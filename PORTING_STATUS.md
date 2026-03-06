@@ -1,0 +1,279 @@
+# Skript-Fabric Porting Status
+
+Last updated: 2026-03-06
+
+## Goal
+- Port `Skript` (Paper plugin) to a Fabric `1.21.8` server-side mod (Java 21, Mojang mappings).
+- Keep behavior and package structure as close as possible to upstream Skript.
+- Prioritize upstream language module porting first:
+  - `src/main/java/org/skriptlang/skript/lang`
+
+## Non-negotiable constraints
+- Server-side only runtime.
+- Client-side logic must stay inactive (`isClient` guard).
+- Event integration target remains `Stimuli` for Fabric-side hooks.
+- Bukkit plugin-hook compatibility is not a target.
+
+## Current repository state
+- Upstream language module imported:
+  - `org.skriptlang.skript.lang` (61 files copied from upstream tree)
+- Bukkit event type usage in language module replaced with server-side neutral context:
+  - Added `org.skriptlang.skript.lang.event.SkriptEvent`
+  - Removed direct `org.bukkit.event.Event` imports from language property/condition paths.
+- Added compatibility shims required to compile `org.skriptlang.skript.lang` in this repo:
+  - `ch.njol.*` minimal compatibility layer (parser/config/classinfo/log/pattern/utility stubs)
+  - `org.skriptlang.skript.util.*` minimal utility/registry/event abstractions
+  - `org.skriptlang.skript.registration.*` minimal syntax registry/info scaffolding
+  - placeholder classes for `org.skriptlang.skript.common.*` and `org.skriptlang.skript.bukkit.base.types.*` references used by language module
+- Added first-pass upstream-aligned `ch.njol.skript.lang` core implementations:
+  - Expanded `ch.njol.skript.lang.Expression` from stub to richer contract
+  - Added `Loopable`, `Simplifiable`, and `ConvertedExpression`
+  - Added `SkriptEvent` + `SkriptEventInfo` compatibility layer
+  - Added `Statement` + `TriggerItem` minimal execution chain scaffolding
+  - Added parser/runtime support APIs used by the above (`ParserInstance` current-event context, `Trigger` debug metadata, `SyntaxRegistry.EVENT`)
+- Added second-pass execution-chain alignment work in `ch.njol.skript.lang`:
+  - Added `ExecutionIntent`, `TriggerSection`, and `Effect` types (upstream-compatible class boundaries)
+  - Updated `Trigger` to use legacy `ch.njol.skript.lang.SkriptEvent` as trigger owner/event descriptor
+  - Updated `Condition` to extend `Statement` and execute via `run(...) -> check(...)`
+  - Added parser section-stack compatibility in `ParserInstance` (`getCurrentSections`/`setCurrentSections`)
+  - Reworked `ScriptLoader.loadItems(...)` to produce `List<TriggerItem>` through `Statement.parse(...)`
+  - Ported `SimpleEvent` to a real `SkriptEvent` subclass
+- Added section-oriented language scaffolding:
+  - Added `Section`, `SectionSkriptEvent`, `EffectSection`, `EffectSectionEffect`
+  - Added section-claim parser context (`Section.SectionContext`) and effect-section context toggle
+  - Added return-flow compatibility types (`ReturnHandler`, `ReturnableTrigger`, `SectionExitHandler`)
+  - `Effect.parse(...)` now resolves `EffectSection` and wraps it with `EffectSectionEffect`
+- Added parser/registry behavior bridge for dynamic syntax registration:
+  - Implemented mutable `SyntaxRegistryService` store with register/clear APIs
+  - Added `Skript.register*` helper methods (`statement`, `condition`, `effect`, `section`, `structure`, `event`)
+  - Reworked `SkriptParser.parseModern/parseStatic` to do pattern matching + `init(...)` invocation
+  - Added minimal pattern features (`%expr%`, `[optional]`, `(a|b)`, `x/y` alternatives)
+  - Fixed modern-to-legacy structure info bridging in `Structure.parse(...)` and `SkriptEvent.parse(...)`
+  - Added regression tests:
+    - `ch.njol.skript.lang.SkriptParserRegistryTest`
+- Improved trigger item loading semantics in `ScriptLoader`:
+  - Loads each child node with correct `ParserInstance.node` context
+  - Restores parser node after load
+  - Links loaded items via `TriggerItem#setNext(...)` in parse order
+  - Added regression tests for item chaining and parser-node context restoration
+- Added additional legacy language API scaffolding in `ch.njol.skript.lang`:
+  - Added `DefaultExpression`, `EventRestrictedSyntax`, `Unit`
+  - Added `SyntaxStringBuilder` and `VerboseAssert` utility interfaces/classes
+  - Added section/event compatibility types: `LoopSection`, `SelfRegisteringSkriptEvent`
+  - Added expression metadata compatibility: `ExpressionType`, `ExpressionInfo`
+  - Extended `SyntaxInfo` with `Priority` constants and `Expression` info type
+  - Extended `Priority` with `after(...)`, `equals(...)`, `hashCode(...)`
+  - Added tests:
+    - `ch.njol.skript.lang.LangCompatibilityScaffoldingTest`
+- Added keyed-expression compatibility APIs:
+  - Added `KeyedValue` record (+ zip/map/unzip helpers)
+  - Added `KeyedIterableExpression`, `KeyProviderExpression`, `KeyReceiverExpression`
+  - Added tests:
+    - `ch.njol.skript.lang.KeyedValueAndExpressionApiTest`
+- Added expression list compatibility layer:
+  - Added `ExpressionList`
+  - Added `LiteralList`
+  - Added tests:
+    - `ch.njol.skript.lang.ExpressionListLiteralListTest`
+- Added input-source compatibility path:
+  - Added `InputSource` + parser data bridge (`InputSource.InputData`)
+  - Added `ExprInput` compatibility stub
+  - Added `LiteralUtils` shim required by input parsing flow
+  - Added tests:
+    - `ch.njol.skript.lang.InputSourceCompatibilityTest`
+- Added literal string compatibility type:
+  - Added `LiteralString`
+  - Added tests:
+    - `ch.njol.skript.lang.LiteralStringCompatibilityTest`
+- Added default-expression validation compatibility helpers:
+  - Added `DefaultExpressionUtils`
+  - Extended `SkriptParser` with `PARSE_EXPRESSIONS`, `PARSE_LITERALS`, and `ExprInfo`
+  - Added `StringUtils` utility shim (`join`, `multiply`)
+  - Added tests:
+    - `ch.njol.skript.lang.DefaultExpressionUtilsTest`
+- Added section-expression compatibility bridge:
+  - Added `ch.njol.skript.expressions.base.SectionExpression`
+  - Added `ch.njol.skript.lang.ExpressionSection`
+  - Extended `ParseLogHandler` with compatibility methods (`clear`, `hasError`, `stop`)
+  - Added tests:
+    - `ch.njol.skript.lang.ExpressionSectionCompatibilityTest`
+- Added unparsed-literal compatibility layer:
+  - Added `ch.njol.skript.lang.UnparsedLiteral`
+  - Added `ch.njol.skript.lang.util.SimpleLiteral`
+  - Added `ch.njol.skript.log.LogEntry` and `SkriptLogger.log(...)`
+  - Extended `Classes` with parser-backed pattern discovery (`getPatternInfos`) and class-info clear helper for test isolation
+  - Added tests:
+    - `ch.njol.skript.lang.UnparsedLiteralCompatibilityTest`
+- Added variable compatibility core:
+  - Added `ch.njol.skript.lang.Variable` implementing legacy `Expression` + keyed-variable APIs
+  - Added `ch.njol.skript.variables.Variables` in-memory global/local variable store bridge
+  - Extended `VariableString` with event-aware rendering/simple checks and `StringMode` with `DEBUG`
+  - Added tests:
+    - `ch.njol.skript.lang.VariableCompatibilityTest`
+- Added parser/simplification compatibility primitives:
+  - Added parser data/stack classes:
+    - `ch.njol.skript.lang.parser.DefaultValueData`
+    - `ch.njol.skript.lang.parser.ParsingStack`
+    - `ch.njol.skript.lang.parser.ParseStackOverflowException`
+  - Added contextless event bridge: `ch.njol.skript.lang.util.ContextlessEvent`
+  - Added `ch.njol.skript.lang.simplification.SimplifiedLiteral`
+  - Added tests:
+    - `ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest`
+    - `ch.njol.skript.lang.simplification.SimplifiedLiteralCompatibilityTest`
+- Added util expression compatibility bridges:
+  - Added `ch.njol.skript.lang.util.ContainerExpression`
+  - Added `ch.njol.skript.lang.util.ConvertedLiteral`
+  - Added `ch.njol.skript.lang.util.ConvertedKeyProviderExpression`
+  - Added simplified linked-section helper: `ch.njol.skript.lang.util.SectionUtils`
+  - Added tests:
+    - `ch.njol.skript.lang.util.UtilCompatibilityBridgeTest`
+- Added function-core compatibility scaffolding:
+  - Added `ch.njol.skript.lang.function.Namespace`
+  - Added `ch.njol.skript.lang.function.Parameter`
+  - Added `ch.njol.skript.lang.function.Signature`
+  - Added `ch.njol.skript.lang.function.Function` and `FunctionEvent`
+  - Added `ch.njol.skript.lang.function.FunctionRegistry` and `Functions`
+  - Added tests:
+    - `ch.njol.skript.lang.function.FunctionCoreCompatibilityTest`
+- Added function-call compatibility path:
+  - Added `ch.njol.skript.lang.function.FunctionReference`
+  - Added `ch.njol.skript.lang.function.ExprFunctionCall`
+  - Added `ch.njol.skript.lang.function.EffFunctionCall`
+  - Added `ch.njol.skript.lang.function.DynamicFunctionReference`
+  - Extended `SkriptParser` with `parseFunctionReference()` compatibility entrypoint
+  - Fixed `Functions.clear()` to also clear in-memory Java namespace contents
+  - Added tests:
+    - `ch.njol.skript.lang.function.FunctionCallCompatibilityTest`
+- Added function implementation compatibility types:
+  - Added `ch.njol.skript.lang.function.ScriptFunction`
+  - Added deprecated compatibility bases:
+    - `ch.njol.skript.lang.function.JavaFunction`
+    - `ch.njol.skript.lang.function.SimpleJavaFunction`
+  - Added tests:
+    - `ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest`
+- Added remaining Any* common provider compatibility:
+  - Added `ch.njol.skript.lang.util.common.AnyProvider`
+  - Added `ch.njol.skript.lang.util.common.AnyContains`
+  - Added `ch.njol.skript.lang.util.common.AnyValued`
+  - Added tests:
+    - `ch.njol.skript.lang.util.common.AnyCommonCompatibilityTest`
+- Added parser-stack runtime wiring:
+  - `ParserInstance` now exposes `getParsingStack()`
+  - `SkriptParser.parseModern(...)` and `parseStatic(...)` now push/pop `ParsingStack.Element` per pattern attempt
+  - `StackOverflowError` during parse-time instantiation/init now wraps to `ParseStackOverflowException` with stack snapshot
+  - Added tests:
+    - `ch.njol.skript.lang.parser.SkriptParserParsingStackIntegrationTest`
+- Aligned function facade namespace semantics more closely to upstream:
+  - `Functions.registerSignature(...)` now allows overloads with different argument types while still rejecting same-locality duplicates
+  - `Functions.getLocalSignature(...)` and `getLocalFunction(...)` now fall back through the script namespace like upstream `Namespace#getSignature/getFunction`
+  - Added `Functions.clearFunctions(...)`, `unregisterFunction(...)`, `validateFunctions()`, and Java-function enumeration helper
+  - `FunctionRegistry` now supports removing registered signatures/functions
+  - `FunctionReference` now tracks validated calls on `Signature.calls()` and exposes revalidation helpers
+  - Added tests:
+    - `ch.njol.skript.lang.function.FunctionCoreCompatibilityTest`
+    - `ch.njol.skript.lang.function.FunctionCallCompatibilityTest`
+- Fixed dynamic function source-script resolution for local functions:
+  - `DynamicFunctionReference.resolveFunction(name, scriptName)` now actually resolves through the provided script namespace instead of dropping it
+  - `DynamicFunctionReference.parseFunction("name() from script.sk")` can now resolve local script functions registered only in that namespace
+  - Added tests:
+    - `ch.njol.skript.lang.function.FunctionCallCompatibilityTest`
+- Improved function call fidelity for single plural parameters:
+  - `FunctionRegistry` candidate matching now accepts upstream-style `single list parameter` signatures and respects minimum arity for optional parameters
+  - `FunctionReference.execute(...)` now collapses multiple call-site arguments into a single plural parameter when the target signature expects one
+  - keyed plural inputs now keep their keys across the function-call boundary for `ExprFunctionCall`
+  - Added tests:
+    - `ch.njol.skript.lang.function.FunctionCallCompatibilityTest`
+- Improved `Statement.parse(...)` parser flow toward upstream ordering:
+  - function calls are now parsed before generic effects/statements
+  - statement parsing now uses `Section.SectionContext` around function-call and statement resolution for section-node cases
+  - effect sections are split from plain effects in the statement parser path
+  - fixed `EffFunctionCall.parse(...)` so unregistered names no longer shadow normal effect parsing
+  - Added tests:
+    - `ch.njol.skript.lang.SkriptParserRegistryTest`
+- Added first-pass typed placeholder parsing in `SkriptParser`:
+  - `%type%` segments are now captured and converted into `Expression<?>[]` passed to `init(...)`
+  - `ParseResult` now exposes the parsed expressions array for compatibility
+  - added minimal `parseExpression(...)` support for typed literals and function-call expressions
+  - kept legacy `Object.class` input-source parsing conservative to avoid regressing `InputSource` compatibility behavior
+  - Added tests:
+    - `ch.njol.skript.lang.SkriptParserRegistryTest`
+- Main sources now compile successfully.
+- Legacy tests tied to removed `org.skriptlang.skript.core.*` were removed.
+- New language-focused test added:
+  - `org.skriptlang.skript.lang.experiment.ExperimentDataTest`
+- Latest verification:
+  - `./gradlew test` passed (2026-03-06, parser/registry unit).
+  - `./gradlew build` passed (2026-03-06, parser/registry unit).
+  - `./gradlew test` passed (2026-03-06, additional lang API scaffolding unit).
+  - `./gradlew build` passed (2026-03-06, additional lang API scaffolding unit).
+  - `./gradlew test` passed (2026-03-06, keyed expression API unit).
+  - `./gradlew build` passed (2026-03-06, keyed expression API unit).
+  - `./gradlew test` passed (2026-03-06, expression list compatibility unit).
+  - `./gradlew build` passed (2026-03-06, expression list compatibility unit).
+  - `./gradlew test` passed (2026-03-06, input-source compatibility unit).
+  - `./gradlew build` passed (2026-03-06, input-source compatibility unit).
+  - `./gradlew test` passed (2026-03-06, literal string compatibility unit).
+  - `./gradlew build` passed (2026-03-06, literal string compatibility unit).
+  - `./gradlew test` passed (2026-03-06, default expression utils unit).
+  - `./gradlew build` passed (2026-03-06, default expression utils unit).
+  - `./gradlew test` passed (2026-03-06, expression section compatibility unit).
+  - `./gradlew build` passed (2026-03-06, expression section compatibility unit).
+  - `./gradlew test` passed (2026-03-06, unparsed literal compatibility unit).
+  - `./gradlew build` passed (2026-03-06, unparsed literal compatibility unit).
+  - `./gradlew test` passed (2026-03-06, variable compatibility core unit).
+  - `./gradlew build` passed (2026-03-06, variable compatibility core unit).
+  - `./gradlew test` passed (2026-03-06, parser/simplification compatibility primitives unit).
+  - `./gradlew build` passed (2026-03-06, parser/simplification compatibility primitives unit).
+  - `./gradlew test` passed (2026-03-06, util expression compatibility bridges unit).
+  - `./gradlew build` passed (2026-03-06, util expression compatibility bridges unit).
+  - `./gradlew test` passed (2026-03-06, function-core compatibility scaffolding unit).
+  - `./gradlew build` passed (2026-03-06, function-core compatibility scaffolding unit).
+  - `./gradlew test` passed (2026-03-06, function-call compatibility path unit).
+  - `./gradlew build` passed (2026-03-06, function-call compatibility path unit).
+  - `./gradlew test` passed (2026-03-06, function implementation compatibility unit).
+  - `./gradlew build` passed (2026-03-06, function implementation compatibility unit).
+  - `./gradlew test` passed (2026-03-06, Any* common provider compatibility unit).
+  - `./gradlew build` passed (2026-03-06, Any* common provider compatibility unit).
+  - `./gradlew test --tests ch.njol.skript.lang.parser.SkriptParserParsingStackIntegrationTest` passed (2026-03-06, parser-stack integration unit).
+  - `./gradlew test` passed (2026-03-06, parser-stack integration unit).
+  - `./gradlew build` passed (2026-03-06, parser-stack integration unit).
+  - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest` passed (2026-03-06, function facade namespace semantics unit).
+  - `./gradlew test` passed (2026-03-06, function facade namespace semantics unit).
+  - `./gradlew build` passed (2026-03-06, function facade namespace semantics unit).
+  - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest` passed (2026-03-06, dynamic function local source resolution unit).
+  - `./gradlew test` passed (2026-03-06, dynamic function local source resolution unit).
+  - `./gradlew build` passed (2026-03-06, dynamic function local source resolution unit).
+  - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest` passed (2026-03-06, single plural parameter function-call fidelity unit).
+  - `./gradlew test` passed (2026-03-06, single plural parameter function-call fidelity unit).
+  - `./gradlew build` passed (2026-03-06, single plural parameter function-call fidelity unit).
+  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest` passed (2026-03-06, statement parser flow unit).
+  - `./gradlew test` passed (2026-03-06, statement parser flow unit).
+  - `./gradlew build` passed (2026-03-06, statement parser flow unit).
+  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest` passed (2026-03-06, typed placeholder parser unit).
+  - `./gradlew test` passed (2026-03-06, typed placeholder parser unit).
+  - `./gradlew build` passed (2026-03-06, typed placeholder parser unit).
+
+## Important notes
+- Current compatibility classes are intentionally minimal to unblock module-level compilation.
+- They are not feature-complete replacements of upstream runtime semantics yet.
+- Remaining port work is now mainly behavior fidelity work (not basic compile plumbing).
+
+## Immediate next milestones
+1. Second-pass `ch.njol.skript.lang` port:
+   - `SkriptParser`를 pattern compiler/token parser 수준으로 고도화 (현재는 typed placeholder support added, but still light regex bridge)
+   - `ScriptLoader.loadItems(...)`를 실제 라인/노드 파싱 로직으로 확장 (현재는 minimal dispatch + node context + next chain, statement ordering only partially aligned)
+   - `ReturnHandler` stack과 section-trigger 실행 semantics를 upstream 수준으로 보강
+   - remaining `ch.njol.skript.lang.util` parity files (`package-info`)
+   - remaining `ch.njol.skript.lang.parser` parity/files (`package-info`, deeper parser-state fidelity beyond current stack wiring)
+   - remaining `ch.njol.skript.lang.function` package port (`FunctionReference` contract/ambiguity fidelity, unload/runtime semantics, `package-info`)
+   - variable runtime fidelity pass (`Variable`/`Variables` semantics: list provider depth, type hints, default variables, arithmetic/comparator parity)
+   - remaining legacy parser/function internals port
+2. Wire Fabric/Stimuli runtime to `ch.njol.skript.lang.SkriptEvent` trigger execution path.
+3. Add regression tests for converted expressions, in-place changes, and event loading/dispatch behavior.
+
+## Notes for next session
+- Session rules remain in:
+  - `AGENTS.md`
+  - `RULES.md`
+- Continue from language-module-first strategy; do not reintroduce Bukkit API dependencies.
+- Keep Mojang mappings (`loom.officialMojangMappings()`).
