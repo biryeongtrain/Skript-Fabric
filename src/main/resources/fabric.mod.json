@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "skript-fabric",
+  "version": "${version}",
+  "name": "Skript-Fabric",
+  "description": "",
+  "authors": [
+    "Skript-Fabric Contributors"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/skript-fabric/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "org.skriptlang.skript.fabric.SkriptFabric"
+    ]
+  },
+  "mixins": [
+    "skript-fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "stimuli": ">=0.5.2+1.21.8"
+  }
+}
