@@ -3,11 +3,11 @@ package org.skriptlang.skript.lang.properties.handlers.base;
 
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.lang.Expression;
-import org.bukkit.event.Event;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.lang.properties.PropertyBaseExpression;
 
 import java.util.function.Function;
@@ -33,7 +33,7 @@ public interface ExpressionPropertyHandler<Type, ReturnType> extends PropertyHan
 	 * @param propertyHolder The object to convert.
 	 * @return The property value.
 	 */
-	default @Nullable ReturnType convert(Event event, Type propertyHolder) {
+	default @Nullable ReturnType convert(SkriptEvent event, Type propertyHolder) {
 		return convert(propertyHolder);
 	}
 

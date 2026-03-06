@@ -1,53 +1,47 @@
 package org.skriptlang.skript.util;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Unmodifiable;
+public final class Priority implements Comparable<Priority> {
 
-import java.util.Collection;
+    private final int value;
 
-/**
- * Priorities are used for things like ordering syntax and loading structures in a specific order.
- */
-public interface Priority extends Comparable<Priority> {
+    private Priority(int value) {
+        this.value = value;
+    }
 
-	/**
-	 * @return A base priority for other priorities to build relationships off of.
-	 */
-	@Contract("-> new")
-	static Priority base() {
-		return new PriorityImpl();
-	}
+    public static Priority base() {
+        return new Priority(1000);
+    }
 
-	/**
-	 * Constructs a new priority that is before <code>priority</code>.
-	 * Note that this method will not make any changes to the {@link #after()} of <code>priority</code>.
-	 * @param priority The priority that will be after the returned priority.
-	 * @return A priority that is before <code>priority</code>.
-	 */
-	@Contract("_ -> new")
-	static Priority before(Priority priority) {
-		return new PriorityImpl(priority, true);
-	}
+    public static Priority before(Priority other) {
+        return new Priority(other.value - 1);
+    }
 
-	/**
-	 * Constructs a new priority that is after <code>priority</code>.
-	 * Note that this method will not make any changes to the {@link #before()} of <code>priority</code>.
-	 * @param priority The priority that will be before the returned priority.
-	 * @return A priority that is after <code>priority</code>.
-	 */
-	@Contract("_ -> new")
-	static Priority after(Priority priority) {
-		return new PriorityImpl(priority, false);
-	}
+    public static Priority after(Priority other) {
+        return new Priority(other.value + 1);
+    }
 
-	/**
-	 * @return A collection of all priorities this priority is known to be after.
-	 */
-	@Unmodifiable Collection<Priority> after();
+    public int value() {
+        return value;
+    }
 
-	/**
-	 * @return A collection of all priorities this priority is known to be before.
-	 */
-	@Unmodifiable Collection<Priority> before();
+    @Override
+    public int compareTo(Priority other) {
+        return Integer.compare(this.value, other.value);
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Priority other)) {
+            return false;
+        }
+        return value == other.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(value);
+    }
 }

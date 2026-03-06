@@ -288,6 +288,7 @@ public record Property<Handler extends PropertyHandler<?>>(
 		NUMBER.register();
 		IS_EMPTY.register();
 		TYPED_VALUE.register();
+		WXYZ.register();
 		SCALE.register();
 		SPEED.register();
 	}

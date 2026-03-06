@@ -1,63 +1,56 @@
 package ch.njol.skript.lang;
 
-import ch.njol.skript.lang.util.ConvertedLiteral;
-import ch.njol.skript.util.Utils;
-import ch.njol.util.coll.CollectionUtils;
-import org.bukkit.event.Event;
-import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
-
 import java.util.Optional;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
-public class LiteralString extends VariableString implements Literal<String> {
+/**
+ * A literal string expression.
+ */
+public class LiteralString implements Literal<String> {
 
-	/**
-	 * Creates a new VariableString which does not contain variables.
-	 *
-	 * @param input Content for string.
-	 */
-	protected LiteralString(String input) {
-		super(input);
-	}
+    protected final String original;
 
-	@Override
-	public String[] getArray() {
-		return new String[]{original};
-	}
+    protected LiteralString(String input) {
+        this.original = input;
+    }
 
-	@Override
-	public String getSingle() {
-		return original;
-	}
+    public static LiteralString of(String input) {
+        return new LiteralString(input);
+    }
 
-	@Override
-	public String[] getAll() {
-		return new String[]{original};
-	}
+    @Override
+    public String[] getArray(SkriptEvent event) {
+        return new String[]{original};
+    }
 
-	@Override
-	public Optional<String> getOptionalSingle(Event event) {
-		return Optional.of(original);
-	}
+    @Override
+    public @Nullable String getSingle(SkriptEvent event) {
+        return original;
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <R> @Nullable Literal<? extends R> getConvertedExpression(Class<R>... to) {
-		if (CollectionUtils.containsSuperclass(to, String.class))
-			return (Literal<? extends R>) this;
-		Class<R> superType = (Class<R>) Utils.getSuperType(to);
-		R[] parsedData = Converters.convert(this.getArray(), to, superType);
-		if (parsedData.length != 1)
-			return null;
-		return new ConvertedLiteral<>(this, parsedData, superType);
-	}
+    @Override
+    public String[] getAll(SkriptEvent event) {
+        return new String[]{original};
+    }
 
-	/**
-	 * Use {@link #toString(Event)} to get the actual string. This method is for debugging.
-	 */
-	@Override
-	public String toString(@Nullable Event event, boolean debug) {
-		return '"' + original + '"';
-	}
+    @Override
+    public Optional<String> getOptionalSingle(SkriptEvent event) {
+        return Optional.of(original);
+    }
 
+    @Override
+    public Class<? extends String> getReturnType() {
+        return String.class;
+    }
+
+    @Override
+    public boolean isSingle() {
+        return true;
+    }
+
+    @Override
+    public String toString(@Nullable SkriptEvent event, boolean debug) {
+        return '"' + original + '"';
+    }
 }

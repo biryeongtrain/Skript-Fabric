@@ -9,12 +9,12 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
-import org.bukkit.event.Event;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.common.properties.expressions.PropExprName;
 import org.skriptlang.skript.lang.converter.Converters;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.lang.properties.Property.PropertyInfo;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -88,7 +88,7 @@ public abstract class PropertyBaseExpression<Handler extends ExpressionPropertyH
 	}
 
 	@Override
-	protected Object @Nullable [] get(Event event) {
+	protected Object @Nullable [] get(SkriptEvent event) {
 		return expr.stream(event)
 			.flatMap(source -> {
 				var handler = properties.getHandler(source.getClass());
@@ -119,7 +119,7 @@ public abstract class PropertyBaseExpression<Handler extends ExpressionPropertyH
 	 * @param <T> The type of the source object and the type the handler will accept.
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T> @Nullable Object convert(Event event, Handler handler, T source) {
+	protected <T> @Nullable Object convert(SkriptEvent event, Handler handler, T source) {
 		return ((ExpressionPropertyHandler<T, ?>) handler).convert(event, source);
 	}
 
@@ -186,7 +186,7 @@ public abstract class PropertyBaseExpression<Handler extends ExpressionPropertyH
 	}
 
 	@Override
-	public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
+	public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
 
 		Function<Object, ?> updateTypeFunction = (propertyHaver) -> {
 
@@ -268,7 +268,7 @@ public abstract class PropertyBaseExpression<Handler extends ExpressionPropertyH
 	}
 
 	@Override
-	public String toString(Event event, boolean debug) {
+	public String toString(SkriptEvent event, boolean debug) {
 		return getPropertyName() + " of " + expr.toString(event, debug);
 	}
 

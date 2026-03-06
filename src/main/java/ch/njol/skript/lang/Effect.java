@@ -1,88 +1,51 @@
 package ch.njol.skript.lang;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.config.Node;
-import ch.njol.skript.lang.function.EffFunctionCall;
-import ch.njol.skript.log.ParseLogHandler;
-import ch.njol.skript.log.SkriptLogger;
-import org.bukkit.event.Event;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.log.runtime.SyntaxRuntimeErrorProducer;
-
+import ch.njol.skript.config.SectionNode;
 import java.util.Iterator;
+import java.util.List;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 
-/**
- * An effect which is unconditionally executed when reached, and execution will usually continue with the next item of the trigger after this effect is executed (the stop effect
- * for example stops the trigger, i.e. nothing else will be executed after it)
- *
- * @see Skript#registerEffect(Class, String...)
- */
-public abstract class Effect extends Statement implements SyntaxRuntimeErrorProducer {
+public abstract class Effect extends Statement {
 
-	protected Effect() {}
+    protected abstract void execute(SkriptEvent event);
 
-	private Node node;
+    @Override
+    protected final boolean run(SkriptEvent event) {
+        execute(event);
+        return true;
+    }
 
-	@Override
-	public boolean preInit() {
-		node = getParser().getNode();
-		return super.preInit();
-	}
+    public static @Nullable Effect parse(String input, @Nullable String defaultError) {
+        return parse(input, defaultError, null, null);
+    }
 
-	/**
-	 * Executes this effect.
-	 * 
-	 * @param event The event with which this effect will be executed
-	 */
-	protected abstract void execute(Event event);
+    public static @Nullable Effect parse(
+            String input,
+            @Nullable String defaultError,
+            @Nullable SectionNode sectionNode,
+            @Nullable List<TriggerItem> triggerItems
+    ) {
+        if (input == null || input.isBlank()) {
+            return null;
+        }
+        String expression = input.trim();
 
-	@Override
-	public final boolean run(Event event) {
-		execute(event);
-		return true;
-	}
+        EffectSection section = EffectSection.parse(expression, defaultError, sectionNode, triggerItems);
+        if (section != null) {
+            return new EffectSectionEffect(section);
+        }
 
-	public static @Nullable Effect parse(String input, @Nullable String defaultError) {
-		try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
-			EffFunctionCall functionCall = EffFunctionCall.parse(input);
-			if (functionCall != null) {
-				log.printLog();
-				return functionCall;
-			} else if (log.hasError()) {
-				log.printError();
-				return null;
-			}
-			log.clear();
-
-			EffectSection section = EffectSection.parse(input, null, null, null);
-			if (section != null) {
-				log.printLog();
-				return new EffectSectionEffect(section);
-			}
-			log.clear();
-
-			var iterator = Skript.instance().syntaxRegistry().syntaxes(org.skriptlang.skript.registration.SyntaxRegistry.EFFECT).iterator();
-			//noinspection unchecked,rawtypes
-			Effect effect = (Effect) SkriptParser.parse(input, (Iterator) iterator, defaultError);
-			if (effect != null) {
-				log.printLog();
-				return effect;
-			}
-
-			log.printError();
-			return null;
-		}
-	}
-
-	@Override
-	public Node getNode() {
-		return node;
-	}
-
-	@Override
-	public @NotNull String getSyntaxTypeName() {
-		return "effect";
-	}
-
+        var iterator = Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EFFECT).iterator();
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Effect effect = (Effect) SkriptParser.parseModern(
+                expression,
+                (Iterator) iterator,
+                ParseContext.DEFAULT,
+                defaultError
+        );
+        return effect;
+    }
 }

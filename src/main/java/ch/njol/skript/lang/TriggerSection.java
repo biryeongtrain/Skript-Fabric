@@ -3,112 +3,99 @@ package ch.njol.skript.lang;
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.parser.ParserInstance;
-import org.bukkit.event.Event;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
-/**
- * Represents a section of a trigger, e.g. a conditional or a loop
- */
 public abstract class TriggerSection extends TriggerItem {
 
-	protected @Nullable TriggerItem first, last;
+    protected @Nullable TriggerItem first;
+    protected @Nullable TriggerItem last;
 
-	/**
-	 * Reserved for new Trigger(...)
-	 */
-	protected TriggerSection(List<TriggerItem> items) {
-		setTriggerItems(items);
-	}
+    protected TriggerSection(List<TriggerItem> items) {
+        setTriggerItems(items);
+    }
 
-	protected TriggerSection(SectionNode node) {
-		ParserInstance parser = ParserInstance.get();
-		List<TriggerSection> previousSections = parser.getCurrentSections();
+    protected TriggerSection(SectionNode node) {
+        ParserInstance parser = ParserInstance.get();
+        List<TriggerSection> previousSections = parser.getCurrentSections();
 
-		List<TriggerSection> sections = new ArrayList<>(previousSections);
-		sections.add(this);
-		parser.setCurrentSections(sections);
+        List<TriggerSection> currentSections = new ArrayList<>(previousSections);
+        currentSections.add(this);
+        parser.setCurrentSections(currentSections);
 
-		try {
-			setTriggerItems(ScriptLoader.loadItems(node));
-		} finally {
-			parser.setCurrentSections(previousSections);
-		}
-	}
+        try {
+            setTriggerItems(ScriptLoader.loadTriggerItems(node));
+        } finally {
+            parser.setCurrentSections(previousSections);
+        }
+    }
 
-	/**
-	 * Important when using this constructor: set the items with {@link #setTriggerItems(List)}!
-	 */
-	protected TriggerSection() {}
+    protected TriggerSection() {
+    }
 
-	/**
-	 * Remember to add this section to {@link ParserInstance#getCurrentSections()} before parsing child elements!
-	 * 
-	 * <pre>
-	 * ScriptLoader.currentSections.add(this);
-	 * setTriggerItems(ScriptLoader.loadItems(node));
-	 * ScriptLoader.currentSections.remove(ScriptLoader.currentSections.size() - 1);
-	 * </pre>
-	 */
-	protected void setTriggerItems(List<TriggerItem> items) {
-		if (!items.isEmpty()) {
-			first = items.get(0);
-			last = items.get(items.size() - 1);
-			last.setNext(getNext());
+    protected void setTriggerItems(List<TriggerItem> items) {
+        if (items == null || items.isEmpty()) {
+            first = null;
+            last = null;
+            return;
+        }
 
-			for (TriggerItem item : items) {
-				item.setParent(this);
-			}
-		}
-	}
+        first = items.getFirst();
+        last = items.getLast();
+        if (last != null) {
+            last.setNext(getNext());
+        }
 
-	@Override
-	public TriggerSection setNext(@Nullable TriggerItem next) {
-		super.setNext(next);
-		if (last != null)
-			last.setNext(next);
-		return this;
-	}
+        for (TriggerItem item : items) {
+            item.setParent(this);
+        }
+    }
 
-	@Override
-	public TriggerSection setParent(@Nullable TriggerSection parent) {
-		super.setParent(parent);
-		return this;
-	}
+    @Override
+    public TriggerSection setNext(@Nullable TriggerItem next) {
+        super.setNext(next);
+        if (last != null) {
+            last.setNext(next);
+        }
+        return this;
+    }
 
-	@Override
-	protected final boolean run(Event event) {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public TriggerSection setParent(@Nullable TriggerSection parent) {
+        super.setParent(parent);
+        return this;
+    }
 
-	@Override
-	protected abstract @Nullable TriggerItem walk(Event event);
+    @Override
+    protected final boolean run(SkriptEvent event) {
+        throw new UnsupportedOperationException();
+    }
 
-	protected final @Nullable TriggerItem walk(Event event, boolean run) {
-		debug(event, run);
-		if (run && first != null) {
-			return first;
-		} else {
-			return getNext();
-		}
-	}
+    @Override
+    protected abstract @Nullable TriggerItem walk(SkriptEvent event);
 
-	/**
-	 * @return The execution intent of the section's trigger.
-	 */
-	protected @Nullable ExecutionIntent triggerExecutionIntent() {
-		TriggerItem current = first;
-		while (current != null) {
-			ExecutionIntent executionIntent = current.executionIntent();
-			if (executionIntent != null)
-				return executionIntent.use();
-			if (current == last)
-				break;
-			current = current.getActualNext();
-		}
-		return null;
-	}
+    protected final @Nullable TriggerItem walk(SkriptEvent event, boolean run) {
+        debug(event, run);
+        if (run && first != null) {
+            return first;
+        }
+        return getNext();
+    }
 
+    protected @Nullable ExecutionIntent triggerExecutionIntent() {
+        TriggerItem current = first;
+        while (current != null) {
+            ExecutionIntent intent = current.executionIntent();
+            if (intent != null) {
+                return intent.use();
+            }
+            if (current == last) {
+                break;
+            }
+            current = current.getActualNext();
+        }
+        return null;
+    }
 }

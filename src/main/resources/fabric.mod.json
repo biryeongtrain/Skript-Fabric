@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "skript-fabric",
+  "id": "skript-fabric-port",
   "version": "${version}",
-  "name": "Skript-Fabric",
-  "description": "",
+  "name": "Skript-Fabric-port",
+  "description": "Fabric port workbench for Skript runtime parity.",
   "authors": [
     "Skript-Fabric Contributors"
   ],

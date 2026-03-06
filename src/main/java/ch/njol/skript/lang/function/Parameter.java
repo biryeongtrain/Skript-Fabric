@@ -1,330 +1,230 @@
 package ch.njol.skript.lang.function;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.SkriptConfig;
 import ch.njol.skript.classes.ClassInfo;
-import ch.njol.skript.lang.*;
-import ch.njol.skript.log.RetainingLogHandler;
-import ch.njol.skript.log.SkriptLogger;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.Literal;
+import ch.njol.skript.lang.Variable;
+import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
-import ch.njol.skript.util.LiteralUtils;
-import ch.njol.skript.util.Utils;
-import ch.njol.util.NonNullPair;
-import ch.njol.util.StringUtils;
-import org.bukkit.event.Event;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
-import org.skriptlang.skript.common.function.DefaultFunction;
-import org.skriptlang.skript.common.function.Parameter.Modifier.RangedModifier;
-import org.skriptlang.skript.common.function.ScriptParameter;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
 /**
- * @deprecated Use {@link ScriptParameter}
- * or {@link DefaultFunction.Builder#parameter(String, Class, Modifier...)} instead.
+ * Legacy script function parameter model.
  */
-@Deprecated(forRemoval = true, since = "2.14")
-public final class Parameter<T> implements org.skriptlang.skript.common.function.Parameter<T> {
+public final class Parameter<T> {
 
-	public final static Pattern PARAM_PATTERN = Pattern.compile("^\\s*([^:(){}\",]+?)\\s*:\\s*([a-zA-Z ]+?)\\s*(?:\\s*=\\s*(.+))?\\s*$");
+    public enum Modifier {
+        OPTIONAL,
+        KEYED
+    }
 
-	/**
-	 * Name of this parameter. Will be used as name for the local variable
-	 * that contains value of it inside function.
-	 * If {@link SkriptConfig#caseInsensitiveVariables} is {@code true},
-	 * then the valid variable names may not necessarily match this string in casing.
-	 */
-	final String name;
+    public static final Pattern PARAM_PATTERN = Pattern.compile(
+            "^\\s*([^:(){}\",]+?)\\s*:\\s*([a-zA-Z ]+?)\\s*(?:\\s*=\\s*(.+))?\\s*$"
+    );
 
-	/**
-	 * Type of the parameter.
-	 */
-	final ClassInfo<T> type;
+    final String name;
+    final ClassInfo<T> type;
+    final @Nullable Expression<? extends T> def;
+    final boolean single;
+    final Set<Modifier> modifiers;
+    final boolean keyed;
 
-	/**
-	 * Expression that will provide default value of this parameter
-	 * when the function is called.
-	 */
-	final @Nullable Expression<? extends T> def;
+    public Parameter(String name, ClassInfo<T> type, boolean single, @Nullable Expression<? extends T> def) {
+        this(name, type, single, def, def != null ? Set.of(Modifier.OPTIONAL) : Set.of());
+    }
 
-	/**
-	 * Whether this parameter takes one or many values.
-	 */
-	final boolean single;
+    public Parameter(
+            String name,
+            ClassInfo<T> type,
+            boolean single,
+            @Nullable Expression<? extends T> def,
+            Modifier... modifiers
+    ) {
+        this(name, type, single, def, modifiers == null ? Set.of() : Set.of(modifiers));
+    }
 
-	private final Set<Modifier> modifiers;
+    private Parameter(
+            String name,
+            ClassInfo<T> type,
+            boolean single,
+            @Nullable Expression<? extends T> def,
+            Set<Modifier> modifiers
+    ) {
+        this.name = Objects.requireNonNull(name, "name");
+        this.type = Objects.requireNonNull(type, "type");
+        this.def = def;
+        this.single = single;
+        EnumSet<Modifier> converted = modifiers.isEmpty()
+                ? EnumSet.noneOf(Modifier.class)
+                : EnumSet.copyOf(modifiers);
+        if (def != null) {
+            converted.add(Modifier.OPTIONAL);
+        }
+        if (!single) {
+            converted.add(Modifier.KEYED);
+        }
+        this.modifiers = Set.copyOf(converted);
+        this.keyed = this.modifiers.contains(Modifier.KEYED);
+    }
 
-	/**
-	 * @deprecated Use {@link org.skriptlang.skript.common.function.Parameter}
-	 * or {@link DefaultFunction.Builder#parameter(String, Class, Modifier...)}
-	 * instead.
-	 */
-	final boolean keyed;
+    public String name() {
+        return name;
+    }
 
-	/**
-	 * @deprecated Use {@link DefaultFunction.Builder#parameter(String, Class, Modifier...)} instead.
-	 */
-	@Deprecated(since = "2.13", forRemoval = true)
-	public Parameter(String name, ClassInfo<T> type, boolean single, @Nullable Expression<? extends T> def) {
-		this(name, type, single, def, false);
-	}
+    public Class<T> type() {
+        @SuppressWarnings("unchecked")
+        Class<T> clazz = (Class<T>) (single ? type.getC() : type.getC().arrayType());
+        return clazz;
+    }
 
-	/**
-	 * @deprecated Use {@link org.skriptlang.skript.common.function.Parameter}
-	 * or {@link DefaultFunction.Builder#parameter(String, Class, Modifier...)}
-	 * instead.
-	 */
-	@Deprecated(since = "2.13", forRemoval = true)
-	public Parameter(String name, ClassInfo<T> type, boolean single, @Nullable Expression<? extends T> def, boolean keyed) {
-		this.name = name;
-		this.type = type;
-		this.def = def;
-		this.single = single;
-		this.keyed = keyed;
-		this.modifiers = new HashSet<>();
+    public boolean isSingle() {
+        return single;
+    }
 
-		if (def != null) {
-			modifiers.add(Modifier.OPTIONAL);
-		}
-		if (keyed) {
-			modifiers.add(Modifier.KEYED);
-		}
-	}
+    public boolean hasModifier(Modifier modifier) {
+        return modifiers.contains(modifier);
+    }
 
-	/**
-	 * @deprecated Use {@link org.skriptlang.skript.common.function.Parameter}
-	 * or {@link DefaultFunction.Builder#parameter(String, Class, Modifier...)}
-	 * instead.
-	 */
-	@Deprecated(since = "2.13", forRemoval = true)
-	public Parameter(String name, ClassInfo<T> type, boolean single, @Nullable Expression<? extends T> def, boolean keyed, boolean optional) {
-		this.name = name;
-		this.type = type;
-		this.def = def;
-		this.single = single;
-		this.keyed = keyed;
-		this.modifiers = new HashSet<>();
+    public Set<Modifier> modifiers() {
+        return modifiers;
+    }
 
-		if (optional) {
-			modifiers.add(Modifier.OPTIONAL);
-		}
-		if (keyed) {
-			modifiers.add(Modifier.KEYED);
-		}
-	}
+    public boolean isOptional() {
+        return modifiers.contains(Modifier.OPTIONAL);
+    }
 
-	/**
-	 * Constructs a new parameter for script functions.
-	 *
-	 * @param name The name.
-	 * @param type The type of the parameter.
-	 * @param single Whether the parameter is single.
-	 * @param def The default value.
-	 */
-	Parameter(String name, ClassInfo<T> type, boolean single, @Nullable Expression<? extends T> def, Modifier... modifiers) {
-		this.name = name;
-		this.type = type;
-		this.def = def;
-		this.single = single;
-		this.modifiers = Set.of(modifiers);
-		this.keyed = this.modifiers.contains(Modifier.KEYED);
-	}
+    public ClassInfo<T> getType() {
+        return type;
+    }
 
-	/**
-	 * Returns whether this parameter is optional or not.
-	 * @return Whether this parameter is optional or not.
-	 */
-	public boolean isOptional() {
-		return modifiers.contains(Modifier.OPTIONAL);
-	}
+    public @Nullable Expression<? extends T> getDefaultExpression() {
+        return def;
+    }
 
-	/**
-	 * @deprecated Use {@link #type()} instead.
-	 */
-	@Deprecated(forRemoval = true, since = "2.14")
-	public ClassInfo<T> getType() {
-		return type;
-	}
+    public boolean isSingleValue() {
+        return single;
+    }
 
-	/**
-	 * @deprecated Use {@link ScriptParameter#parse(String, Class, String)}} instead.
-	 */
-	@Deprecated(forRemoval = true, since = "2.14")
-	public static <T> @Nullable Parameter<T> newInstance(String name, ClassInfo<T> type, boolean single, @Nullable String def) {
-		if (!Variable.isValidVariableName(name, true, false)) {
-			Skript.error("A parameter's name must be a valid variable name.");
-			// ... because it will be made available as local variable
-			return null;
-		}
-		Expression<? extends T> d = null;
-		if (def != null) {
-			RetainingLogHandler log = SkriptLogger.startRetainingLog();
+    public static <T> @Nullable Parameter<T> newInstance(
+            String name,
+            ClassInfo<T> type,
+            boolean single,
+            @Nullable String def
+    ) {
+        if (!Variable.isValidVariableName(name, true, false)) {
+            Skript.error("A parameter's name must be a valid variable name.");
+            return null;
+        }
+        Expression<? extends T> defaultExpr = null;
+        if (def != null && !def.isBlank()) {
+            T parsed = Classes.parse(def, type.getC(), ch.njol.skript.lang.ParseContext.DEFAULT);
+            if (parsed == null) {
+                Skript.error("Can't understand this expression: " + def);
+                return null;
+            }
+            defaultExpr = new SimpleLiteral<>(parsed, true);
+        }
 
-			// Parse the default value expression
-			try {
-				//noinspection unchecked
-				d = new SkriptParser(def, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(type.getC());
-				if (d == null || LiteralUtils.hasUnparsedLiteral(d)) {
-					log.printErrors("Can't understand this expression: " + def);
-					return null;
-				}
-				log.printLog();
-			} finally {
-				log.stop();
-			}
-		}
+        List<Modifier> modifiers = new ArrayList<>();
+        if (defaultExpr != null) {
+            modifiers.add(Modifier.OPTIONAL);
+        }
+        if (!single) {
+            modifiers.add(Modifier.KEYED);
+        }
+        return new Parameter<>(name, type, single, defaultExpr, modifiers.toArray(Modifier[]::new));
+    }
 
-		Set<Modifier> modifiers = new HashSet<>();
-		if (d != null) {
-			modifiers.add(Modifier.OPTIONAL);
-		}
-		if (!single) {
-			modifiers.add(Modifier.KEYED);
-		}
+    public static @Nullable List<Parameter<?>> parse(String args) {
+        if (args == null) {
+            return null;
+        }
+        if (args.isBlank()) {
+            return List.of();
+        }
+        List<Parameter<?>> params = new ArrayList<>();
+        String[] split = args.split(",");
+        for (int index = 0; index < split.length; index++) {
+            String arg = split[index].trim();
+            Matcher matcher = PARAM_PATTERN.matcher(arg);
+            if (!matcher.matches()) {
+                Skript.error("Invalid argument definition near '" + arg + "'. Expected 'name: type' or 'name: type = default value'.");
+                return null;
+            }
+            String paramName = matcher.group(1).trim();
+            String typeName = matcher.group(2).trim();
+            String defaultValue = matcher.group(3);
 
-		return new Parameter<>(name, type, single, d, modifiers.toArray(new Modifier[0]));
-	}
+            boolean single = true;
+            if (typeName.toLowerCase(Locale.ENGLISH).endsWith("s")) {
+                single = false;
+                typeName = typeName.substring(0, typeName.length() - 1).trim();
+            }
 
-	/**
-	 * @deprecated Use {@link ch.njol.skript.structures.StructFunction.FunctionParser#parse(String, String, String, String, boolean)} instead.
-	 */
-	@Deprecated(forRemoval = true, since = "2.14")
-	public static @Nullable List<Parameter<?>> parse(String args) {
-		List<Parameter<?>> params = new ArrayList<>();
-		boolean caseInsensitive = SkriptConfig.caseInsensitiveVariables.value();
-		int j = 0;
-		for (int i = 0; i <= args.length(); i = SkriptParser.next(args, i, ParseContext.DEFAULT)) {
-			if (i == -1) {
-				Skript.error("Invalid text/variables/parentheses in the arguments of this function");
-				return null;
-			}
-			if (i == args.length() || args.charAt(i) == ',') {
-				String arg = args.substring(j, i);
+            ClassInfo<?> classInfo = guessClassInfo(typeName);
+            if (classInfo == null) {
+                Skript.error("Cannot recognise the type '" + matcher.group(2) + "'");
+                return null;
+            }
 
-				if (args.isEmpty()) // Zero-argument function
-					break;
+            Parameter<?> parameter = newInstance(paramName, classInfo, single, defaultValue);
+            if (parameter == null) {
+                return null;
+            }
+            params.add(parameter);
+        }
+        return params;
+    }
 
-				// One or more arguments for this function
-				Matcher n = PARAM_PATTERN.matcher(arg);
-				if (!n.matches()) {
-					Skript.error("The " + StringUtils.fancyOrderNumber(params.size() + 1) + " argument's definition is invalid. It should look like 'name: type' or 'name: type = default value'.");
-					return null;
-				}
-				String paramName = "" + n.group(1);
-				// for comparing without affecting the original name, in case the config option for case insensitivity changes.
-				String lowerParamName = paramName.toLowerCase(Locale.ENGLISH);
-				for (Parameter<?> p : params) {
-					// only force lowercase if we don't care about case in variables
-					String otherName = caseInsensitive ? p.name.toLowerCase(Locale.ENGLISH) : p.name;
-					if (otherName.equals(caseInsensitive ? lowerParamName : paramName)) {
-						Skript.error("Each argument's name must be unique, but the name '" + paramName + "' occurs at least twice.");
-						return null;
-					}
-				}
-				ClassInfo<?> c;
-				c = Classes.getClassInfoFromUserInput("" + n.group(2));
-				NonNullPair<String, Boolean> pl = Utils.getEnglishPlural("" + n.group(2));
-				if (c == null)
-					c = Classes.getClassInfoFromUserInput(pl.getFirst());
-				if (c == null) {
-					Skript.error("Cannot recognise the type '" + n.group(2) + "'");
-					return null;
-				}
-				String rParamName = paramName.endsWith("*") ? paramName.substring(0, paramName.length() - 3) +
-					(!pl.getSecond() ? "::1" : "") : paramName;
-				Parameter<?> p = Parameter.newInstance(rParamName, c, !pl.getSecond(), n.group(3));
-				if (p == null)
-					return null;
-				params.add(p);
+    public Object @Nullable [] evaluate(@Nullable Expression<?> expression, SkriptEvent event) {
+        if (expression == null) {
+            return null;
+        }
+        if (expression instanceof Literal<?> literal) {
+            return literal.getArray(event);
+        }
+        return expression.getArray(event);
+    }
 
-				j = i + 1;
-			}
-			if (i == args.length())
-				break;
-		}
-		return params;
-	}
+    private static @Nullable ClassInfo<?> guessClassInfo(String typeName) {
+        String normalized = typeName.toLowerCase(Locale.ENGLISH);
+        return switch (normalized) {
+            case "text", "string" -> Classes.getSuperClassInfo(String.class);
+            case "number", "integer", "int" -> Classes.getSuperClassInfo(Integer.class);
+            case "decimal", "double" -> Classes.getSuperClassInfo(Double.class);
+            case "boolean", "bool" -> Classes.getSuperClassInfo(Boolean.class);
+            case "object", "value", "any" -> Classes.getSuperClassInfo(Object.class);
+            default -> null;
+        };
+    }
 
-	/**
-	 * @deprecated Use {@link #name()} instead.
-	 */
-	@Deprecated(forRemoval = true, since = "2.13")
-	public String getName() {
-		return name;
-	}
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof Parameter<?> parameter)) {
+            return false;
+        }
+        return single == parameter.single
+                && keyed == parameter.keyed
+                && name.equals(parameter.name)
+                && type.getC().equals(parameter.type.getC());
+    }
 
-	/**
-	 * Get the Expression that will be used to provide the default value of this parameter when the function is called.
-	 * @return Expression that will provide default value of this parameter
-	 */
-	public @Nullable Expression<? extends T> getDefaultExpression() {
-		return def;
-	}
-
-	/**
-	 * Get whether this parameter takes one or many values.
-	 * @return True if this parameter takes one value, false otherwise
-	 */
-	public boolean isSingleValue() {
-		return single;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof Parameter<?> parameter)) {
-			return false;
-		}
-
-		return modifiers.equals(parameter.modifiers)
-			&& single == parameter.single
-			&& name.equals(parameter.name)
-			&& type.equals(parameter.type)
-			&& Objects.equals(def, parameter.def);
-	}
-
-	@Override
-	public String toString() {
-		return toString(Skript.debug());
-	}
-
-	// toString output format:
-	// name: type between min and max = default
-	//
-	// Example:
-	// ns: numbers between 0 and 100 = 3
-	public String toString(boolean debug) {
-		String result = name + ": " + Utils.toEnglishPlural(type.getCodeName(), !single);
-		if (this.hasModifier(Modifier.RANGED)) {
-			RangedModifier<?> range = this.getModifier(RangedModifier.class);
-			result += " between " + Classes.toString(range.getMin()) + " and " + Classes.toString(range.getMax());
-		}
-		result += (def != null ? " = " + def.toString(null, debug) : "");
-		return result;
-	}
-
-	@Override
-	public @NotNull String name() {
-		return name;
-	}
-
-	@Override
-	public @NotNull Class<T> type() {
-		//noinspection unchecked
-		return (Class<T>) Signature.getReturns(single, type.getC());
-	}
-
-	@Override
-	public @Unmodifiable @NotNull Set<Modifier> modifiers() {
-		return Collections.unmodifiableSet(modifiers);
-	}
-
-	@Override
-	public boolean isSingle() {
-		return single;
-	}
-
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + type.getC().hashCode();
+        result = 31 * result + (single ? 1 : 0);
+        result = 31 * result + (keyed ? 1 : 0);
+        return result;
+    }
 }

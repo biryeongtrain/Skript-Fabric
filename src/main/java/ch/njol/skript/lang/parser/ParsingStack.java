@@ -1,199 +1,103 @@
 package ch.njol.skript.lang.parser;
 
-import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SyntaxElement;
-import ch.njol.util.Kleenean;
-import org.skriptlang.skript.registration.SyntaxInfo;
-
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import org.skriptlang.skript.registration.SyntaxInfo;
 
 /**
- * A stack that keeps track of what Skript is currently parsing.
- * <p>
- * When accessing the stack from within
- * {@link SyntaxElement#init(Expression[], int, Kleenean, SkriptParser.ParseResult)},
- * the stack element corresponding to that {@link SyntaxElement} is <b>not</b>
- * on the parsing stack.
+ * A stack tracking currently parsed syntax elements.
  */
 public class ParsingStack implements Iterable<ParsingStack.Element> {
 
-	private final LinkedList<Element> stack;
+    private final LinkedList<Element> stack;
 
-	/**
-	 * Creates an empty parsing stack.
-	 */
-	public ParsingStack() {
-		this.stack = new LinkedList<>();
-	}
+    public ParsingStack() {
+        this.stack = new LinkedList<>();
+    }
 
-	/**
-	 * Creates a parsing stack containing all elements
-	 * of another given parsing stack.
-	 */
-	public ParsingStack(ParsingStack parsingStack) {
-		this.stack = new LinkedList<>(parsingStack.stack);
-	}
+    public ParsingStack(ParsingStack parsingStack) {
+        this.stack = new LinkedList<>(parsingStack.stack);
+    }
 
-	/**
-	 * Removes and returns the top element of this stack.
-	 *
-	 * @throws IllegalStateException if the stack is empty.
-	 */
-	public Element pop() throws IllegalStateException {
-		if (stack.isEmpty()) {
-			throw new IllegalStateException("Stack is empty");
-		}
+    public Element pop() throws IllegalStateException {
+        if (stack.isEmpty()) {
+            throw new IllegalStateException("Stack is empty");
+        }
+        return stack.pop();
+    }
 
-		return stack.pop();
-	}
+    public Element peek(int index) throws IndexOutOfBoundsException {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException("Index: " + index);
+        }
+        return stack.get(index);
+    }
 
-	/**
-	 * Returns the element at the given index in the stack,
-	 * starting with the top element at index 0.
-	 *
-	 * @param index the index in stack.
-	 * @throws IndexOutOfBoundsException if the index is not appointed
-	 *                                   to an element in the stack.
-	 */
-	public Element peek(int index) throws IndexOutOfBoundsException {
-		if (index < 0 || index >= size()) {
-			throw new IndexOutOfBoundsException("Index: " + index);
-		}
+    public Element peek() throws IllegalStateException {
+        if (stack.isEmpty()) {
+            throw new IllegalStateException("Stack is empty");
+        }
+        return stack.peek();
+    }
 
-		return stack.get(index);
-	}
+    public void push(Element element) {
+        stack.push(element);
+    }
 
-	/**
-	 * Returns the top element of the stack.
-	 * Equivalent to {@code peek(0)}.
-	 *
-	 * @throws IllegalStateException if the stack is empty.
-	 */
-	public Element peek() throws IllegalStateException {
-		if (stack.isEmpty()) {
-			throw new IllegalStateException("Stack is empty");
-		}
+    public boolean isEmpty() {
+        return stack.isEmpty();
+    }
 
-		return stack.peek();
-	}
+    public int size() {
+        return stack.size();
+    }
 
-	/**
-	 * Adds the given element to the top of the stack.
-	 */
-	public void push(Element element) {
-		stack.push(element);
-	}
+    public void print(PrintStream printStream) {
+        synchronized (printStream) {
+            printStream.println("Stack:");
+            if (stack.isEmpty()) {
+                printStream.println("<empty>");
+                return;
+            }
+            for (Element element : stack) {
+                printStream.println("\t" + element.getSyntaxElementClass().getName() + " @ " + element.patternIndex());
+            }
+        }
+    }
 
-	/**
-	 * Check if this stack is empty.
-	 */
-	public boolean isEmpty() {
-		return stack.isEmpty();
-	}
+    @Override
+    public Iterator<Element> iterator() {
+        return Collections.unmodifiableList(stack).iterator();
+    }
 
-	/**
-	 * Gets the size of the stack.
-	 */
-	public int size() {
-		return stack.size();
-	}
+    public record Element(SyntaxInfo<?> syntaxElementInfo, int patternIndex) {
 
-	/**
-	 * Prints this stack to the given {@link PrintStream}.
-	 *
-	 * @param printStream a {@link PrintStream} to print the stack to.
-	 */
-	public void print(PrintStream printStream) {
-		// Synchronized to assure it'll all be printed at once,
-		//  PrintStream uses synchronization on itself internally, justifying warning suppression
+        public Element {
+            if (syntaxElementInfo == null) {
+                throw new IllegalArgumentException("syntaxElementInfo must not be null");
+            }
+            if (patternIndex < 0 || patternIndex >= syntaxElementInfo.patterns().length) {
+                throw new IllegalArgumentException("Invalid pattern index " + patternIndex);
+            }
+        }
 
-		//noinspection SynchronizationOnLocalVariableOrMethodParameter
-		synchronized (printStream) {
-			printStream.println("Stack:");
+        public SyntaxInfo<?> syntaxInfo() {
+            return syntaxElementInfo;
+        }
 
-			if (stack.isEmpty()) {
-				printStream.println("<empty>");
-			} else {
-				for (Element element : stack) {
-					printStream.println("\t" + element.getSyntaxElementClass().getName() +
-						" @ " + element.patternIndex());
-				}
-			}
-		}
-	}
+        public Class<? extends SyntaxElement> getSyntaxElementClass() {
+            return syntaxElementInfo.type();
+        }
 
-	/**
-	 * Iterate over the stack, starting at the top.
-	 */
-	@Override
-	public Iterator<Element> iterator() {
-		return Collections.unmodifiableList(stack).iterator();
-	}
+        public String getPattern() {
+            return getPatterns()[patternIndex];
+        }
 
-	/**
-	 * A stack element, containing details about the syntax element it is about.
-	 */
-	public record Element(SyntaxInfo<?> syntaxElementInfo, int patternIndex) {
-
-		public Element {
-			assert patternIndex >= 0 && patternIndex < syntaxElementInfo.patterns().size();
-		}
-
-		/**
-		 * Gets the raw {@link SyntaxInfo} of this stack element.
-		 * <p>
-		 * For ease of use, consider using other getters of this class.
-		 *
-		 * @see #getSyntaxElementClass()
-		 * @see #getPattern()
-		 */
-		@Override
-		public SyntaxInfo<?> syntaxElementInfo() {
-			return syntaxInfo();
-		}
-
-		/**
-		 * @return The raw {@link SyntaxInfo} of this stack element.
-		 */
-		public SyntaxInfo<?> syntaxInfo() {
-			return syntaxElementInfo;
-		}
-
-		/**
-		 * Gets the index to the registered patterns for the syntax element
-		 * of this stack element.
-		 */
-		@Override
-		public int patternIndex() {
-			return patternIndex;
-		}
-
-		/**
-		 * Gets the syntax element class of this stack element.
-		 */
-		public Class<? extends SyntaxElement> getSyntaxElementClass() {
-			return syntaxElementInfo.type();
-		}
-
-		/**
-		 * Gets the pattern that was matched for this stack element.
-		 */
-		public String getPattern() {
-			return getPatterns()[patternIndex];
-		}
-
-		/**
-		 * Gets all patterns registered with the syntax element
-		 * of this stack element.
-		 */
-		public String[] getPatterns() {
-			return syntaxElementInfo.patterns().toArray(new String[0]);
-		}
-
-	}
-
+        public String[] getPatterns() {
+            return syntaxElementInfo.patterns();
+        }
+    }
 }

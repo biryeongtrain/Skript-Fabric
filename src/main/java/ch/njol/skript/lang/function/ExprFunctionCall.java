@@ -6,147 +6,161 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
-import ch.njol.util.coll.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.bukkit.event.Event;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.common.function.FunctionReference;
-import org.skriptlang.skript.lang.converter.Converters;
-
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
+/**
+ * Expression wrapper for function calls.
+ */
 public class ExprFunctionCall<T> extends SimpleExpression<T> implements KeyProviderExpression<T> {
 
-	private final FunctionReference<?> reference;
-	private final Class<? extends T>[] returnTypes;
-	private final Class<T> returnType;
-	private final Map<Event, String[]> cache = Collections.synchronizedMap(new WeakHashMap<>());
+    private final FunctionReference<?> reference;
+    private final Class<? extends T>[] returnTypes;
+    private final Class<T> returnType;
+    private final Map<SkriptEvent, String[]> cache = Collections.synchronizedMap(new WeakHashMap<>());
 
-	public ExprFunctionCall(FunctionReference<T> function) {
-		this(function, CollectionUtils.array(function.signature().returnType()));
-	}
+    public ExprFunctionCall(FunctionReference<T> function) {
+        this(function, array(function.signature() != null && function.signature().returnType() != null
+                ? (Class<? extends T>) Utils.getComponentType(function.signature().returnType())
+                : (Class<? extends T>) Object.class));
+    }
 
-	@SuppressWarnings("unchecked")
-	public ExprFunctionCall(FunctionReference<?> reference, Class<? extends T>[] expectedReturnTypes) {
-		this.reference = reference;
+    @SafeVarargs
+    private static <T> Class<? extends T>[] array(Class<? extends T>... values) {
+        return values;
+    }
 
-		Class<?> functionReturnType = reference.signature().returnType();
-		Class<?> returnType = Utils.getComponentType(functionReturnType);
-		if (CollectionUtils.containsSuperclass(expectedReturnTypes, returnType)) {
-			// Function returns expected type already
-			this.returnTypes = new Class[] {returnType};
-			this.returnType = (Class<T>) returnType;
-		} else {
-			// Return value needs to be converted
-			this.returnTypes = expectedReturnTypes;
-			this.returnType = (Class<T>) Utils.getSuperType(expectedReturnTypes);
-		}
-	}
+    @SuppressWarnings("unchecked")
+    public ExprFunctionCall(FunctionReference<?> reference, Class<? extends T>[] expectedReturnTypes) {
+        this.reference = reference;
+        Class<?> functionReturnType = reference.signature() != null ? reference.signature().returnType() : null;
+        Class<?> component = functionReturnType != null ? Utils.getComponentType(functionReturnType) : Object.class;
+        if (containsSuper(expectedReturnTypes, component)) {
+            this.returnTypes = new Class[]{(Class<? extends T>) component};
+            this.returnType = (Class<T>) component;
+        } else {
+            this.returnTypes = expectedReturnTypes;
+            this.returnType = (Class<T>) Utils.getSuperType(expectedReturnTypes);
+        }
+    }
 
-	@Override
-	protected T @Nullable [] get(Event event) {
-		Object[] values;
-		Object execute = reference.execute(event);
-		if (execute == null) {
-			values = null;
-		} else if (!execute.getClass().isArray()) {
-			values = new Object[] {execute};
-		} else {
-			values = (Object[]) execute;
-		}
+    @Override
+    protected T @Nullable [] get(SkriptEvent event) {
+        Object execute = reference.execute(event);
+        Object[] values;
+        if (execute == null) {
+            values = new Object[0];
+        } else if (!execute.getClass().isArray()) {
+            values = new Object[]{execute};
+        } else {
+            values = (Object[]) execute;
+        }
 
-		String[] keys = reference.function().returnedKeys();
-		reference.function().resetReturnValue();
+        String[] keys = reference.function() != null ? reference.function().returnedKeys() : null;
+        if (reference.function() != null) {
+            reference.function().resetReturnValue();
+        }
 
-		//noinspection unchecked
-		T[] convertedValues = (T[]) Array.newInstance(returnType, values != null ? values.length : 0);
-		if (values == null || values.length == 0) {
-			cache.put(event, new String[0]);
-			return convertedValues;
-		}
+        @SuppressWarnings("unchecked")
+        T[] converted = (T[]) Array.newInstance(returnType, values.length);
+        if (values.length == 0) {
+            cache.put(event, new String[0]);
+            return converted;
+        }
 
-		Converters.convert(values, convertedValues, returnTypes);
-		if (keys != null) {
-			for (int i = 0; i < convertedValues.length; i++) {
-				if (convertedValues[i] == null)
-					keys[i] = null;
-			}
-			convertedValues = ArrayUtils.removeAllOccurrences(convertedValues, null);
-			cache.put(event, ArrayUtils.removeAllOccurrences(keys, null));
-		} else {
-			convertedValues = ArrayUtils.removeAllOccurrences(convertedValues, null);
-			cache.put(event, generateNumericalKeys(convertedValues.length));
-		}
-		return convertedValues;
-	}
+        Converters.convert(values, converted, returnTypes);
+        List<T> nonNullValues = new ArrayList<>(converted.length);
+        List<String> resolvedKeys = new ArrayList<>(converted.length);
+        for (int i = 0; i < converted.length; i++) {
+            T value = converted[i];
+            if (value == null) {
+                continue;
+            }
+            nonNullValues.add(value);
+            if (keys != null && i < keys.length) {
+                resolvedKeys.add(keys[i]);
+            } else {
+                resolvedKeys.add(String.valueOf(i));
+            }
+        }
+        cache.put(event, resolvedKeys.toArray(String[]::new));
+        @SuppressWarnings("unchecked")
+        T[] result = nonNullValues.toArray((T[]) Array.newInstance(returnType, nonNullValues.size()));
+        return result;
+    }
 
-	@Override
-	public @NotNull String @NotNull [] getArrayKeys(Event event) throws IllegalStateException {
-		if (!cache.containsKey(event))
-			throw new IllegalStateException();
-		return cache.remove(event);
-	}
+    @Override
+    public @NotNull String @NotNull [] getArrayKeys(SkriptEvent event) throws IllegalStateException {
+        if (!cache.containsKey(event)) {
+            throw new IllegalStateException();
+        }
+        return cache.remove(event);
+    }
 
-	@Override
-	public boolean areKeysRecommended() {
-		return false;
-	}
+    @Override
+    public boolean areKeysRecommended() {
+        return false;
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <R> @Nullable Expression<? extends R> getConvertedExpression(Class<R>... to) {
-		if (CollectionUtils.containsSuperclass(to, getReturnType()))
-			return (Expression<? extends R>) this;
+    @Override
+    @SuppressWarnings("unchecked")
+    public <R> @Nullable Expression<? extends R> getConvertedExpression(Class<R>... to) {
+        if (containsSuper(to, getReturnType())) {
+            return (Expression<? extends R>) this;
+        }
+        Class<?> returns = reference.signature() != null ? reference.signature().returnType() : Object.class;
+        Class<?> converterType = Utils.getComponentType(returns);
+        if (Converters.converterExists(converterType, to)) {
+            return new ExprFunctionCall<>(reference, to);
+        }
+        return null;
+    }
 
-		Class<?> returns = reference.signature().returnType();
-		Class<?> converterType = Utils.getComponentType(returns);
+    @Override
+    public boolean isSingle() {
+        return reference.isSingle();
+    }
 
-		if (Converters.converterExists(converterType, to))
-			return new ExprFunctionCall<>(reference, to);
-		return null;
-	}
+    @Override
+    public Class<? extends T> getReturnType() {
+        return returnType;
+    }
 
-	@Override
-	public boolean isSingle() {
-		return reference.isSingle();
-	}
+    @Override
+    public Class<? extends T>[] possibleReturnTypes() {
+        return Arrays.copyOf(returnTypes, returnTypes.length);
+    }
 
-	@Override
-	public Class<? extends T> getReturnType() {
-		return returnType;
-	}
+    @Override
+    public boolean isLoopOf(String input) {
+        return KeyProviderExpression.super.isLoopOf(input);
+    }
 
-	@Override
-	public Class<? extends T>[] possibleReturnTypes() {
-		return Arrays.copyOf(returnTypes, returnTypes.length);
-	}
+    @Override
+    public String toString(@Nullable SkriptEvent event, boolean debug) {
+        return reference.toString(event, debug);
+    }
 
-	@Override
-	public boolean isLoopOf(String input) {
-		return KeyProviderExpression.super.isLoopOf(input);
-	}
+    @Override
+    public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        return false;
+    }
 
-	@Override
-	public String toString(@Nullable Event event, boolean debug) {
-		return reference.toString(event, debug);
-	}
-
-	@Override
-	public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-		assert false;
-		return false;
-	}
-
-	private static String[] generateNumericalKeys(int length) {
-		String[] keys = new String[length];
-		for (int i = 0; i < length; i++)
-			keys[i] = String.valueOf(i);
-		return keys;
-	}
-
+    private static boolean containsSuper(Class<?>[] candidates, Class<?> type) {
+        for (Class<?> candidate : candidates) {
+            if (candidate.isAssignableFrom(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

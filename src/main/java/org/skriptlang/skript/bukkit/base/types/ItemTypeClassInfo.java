@@ -1,161 +1,150 @@
 package org.skriptlang.skript.bukkit.base.types;
 
-import ch.njol.skript.Skript;
-import ch.njol.skript.aliases.Aliases;
-import ch.njol.skript.aliases.ItemData;
-import ch.njol.skript.aliases.ItemType;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.classes.ClassInfo;
-import ch.njol.skript.classes.Parser;
-import ch.njol.skript.classes.YggdrasilSerializer;
 import ch.njol.skript.lang.ParseContext;
-import ch.njol.skript.util.EnchantmentType;
-import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import ch.njol.skript.registrations.Classes;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
-import java.util.Arrays;
+public final class ItemTypeClassInfo {
 
-@ApiStatus.Internal
-public class ItemTypeClassInfo extends ClassInfo<ItemType> {
+    private static final Pattern AMOUNT_PREFIX = Pattern.compile("^(\\d+)\\s+(.+)$");
 
-	public ItemTypeClassInfo() {
-		super(ItemType.class, "itemtype");
-		this.user("item ?types?", "materials?")
-			.name("Item Type")
-			.description("An item type is an alias that can result in different items when added to an inventory, " +
-					"and unlike <a href='#itemstack'>items</a> they are well suited for checking whether an inventory contains a certain item or whether a certain item is of a certain type.",
-				"An item type can also have one or more <a href='#enchantmenttype'>enchantments</a> with or without a specific level defined, " +
-					"and can optionally start with 'all' or 'every' to make this item type represent <i>all</i> types that the alias represents, including data ranges.")
-			.usage("[<number> [of]] [all/every] <alias> [of <enchantment> [<level>] [,/and <more enchantments...>]]")
-			.examples("give 4 torches to the player",
-				"add oak slab to the inventory of the block",
-				"player's tool is a diamond sword of sharpness",
-				"block is dirt or farmland")
-			.since("1.0")
-			.before("itemstack", "entitydata", "entitytype")
-			.after("number", "integer", "long", "time")
-			.supplier(() -> Arrays.stream(Material.values())
-				.map(ItemType::new)
-				.iterator())
-			.parser(new ItemTypeParser())
-			.cloner(ItemType::clone)
-			.serializer(new YggdrasilSerializer<>())
-			.property(Property.NAME,
-				"An item type's custom name, if set. Can be set or reset.",
-				Skript.instance(),
-				new ItemTypeNameHandler())
-			.property(Property.DISPLAY_NAME,
-				"An item type's custom name, if set. Can be set or reset.",
-				Skript.instance(),
-				new ItemTypeNameHandler())
-			.property(Property.AMOUNT,
-				"The amount of items in the stack this type represents. E.g. 5 for '5 stone swords'. Can be set.",
-				Skript.instance(),
-				new ItemTypeAmountHandler());
-	}
+    private ItemTypeClassInfo() {
+    }
 
-	private static class ItemTypeParser extends Parser<ItemType> {
-		//<editor-fold desc="item type parser" defaultstate="collapsed">
-		@Override
-		public @Nullable ItemType parse(String s, ParseContext context) {
-			return Aliases.parseItemType(s);
-		}
+    public static void register() {
+        ClassInfo<FabricItemType> info = new ClassInfo<>(FabricItemType.class);
+        info.setParser(new ItemTypeParser());
+        info.setPropertyInfo(Property.NAME, new ItemTypeNameHandler());
+        info.setPropertyInfo(Property.DISPLAY_NAME, new ItemTypeNameHandler());
+        info.setPropertyInfo(Property.AMOUNT, new ItemTypeAmountHandler());
+        Classes.registerClassInfo(info);
+    }
 
-		@Override
-		public String toString(ItemType t, int flags) {
-			return t.toString(flags);
-		}
+    private static class ItemTypeParser implements ClassInfo.Parser<FabricItemType> {
 
-		@Override
-		public String getDebugMessage(ItemType t) {
-			return t.getDebugMessage();
-		}
+        @Override
+        public boolean canParse(ParseContext context) {
+            return context == ParseContext.DEFAULT || context == ParseContext.CONFIG;
+        }
 
-		@Override
-		public String toVariableNameString(ItemType itemType) {
-			final StringBuilder result = new StringBuilder("itemtype:");
-			result.append(itemType.getInternalAmount());
-			result.append(",").append(itemType.isAll());
-			// TODO this is missing information
-			for (ItemData itemData : itemType.getTypes()) {
-				result.append(",").append(itemData.getType());
-			}
-			EnchantmentType[] enchantmentTypes = itemType.getEnchantmentTypes();
-			if (enchantmentTypes != null) {
-				result.append("|");
-				for (EnchantmentType enchantmentType : enchantmentTypes) {
-					Enchantment enchantment = enchantmentType.getType();
-					if (enchantment == null)
-						continue;
-					result.append("#").append(enchantment.getKey());
-					result.append(":").append(enchantmentType.getLevel());
-				}
-			}
-			return result.toString();
-		}
-		//</editor-fold>
-	}
+        @Override
+        public @Nullable FabricItemType parse(String input, ParseContext context) {
+            if (input == null || input.isBlank()) {
+                return null;
+            }
 
-	private static class ItemTypeNameHandler implements ExpressionPropertyHandler<ItemType, String> {
-		//<editor-fold desc="item type name handler" defaultstate="collapsed">
-		@Override
-		public String convert(ItemType itemType) {
-			return itemType.name();
-		}
+            String normalized = input.trim();
+            int amount = 1;
+            Matcher matcher = AMOUNT_PREFIX.matcher(normalized);
+            if (matcher.matches()) {
+                amount = Integer.parseInt(matcher.group(1));
+                normalized = matcher.group(2).trim();
+            }
 
-		@Override
-		public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-			return switch (mode) {
-				case SET, RESET, DELETE -> new Class[] {String.class};
-				default -> null;
-			};
-		}
+            normalized = normalizeItemId(normalized);
 
-		@Override
-		public void change(ItemType itemType, Object @Nullable [] delta, ChangeMode mode) {
-			String name = delta != null ? (String) delta[0] : null;
-			itemType.setName(name);
-		}
+            ResourceLocation itemId;
+            try {
+                itemId = normalized.indexOf(':') >= 0
+                        ? ResourceLocation.parse(normalized)
+                        : ResourceLocation.withDefaultNamespace(normalized);
+            } catch (RuntimeException ignored) {
+                return null;
+            }
+            Item item = BuiltInRegistries.ITEM.getValue(itemId);
+            if (item == null || item == Items.AIR && !"minecraft:air".equals(itemId.toString())) {
+                return null;
+            }
+            return new FabricItemType(item, amount, null);
+        }
 
-		@Override
-		public @NotNull Class<String> returnType() {
-			return String.class;
-		}
-		//</editor-fold>
-	}
+        private String normalizeItemId(String input) {
+            String normalized = input;
+            while (normalized.length() >= 2) {
+                if ((normalized.startsWith("\"") && normalized.endsWith("\""))
+                        || (normalized.startsWith("'") && normalized.endsWith("'"))) {
+                    normalized = normalized.substring(1, normalized.length() - 1).trim();
+                    continue;
+                }
+                if ((normalized.startsWith("\\\"") && normalized.endsWith("\\\""))
+                        || (normalized.startsWith("\\'") && normalized.endsWith("\\'"))) {
+                    normalized = normalized.substring(2, normalized.length() - 2).trim();
+                    continue;
+                }
+                break;
+            }
+            return normalized
+                    .replace("\\\"", "")
+                    .replace("\\'", "")
+                    .replaceAll("\\s+", "");
+        }
+    }
 
-	private static class ItemTypeAmountHandler implements ExpressionPropertyHandler<ItemType, Number> {
-		//<editor-fold desc="amount property for item types" defaultstate="collapsed">
-		@Override
-		public Number convert(ItemType itemType) {
-			return itemType.getAmount();
-		}
+    public static class ItemTypeNameHandler implements ExpressionPropertyHandler<FabricItemType, String> {
 
-		@Override
-		public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-			if (mode == ChangeMode.SET)
-				return new Class[] {Integer.class};
-			return null;
-		}
+        @Override
+        public @Nullable String convert(FabricItemType propertyHolder) {
+            return propertyHolder.name();
+        }
 
-		@Override
-		public void change(ItemType itemType, Object @Nullable [] delta, ChangeMode mode) {
-			if (mode == ChangeMode.SET) {
-				assert delta != null;
-				itemType.setAmount((Integer) delta[0]);
-			}
-		}
+        @Override
+        public Class<?>[] acceptChange(ChangeMode mode) {
+            return switch (mode) {
+                case SET, RESET, DELETE -> new Class[]{String.class};
+                default -> null;
+            };
+        }
 
-		@Override
-		public @NotNull Class<Number> returnType() {
-			return Number.class;
-		}
-		//</editor-fold>
-	}
+        @Override
+        public void change(FabricItemType propertyHolder, Object[] delta, ChangeMode mode) {
+            String value = delta != null && delta.length > 0 ? String.valueOf(delta[0]) : null;
+            if (mode == ChangeMode.RESET || mode == ChangeMode.DELETE) {
+                propertyHolder.name(null);
+                return;
+            }
+            propertyHolder.name(value);
+        }
 
+        @Override
+        public Class<String> returnType() {
+            return String.class;
+        }
+    }
+
+    public static class ItemTypeAmountHandler implements ExpressionPropertyHandler<FabricItemType, Integer> {
+
+        @Override
+        public @Nullable Integer convert(FabricItemType propertyHolder) {
+            return propertyHolder.amount();
+        }
+
+        @Override
+        public Class<?>[] acceptChange(ChangeMode mode) {
+            return mode == ChangeMode.SET ? new Class[]{Integer.class, Number.class} : null;
+        }
+
+        @Override
+        public void change(FabricItemType propertyHolder, Object[] delta, ChangeMode mode) {
+            if (mode != ChangeMode.SET || delta == null || delta.length == 0 || !(delta[0] instanceof Number number)) {
+                throw new UnsupportedOperationException("Only integer set changes are supported for item type amount.");
+            }
+            propertyHolder.amount(number.intValue());
+        }
+
+        @Override
+        public Class<Integer> returnType() {
+            return Integer.class;
+        }
+    }
 }

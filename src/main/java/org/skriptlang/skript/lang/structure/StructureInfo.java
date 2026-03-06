@@ -8,7 +8,7 @@ import org.skriptlang.skript.registration.SyntaxInfo;
 
 /**
  * Special {@link SyntaxElementInfo} for {@link Structure}s that may contain information such as the {@link EntryValidator}.
- * @deprecated Use {@link Structure} ({@link Structure#builder(Class)}) instead.
+ * @deprecated Use {@link SyntaxInfo.Structure} ({@link SyntaxInfo.Structure#builder(Class)}) instead.
  */
 @Deprecated(since = "2.14", forRemoval = true)
 public class StructureInfo<E extends Structure> extends SyntaxElementInfo<E> {
@@ -21,22 +21,22 @@ public class StructureInfo<E extends Structure> extends SyntaxElementInfo<E> {
 	 */
 	public final boolean simple;
 
-	public final Structure.NodeType nodeType;
+	public final SyntaxInfo.Structure.NodeType nodeType;
 
 	public StructureInfo(String[] patterns, Class<E> c, String originClassPath) throws IllegalArgumentException {
 		this(patterns, c, originClassPath, false);
 	}
 
 	public StructureInfo(String[] patterns, Class<E> elementClass, String originClassPath, boolean simple) throws IllegalArgumentException {
-		this(patterns, elementClass, originClassPath, null, simple ? Structure.NodeType.SIMPLE : Structure.NodeType.SECTION);
+		this(patterns, elementClass, originClassPath, null, simple ? SyntaxInfo.Structure.NodeType.SIMPLE : SyntaxInfo.Structure.NodeType.SECTION);
 	}
 
 	public StructureInfo(String[] patterns, Class<E> elementClass, String originClassPath, @Nullable EntryValidator entryValidator) throws IllegalArgumentException {
-		this(patterns, elementClass, originClassPath, entryValidator, Structure.NodeType.SECTION);
+		this(patterns, elementClass, originClassPath, entryValidator, SyntaxInfo.Structure.NodeType.SECTION);
 	}
 
 	public StructureInfo(String[] patterns, Class<E> elementClass, String originClassPath,
-						 @Nullable EntryValidator entryValidator, Structure.NodeType nodeType) throws IllegalArgumentException {
+						 @Nullable EntryValidator entryValidator, SyntaxInfo.Structure.NodeType nodeType) throws IllegalArgumentException {
 		super(patterns, elementClass, originClassPath);
 		this.entryValidator = entryValidator;
 		this.nodeType = nodeType;
@@ -44,7 +44,7 @@ public class StructureInfo<E extends Structure> extends SyntaxElementInfo<E> {
 	}
 
 	@ApiStatus.Internal
-	public StructureInfo(Structure<E> source) {
+	public StructureInfo(SyntaxInfo.Structure<E> source) {
 		super(source);
 		this.entryValidator = source.entryValidator();
 		this.nodeType = source.nodeType();
@@ -55,7 +55,7 @@ public class StructureInfo<E extends Structure> extends SyntaxElementInfo<E> {
 	protected StructureInfo(SyntaxInfo<E> source) {
 		super(source);
 		this.entryValidator = null;
-		this.nodeType = Structure.NodeType.SIMPLE;
+		this.nodeType = SyntaxInfo.Structure.NodeType.SIMPLE;
 		this.simple = nodeType.canBeSimple();
 	}
 

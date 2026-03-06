@@ -1,170 +1,218 @@
 package org.skriptlang.skript.registration;
 
+import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SyntaxElement;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Unmodifiable;
-import org.skriptlang.skript.docs.Origin;
-import org.skriptlang.skript.registration.SyntaxInfoImpl.BuilderImpl;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.entry.EntryValidator;
 import org.skriptlang.skript.util.Priority;
 
-import java.util.Collection;
-import java.util.SequencedCollection;
-import java.util.function.Supplier;
+public class SyntaxInfo<E extends SyntaxElement> {
 
-/**
- * A syntax info contains the details of a syntax, including its origin and patterns.
- * @param <E> The class providing the implementation of the syntax this info represents.
- */
-public non-sealed interface SyntaxInfo<E extends SyntaxElement> extends DefaultSyntaxInfos {
+    public static final Priority SIMPLE = Priority.base();
+    public static final Priority COMBINED = Priority.after(SIMPLE);
+    public static final Priority PATTERN_MATCHES_EVERYTHING = Priority.after(COMBINED);
 
-	/**
-	 * A priority for infos with patterns that only match simple text (they do not have any {@link Expression}s).
-	 * Example: "[the] console"
-	 */
-	Priority SIMPLE = Priority.base();
+    private final Class<E> type;
+    private final String[] patterns;
+    private final String originClassPath;
+    private final Priority priority;
 
-	/**
-	 * A priority for infos with patterns that contain at least one {@link Expression}.
-	 * This is typically the default priority of an info.
-	 * Example: "[the] first %number% characters of %strings%"
-	 */
-	Priority COMBINED = Priority.after(SIMPLE);
+    public SyntaxInfo(Class<E> type, String[] patterns, String originClassPath) {
+        this(type, patterns, originClassPath, COMBINED);
+    }
 
-	/**
-	 * A priority for infos with patterns that can match almost anything.
-	 * This is likely the case when using regex or multiple expressions next to each other in a pattern.
-	 * Example: "[the] [loop-]<.+>"
-	 */
-	Priority PATTERN_MATCHES_EVERYTHING = Priority.after(COMBINED);
+    public SyntaxInfo(Class<E> type, String[] patterns, String originClassPath, Priority priority) {
+        this.type = type;
+        this.patterns = patterns;
+        this.originClassPath = originClassPath;
+        this.priority = priority;
+    }
 
-	/**
-	 * Constructs a builder for a syntax info.
-	 * @param type The syntax class the info will represent.
-	 * @return A builder for creating a syntax info representing <code>type</code>.
-	 */
-	@Contract("_ -> new")
-	static <E extends SyntaxElement> Builder<? extends Builder<?, E>, E> builder(Class<E> type) {
-		return new BuilderImpl<>(type);
-	}
+    public Class<E> type() {
+        return type;
+    }
 
-	/**
-	 * @return A builder representing this SyntaxInfo.
-	 */
-	@Contract("-> new")
-	Builder<? extends Builder<?, E>, E> toBuilder();
+    public String[] patterns() {
+        return patterns;
+    }
 
-	/**
-	 * @return The origin of this syntax.
-	 */
-	Origin origin();
+    public String originClassPath() {
+        return originClassPath;
+    }
 
-	/**
-	 * @return The class providing the implementation of this syntax.
-	 */
-	Class<E> type();
+    public Priority priority() {
+        return priority;
+    }
 
-	/**
-	 * @return A new instance of the class providing the implementation of this syntax.
-	 */
-	@Contract("-> new")
-	E instance();
+    public static class Structure<E extends org.skriptlang.skript.lang.structure.Structure> extends SyntaxInfo<E> {
 
-	/**
-	 * @return The patterns of this syntax.
-	 */
-	@Unmodifiable SequencedCollection<String> patterns();
+        public enum NodeType {
+            SIMPLE(true, false),
+            SECTION(false, true),
+            BOTH(true, true);
 
-	/**
-	 * @return The priority of this syntax, which dictates its position for matching during parsing.
-	 */
-	Priority priority();
+            private final boolean simple;
+            private final boolean section;
 
-	/**
-	 * A builder is used for constructing a new syntax info.
-	 * @see #builder(Class)
-	 * @param <B> The type of builder being used.
-	 * @param <E> The class providing the implementation of the syntax info being built.
-	 */
-	interface Builder<B extends Builder<B, E>, E extends SyntaxElement> {
+            NodeType(boolean simple, boolean section) {
+                this.simple = simple;
+                this.section = section;
+            }
 
-		/**
-		 * Sets the origin the syntax info will use.
-		 * @param origin The origin to use.
-		 * @return This builder.
-		 * @see SyntaxInfo#origin()
-		 */
-		@Contract("_ -> this")
-		B origin(Origin origin);
+            public boolean canBeSimple() {
+                return simple;
+            }
 
-		/**
-		 * Sets the supplier the syntax info will use to create new instances of the implementing class.
-		 * @param supplier The supplier to use.
-		 * @return This builder.
-		 * @see SyntaxInfo#instance()
-		 */
-		@Contract("_ -> this")
-		B supplier(Supplier<E> supplier);
+            public boolean canBeSection() {
+                return section;
+            }
+        }
 
-		/**
-		 * Adds a new pattern to the syntax info.
-		 * @param pattern The pattern to add.
-		 * @return This builder.
-		 * @see SyntaxInfo#patterns()
-		 */
-		@Contract("_ -> this")
-		B addPattern(String pattern);
+        private final @Nullable EntryValidator entryValidator;
+        private final NodeType nodeType;
 
-		/**
-		 * Adds new patterns to the syntax info.
-		 * @param patterns The patterns to add.
-		 * @return This builder.
-		 * @see SyntaxInfo#patterns()
-		 */
-		@Contract("_ -> this")
-		B addPatterns(String... patterns);
+        public Structure(
+                Class<E> type,
+                String[] patterns,
+                String originClassPath,
+                @Nullable EntryValidator entryValidator,
+                NodeType nodeType
+        ) {
+            this(type, patterns, originClassPath, entryValidator, nodeType, COMBINED);
+        }
 
-		/**
-		 * Adds new patterns to the syntax info.
-		 * @param patterns The patterns to add.
-		 * @return This builder.
-		 * @see SyntaxInfo#patterns()
-		 */
-		@Contract("_ -> this")
-		B addPatterns(Collection<String> patterns);
+        public Structure(
+                Class<E> type,
+                String[] patterns,
+                String originClassPath,
+                @Nullable EntryValidator entryValidator,
+                NodeType nodeType,
+                Priority priority
+        ) {
+            super(type, patterns, originClassPath, priority);
+            this.entryValidator = entryValidator;
+            this.nodeType = nodeType;
+        }
 
-		/**
-		 * Removes all patterns from the syntax info.
-		 * @return This builder.
-		 * @see SyntaxInfo#patterns()
-		 */
-		@Contract("-> this")
-		B clearPatterns();
+        public @Nullable EntryValidator entryValidator() {
+            return entryValidator;
+        }
 
-		/**
-		 * Sets the priority the syntax info will use, which dictates its position for matching during parsing.
-		 * @param priority The priority to use.
-		 * @return This builder.
-		 */
-		@Contract("_ -> this")
-		B priority(Priority priority);
+        public NodeType nodeType() {
+            return nodeType;
+        }
 
-		/**
-		 * Builds a new syntax info from the set details.
-		 * @return A syntax info representing the class providing the syntax's implementation.
-		 */
-		@Contract("-> new")
-		SyntaxInfo<E> build();
+        public static <E extends org.skriptlang.skript.lang.structure.Structure> Builder<E> builder(Class<E> type) {
+            return new Builder<>(type);
+        }
 
-		/**
-		 * Applies the values of this builder onto <code>builder</code>.
-		 * When using this method, it is possible that <b>some values are not safe to copy over</b>.
-		 * For example, when applying a SyntaxInfo for some type to a SyntaxInfo of another type,
-		 * it is *not* safe to copy over {@link #supplier(Supplier)}, but that operation will occur anyway.
-		 * In cases like this, you are expected to correct the values.
-		 * @param builder The builder to apply values onto.
-		 */
-		void applyTo(Builder<?, ?> builder);
+        public static class Builder<E extends org.skriptlang.skript.lang.structure.Structure> {
 
-	}
+            private final Class<E> type;
+            private String[] patterns = new String[0];
+            private String originClassPath = "";
+            private @Nullable EntryValidator entryValidator;
+            private NodeType nodeType = NodeType.SECTION;
+            private Priority priority = COMBINED;
 
+            public Builder(Class<E> type) {
+                this.type = type;
+            }
+
+            public Builder<E> patterns(String... patterns) {
+                this.patterns = patterns;
+                return this;
+            }
+
+            public Builder<E> originClassPath(String path) {
+                this.originClassPath = path;
+                return this;
+            }
+
+            public Builder<E> entryValidator(@Nullable EntryValidator validator) {
+                this.entryValidator = validator;
+                return this;
+            }
+
+            public Builder<E> nodeType(NodeType nodeType) {
+                this.nodeType = nodeType;
+                return this;
+            }
+
+            public Builder<E> priority(Priority priority) {
+                this.priority = priority;
+                return this;
+            }
+
+            public Structure<E> build() {
+                return new Structure<>(type, patterns, originClassPath, entryValidator, nodeType, priority);
+            }
+        }
+    }
+
+    public static class Expression<E extends ch.njol.skript.lang.Expression<T>, T> extends SyntaxInfo<E> {
+
+        private final Class<T> returnType;
+
+        public Expression(
+                Class<E> type,
+                String[] patterns,
+                String originClassPath,
+                Class<T> returnType
+        ) {
+            this(type, patterns, originClassPath, returnType, COMBINED);
+        }
+
+        public Expression(
+                Class<E> type,
+                String[] patterns,
+                String originClassPath,
+                Class<T> returnType,
+                Priority priority
+        ) {
+            super(type, patterns, originClassPath, priority);
+            this.returnType = returnType;
+        }
+
+        public Class<T> returnType() {
+            return returnType;
+        }
+
+        public static <E extends ch.njol.skript.lang.Expression<T>, T> Builder<E, T> builder(Class<E> type, Class<T> returnType) {
+            return new Builder<>(type, returnType);
+        }
+
+        public static class Builder<E extends ch.njol.skript.lang.Expression<T>, T> {
+
+            private final Class<E> type;
+            private final Class<T> returnType;
+            private String[] patterns = new String[0];
+            private String originClassPath = "";
+            private Priority priority = COMBINED;
+
+            public Builder(Class<E> type, Class<T> returnType) {
+                this.type = type;
+                this.returnType = returnType;
+            }
+
+            public Builder<E, T> patterns(String... patterns) {
+                this.patterns = patterns;
+                return this;
+            }
+
+            public Builder<E, T> originClassPath(String path) {
+                this.originClassPath = path;
+                return this;
+            }
+
+            public Builder<E, T> priority(Priority priority) {
+                this.priority = priority;
+                return this;
+            }
+
+            public Expression<E, T> build() {
+                return new Expression<>(type, patterns, originClassPath, returnType, priority);
+            }
+        }
+    }
 }

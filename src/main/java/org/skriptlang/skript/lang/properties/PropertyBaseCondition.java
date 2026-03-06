@@ -7,10 +7,10 @@ import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import org.bukkit.event.Event;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.common.properties.conditions.PropCondIsEmpty;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.lang.properties.handlers.base.ConditionPropertyHandler;
 
 /**
@@ -45,7 +45,7 @@ public abstract class PropertyBaseCondition<Handler extends ConditionPropertyHan
 	}
 
 	@Override
-	public boolean check(Event event) {
+	public boolean check(SkriptEvent event) {
 		return propertyHolder.check(event, (element) -> {
 				//noinspection unchecked
 				var handler = (ConditionPropertyHandler<Object>) properties.getHandler(element.getClass());
@@ -64,7 +64,7 @@ public abstract class PropertyBaseCondition<Handler extends ConditionPropertyHan
 	}
 
 	@Override
-	public String toString(@Nullable Event event, boolean debug) {
+	public String toString(@Nullable SkriptEvent event, boolean debug) {
 		return PropertyCondition.toString(this, getPropertyType(), event, debug, propertyHolder, getPropertyName());
 	}
 

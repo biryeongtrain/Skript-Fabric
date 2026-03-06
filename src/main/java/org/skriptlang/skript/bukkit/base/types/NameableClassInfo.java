@@ -1,76 +1,74 @@
 package org.skriptlang.skript.bukkit.base.types;
 
-import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.classes.ClassInfo;
-import ch.njol.skript.expressions.base.EventValueExpression;
-import org.bukkit.Nameable;
-import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import ch.njol.skript.registrations.Classes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.Nameable;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
-@ApiStatus.Internal
-public class NameableClassInfo extends ClassInfo<Nameable> {
+public final class NameableClassInfo {
 
-	public NameableClassInfo() {
-		super(Nameable.class, "nameable");
-		this.user("nameables?")
-			.name("Nameable")
-			.description(
-				"A variety of Bukkit types that can have names, such as entities and some blocks."
-			).since("2.13")
-			.defaultExpression(new EventValueExpression<>(Nameable.class))
-			.after("entity", "commandsender", "block", "player")
-			.property(Property.NAME,
-				"The name of the nameable, if it has one, as text. Use 'display name' if you need a changeable name.",
-				Skript.instance(),
-				ExpressionPropertyHandler.of(nameable -> {
-				if (nameable instanceof CommandSender sender) { // prioritize CommandSender names over Nameable names for "name of"
-					return sender.getName();
-				}
-				return nameable.getCustomName();
-			}, String.class))
-			.property(Property.DISPLAY_NAME,
-				"The custom name of the nameable, if it has one, as text. Can be set or reset.",
-				Skript.instance(),
-				new NameableNameHandler());
-	}
+    private NameableClassInfo() {
+    }
 
-	private static class NameableNameHandler implements ExpressionPropertyHandler<Nameable, String> {
-		//<editor-fold desc="name property for nameables" defaultstate="collapsed">
-		@Override
-		public String convert(Nameable nameable) {
-			return nameable.getCustomName();
-		}
+    public static void register() {
+        ClassInfo<Nameable> info = new ClassInfo<>(Nameable.class);
+        info.setPropertyInfo(Property.NAME, new NameableNameHandler());
+        info.setPropertyInfo(Property.DISPLAY_NAME, new NameableDisplayNameHandler());
+        Classes.registerClassInfo(info);
+    }
 
-		@Override
-		public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-			if (mode == ChangeMode.SET || mode == ChangeMode.RESET)
-				return new Class[] {String.class};
-			return null;
-		}
+    public static class NameableNameHandler implements ExpressionPropertyHandler<Nameable, String> {
 
-		@Override
-		public void change(Nameable propertyHolder, Object @Nullable [] delta, ChangeMode mode) {
-			assert mode == ChangeMode.SET || mode == ChangeMode.RESET;
-			if (mode == ChangeMode.SET) {
-				assert delta != null;
-				if (delta.length == 1) {
-					propertyHolder.setCustomName((String) delta[0]);
-				}
-			} else {
-				propertyHolder.setCustomName(null);
-			}
-		}
+        @Override
+        public @Nullable String convert(Nameable propertyHolder) {
+            return propertyHolder.getName().getString();
+        }
 
-		@Override
-		public @NotNull Class<String> returnType() {
-			return String.class;
-		}
-		//</editor-fold>
-	}
+        @Override
+        public Class<String> returnType() {
+            return String.class;
+        }
+    }
 
+    public static class NameableDisplayNameHandler implements ExpressionPropertyHandler<Nameable, String> {
+
+        @Override
+        public @Nullable String convert(Nameable propertyHolder) {
+            Component customName = propertyHolder.getCustomName();
+            return customName != null ? customName.getString() : null;
+        }
+
+        @Override
+        public Class<?>[] acceptChange(ChangeMode mode) {
+            return switch (mode) {
+                case SET, RESET, DELETE -> new Class[]{String.class};
+                default -> null;
+            };
+        }
+
+        @Override
+        public void change(Nameable propertyHolder, Object[] delta, ChangeMode mode) {
+            if (!(propertyHolder instanceof Entity entity)) {
+                throw new UnsupportedOperationException("Display name changes currently require an Entity-backed nameable.");
+            }
+
+            if (mode == ChangeMode.RESET || mode == ChangeMode.DELETE) {
+                entity.setCustomName(null);
+                return;
+            }
+
+            String value = delta != null && delta.length > 0 ? String.valueOf(delta[0]) : null;
+            entity.setCustomName(value == null ? null : Component.literal(value));
+        }
+
+        @Override
+        public Class<String> returnType() {
+            return String.class;
+        }
+    }
 }

@@ -9,89 +9,54 @@ import org.jetbrains.annotations.UnknownNullability;
 import org.skriptlang.skript.lang.converter.Converters;
 
 /**
- * A provider for anything with a value.
- * Anything implementing this (or convertible to this) can be used by the {@link ExprSubnodeValue}
- * property expression.
+ * Provider for values that can be read and optionally changed.
  *
- * @see AnyProvider
  * @deprecated Use {@link org.skriptlang.skript.lang.properties.Property#TYPED_VALUE} instead.
  */
-@Deprecated(since="2.13", forRemoval = true)
+@Deprecated(since = "2.13", forRemoval = true)
 public interface AnyValued<Type> extends AnyProvider {
 
-	/**
-	 * @return This thing's value
-	 */
-	@UnknownNullability
-	Type value();
+    @UnknownNullability
+    Type value();
 
-	default <Converted> Converted convertedValue(ClassInfo<Converted> expected) {
-		Type value = value();
-		if (value == null)
-			return null;
-		return ExprSubnodeValue.convertedValue(value, expected);
-	}
+    default <Converted> Converted convertedValue(ClassInfo<Converted> expected) {
+        Type value = value();
+        if (value == null) {
+            return null;
+        }
+        return ExprSubnodeValue.convertedValue(value, expected);
+    }
 
-	/**
-	 * This is called before {@link #changeValue(Object)}.
-	 * If the result is false, setting the value will never be attempted.
-	 *
-	 * @return Whether this supports being set
-	 */
-	default boolean supportsValueChange() {
-		return false;
-	}
+    default boolean supportsValueChange() {
+        return false;
+    }
 
-	/**
-	 * The behaviour for changing this thing's value, if possible.
-	 * If not possible, then {@link #supportsValueChange()} should return false and this
-	 * may throw an error.
-	 *
-	 * @param value The new value
-	 * @throws UnsupportedOperationException If this is impossible
-	 */
-	default void changeValue(Type value) throws UnsupportedOperationException {
-		throw new UnsupportedOperationException();
-	}
+    default void changeValue(Type value) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    }
 
-	/**
-	 *
-	 * @return The type of values this accepts (or provides)
-	 */
-	Class<Type> valueType();
+    Class<Type> valueType();
 
-	/**
-	 * A default implementation of 'resetting' the value (setting it to null).
-	 * Implementations should override this if different behaviour is required.
-	 *
-	 * @throws UnsupportedOperationException If changing is not supported
-	 */
-	default void resetValue() throws UnsupportedOperationException {
-		this.changeValueSafely(null);
-	}
+    default void resetValue() throws UnsupportedOperationException {
+        changeValueSafely(null);
+    }
 
-	/**
-	 * This method can be overridden to filter out bad values (e.g. null, objects of the wrong type, etc.)
-	 * and make sure {@link #changeValue(Object)} is not called with a bad parameter.
-	 *
-	 * @param value The (unchecked) new value
-	 */
-	default void changeValueSafely(Object value) throws UnsupportedOperationException {
-		Class<Type> typeClass = this.valueType();
-		ClassInfo<? super Type> classInfo = Classes.getSuperClassInfo(typeClass);
-		if (value == null) {
-			this.changeValue(null);
-		} else if (typeClass == String.class) {
-			this.changeValue(typeClass.cast(Classes.toString(value, StringMode.MESSAGE)));
-		} else if (value instanceof String string
-			&& classInfo.getParser() != null
-			&& classInfo.getParser().canParse(ParseContext.CONFIG)) {
-			Type convert = (Type) classInfo.getParser().parse(string, ParseContext.CONFIG);
-			this.changeValue(convert);
-		} else {
-			Type convert = Converters.convert(value, typeClass);
-			this.changeValue(convert);
-		}
-	}
-
+    @SuppressWarnings("unchecked")
+    default void changeValueSafely(Object value) throws UnsupportedOperationException {
+        Class<Type> typeClass = valueType();
+        ClassInfo<? super Type> classInfo = Classes.getSuperClassInfo(typeClass);
+        if (value == null) {
+            changeValue(null);
+        } else if (typeClass == String.class) {
+            changeValue(typeClass.cast(Classes.toString(value, StringMode.MESSAGE)));
+        } else if (value instanceof String string
+                && classInfo.getParser() != null
+                && classInfo.getParser().canParse(ParseContext.CONFIG)) {
+            Type parsed = (Type) classInfo.getParser().parse(string, ParseContext.CONFIG);
+            changeValue(parsed);
+        } else {
+            Type converted = Converters.convert(value, typeClass);
+            changeValue(converted);
+        }
+    }
 }

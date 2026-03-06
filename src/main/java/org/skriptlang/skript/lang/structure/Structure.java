@@ -11,7 +11,6 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.SyntaxElement;
-import ch.njol.skript.lang.SyntaxElementInfo;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
@@ -25,6 +24,7 @@ import org.jetbrains.annotations.UnknownNullability;
 import org.skriptlang.skript.lang.entry.EntryContainer;
 import org.skriptlang.skript.lang.entry.EntryData;
 import org.skriptlang.skript.lang.entry.EntryValidator;
+import org.skriptlang.skript.registration.SyntaxInfo;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -67,6 +67,31 @@ public abstract class Structure implements SyntaxElement, Debuggable {
 			return Integer.compare(this.priority, o.priority);
 		}
 
+	}
+
+	/**
+	 * Legacy node-type marker kept for compatibility with upstream APIs.
+	 */
+	public enum NodeType {
+		SIMPLE(true, false),
+		SECTION(false, true),
+		BOTH(true, true);
+
+		private final boolean simple;
+		private final boolean section;
+
+		NodeType(boolean simple, boolean section) {
+			this.simple = simple;
+			this.section = section;
+		}
+
+		public boolean canBeSimple() {
+			return simple;
+		}
+
+		public boolean canBeSection() {
+			return section;
+		}
 	}
 
 	@Nullable
@@ -193,17 +218,21 @@ public abstract class Structure implements SyntaxElement, Debuggable {
 			throw new IllegalArgumentException("only simple or section nodes may be parsed as a structure");
 		ParserInstance.get().getData(StructureData.class).node = node;
 
-		var iterator = Skript.instance().syntaxRegistry().syntaxes(org.skriptlang.skript.registration.SyntaxRegistry.STRUCTURE).iterator();
+		Iterator<SyntaxInfo.Structure<?>> iterator = Skript.instance()
+			.syntaxRegistry()
+			.<SyntaxInfo.Structure<?>>syntaxes(org.skriptlang.skript.registration.SyntaxRegistry.STRUCTURE)
+			.iterator();
 		if (node instanceof SimpleNode) { // filter out section only structures
 			iterator = new CheckedIterator<>(iterator, info -> info != null && info.nodeType().canBeSimple());
 		} else { // filter out simple only structures
 			iterator = new CheckedIterator<>(iterator, info -> info != null && info.nodeType().canBeSection());
 		}
 		iterator = new ConsumingIterator<>(iterator, info -> ParserInstance.get().getData(StructureData.class).structureInfo =
-			(StructureInfo<?>) SyntaxElementInfo.fromModern(info));
+			toLegacyStructureInfo(info));
 
 		try (ParseLogHandler parseLogHandler = SkriptLogger.startParseLogHandler()) {
-			Structure structure = SkriptParser.parseStatic(expr, iterator, ParseContext.EVENT, defaultError);
+			@SuppressWarnings({"rawtypes", "unchecked"})
+			Structure structure = (Structure) SkriptParser.parseModern(expr, (Iterator) iterator, ParseContext.EVENT, defaultError);
 			if (structure != null) {
 				parseLogHandler.printLog();
 				return structure;
@@ -211,6 +240,11 @@ public abstract class Structure implements SyntaxElement, Debuggable {
 			parseLogHandler.printError();
 			return null;
 		}
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked", "removal"})
+	private static StructureInfo<? extends Structure> toLegacyStructureInfo(SyntaxInfo.Structure<?> info) {
+		return new StructureInfo((SyntaxInfo.Structure) info);
 	}
 
 	@Nullable

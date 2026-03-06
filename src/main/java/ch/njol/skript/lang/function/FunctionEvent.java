@@ -1,34 +1,29 @@
 package ch.njol.skript.lang.function;
 
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
-public final class FunctionEvent<T> extends Event {
-	
-	// Bukkit stuff
-	private final static HandlerList handlers = new HandlerList();
-	
-	private final Function<? extends T> function;
-	
-	public FunctionEvent(Function<? extends T> function) {
-		this.function = function;
-	}
+/**
+ * Event context wrapper for function execution.
+ */
+public final class FunctionEvent<T> {
 
-	public FunctionEvent(org.skriptlang.skript.common.function.Function<? extends T> function) {
-		this.function = (Function<? extends T>) function;
-	}
+    private final Function<? extends T> function;
+    private final SkriptEvent context;
 
-	public Function<? extends T> getFunction() {
-		return function;
-	}
-	
-	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
-	
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
-	
+    public FunctionEvent(Function<? extends T> function) {
+        this(function, SkriptEvent.EMPTY);
+    }
+
+    public FunctionEvent(Function<? extends T> function, SkriptEvent context) {
+        this.function = function;
+        this.context = context == null ? SkriptEvent.EMPTY : context;
+    }
+
+    public Function<? extends T> getFunction() {
+        return function;
+    }
+
+    public SkriptEvent getContext() {
+        return context;
+    }
 }
