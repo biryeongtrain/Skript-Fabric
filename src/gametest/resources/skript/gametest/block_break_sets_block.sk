@@ -1,0 +1,2 @@
+on block break:
+    set test block for event-block to "minecraft:redstone_block"

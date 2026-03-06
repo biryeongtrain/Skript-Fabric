@@ -1,0 +1,2 @@
+on gametest:
+    set test block at 0, 1, 0 to "minecraft:emerald_block"
