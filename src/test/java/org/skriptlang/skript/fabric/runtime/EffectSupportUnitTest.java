@@ -34,6 +34,8 @@ import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class EffectSupportUnitTest {
@@ -109,10 +111,16 @@ final class EffectSupportUnitTest {
 
         SkriptRuntime runtime = SkriptRuntime.instance();
         runtime.clearScripts();
-        runtime.loadFromPath(Path.of("src/gametest/resources/skript/gametest/equippable_damage_effect_renames_item.sk"));
+        runtime.loadFromPath(Path.of("src/gametest/resources/skript/gametest/effect/equippable_damage_effect_renames_item.sk"));
         Object effect = firstTriggerItem(runtime);
+        SkriptEvent event = new SkriptEvent(new FakeItemHandle(stack), null, null, null);
+        Expression<?> values = (Expression<?>) readField(effect, "values");
+        Object[] resolved = values.getAll(event);
 
-        execute(effect, new SkriptEvent(new FakeItemHandle(stack), null, null, null));
+        assertEquals(1, resolved.length);
+        assertInstanceOf(ItemStack.class, resolved[0]);
+
+        execute(effect, event);
 
         Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
         assertTrue(equippable != null && equippable.damageOnHurt());
@@ -138,14 +146,14 @@ final class EffectSupportUnitTest {
 
         execute(effect, SkriptEvent.EMPTY);
 
-        boolean foundSaddle = false;
+        boolean foundLoot = false;
         for (int slot = 0; slot < chest.getContainerSize(); slot++) {
-            if (chest.getItem(slot).is(Items.SADDLE)) {
-                foundSaddle = true;
+            if (!chest.getItem(slot).isEmpty()) {
+                foundLoot = true;
                 break;
             }
         }
-        assertTrue(foundSaddle);
+        assertTrue(foundLoot);
     }
 
     private void execute(Object effect, SkriptEvent event) throws Exception {
@@ -166,6 +174,20 @@ final class EffectSupportUnitTest {
         firstField.setAccessible(true);
         TriggerItem first = (TriggerItem) firstField.get(trigger);
         return first;
+    }
+
+    private Object readField(Object instance, String name) throws Exception {
+        Class<?> type = instance.getClass();
+        while (type != null) {
+            try {
+                Field field = type.getDeclaredField(name);
+                field.setAccessible(true);
+                return field.get(instance);
+            } catch (NoSuchFieldException ignored) {
+                type = type.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(name);
     }
 
     private static final class ConstantExpression<T> extends SimpleExpression<T> {

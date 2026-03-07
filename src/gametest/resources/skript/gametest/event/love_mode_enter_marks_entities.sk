@@ -1,0 +1,4 @@
+on love mode enter:
+    set test name of entity event-entity to "love mode entity"
+    set test name of entity event-player to "love cause"
+    set test block under player event-player to pink_concrete

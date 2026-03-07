@@ -1,5 +1,9 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -7,6 +11,9 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -14,21 +21,39 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Interaction;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.bukkit.loottables.LootTable;
+import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.fabric.compat.FabricBreedingItemSource;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.compat.FabricInteractionState;
+import org.skriptlang.skript.fabric.compat.PrivateFurnaceAccess;
 
 public final class SkriptFabricEventBridge {
 
+    private static final Map<net.minecraft.world.level.storage.loot.LootTable, ResourceKey<net.minecraft.world.level.storage.loot.LootTable>> LOOT_TABLE_KEYS =
+            Collections.synchronizedMap(new IdentityHashMap<>());
     private static volatile boolean registered;
 
     private SkriptFabricEventBridge() {
@@ -170,12 +195,141 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
-    public static void dispatchFishing(ServerLevel level, ServerPlayer player, FishingHook hook, boolean lureApplied) {
+    public static void dispatchBrewingStart(ServerLevel level, BlockPos pos, BrewingStandBlockEntity brewingStand) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricFishingHandle(level, player, hook, lureApplied),
+                new FabricBrewingStartHandle(level, pos.immutable(), brewingStand),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchBrewingComplete(
+            ServerLevel level,
+            BlockPos pos,
+            BrewingStandBlockEntity brewingStand,
+            List<ItemStack> results
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricBrewingCompleteHandle(level, pos.immutable(), brewingStand, results),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchFishing(ServerLevel level, ServerPlayer player, FishingHook hook, boolean lureApplied) {
+        dispatchFishing(level, player, hook, null, lureApplied, FabricFishingEventState.FISHING);
+    }
+
+    public static void dispatchFishing(
+            ServerLevel level,
+            ServerPlayer player,
+            FishingHook hook,
+            @Nullable Entity eventEntity,
+            boolean lureApplied,
+            FabricFishingEventState state
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricFishingHandle(level, player, hook, eventEntity, lureApplied, state),
                 level.getServer(),
                 level,
                 player
+        ));
+    }
+
+    public static @Nullable ItemEntity findNearestCaughtFishEntity(ServerLevel level, FishingHook hook) {
+        return level.getEntitiesOfClass(ItemEntity.class, hook.getBoundingBox().inflate(2.0D)).stream()
+                .min((left, right) -> Double.compare(left.distanceToSqr(hook), right.distanceToSqr(hook)))
+                .orElse(null);
+    }
+
+    public static void dispatchBucketCatch(
+            ServerLevel level,
+            ServerPlayer player,
+            LivingEntity entity,
+            ItemStack originalBucket,
+            ItemStack entityBucket
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricBucketCatchHandle(level, player, entity, originalBucket, entityBucket),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchPotionEffect(
+            ServerLevel level,
+            LivingEntity entity,
+            @Nullable MobEffectInstance currentEffect,
+            @Nullable MobEffectInstance previousEffect,
+            FabricPotionEffectAction action
+    ) {
+        dispatchPotionEffect(level, entity, currentEffect, previousEffect, action, FabricPotionEffectCause.UNKNOWN);
+    }
+
+    public static void dispatchPotionEffect(
+            ServerLevel level,
+            LivingEntity entity,
+            @Nullable MobEffectInstance currentEffect,
+            @Nullable MobEffectInstance previousEffect,
+            FabricPotionEffectAction action,
+            FabricPotionEffectCause cause
+    ) {
+        SkriptPotionEffect current = currentEffect == null ? null : SkriptPotionEffect.fromInstance(currentEffect, entity);
+        SkriptPotionEffect previous = previousEffect == null ? null : SkriptPotionEffect.fromInstance(previousEffect);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricPotionEffectHandle(level, entity, current, previous, action, cause),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchLoveModeEnter(ServerLevel level, Animal entity, @Nullable ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricLoveModeEnterHandle(level, entity, player),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void rememberLootTableKey(
+            net.minecraft.world.level.storage.loot.LootTable lootTable,
+            ResourceKey<net.minecraft.world.level.storage.loot.LootTable> key
+    ) {
+        LOOT_TABLE_KEYS.put(lootTable, key);
+    }
+
+    public static void dispatchLootGenerate(
+            LootContext context,
+            net.minecraft.world.level.storage.loot.LootTable lootTable,
+            List<ItemStack> loot
+    ) {
+        ResourceKey<net.minecraft.world.level.storage.loot.LootTable> key = resolveLootTableKey(context, lootTable);
+        if (key == null) {
+            return;
+        }
+
+        ServerLevel level = context.getLevel();
+        Entity contextEntity = context.getOptionalParameter(LootContextParams.THIS_ENTITY);
+        ServerPlayer looter = resolveLootingPlayer(context, contextEntity);
+        Entity lootedEntity = contextEntity instanceof ServerPlayer && contextEntity == looter ? null : contextEntity;
+        Vec3 origin = context.getOptionalParameter(LootContextParams.ORIGIN);
+
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricLootGenerateHandle(
+                        new LootTable(key),
+                        loot,
+                        new FabricLocation(level, origin != null ? origin : Vec3.ZERO),
+                        looter,
+                        lootedEntity
+                ),
+                level.getServer(),
+                level,
+                looter
         ));
     }
 
@@ -191,5 +345,163 @@ public final class SkriptFabricEventBridge {
 
     private static Input normalizeInput(Input input) {
         return input != null ? input : Input.EMPTY;
+    }
+
+    public static void dispatchBreeding(
+            ServerLevel level,
+            Animal mother,
+            Animal father,
+            AgeableMob offspring,
+            @org.jetbrains.annotations.Nullable Player breeder
+    ) {
+        ItemStack bredWith = ItemStack.EMPTY;
+        if (mother instanceof FabricBreedingItemSource source) {
+            bredWith = source.skript$getLastLoveItem();
+        }
+        if (bredWith.isEmpty() && father instanceof FabricBreedingItemSource source) {
+            bredWith = source.skript$getLastLoveItem();
+        }
+        if (bredWith.isEmpty() && breeder != null) {
+            ItemStack mainHand = breeder.getMainHandItem();
+            if (!mainHand.isEmpty()) {
+                bredWith = mainHand.copyWithCount(1);
+            } else {
+                ItemStack offHand = breeder.getOffhandItem();
+                if (!offHand.isEmpty()) {
+                    bredWith = offHand.copyWithCount(1);
+                }
+            }
+        }
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricBreedingHandle(level, mother, father, offspring, breeder, bredWith),
+                level.getServer(),
+                level,
+                breeder instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchFurnaceBurn(
+            ServerLevel level,
+            BlockPos pos,
+            AbstractFurnaceBlockEntity furnace,
+            ItemStack source,
+            ItemStack fuel
+    ) {
+        dispatchFurnace(level, pos, furnace, FabricFurnaceEventHandle.Kind.BURN, source, fuel, furnace.getItem(2).copy(), 0, null);
+    }
+
+    public static void dispatchFurnaceSmeltingStart(
+            ServerLevel level,
+            BlockPos pos,
+            AbstractFurnaceBlockEntity furnace,
+            ItemStack source,
+            ItemStack fuel
+    ) {
+        dispatchFurnace(level, pos, furnace, FabricFurnaceEventHandle.Kind.START_SMELT, source, fuel, furnace.getItem(2).copy(), 0, null);
+    }
+
+    public static void dispatchFurnaceSmelt(
+            ServerLevel level,
+            BlockPos pos,
+            AbstractFurnaceBlockEntity furnace,
+            ItemStack source,
+            ItemStack fuel,
+            ItemStack result
+    ) {
+        dispatchFurnace(level, pos, furnace, FabricFurnaceEventHandle.Kind.SMELT, source, fuel, result, 0, null);
+    }
+
+    public static void dispatchFurnaceExtract(
+            ServerPlayer player,
+            AbstractFurnaceBlockEntity furnace,
+            ItemStack result,
+            int itemAmount
+    ) {
+        ServerLevel level = player.level();
+        dispatchFurnace(
+                level,
+                furnace.getBlockPos(),
+                furnace,
+                FabricFurnaceEventHandle.Kind.EXTRACT,
+                furnace.getItem(0).copy(),
+                furnace.getItem(1).copy(),
+                result,
+                itemAmount,
+                player
+        );
+    }
+
+    private static void dispatchFurnace(
+            ServerLevel level,
+            BlockPos pos,
+            AbstractFurnaceBlockEntity furnace,
+            FabricFurnaceEventHandle.Kind kind,
+            ItemStack source,
+            ItemStack fuel,
+            ItemStack result,
+            int itemAmount,
+            @org.jetbrains.annotations.Nullable ServerPlayer player
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricFurnaceHandle(
+                        kind,
+                        level,
+                        pos.immutable(),
+                        furnace,
+                        source.copy(),
+                        fuel.copy(),
+                        result.copy(),
+                        itemAmount,
+                        PrivateFurnaceAccess.litTimeRemaining(furnace),
+                        PrivateFurnaceAccess.cookingTotalTime(furnace)
+                ),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    private static @Nullable ResourceKey<net.minecraft.world.level.storage.loot.LootTable> resolveLootTableKey(
+            LootContext context,
+            net.minecraft.world.level.storage.loot.LootTable lootTable
+    ) {
+        ResourceKey<net.minecraft.world.level.storage.loot.LootTable> remembered = LOOT_TABLE_KEYS.get(lootTable);
+        if (remembered != null) {
+            return remembered;
+        }
+
+        MinecraftServer server = context.getLevel().getServer();
+        if (server == null) {
+            return null;
+        }
+
+        return server.reloadableRegistries().lookup().lookup(Registries.LOOT_TABLE)
+                .flatMap(registry -> registry.listElements()
+                        .filter(holder -> holder.value() == lootTable)
+                        .findFirst()
+                        .map(Holder.Reference::key))
+                .map(key -> {
+                    LOOT_TABLE_KEYS.put(lootTable, key);
+                    return key;
+                })
+                .orElse(null);
+    }
+
+    private static @Nullable ServerPlayer resolveLootingPlayer(LootContext context, @Nullable Entity contextEntity) {
+        Player lastDamagePlayer = context.getOptionalParameter(LootContextParams.LAST_DAMAGE_PLAYER);
+        if (lastDamagePlayer instanceof ServerPlayer serverPlayer) {
+            return serverPlayer;
+        }
+
+        Entity attackingEntity = context.getOptionalParameter(LootContextParams.ATTACKING_ENTITY);
+        if (attackingEntity instanceof ServerPlayer serverPlayer) {
+            return serverPlayer;
+        }
+
+        if (contextEntity instanceof ServerPlayer serverPlayer) {
+            return serverPlayer;
+        }
+
+        return null;
     }
 }

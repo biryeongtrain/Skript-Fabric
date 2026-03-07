@@ -1,0 +1,2 @@
+on breeding of cows:
+    set test block under player event-player to lime_wool

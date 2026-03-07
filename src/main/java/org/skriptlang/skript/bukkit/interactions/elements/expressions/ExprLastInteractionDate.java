@@ -30,8 +30,8 @@ public final class ExprLastInteractionDate extends SimpleExpression<Date> {
         }
         entities = (Expression<Entity>) expressions[0];
         mode = switch (matchedPattern) {
-            case 0 -> ATTACK;
-            case 1 -> INTERACT;
+            case 0, 3 -> ATTACK;
+            case 1, 4 -> INTERACT;
             default -> BOTH;
         };
         return true;

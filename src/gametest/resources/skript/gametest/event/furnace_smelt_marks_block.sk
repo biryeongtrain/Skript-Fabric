@@ -1,0 +1,2 @@
+on furnace smelt:
+    set test block above event-block to gold_block

@@ -1,0 +1,2 @@
+on furnace extraction of iron ingot:
+    set test block above event-block to redstone_block

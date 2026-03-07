@@ -1,0 +1,5 @@
+on entity hooked:
+    set test name of entity hooked entity to "entity hooked"
+
+on bobber hit ground:
+    set test block under player event-player to redstone_block

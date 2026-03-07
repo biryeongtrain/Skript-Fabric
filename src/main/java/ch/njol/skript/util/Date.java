@@ -24,6 +24,22 @@ public final class Date implements Comparable<Date> {
     }
 
     @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof Date other)) {
+            return false;
+        }
+        return timestamp == other.timestamp;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(timestamp);
+    }
+
+    @Override
     public String toString() {
         return FORMATTER.format(Instant.ofEpochMilli(timestamp));
     }

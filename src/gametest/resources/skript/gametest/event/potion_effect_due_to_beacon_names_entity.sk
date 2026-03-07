@@ -1,0 +1,2 @@
+on entity potion effect of speed added due to beacon:
+    set test name of entity event-entity to "beacon"

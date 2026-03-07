@@ -1,0 +1,2 @@
+on entity potion effect of poison cleared due to milk:
+    set test name of entity event-entity to "milk"

@@ -1,0 +1,4 @@
+on entity potion effect of minecraft:poison added:
+    event-potion effect action is "added"
+    potion amplifier of event-potion effect is 1
+    set test name of entity event-entity to "namespaced poison added"

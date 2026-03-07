@@ -1,3 +1,0 @@
-on use item:
-    make equippable component of event-item lose durability when injured
-    set test name of item event-item to "damage effect"

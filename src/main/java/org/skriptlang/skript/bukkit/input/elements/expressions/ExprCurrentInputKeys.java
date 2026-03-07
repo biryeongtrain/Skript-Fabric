@@ -17,6 +17,7 @@ public final class ExprCurrentInputKeys extends SimpleExpression<InputKey> {
 
     private Expression<ServerPlayer> players;
     private boolean delayed;
+    private int time;
 
     @Override
     protected InputKey @Nullable [] get(SkriptEvent event) {
@@ -25,7 +26,7 @@ public final class ExprCurrentInputKeys extends SimpleExpression<InputKey> {
         for (ServerPlayer player : players.getAll(event)) {
             Input input;
             if (!delayed && inputEvent != null && inputEvent.player() == player) {
-                input = inputEvent.currentInput();
+                input = time == 1 ? inputEvent.previousInput() : inputEvent.currentInput();
             } else {
                 input = player.getLastClientInput();
             }
@@ -47,6 +48,24 @@ public final class ExprCurrentInputKeys extends SimpleExpression<InputKey> {
     }
 
     @Override
+    public boolean setTime(int time) {
+        if (time == 0) {
+            this.time = 0;
+            return true;
+        }
+        if (time == 1 && getParser().isCurrentEvent(FabricPlayerInputEventHandle.class)) {
+            this.time = 1;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int getTime() {
+        return time;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         if (expressions.length != 1 || !expressions[0].canReturn(ServerPlayer.class)) {
@@ -59,6 +78,6 @@ public final class ExprCurrentInputKeys extends SimpleExpression<InputKey> {
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
-        return "current input keys of " + players.toString(event, debug);
+        return (time == 1 ? "past " : "") + "current input keys of " + players.toString(event, debug);
     }
 }

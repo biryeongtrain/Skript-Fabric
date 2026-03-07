@@ -1,0 +1,2 @@
+on entity potion effect of conduit_power added due to conduit:
+    set test name of entity event-entity to "conduit"

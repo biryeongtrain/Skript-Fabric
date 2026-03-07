@@ -8,6 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.Equippable;
 import org.jetbrains.annotations.Nullable;
+import java.util.Objects;
 
 public final class FabricItemType {
 
@@ -63,6 +64,25 @@ public final class FabricItemType {
             stack.set(DataComponents.EQUIPPABLE, equippable);
         }
         return stack;
+    }
+
+    public boolean matches(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !stack.is(item)) {
+            return false;
+        }
+        if (stack.getCount() < amount) {
+            return false;
+        }
+        if (customName != null && !customName.isBlank()) {
+            Component stackName = stack.get(DataComponents.CUSTOM_NAME);
+            if (stackName == null || !customName.equals(stackName.getString())) {
+                return false;
+            }
+        }
+        if (equippable != null && !Objects.equals(equippable, stack.get(DataComponents.EQUIPPABLE))) {
+            return false;
+        }
+        return true;
     }
 
     public String itemId() {

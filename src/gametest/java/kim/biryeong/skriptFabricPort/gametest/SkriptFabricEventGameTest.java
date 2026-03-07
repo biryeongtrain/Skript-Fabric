@@ -1,0 +1,2232 @@
+package kim.biryeong.skriptFabricPort.gametest;
+
+import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.lang.Condition;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.TriggerItem;
+import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Timespan;
+import ch.njol.skript.util.Timespan.TimePeriod;
+import com.mojang.authlib.GameProfile;
+import com.mojang.math.Transformation;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Brightness;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.entity.Interaction;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.Dolphin;
+import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.projectile.ThrownSplashPotion;
+import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.inventory.FurnaceResultSlot;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WitherRoseBlock;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.ConduitBlockEntity;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import org.skriptlang.skript.bukkit.base.types.InventoryClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ItemStackClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ItemTypeClassInfo;
+import org.skriptlang.skript.bukkit.base.types.LocationClassInfo;
+import org.skriptlang.skript.bukkit.base.types.NameableClassInfo;
+import org.skriptlang.skript.bukkit.base.types.OfflinePlayerClassInfo;
+import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
+import org.skriptlang.skript.bukkit.base.types.VectorClassInfo;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondScalesWithDifficulty;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondWasIndirect;
+import org.skriptlang.skript.bukkit.displays.text.CondTextDisplayHasDropShadow;
+import org.skriptlang.skript.bukkit.brewing.elements.CondBrewingConsume;
+import org.skriptlang.skript.bukkit.fishing.elements.CondFishingLure;
+import org.skriptlang.skript.bukkit.fishing.elements.CondIsInOpenWater;
+import org.skriptlang.skript.bukkit.input.InputKey;
+import org.skriptlang.skript.bukkit.input.elements.conditions.CondIsPressingKey;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDamage;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDispensable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompInteract;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompShearable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompSwapEquipment;
+import org.skriptlang.skript.bukkit.interactions.elements.conditions.CondIsResponsive;
+import org.skriptlang.skript.bukkit.loottables.LootTable;
+import org.skriptlang.skript.bukkit.loottables.LootTableUtils;
+import org.skriptlang.skript.bukkit.loottables.elements.conditions.CondHasLootTable;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanAge;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanBreed;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsAdult;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsBaby;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsInLove;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondHasPotion;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPoisoned;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionAmbient;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionInstant;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasIcon;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasParticles;
+import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
+import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.bukkit.tags.elements.CondIsTagged;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.FabricBreedingItemSource;
+import org.skriptlang.skript.fabric.compat.FabricBreedingState;
+import org.skriptlang.skript.fabric.compat.FabricFishingState;
+import org.skriptlang.skript.fabric.compat.FabricInventory;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
+import org.skriptlang.skript.fabric.compat.PrivateBlockEntityAccess;
+import org.skriptlang.skript.fabric.compat.PrivateEntityAccess;
+import org.skriptlang.skript.fabric.compat.PrivateFishingHookAccess;
+import org.skriptlang.skript.fabric.compat.PrivateFurnaceAccess;
+import org.skriptlang.skript.fabric.runtime.FabricAttackEntityHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBlockBreakHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBreedingEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBreedingHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBrewingFuelHandle;
+import org.skriptlang.skript.fabric.runtime.FabricDamageHandle;
+import org.skriptlang.skript.fabric.runtime.FabricFishingEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
+import org.skriptlang.skript.fabric.runtime.FabricFishingHandle;
+import org.skriptlang.skript.fabric.runtime.FabricPlayerInputHandle;
+import org.skriptlang.skript.fabric.runtime.FabricUseEntityHandle;
+import org.skriptlang.skript.fabric.runtime.FabricUseItemHandle;
+import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
+import org.skriptlang.skript.lang.properties.Property;
+import org.skriptlang.skript.lang.properties.handlers.WXYZHandler;
+import ch.njol.util.Kleenean;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+
+public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTestSupport {
+
+    @GameTest
+    public void fabricServerTickBridgeExecutesLoadedScript(GameTestHelper helper) {
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos absoluteTarget = new BlockPos(1, 80, 1);
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            if (!loaded.get()) {
+                helper.assertTrue(
+                        RUNTIME_LOCK.compareAndSet(false, true),
+                        Component.literal("Waiting for exclusive Skript runtime access.")
+                );
+                runtime.clearScripts();
+                helper.getLevel().setBlockAndUpdate(absoluteTarget, Blocks.AIR.defaultBlockState());
+                runtime.loadFromResource("skript/gametest/event/server_tick_sets_block.sk");
+                loaded.set(true);
+            }
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(absoluteTarget).is(Blocks.LAPIS_BLOCK),
+                    Component.literal("Expected server tick event bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
+    public void fabricBlockBreakBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_break_sets_block.sk");
+
+            BlockPos brokenRelative = new BlockPos(0, 1, 0);
+            BlockPos brokenAbsolute = helper.absolutePos(brokenRelative);
+
+            helper.getLevel().setBlockAndUpdate(brokenAbsolute, Blocks.STONE.defaultBlockState());
+
+            var player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(brokenAbsolute.getX() + 0.5D, brokenAbsolute.getY(), brokenAbsolute.getZ() + 0.5D);
+
+            helper.assertTrue(
+                player.gameMode.destroyBlock(brokenAbsolute),
+                Component.literal("Expected mock server player to break the test block.")
+            );
+            helper.assertTrue(
+                helper.getLevel().getBlockState(brokenAbsolute).is(Blocks.REDSTONE_BLOCK),
+                Component.literal("Expected block break bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void attackEntityBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/attack_entity_marks_target.sk");
+
+            BlockPos playerMarkerAbsolute = helper.absolutePos(new BlockPos(5, 1, 0));
+            helper.getLevel().setBlockAndUpdate(playerMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ArmorStand armorStand = new ArmorStand(helper.getLevel(), 0.5D, 1.0D, 0.5D);
+            helper.getLevel().addFreshEntity(armorStand);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = AttackEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    armorStand,
+                    new EntityHitResult(armorStand)
+            );
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected attack entity bridge to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertTrue(
+                    armorStand.getCustomName() != null && "attacked entity".equals(armorStand.getCustomName().getString()),
+                    Component.literal("Expected attack entity bridge to resolve event-entity inside a real .sk file.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.RED_WOOL),
+                    Component.literal("Expected attack entity bridge to resolve event-player inside a real .sk file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void fabricUseBlockBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/use_block_sets_blocks.sk");
+
+            BlockPos clickedAbsolute = helper.absolutePos(new BlockPos(0, 1, 0));
+            BlockPos playerMarkerAbsolute = helper.absolutePos(new BlockPos(2, 1, 0));
+
+            helper.getLevel().setBlockAndUpdate(clickedAbsolute, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(playerMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = UseBlockCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(Vec3.atCenterOf(clickedAbsolute), Direction.UP, clickedAbsolute, false)
+            );
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected use block bridge to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(clickedAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected use block bridge to resolve event-block inside a real .sk file.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected use block bridge to resolve event-player inside a real .sk file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void useEntityBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/use_entity_names_entity.sk");
+
+            BlockPos playerMarkerAbsolute = helper.absolutePos(new BlockPos(3, 1, 0));
+            helper.getLevel().setBlockAndUpdate(playerMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ArmorStand armorStand = new ArmorStand(helper.getLevel(), 0.5D, 1.0D, 0.5D);
+            helper.getLevel().addFreshEntity(armorStand);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    armorStand,
+                    new EntityHitResult(armorStand)
+            );
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected use entity bridge to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertTrue(
+                    armorStand.getCustomName() != null && "clicked entity".equals(armorStand.getCustomName().getString()),
+                    Component.literal("Expected use entity bridge to resolve event-entity inside a real .sk file.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.AMETHYST_BLOCK),
+                    Component.literal("Expected use entity bridge to resolve event-player inside a real .sk file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void breedingEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/breeding_event_marks_entities.sk");
+
+            BlockPos playerMarkerAbsolute = helper.absolutePos(new BlockPos(12, 1, 0));
+            helper.getLevel().setBlockAndUpdate(playerMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            Cow mother = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 0.5F, 1.0F, 0.5F);
+            Cow father = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 2.5F, 1.0F, 0.5F);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+
+            mother.setInLove(player);
+            father.setInLove(player);
+            mother.spawnChildFromBreeding(helper.getLevel(), father);
+
+            List<Cow> offspring = helper.getLevel().getEntitiesOfClass(
+                    Cow.class,
+                    mother.getBoundingBox().inflate(6.0D),
+                    candidate -> candidate != mother && candidate != father
+            );
+            helper.assertTrue(
+                    offspring.size() == 1,
+                    Component.literal("Expected breeding event test to create exactly one offspring but got " + offspring.size() + ".")
+            );
+            if (offspring.isEmpty()) {
+                throw new IllegalStateException("Breeding event test did not create an offspring.");
+            }
+            Cow baby = offspring.get(0);
+
+            helper.assertTrue(
+                    mother.getCustomName() != null && "breeding mother".equals(mother.getCustomName().getString()),
+                    Component.literal("Expected breeding event script to resolve breeding mother.")
+            );
+            helper.assertTrue(
+                    father.getCustomName() != null && "breeding father".equals(father.getCustomName().getString()),
+                    Component.literal("Expected breeding event script to resolve breeding father.")
+            );
+            helper.assertTrue(
+                    baby.getCustomName() != null && "bred offspring".equals(baby.getCustomName().getString()),
+                    Component.literal("Expected breeding event script to resolve bred offspring.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "breeder".equals(player.getCustomName().getString()),
+                    Component.literal("Expected breeding event script to resolve breeder.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.YELLOW_WOOL),
+                    Component.literal("Expected breeding event script to expose the breeder as event-player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void breedingEventItemExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/breeding_event_item_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(13, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            Cow mother = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 0.5F, 1.0F, 0.5F);
+            Cow father = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 2.5F, 1.0F, 0.5F);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WHEAT));
+
+            InteractionResult motherResult = mother.interact(player, InteractionHand.MAIN_HAND);
+            InteractionResult fatherResult = father.interact(player, InteractionHand.MAIN_HAND);
+            helper.assertTrue(
+                    motherResult.consumesAction() && fatherResult.consumesAction(),
+                    Component.literal("Expected feeding wheat to both parents to consume the player action.")
+            );
+            helper.assertTrue(
+                    mother instanceof FabricBreedingItemSource && father instanceof FabricBreedingItemSource,
+                    Component.literal("Expected breeding test animals to expose tracked breeding-item state.")
+            );
+            ItemStack motherLoveItem = ((FabricBreedingItemSource) mother).skript$getLastLoveItem();
+            ItemStack fatherLoveItem = ((FabricBreedingItemSource) father).skript$getLastLoveItem();
+            helper.assertTrue(
+                    motherLoveItem.is(Items.WHEAT) || fatherLoveItem.is(Items.WHEAT),
+                    Component.literal("Expected at least one parent to retain the wheat used to enter love mode.")
+            );
+
+            @SuppressWarnings("unchecked")
+            Expression<? extends ItemStack> breedingEventItemExpression = parseExpressionInEvent(
+                    "event-item",
+                    new Class[]{ItemStack.class},
+                    FabricBreedingEventHandle.class
+            );
+            helper.assertTrue(
+                    breedingEventItemExpression != null,
+                    Component.literal("Expected event-item to parse inside breeding events.")
+            );
+            if (breedingEventItemExpression == null) {
+                throw new IllegalStateException("breeding event-item did not parse");
+            }
+            ItemStack resolvedBreedingItem = breedingEventItemExpression.getSingle(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    new FabricBreedingHandle(
+                            helper.getLevel(),
+                            mother,
+                            father,
+                            mother,
+                            player,
+                            motherLoveItem.isEmpty() ? fatherLoveItem : motherLoveItem
+                    ),
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    player
+            ));
+            helper.assertTrue(
+                    resolvedBreedingItem != null && resolvedBreedingItem.is(Items.WHEAT),
+                    Component.literal("Expected breeding event-item expression to resolve the captured wheat item.")
+            );
+            FabricItemType wheatType = Classes.parse("wheat", FabricItemType.class, ParseContext.DEFAULT);
+            helper.assertTrue(
+                    wheatType != null && wheatType.matches(resolvedBreedingItem),
+                    Component.literal("Expected bare item id 'wheat' to parse as an item type matching breeding event-item.")
+            );
+            Condition breedingEventItemIsWheat = parseConditionInEvent("event-item is wheat", FabricBreedingEventHandle.class);
+            helper.assertTrue(
+                    breedingEventItemIsWheat != null,
+                    Component.literal("Expected breeding event-item comparison condition to parse.")
+            );
+            if (breedingEventItemIsWheat == null) {
+                throw new IllegalStateException("breeding event-item is wheat did not parse");
+            }
+
+            mother.spawnChildFromBreeding(helper.getLevel(), father);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected breeding event-item script to execute and mark the breeder position.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "bred with item".equals(player.getCustomName().getString()),
+                    Component.literal("Expected breeding event-item to resolve as a non-empty item inside the real script.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void breedingFilteredCowEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/breeding_of_cow_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(14, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            Cow mother = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 0.5F, 1.0F, 0.5F);
+            Cow father = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 2.5F, 1.0F, 0.5F);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            mother.setInLove(player);
+            father.setInLove(player);
+            mother.spawnChildFromBreeding(helper.getLevel(), father);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.LIME_WOOL),
+                    Component.literal("Expected cow breeding filter to execute for a cow offspring.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void breedingFilteredPigEventDoesNotExecuteForCowBreeding(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/breeding_of_pig_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(15, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            Cow mother = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 0.5F, 1.0F, 0.5F);
+            Cow father = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 2.5F, 1.0F, 0.5F);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            mother.setInLove(player);
+            father.setInLove(player);
+            mother.spawnChildFromBreeding(helper.getLevel(), father);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.AIR),
+                    Component.literal("Expected pig breeding filter to ignore a cow offspring.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void loveModeEnterEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/love_mode_enter_marks_entities.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(14, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            Cow cow = createCow(helper, false);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WHEAT));
+
+            InteractionResult result = cow.interact(player, InteractionHand.MAIN_HAND);
+
+            helper.assertTrue(
+                    result.consumesAction(),
+                    Component.literal("Expected feeding a breeding item to consume the player action.")
+            );
+            helper.assertTrue(
+                    cow.getCustomName() != null && "love mode entity".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected love mode event script to expose event-entity.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "love cause".equals(player.getCustomName().getString()),
+                    Component.literal("Expected love mode event script to expose event-player.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.PINK_CONCRETE),
+                    Component.literal("Expected love mode event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    cow.isInLove(),
+                    Component.literal("Expected the cow to enter love mode after the interaction.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void bucketCatchEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/bucket_catch_marks_player_and_block.sk");
+
+            BlockPos markerRelative = new BlockPos(13, 1, 0);
+            BlockPos markerAbsolute = helper.absolutePos(markerRelative);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            BlockPos liveMarker = player.blockPosition().below();
+            helper.getLevel().setBlockAndUpdate(liveMarker, Blocks.AIR.defaultBlockState());
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+
+            Pufferfish pufferfish = (Pufferfish) helper.spawnWithNoFreeWill(EntityType.PUFFERFISH, 13.5F, 2.0F, 0.5F);
+            InteractionResult result = pufferfish.interact(player, InteractionHand.MAIN_HAND);
+
+            helper.assertTrue(
+                    result.consumesAction(),
+                    Component.literal("Expected bucket catch interaction to consume the player action.")
+            );
+            helper.assertTrue(
+                    player.getMainHandItem().is(Items.PUFFERFISH_BUCKET),
+                    Component.literal("Expected bucket catch interaction to replace the water bucket with a pufferfish bucket.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(liveMarker).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected bucket catch script to mark the block under the player at " + liveMarker + ".")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "bucket catcher".equals(player.getCustomName().getString()),
+                    Component.literal("Expected bucket catch script to expose the bucketing player as event-player.")
+            );
+            helper.assertTrue(
+                    !pufferfish.isAlive() || pufferfish.isRemoved(),
+                    Component.literal("Expected captured pufferfish to be removed from the world.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void filteredBucketCatchEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/bucket_filtered_catch_names_player.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(13.5D, 2.0D, 1.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+            BlockPos futureMarker = player.blockPosition().below();
+
+            Pufferfish pufferfish = (Pufferfish) helper.spawnWithNoFreeWill(EntityType.PUFFERFISH, 13.5F, 2.0F, 1.5F);
+            InteractionResult result = pufferfish.interact(player, InteractionHand.MAIN_HAND);
+
+            helper.assertTrue(
+                    result.consumesAction(),
+                    Component.literal("Expected filtered bucket catch interaction to consume the player action.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "puffer catcher".equals(player.getCustomName().getString()),
+                    Component.literal(
+                            "Expected filtered bucket catch script to match only the pufferfish trigger and resolve future event-item. "
+                                    + "actualName="
+                                    + (player.getCustomName() == null ? "null" : player.getCustomName().getString())
+                                    + ", hand="
+                                    + player.getMainHandItem()
+                                    + ", futureMarker="
+                                    + helper.getLevel().getBlockState(futureMarker)
+                    )
+            );
+            helper.assertTrue(
+                    !pufferfish.isAlive() || pufferfish.isRemoved(),
+                    Component.literal("Expected filtered bucket catch test to remove the captured pufferfish.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void fishingLineCastAndStateChangeEventsExecuteRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/fishing_line_cast_and_state_change_marks_player.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(6, 1, 1));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            new FishingHook(player, helper.getLevel(), 0, 0);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected fishing line cast event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "state changed".equals(player.getCustomName().getString()),
+                    Component.literal("Expected fishing state change script to name the player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void fishingEntityHookAndInGroundEventsExecuteRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/fishing_entity_hook_and_in_ground_mark_targets.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(7, 1, 1));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            FishingHook entityHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            ArmorStand armorStand = new ArmorStand(helper.getLevel(), markerAbsolute.getX() + 1.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            helper.getLevel().addFreshEntity(armorStand);
+            PrivateFishingHookAccess.onHitEntity(entityHook, armorStand);
+
+            helper.assertTrue(
+                    armorStand.getCustomName() != null && "entity hooked".equals(armorStand.getCustomName().getString()),
+                    Component.literal("Expected entity-hooked event script to rename the hooked entity.")
+            );
+
+            FishingHook groundHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            PrivateFishingHookAccess.onHitBlock(
+                    groundHook,
+                    new BlockHitResult(
+                            Vec3.atCenterOf(markerAbsolute),
+                            Direction.UP,
+                            markerAbsolute,
+                            false
+                    )
+            );
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected bobber-hit-ground event script to mark the block under the player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void fishingLuredBiteAndEscapeEventsExecuteRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/fishing_lured_bite_escape_marks_targets.sk");
+
+            BlockPos luredMarkerAbsolute = helper.absolutePos(new BlockPos(8, 1, 1));
+            BlockPos escapeMarkerAbsolute = helper.absolutePos(new BlockPos(9, 1, 1));
+            helper.getLevel().setBlockAndUpdate(luredMarkerAbsolute, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(escapeMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+
+            player.teleportTo(luredMarkerAbsolute.getX() + 0.5D, luredMarkerAbsolute.getY() + 1.0D, luredMarkerAbsolute.getZ() + 0.5D);
+            FishingHook luredHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            PrivateFishingHookAccess.setCurrentState(luredHook, "BOBBING");
+            PrivateFishingHookAccess.setTimeUntilLured(luredHook, 0);
+            PrivateFishingHookAccess.setTimeUntilHooked(luredHook, 0);
+            PrivateFishingHookAccess.setNibble(luredHook, 0);
+            PrivateFishingHookAccess.setBiting(luredHook, false);
+            PrivateFishingHookAccess.catchingFish(luredHook, luredHook.blockPosition());
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(luredMarkerAbsolute).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected fish-approaching event script to mark the block under the player.")
+            );
+
+            FishingHook biteHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            PrivateFishingHookAccess.setCurrentState(biteHook, "BOBBING");
+            PrivateFishingHookAccess.setTimeUntilLured(biteHook, 0);
+            PrivateFishingHookAccess.setTimeUntilHooked(biteHook, 1);
+            PrivateFishingHookAccess.setNibble(biteHook, 0);
+            PrivateFishingHookAccess.setBiting(biteHook, false);
+            PrivateFishingHookAccess.catchingFish(biteHook, biteHook.blockPosition());
+            helper.assertTrue(
+                    biteHook.getCustomName() != null && "fish bite".equals(biteHook.getCustomName().getString()),
+                    Component.literal("Expected fish-bite event script to rename the hook.")
+            );
+
+            player.teleportTo(escapeMarkerAbsolute.getX() + 0.5D, escapeMarkerAbsolute.getY() + 1.0D, escapeMarkerAbsolute.getZ() + 0.5D);
+            FishingHook escapeHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            PrivateFishingHookAccess.setCurrentState(escapeHook, "BOBBING");
+            PrivateFishingHookAccess.setTimeUntilLured(escapeHook, 0);
+            PrivateFishingHookAccess.setTimeUntilHooked(escapeHook, 0);
+            PrivateFishingHookAccess.setNibble(escapeHook, 1);
+            PrivateFishingHookAccess.setBiting(escapeHook, false);
+            PrivateFishingHookAccess.catchingFish(escapeHook, escapeHook.blockPosition());
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(escapeMarkerAbsolute).is(Blocks.IRON_BLOCK),
+                    Component.literal("Expected fish-escape event script to mark the block under the player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void fishingCaughtAndReelInEventsExecuteRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/fishing_caught_and_reel_in_marks_targets.sk");
+
+            BlockPos caughtMarkerAbsolute = helper.absolutePos(new BlockPos(10, 1, 1));
+            helper.getLevel().setBlockAndUpdate(caughtMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FISHING_ROD));
+            player.teleportTo(caughtMarkerAbsolute.getX() + 0.5D, caughtMarkerAbsolute.getY() + 1.0D, caughtMarkerAbsolute.getZ() + 0.5D);
+
+            FishingHook caughtHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            PrivateFishingHookAccess.setNibble(caughtHook, 1);
+            PrivateFishingHookAccess.setTimeUntilLured(caughtHook, 0);
+            PrivateFishingHookAccess.setTimeUntilHooked(caughtHook, 0);
+            PrivateFishingHookAccess.setBiting(caughtHook, false);
+            caughtHook.retrieve(new ItemStack(Items.FISHING_ROD));
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(caughtMarkerAbsolute).is(Blocks.DIAMOND_BLOCK),
+                    Component.literal("Expected fish-caught event script to mark the block under the player.")
+            );
+
+            FishingHook reelHook = new FishingHook(player, helper.getLevel(), 0, 0);
+            reelHook.retrieve(new ItemStack(Items.FISHING_ROD));
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "reeled in".equals(player.getCustomName().getString()),
+                    Component.literal("Expected reel-in event script to rename the player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerInputAnyPressEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_input_any_press_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(9, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            sendPlayerInput(player, new Input(true, false, false, false, false, false, false));
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.DIAMOND_BLOCK),
+                    Component.literal("Expected any-key press event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() == null,
+                    Component.literal("Expected any-key press event test not to execute the release handler.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerInputForwardReleaseEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_input_forward_release_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(10, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            sendPlayerInput(player, new Input(true, false, false, false, false, false, false));
+            sendPlayerInput(player, Input.EMPTY);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected forward-key release event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() == null,
+                    Component.literal("Expected forward-key release event test not to execute the jump release handler.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerInputSneakToggleEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_input_sneak_toggle_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(11, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            sendPlayerInput(player, new Input(false, false, false, false, false, true, false));
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected sneak-key toggle event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() == null,
+                    Component.literal("Expected sneak-key toggle event test not to execute the sprint toggle handler.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void brewingFuelFilteredEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/brewing_fuel_of_blaze_powder_marks_block.sk");
+
+            BlockPos brewingRelative = new BlockPos(10, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(
+                    brewingStand != null,
+                    Component.literal("Expected brewing stand block entity to exist for filtered brewing fuel test.")
+            );
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            for (int slot = 0; slot < 3; slot++) {
+                brewingStand.setItem(slot, PotionContents.createItemStack(Items.POTION, Potions.WATER));
+            }
+            brewingStand.setItem(3, new ItemStack(Items.NETHER_WART));
+            brewingStand.setItem(4, new ItemStack(Items.BLAZE_POWDER));
+            PrivateBlockEntityAccess.setBrewingFuel(brewingStand, 0);
+
+            BrewingStandBlockEntity.serverTick(
+                    helper.getLevel(),
+                    brewingAbsolute,
+                    helper.getLevel().getBlockState(brewingAbsolute),
+                    brewingStand
+            );
+
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(10, 2, 0));
+            helper.assertTrue(
+                    PrivateBlockEntityAccess.brewingFuel(brewingStand) > 0,
+                    Component.literal("Expected filtered brewing fuel test to actually consume fuel.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void brewingFuelMismatchedFilterDoesNotExecuteRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/brewing_fuel_of_redstone_marks_block.sk");
+
+            BlockPos brewingRelative = new BlockPos(11, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(
+                    brewingStand != null,
+                    Component.literal("Expected brewing stand block entity to exist for mismatched brewing fuel test.")
+            );
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            for (int slot = 0; slot < 3; slot++) {
+                brewingStand.setItem(slot, PotionContents.createItemStack(Items.POTION, Potions.WATER));
+            }
+            brewingStand.setItem(3, new ItemStack(Items.NETHER_WART));
+            brewingStand.setItem(4, new ItemStack(Items.BLAZE_POWDER));
+            PrivateBlockEntityAccess.setBrewingFuel(brewingStand, 0);
+
+            BrewingStandBlockEntity.serverTick(
+                    helper.getLevel(),
+                    brewingAbsolute,
+                    helper.getLevel().getBlockState(brewingAbsolute),
+                    brewingStand
+            );
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(11, 2, 0))).is(Blocks.AIR),
+                    Component.literal("Expected redstone brewing fuel filter to ignore blaze powder fuel.")
+            );
+            helper.assertTrue(
+                    PrivateBlockEntityAccess.brewingFuel(brewingStand) > 0,
+                    Component.literal("Expected mismatched brewing fuel test to still run the live serverTick fuel path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void brewingCompleteEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/brewing_complete_clears_results.sk");
+
+            BlockPos brewingRelative = new BlockPos(11, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(
+                    brewingStand != null,
+                    Component.literal("Expected brewing stand block entity to exist for brewing complete event test.")
+            );
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            for (int slot = 0; slot < 3; slot++) {
+                brewingStand.setItem(slot, PotionContents.createItemStack(Items.POTION, Potions.WATER));
+            }
+            brewingStand.setItem(3, new ItemStack(Items.NETHER_WART));
+            PrivateBlockEntityAccess.setBrewingTime(brewingStand, 1);
+
+            BrewingStandBlockEntity.serverTick(
+                    helper.getLevel(),
+                    brewingAbsolute,
+                    helper.getLevel().getBlockState(brewingAbsolute),
+                    brewingStand
+            );
+
+            helper.assertBlockPresent(Blocks.LAPIS_BLOCK, new BlockPos(11, 2, 0));
+            for (int slot = 0; slot < 3; slot++) {
+                helper.assertTrue(
+                        brewingStand.getItem(slot).isEmpty(),
+                        Component.literal("Expected brewing complete script to clear bottle slot " + slot + ".")
+                );
+            }
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void brewingCompleteItemFilteredEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/brewing_complete_for_potion_marks_block.sk");
+
+            BlockPos brewingRelative = new BlockPos(11, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(
+                    brewingStand != null,
+                    Component.literal("Expected brewing stand block entity to exist for filtered brewing complete item test.")
+            );
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            for (int slot = 0; slot < 3; slot++) {
+                brewingStand.setItem(slot, PotionContents.createItemStack(Items.POTION, Potions.WATER));
+            }
+            brewingStand.setItem(3, new ItemStack(Items.NETHER_WART));
+            PrivateBlockEntityAccess.setBrewingTime(brewingStand, 1);
+
+            BrewingStandBlockEntity.serverTick(
+                    helper.getLevel(),
+                    brewingAbsolute,
+                    helper.getLevel().getBlockState(brewingAbsolute),
+                    brewingStand
+            );
+
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(11, 2, 0));
+            helper.assertTrue(
+                    brewingStand.getItem(0).is(Items.POTION),
+                    Component.literal("Expected filtered brewing complete item test to keep brewed bottle results as potions.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void brewingCompleteEffectFilteredEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/brewing_complete_for_speed_marks_block.sk");
+
+            BlockPos brewingRelative = new BlockPos(12, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(
+                    brewingStand != null,
+                    Component.literal("Expected brewing stand block entity to exist for filtered brewing complete effect test.")
+            );
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            for (int slot = 0; slot < 3; slot++) {
+                brewingStand.setItem(slot, PotionContents.createItemStack(Items.POTION, Potions.AWKWARD));
+            }
+            brewingStand.setItem(3, new ItemStack(Items.SUGAR));
+            PrivateBlockEntityAccess.setBrewingTime(brewingStand, 1);
+
+            BrewingStandBlockEntity.serverTick(
+                    helper.getLevel(),
+                    brewingAbsolute,
+                    helper.getLevel().getBlockState(brewingAbsolute),
+                    brewingStand
+            );
+
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(12, 2, 0));
+            PotionContents potionContents = brewingStand.getItem(0).get(DataComponents.POTION_CONTENTS);
+            helper.assertTrue(
+                    potionContents != null && containsPotionEffect(potionContents, MobEffects.SPEED),
+                    Component.literal("Expected filtered brewing complete effect test to brew a speed potion.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void brewingStartEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/brewing_start_sets_time_and_marks_block.sk");
+
+            BlockPos brewingRelative = new BlockPos(12, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(
+                    brewingStand != null,
+                    Component.literal("Expected brewing stand block entity to exist for brewing start event test.")
+            );
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            for (int slot = 0; slot < 3; slot++) {
+                brewingStand.setItem(slot, PotionContents.createItemStack(Items.POTION, Potions.WATER));
+            }
+            brewingStand.setItem(3, new ItemStack(Items.NETHER_WART));
+            PrivateBlockEntityAccess.setBrewingFuel(brewingStand, 1);
+
+            BrewingStandBlockEntity.serverTick(
+                    helper.getLevel(),
+                    brewingAbsolute,
+                    helper.getLevel().getBlockState(brewingAbsolute),
+                    brewingStand
+            );
+
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(12, 2, 0));
+            helper.assertTrue(
+                    PrivateBlockEntityAccess.brewingTime(brewingStand) == 1,
+                    Component.literal("Expected brewing start script to set the brewing time to 1 tick.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void lootGenerateEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/loot_generate_clears_chest_loot.sk");
+
+            BlockPos chestRelative = new BlockPos(15, 1, 0);
+            BlockPos chestAbsolute = helper.absolutePos(chestRelative);
+            helper.getLevel().setBlockAndUpdate(chestAbsolute, Blocks.CHEST.defaultBlockState());
+
+            ChestBlockEntity chest = (ChestBlockEntity) helper.getLevel().getBlockEntity(chestAbsolute);
+            helper.assertTrue(
+                    chest != null,
+                    Component.literal("Expected chest block entity to exist for loot generate event test.")
+            );
+            if (chest == null) {
+                throw new IllegalStateException("Chest block entity was not created.");
+            }
+
+            chest.setLootTable(BuiltInLootTables.SIMPLE_DUNGEON);
+            chest.setLootTableSeed(37L);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(chestAbsolute.getX() + 0.5D, chestAbsolute.getY() + 1.0D, chestAbsolute.getZ() + 0.5D);
+
+            chest.unpackLootTable(player);
+
+            int nonEmptySlots = 0;
+            StringBuilder contents = new StringBuilder();
+            for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+                ItemStack stack = chest.getItem(slot);
+                if (stack.isEmpty()) {
+                    continue;
+                }
+                nonEmptySlots++;
+                if (contents.length() > 0) {
+                    contents.append(", ");
+                }
+                contents.append(stack.getCount()).append("x").append(stack.getItem());
+            }
+
+            helper.assertTrue(
+                    nonEmptySlots == 0,
+                    Component.literal("Expected loot generate script to clear all generated loot after deleting loot. Contents: " + contents)
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceFuelBurnEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_fuel_burn_marks_block.sk");
+
+            AbstractFurnaceBlockEntity furnace = createFurnace(helper, new BlockPos(11, 1, 1));
+            furnace.setItem(0, new ItemStack(Items.RAW_IRON));
+            furnace.setItem(1, new ItemStack(Items.COAL));
+
+            tickFurnace(helper, furnace);
+
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(11, 2, 1));
+            helper.assertTrue(
+                    PrivateFurnaceAccess.litTimeRemaining(furnace) == 10,
+                    Component.literal("Expected fuel burn script to set the remaining burn time to 10 ticks.")
+            );
+            helper.assertTrue(
+                    PrivateFurnaceAccess.litTotalTime(furnace) == 10,
+                    Component.literal("Expected fuel burn script to set the total burn time to 10 ticks.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceSmeltingStartEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_smelting_start_marks_block.sk");
+
+            AbstractFurnaceBlockEntity furnace = createFurnace(helper, new BlockPos(12, 1, 1));
+            furnace.setItem(0, new ItemStack(Items.RAW_IRON));
+            furnace.setItem(1, new ItemStack(Items.COAL));
+
+            tickFurnace(helper, furnace);
+
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(12, 2, 1));
+            int actualTotalCookTime = PrivateFurnaceAccess.cookingTotalTime(furnace);
+            helper.assertTrue(
+                    actualTotalCookTime == 40,
+                    Component.literal("Expected smelting start script to set the total cook time to 40 ticks. Actual: " + actualTotalCookTime)
+            );
+            helper.assertTrue(
+                    PrivateFurnaceAccess.cookingTimer(furnace) == 1,
+                    Component.literal("Expected furnace tick to keep cooking progress moving after the smelting start event.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceSmeltEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_smelt_marks_block.sk");
+
+            AbstractFurnaceBlockEntity furnace = createFurnace(helper, new BlockPos(13, 1, 1));
+            furnace.setItem(0, new ItemStack(Items.RAW_IRON));
+            furnace.setItem(1, new ItemStack(Items.COAL));
+            PrivateFurnaceAccess.setCookingTotalTime(furnace, 1);
+
+            tickFurnace(helper, furnace);
+
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(13, 2, 1));
+            helper.assertTrue(
+                    furnace.getItem(2).is(Items.IRON_INGOT) && furnace.getItem(2).getCount() == 1,
+                    Component.literal("Expected furnace smelt bridge to produce one iron ingot after the real furnace tick.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceExtractEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_extract_marks_block.sk");
+
+            AbstractFurnaceBlockEntity furnace = createFurnace(helper, new BlockPos(14, 1, 1));
+            furnace.setItem(2, new ItemStack(Items.IRON_INGOT, 3));
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(furnace.getBlockPos().getX() + 1.5D, furnace.getBlockPos().getY() + 1.0D, furnace.getBlockPos().getZ() + 0.5D);
+
+            FurnaceResultSlot resultSlot = new FurnaceResultSlot(player, furnace, 2, 0, 0);
+            ItemStack extracted = resultSlot.remove(2);
+            resultSlot.onTake(player, extracted);
+
+            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, new BlockPos(14, 2, 1));
+            helper.assertTrue(
+                    player.getCustomName() != null && "furnace extractor".equals(player.getCustomName().getString()),
+                    Component.literal("Expected furnace extract script to receive the extracting player as event-player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceFilteredFuelBurnEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_filtered_fuel_burn_marks_block.sk");
+
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(1, 2, 2)), Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(2, 2, 2)), Blocks.AIR.defaultBlockState());
+
+            AbstractFurnaceBlockEntity matchingBurn = createFurnace(helper, new BlockPos(1, 1, 2));
+            matchingBurn.setItem(0, new ItemStack(Items.RAW_COPPER));
+            matchingBurn.setItem(1, new ItemStack(Items.COAL));
+            tickFurnace(helper, matchingBurn);
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(1, 2, 2));
+
+            AbstractFurnaceBlockEntity nonMatchingBurn = createFurnace(helper, new BlockPos(2, 1, 2));
+            nonMatchingBurn.setItem(0, new ItemStack(Items.RAW_COPPER));
+            nonMatchingBurn.setItem(1, new ItemStack(Items.BLAZE_ROD));
+            tickFurnace(helper, nonMatchingBurn);
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(2, 2, 2))).is(Blocks.AIR),
+                    Component.literal("Expected non-matching fuel burn filter to leave the marker block untouched.")
+            );
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceFilteredSmeltingStartEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_filtered_smelting_start_marks_block.sk");
+
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(3, 2, 2)), Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(4, 2, 2)), Blocks.AIR.defaultBlockState());
+
+            AbstractFurnaceBlockEntity matchingStart = createFurnace(helper, new BlockPos(3, 1, 2));
+            matchingStart.setItem(0, new ItemStack(Items.RAW_IRON));
+            matchingStart.setItem(1, new ItemStack(Items.BLAZE_ROD));
+            tickFurnace(helper, matchingStart);
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(3, 2, 2));
+
+            AbstractFurnaceBlockEntity nonMatchingStart = createFurnace(helper, new BlockPos(4, 1, 2));
+            nonMatchingStart.setItem(0, new ItemStack(Items.RAW_COPPER));
+            nonMatchingStart.setItem(1, new ItemStack(Items.BLAZE_ROD));
+            tickFurnace(helper, nonMatchingStart);
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(4, 2, 2))).is(Blocks.AIR),
+                    Component.literal("Expected non-matching smelting-start filter to leave the marker block untouched.")
+            );
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceFilteredSmeltEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_filtered_smelt_marks_block.sk");
+
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(5, 2, 2)), Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(6, 2, 2)), Blocks.AIR.defaultBlockState());
+
+            AbstractFurnaceBlockEntity matchingSmelt = createFurnace(helper, new BlockPos(5, 1, 2));
+            matchingSmelt.setItem(0, new ItemStack(Items.RAW_IRON));
+            matchingSmelt.setItem(1, new ItemStack(Items.BLAZE_ROD));
+            PrivateFurnaceAccess.setCookingTotalTime(matchingSmelt, 1);
+            tickFurnace(helper, matchingSmelt);
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(5, 2, 2));
+
+            AbstractFurnaceBlockEntity nonMatchingSmelt = createFurnace(helper, new BlockPos(6, 1, 2));
+            nonMatchingSmelt.setItem(0, new ItemStack(Items.RAW_COPPER));
+            nonMatchingSmelt.setItem(1, new ItemStack(Items.BLAZE_ROD));
+            PrivateFurnaceAccess.setCookingTotalTime(nonMatchingSmelt, 1);
+            tickFurnace(helper, nonMatchingSmelt);
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(6, 2, 2))).is(Blocks.AIR),
+                    Component.literal("Expected non-matching smelt filter to leave the marker block untouched.")
+            );
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void furnaceFilteredExtractEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/furnace_filtered_extract_marks_block.sk");
+
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(7, 2, 2)), Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(8, 2, 2)), Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+
+            AbstractFurnaceBlockEntity matchingExtract = createFurnace(helper, new BlockPos(7, 1, 2));
+            matchingExtract.setItem(2, new ItemStack(Items.IRON_INGOT, 3));
+            player.teleportTo(matchingExtract.getBlockPos().getX() + 1.5D, matchingExtract.getBlockPos().getY() + 1.0D, matchingExtract.getBlockPos().getZ() + 0.5D);
+            FurnaceResultSlot matchingResultSlot = new FurnaceResultSlot(player, matchingExtract, 2, 0, 0);
+            ItemStack extractedIron = matchingResultSlot.remove(2);
+            matchingResultSlot.onTake(player, extractedIron);
+            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, new BlockPos(7, 2, 2));
+
+            AbstractFurnaceBlockEntity nonMatchingExtract = createFurnace(helper, new BlockPos(8, 1, 2));
+            nonMatchingExtract.setItem(2, new ItemStack(Items.GOLD_INGOT, 3));
+            player.teleportTo(nonMatchingExtract.getBlockPos().getX() + 1.5D, nonMatchingExtract.getBlockPos().getY() + 1.0D, nonMatchingExtract.getBlockPos().getZ() + 0.5D);
+            FurnaceResultSlot nonMatchingResultSlot = new FurnaceResultSlot(player, nonMatchingExtract, 2, 0, 0);
+            ItemStack extractedGold = nonMatchingResultSlot.remove(2);
+            nonMatchingResultSlot.onTake(player, extractedGold);
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(8, 2, 2))).is(Blocks.AIR),
+                    Component.literal("Expected non-matching furnace extract filter to leave the marker block untouched.")
+            );
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectAddedEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_added_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "poison added".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected entity potion add event script to rename the entity.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectAddedEventAcceptsNamespacedEffectId(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_added_namespaced_id_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "namespaced poison added".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected entity potion add event script to match an explicit namespaced effect id.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToPotionDrinkExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_potion_drink_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.setItemInHand(InteractionHand.MAIN_HAND, PotionContents.createItemStack(Items.POTION, Potions.POISON));
+            player.getItemInHand(InteractionHand.MAIN_HAND).finishUsingItem(helper.getLevel(), player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "potion drink".equals(player.getCustomName().getString()),
+                    Component.literal("Expected potion-drink cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToAreaEffectCloudExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_area_effect_cloud_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+
+            AreaEffectCloud cloud = new AreaEffectCloud(helper.getLevel(), cow.getX(), cow.getY(), cow.getZ());
+            cloud.setRadius(2.0F);
+            cloud.setWaitTime(0);
+            cloud.setDuration(40);
+            cloud.setPotionContents(new PotionContents(Potions.POISON));
+            helper.getLevel().addFreshEntity(cloud);
+            for (int i = 0; i < 6; i++) {
+                cloud.tick();
+            }
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "area effect cloud".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected area-effect-cloud cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToAreaEffectCloudDoesNotMatchPotionDrink(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_area_effect_cloud_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.setItemInHand(InteractionHand.MAIN_HAND, PotionContents.createItemStack(Items.POTION, Potions.POISON));
+            player.getItemInHand(InteractionHand.MAIN_HAND).finishUsingItem(helper.getLevel(), player);
+
+            helper.assertTrue(
+                    player.getCustomName() == null,
+                    Component.literal("Expected area-effect-cloud cause filter to ignore potion-drink events. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToFoodExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_food_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.getFoodData().setFoodLevel(10);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
+            player.getItemInHand(InteractionHand.MAIN_HAND).finishUsingItem(helper.getLevel(), player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "food".equals(player.getCustomName().getString()),
+                    Component.literal("Expected food cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToMilkExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_milk_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.MILK_BUCKET));
+            player.getItemInHand(InteractionHand.MAIN_HAND).finishUsingItem(helper.getLevel(), player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "milk".equals(player.getCustomName().getString()),
+                    Component.literal("Expected milk cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToBeaconExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_beacon_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            BlockPos beaconPos = helper.absolutePos(new BlockPos(2, 1, 2));
+            player.teleportTo(beaconPos.getX() + 0.5D, beaconPos.getY() + 1.0D, beaconPos.getZ() + 0.5D);
+
+            invokeBeaconApplyEffects(helper, beaconPos, 1, MobEffects.SPEED, null);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "beacon".equals(player.getCustomName().getString()),
+                    Component.literal("Expected beacon cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToConduitExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_conduit_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            BlockPos conduitPos = helper.absolutePos(new BlockPos(4, 1, 4));
+            BlockPos waterPos = conduitPos.above();
+            helper.getLevel().setBlockAndUpdate(waterPos, Blocks.WATER.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(waterPos.above(), Blocks.WATER.defaultBlockState());
+            player.teleportTo(waterPos.getX() + 0.5D, waterPos.getY(), waterPos.getZ() + 0.5D);
+            refreshWaterState(player);
+
+            invokeConduitApplyEffects(helper, conduitPos, 7);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "conduit".equals(player.getCustomName().getString()),
+                    Component.literal("Expected conduit cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToCommandExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_command_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+
+            helper.getLevel().getServer()
+                    .getCommands()
+                    .performPrefixedCommand(player.createCommandSourceStack().withPermission(4), "effect give @s poison 5 0 true");
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "command".equals(player.getCustomName().getString()),
+                    Component.literal("Expected command cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToAttackExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_attack_names_entity.sk");
+
+            Pufferfish pufferfish = (Pufferfish) helper.spawnWithNoFreeWill(EntityType.PUFFERFISH, 0.5F, 1.0F, 0.5F);
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+            pufferfish.setPuffState(2);
+            invokePufferfishTouch(pufferfish, helper, cow);
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "attack".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected attack cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToArrowExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_arrow_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+
+            Arrow arrow = new Arrow(helper.getLevel(), player, new ItemStack(Items.ARROW), new ItemStack(Items.BOW));
+            arrow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+            invokeArrowPostHurtEffects(arrow, cow);
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "arrow".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected arrow cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToUnknownExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_unknown_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "unknown".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected unknown cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToPotionSplashExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_potion_splash_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+
+            ItemStack splashStack = PotionContents.createItemStack(Items.SPLASH_POTION, Potions.POISON);
+            ThrownSplashPotion splashPotion = new ThrownSplashPotion(helper.getLevel(), player, splashStack);
+            splashPotion.setPos(cow.getX(), cow.getY(), cow.getZ());
+            helper.getLevel().addFreshEntity(splashPotion);
+            splashPotion.onHitAsPotion(helper.getLevel(), splashStack, new EntityHitResult(cow));
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "potion splash".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected splash-potion cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectClearDueToCommandExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_clear_due_to_command_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+
+            helper.getLevel().getServer()
+                    .getCommands()
+                    .performPrefixedCommand(player.createCommandSourceStack().withPermission(4), "effect clear @s");
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "command clear".equals(player.getCustomName().getString()),
+                    Component.literal("Expected command clear cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToTotemExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_totem_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.setHealth(1.0F);
+            player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.TOTEM_OF_UNDYING));
+
+            boolean survived = invokeTotemDeathProtection(player, helper.getLevel().damageSources().mobAttack(createCow(helper, false)));
+
+            helper.assertTrue(survived, Component.literal("Expected totem protection invocation to succeed."));
+            helper.assertTrue(
+                    player.getCustomName() != null && "totem".equals(player.getCustomName().getString()),
+                    Component.literal("Expected totem cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToWitherRoseExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_wither_rose_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+            BlockPos rosePos = helper.absolutePos(new BlockPos(12, 1, 12));
+            helper.getLevel().setBlockAndUpdate(rosePos, Blocks.WITHER_ROSE.defaultBlockState());
+
+            invokeWitherRoseEntityInside(helper, rosePos, cow);
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "wither rose".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected wither-rose cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToConversionExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_conversion_names_entity.sk");
+
+            ZombieVillager zombieVillager = (ZombieVillager) helper.spawnWithNoFreeWill(EntityType.ZOMBIE_VILLAGER, 0.5F, 1.0F, 0.5F);
+            invokeZombieVillagerFinishConversion(helper, zombieVillager);
+
+            List<Villager> villagers = helper.getLevel().getEntitiesOfClass(
+                    Villager.class,
+                    new AABB(zombieVillager.blockPosition()).inflate(4.0D)
+            );
+
+            helper.assertTrue(
+                    villagers.stream().anyMatch(villager ->
+                            villager.getCustomName() != null && "conversion".equals(villager.getCustomName().getString())),
+                    Component.literal("Expected conversion cause filter to rename the converted villager.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToAxolotlExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_axolotl_names_entity.sk");
+
+            Axolotl axolotl = (Axolotl) helper.spawnWithNoFreeWill(EntityType.AXOLOTL, 0.5F, 1.0F, 0.5F);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+
+            invokeAxolotlSupportingEffects(axolotl, player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "axolotl".equals(player.getCustomName().getString()),
+                    Component.literal("Expected axolotl cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToWardenExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_warden_names_entity.sk");
+
+            Warden warden = (Warden) helper.spawnWithNoFreeWill(EntityType.WARDEN, 0.5F, 1.0F, 0.5F);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.teleportTo(warden.getX(), warden.getY(), warden.getZ() + 1.0D);
+
+            Warden.applyDarknessAround(helper.getLevel(), warden.position(), warden, 20);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "warden".equals(player.getCustomName().getString()),
+                    Component.literal("Expected warden cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToSpiderSpawnExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_spider_spawn_names_entity.sk");
+
+            Spider spider = (Spider) helper.spawnWithNoFreeWill(EntityType.SPIDER, 0.5F, 1.0F, 0.5F);
+            spider.setCustomName(null);
+
+            invokeSpiderFinalizeSpawn(helper, spider);
+
+            helper.assertTrue(
+                    spider.getCustomName() != null && "spider spawn".equals(spider.getCustomName().getString()),
+                    Component.literal("Expected spider-spawn cause filter to rename the affected entity. Actual name: "
+                            + (spider.getCustomName() == null ? "null" : spider.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToVillagerTradeExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_villager_trade_names_entity.sk");
+
+            Villager villager = (Villager) helper.spawnWithNoFreeWill(EntityType.VILLAGER, 0.5F, 1.0F, 0.5F);
+            villager.setCustomName(null);
+
+            invokeVillagerRewardTradeXp(villager, new MerchantOffer(new ItemCost(Items.EMERALD), new ItemStack(Items.BREAD), 0, 2, 0.05F));
+            setIntField(villager, "updateMerchantTimer", 1);
+            invokeVillagerCustomServerAiStep(helper, villager);
+
+            helper.assertTrue(
+                    villager.getCustomName() != null && "villager trade".equals(villager.getCustomName().getString()),
+                    Component.literal("Expected villager-trade cause filter to rename the affected villager. Actual name: "
+                            + (villager.getCustomName() == null ? "null" : villager.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToExpirationExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_expiration_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 1, 0));
+            cow.tick();
+            cow.tick();
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "expiration".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected expiration cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToDolphinExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_dolphin_names_entity.sk");
+
+            Dolphin dolphin = (Dolphin) helper.spawnWithNoFreeWill(EntityType.DOLPHIN, 0.5F, 1.0F, 0.5F);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+
+            invokeDolphinSwimWithPlayerGoalStart(dolphin, player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "dolphin".equals(player.getCustomName().getString()),
+                    Component.literal("Expected dolphin cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToTurtleHelmetExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_turtle_helmet_names_entity.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setCustomName(null);
+            player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.TURTLE_HELMET));
+
+            invokePlayerTurtleHelmetTick(player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "turtle helmet".equals(player.getCustomName().getString()),
+                    Component.literal("Expected turtle-helmet cause filter to rename the affected player. Actual name: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToIllusionExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_illusion_names_entity.sk");
+
+            Illusioner illusioner = (Illusioner) helper.spawnWithNoFreeWill(EntityType.ILLUSIONER, 0.5F, 1.0F, 0.5F);
+            illusioner.setCustomName(null);
+
+            invokeIllusionerMirrorSpell(illusioner);
+
+            helper.assertTrue(
+                    illusioner.getCustomName() != null && "illusion".equals(illusioner.getCustomName().getString()),
+                    Component.literal("Expected illusion cause filter to rename the affected illusioner. Actual name: "
+                            + (illusioner.getCustomName() == null ? "null" : illusioner.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToPluginExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_plugin_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(cow.getX(), cow.getY() + 1.0D, cow.getZ());
+
+            InteractionResult result = UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    cow,
+                    new EntityHitResult(cow)
+            );
+
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected plugin-cause setup script to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertTrue(
+                    cow.getCustomName() != null && "plugin".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected plugin cause filter to rename the affected entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectDueToDeathExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_due_to_death_names_entity.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+            cow.remove(Entity.RemovalReason.KILLED);
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "death".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected death cause filter to rename the removed entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectChangedEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            Cow cow = createCow(helper, false);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_changed_names_entity.sk");
+
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 1));
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "poison changed".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected entity potion change event script to rename the entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectRemovedEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            Cow cow = createCow(helper, false);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_removed_names_entity.sk");
+
+            boolean removed = cow.removeEffect(MobEffects.POISON);
+
+            helper.assertTrue(
+                    removed,
+                    Component.literal("Expected explicit potion removal to succeed.")
+            );
+            helper.assertTrue(
+                    cow.getCustomName() != null && "poison removed".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected entity potion remove event script to rename the entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void potionEffectClearedEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            Cow cow = createCow(helper, false);
+            cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+            cow.addEffect(new MobEffectInstance(MobEffects.SPEED, 200, 0));
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/potion_effect_cleared_names_entity.sk");
+
+            boolean cleared = cow.removeAllEffects();
+
+            helper.assertTrue(
+                    cleared,
+                    Component.literal("Expected clear-all potion removal to succeed.")
+            );
+            helper.assertTrue(
+                    cow.getCustomName() != null && "poison cleared".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected entity potion clear event script to rename the entity. Actual name: "
+                            + (cow.getCustomName() == null ? "null" : cow.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void useItemBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/use_item_renames_item.sk");
+
+            BlockPos playerMarkerAbsolute = helper.absolutePos(new BlockPos(4, 1, 0));
+            helper.getLevel().setBlockAndUpdate(playerMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+
+            InteractionResult result = UseItemCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND
+            );
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected use item bridge to keep Fabric callback flow in PASS state.")
+            );
+            ItemStack held = player.getItemInHand(InteractionHand.MAIN_HAND);
+            helper.assertTrue(
+                    held.getCustomName() != null && "used item".equals(held.getCustomName().getString()),
+                    Component.literal("Expected use item bridge to resolve event-item inside a real .sk file.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.BLUE_WOOL),
+                    Component.literal("Expected use item bridge to resolve event-player inside a real .sk file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+}

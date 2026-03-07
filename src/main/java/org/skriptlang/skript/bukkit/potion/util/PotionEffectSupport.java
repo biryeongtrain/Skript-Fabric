@@ -11,6 +11,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import com.mojang.authlib.GameProfile;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.MinecraftRegistryLookup;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
 
 public final class PotionEffectSupport {
@@ -29,6 +30,9 @@ public final class PotionEffectSupport {
             @SuppressWarnings("unchecked") Holder<MobEffect> mobEffectHolder = (Holder<MobEffect>) holder;
             return mobEffectHolder;
         }
+        if (value instanceof ResourceLocation id) {
+            return holderFromId(id);
+        }
         if (value instanceof MobEffect mobEffect) {
             return BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect);
         }
@@ -43,13 +47,13 @@ public final class PotionEffectSupport {
         if (normalized.isEmpty()) {
             return null;
         }
-        try {
-            ResourceLocation id = MinecraftResourceParser.parse(normalized.replace(' ', '_'));
-            MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.getValue(id);
-            return mobEffect != null ? BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect) : null;
-        } catch (RuntimeException ignored) {
+        normalized = stripPotionSuffix(normalized);
+        Matcher matcher = AMPLIFIER_SUFFIX.matcher(normalized);
+        if (!matcher.matches()) {
             return null;
         }
+        MobEffect mobEffect = MinecraftRegistryLookup.lookup(matcher.group(1), PotionEffectSupport::effectFromId);
+        return mobEffect == null ? null : BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect);
     }
 
     public static @Nullable SkriptPotionEffect parsePotionEffect(@Nullable Object value) {
@@ -117,6 +121,18 @@ public final class PotionEffectSupport {
         return key != null ? MinecraftResourceParser.display(key) : effect.toString();
     }
 
+    public static boolean sameType(@Nullable Holder<MobEffect> left, @Nullable Holder<MobEffect> right) {
+        if (left == null || right == null) {
+            return false;
+        }
+        if (left == right || left.value() == right.value()) {
+            return true;
+        }
+        ResourceLocation leftId = BuiltInRegistries.MOB_EFFECT.getKey(left.value());
+        ResourceLocation rightId = BuiltInRegistries.MOB_EFFECT.getKey(right.value());
+        return leftId != null && leftId.equals(rightId);
+    }
+
     private static String normalizeEffectName(String raw) {
         String normalized = raw.trim().toLowerCase(Locale.ENGLISH);
         if (normalized.startsWith("a ")) {
@@ -127,6 +143,14 @@ public final class PotionEffectSupport {
         normalized = normalized.replace("potion effect of ", "");
         normalized = normalized.replace("effect of ", "");
         return normalized.trim();
+    }
+
+    private static String stripPotionSuffix(String raw) {
+        String normalized = raw.trim();
+        if (normalized.endsWith(" potion")) {
+            normalized = normalized.substring(0, normalized.length() - 7).trim();
+        }
+        return normalized;
     }
 
     private static @Nullable String fallbackPotionToken(@Nullable Object value) {
@@ -141,5 +165,16 @@ public final class PotionEffectSupport {
         }
         String rendered = value.toString();
         return rendered == null || rendered.isBlank() ? null : rendered;
+    }
+
+    private static @Nullable Holder<MobEffect> holderFromId(ResourceLocation id) {
+        MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.getValue(id);
+        return mobEffect != null ? BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect) : null;
+    }
+
+    private static @Nullable MobEffect effectFromId(ResourceLocation id) {
+        MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.getValue(id);
+        ResourceLocation key = mobEffect == null ? null : BuiltInRegistries.MOB_EFFECT.getKey(mobEffect);
+        return id.equals(key) ? mobEffect : null;
     }
 }

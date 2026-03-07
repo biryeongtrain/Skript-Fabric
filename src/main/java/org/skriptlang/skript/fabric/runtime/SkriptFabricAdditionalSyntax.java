@@ -38,6 +38,7 @@ import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.ExprEquip
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.ExprSecBlankEquipComp;
 import org.skriptlang.skript.bukkit.itemcomponents.generic.ExprItemCompCopy;
 import org.skriptlang.skript.bukkit.loottables.LootContextWrapper;
+import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLoot;
 import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootContext;
 import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootContextEntity;
 import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootContextLocation;
@@ -59,6 +60,8 @@ import org.skriptlang.skript.bukkit.particles.elements.expressions.ExprParticleW
 import org.skriptlang.skript.bukkit.particles.elements.expressions.ExprParticleWithOffset;
 import org.skriptlang.skript.bukkit.particles.elements.expressions.ExprParticleWithSpeed;
 import org.skriptlang.skript.bukkit.particles.particleeffects.ParticleEffect;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprEventPotionEffect;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprEventPotionEffectAction;
 import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprSecPotionEffect;
 import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprSkriptPotionEffect;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
@@ -69,9 +72,13 @@ import org.skriptlang.skript.bukkit.tags.elements.ExprTagKey;
 import org.skriptlang.skript.bukkit.tags.elements.ExprTagsOf;
 import org.skriptlang.skript.bukkit.tags.elements.ExprTagsOfType;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.syntax.event.EvtBucketCatch;
 import org.skriptlang.skript.fabric.syntax.event.EvtBreeding;
 import org.skriptlang.skript.fabric.syntax.event.EvtBrewingComplete;
+import org.skriptlang.skript.fabric.syntax.event.EvtBrewingStart;
+import org.skriptlang.skript.fabric.syntax.event.EvtEntityPotion;
 import org.skriptlang.skript.fabric.syntax.event.EvtFurnace;
+import org.skriptlang.skript.fabric.syntax.event.EvtLoveModeEnter;
 import org.skriptlang.skript.fabric.syntax.event.EvtLootGenerate;
 
 final class SkriptFabricAdditionalSyntax {
@@ -81,15 +88,16 @@ final class SkriptFabricAdditionalSyntax {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     static void register() {
-        Skript.registerEvent(EvtBreeding.class, "on breeding");
-        Skript.registerEvent(EvtBrewingComplete.class, "on brewing complete", "on brew complete");
+        Skript.registerEvent(EvtBucketCatch.class, EvtBucketCatch.patterns());
+        Skript.registerEvent(EvtBreeding.class, EvtBreeding.patterns());
+        Skript.registerEvent(EvtBrewingComplete.class, EvtBrewingComplete.patterns());
+        Skript.registerEvent(EvtBrewingStart.class, EvtBrewingStart.patterns());
+        Skript.registerEvent(EvtEntityPotion.class, EvtEntityPotion.patterns());
+        Skript.registerEvent(EvtLoveModeEnter.class, EvtLoveModeEnter.patterns());
         Skript.registerEvent(EvtLootGenerate.class, "on loot generate");
         Skript.registerEvent(
                 EvtFurnace.class,
-                "on furnace smelt",
-                "on fuel burn",
-                "on smelting start",
-                "on furnace extract"
+                EvtFurnace.patterns()
         );
 
         Skript.registerExpression(
@@ -129,6 +137,18 @@ final class SkriptFabricAdditionalSyntax {
                 "%entities%'[s] glow [color] override"
         );
         Skript.registerExpression(
+                ExprEventPotionEffect.class,
+                (Class) SkriptPotionEffect.class,
+                "[the] event-potion effect",
+                "[the] event potion effect"
+        );
+        Skript.registerExpression(
+                ExprEventPotionEffectAction.class,
+                String.class,
+                "[the] event-potion effect action",
+                "[the] event potion effect action"
+        );
+        Skript.registerExpression(
                 ExprFurnaceEventItems.class,
                 ItemStack.class,
                 "smelted item",
@@ -144,10 +164,14 @@ final class SkriptFabricAdditionalSyntax {
         Skript.registerExpression(
                 ExprFurnaceTime.class,
                 Timespan.class,
-                "[the] cook[ing] time",
-                "[the] cook[ing] time of %blocks%",
-                "[the] total cook[ing] time",
-                "[the] total cook[ing] time of %blocks%",
+                "[the] cook time",
+                "[the] cook time of %blocks%",
+                "[the] cooking time",
+                "[the] cooking time of %blocks%",
+                "[the] total cook time",
+                "[the] total cook time of %blocks%",
+                "[the] total cooking time",
+                "[the] total cooking time of %blocks%",
                 "[the] fuel burn time",
                 "[the] fuel burn time of %blocks%"
         );
@@ -156,7 +180,10 @@ final class SkriptFabricAdditionalSyntax {
                 Date.class,
                 "[the] last attack (date|time) of %entities%",
                 "[the] last interaction (date|time) of %entities%",
-                "[the] last click (date|time) of %entities%"
+                "[the] last click (date|time) of %entities%",
+                "[the] last (date|time)[s] [that|when] %entities% (were|was) attacked",
+                "[the] last (date|time)[s] [that|when] %entities% (were|was) interacted with",
+                "[the] last (date|time)[s] [that|when] %entities% (were|was) clicked [on]"
         );
         Skript.registerExpression(
                 ExprEquippableComponent.class,
@@ -215,6 +242,11 @@ final class SkriptFabricAdditionalSyntax {
                 ExprSecCreateLootContext.class,
                 (Class) LootContextWrapper.class,
                 "[a] loot[ ]context at %locations%"
+        );
+        Skript.registerExpression(
+                ExprLoot.class,
+                ItemStack.class,
+                "[the] loot"
         );
         Skript.registerExpression(
                 ExprLootContext.class,

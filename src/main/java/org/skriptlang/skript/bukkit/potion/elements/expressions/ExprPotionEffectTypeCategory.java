@@ -49,6 +49,16 @@ public final class ExprPotionEffectTypeCategory extends SimpleExpression<MobEffe
     }
 
     @Override
+    public boolean setTime(int time) {
+        return values.setTime(time);
+    }
+
+    @Override
+    public int getTime() {
+        return values.getTime();
+    }
+
+    @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         return "potion effect type category of " + values.toString(event, debug);
     }

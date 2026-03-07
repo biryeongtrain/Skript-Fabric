@@ -1,0 +1,2 @@
+on entity potion effect due to axolotl:
+    set test name of entity event-entity to "axolotl"

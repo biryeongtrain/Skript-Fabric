@@ -49,6 +49,16 @@ public final class ExprPotionDuration extends SimpleExpression<Timespan> {
     }
 
     @Override
+    public boolean setTime(int time) {
+        return values.setTime(time);
+    }
+
+    @Override
+    public int getTime() {
+        return values.getTime();
+    }
+
+    @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         return "duration of " + values.toString(event, debug);
     }

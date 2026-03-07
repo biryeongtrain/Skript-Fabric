@@ -1,0 +1,2 @@
+on fuel burning of coal:
+    set test block above event-block to emerald_block

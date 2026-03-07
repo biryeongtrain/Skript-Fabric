@@ -1,0 +1,5 @@
+on sneak key toggle:
+    set test block under player event-player to redstone_block
+
+on sprint key toggle:
+    set test name of entity event-player to "sprint toggle"

@@ -33,7 +33,12 @@ public final class ExprFurnaceTime extends SimpleExpression<Timespan> {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        type = Type.values()[matchedPattern / 2];
+        type = switch (matchedPattern) {
+            case 0, 1, 2, 3 -> Type.COOK;
+            case 4, 5, 6, 7 -> Type.TOTAL_COOK;
+            case 8, 9 -> Type.BURN;
+            default -> Type.COOK;
+        };
         if (expressions.length == 0 || expressions[0] == null) {
             if (!getParser().isCurrentEvent(FabricFurnaceEventHandle.class)) {
                 Skript.error("The event-only furnace time syntax can only be used in furnace events.");

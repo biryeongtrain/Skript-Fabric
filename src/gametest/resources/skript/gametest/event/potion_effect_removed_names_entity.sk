@@ -1,0 +1,4 @@
+on entity potion effect of poison removed:
+    event-potion effect action is "removed"
+    potion amplifier of past event-potion effect is 1
+    set test name of entity event-entity to "poison removed"

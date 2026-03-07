@@ -1,0 +1,2 @@
+on brewing fuel of blaze powder:
+    set test block above event-block to emerald_block

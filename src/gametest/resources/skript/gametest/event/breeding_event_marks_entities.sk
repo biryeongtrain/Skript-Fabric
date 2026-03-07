@@ -1,0 +1,6 @@
+on breeding:
+    set test name of entity breeding mother to "breeding mother"
+    set test name of entity breeding father to "breeding father"
+    set test name of entity bred offspring to "bred offspring"
+    set test name of entity breeder to "breeder"
+    set test block under player event-player to yellow_wool

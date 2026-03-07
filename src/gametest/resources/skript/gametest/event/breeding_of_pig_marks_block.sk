@@ -1,0 +1,2 @@
+on breeding of pigs:
+    set test block under player event-player to red_wool

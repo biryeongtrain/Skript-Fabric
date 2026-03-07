@@ -1,0 +1,3 @@
+on use entity:
+    if last time event-entity was interacted with is last time event-entity was clicked on:
+        set test name of entity event-entity to "interaction date matched"

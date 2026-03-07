@@ -1,0 +1,5 @@
+on fish caught:
+    set test block under player event-player to diamond_block
+
+on fishing rod reel in:
+    set test name of entity event-player to "reeled in"

@@ -1,0 +1,5 @@
+on use entity:
+    apply a potion effect of poison to event-entity for 5 seconds
+
+on entity potion effect due to plugin:
+    set test name of entity event-entity to "plugin"

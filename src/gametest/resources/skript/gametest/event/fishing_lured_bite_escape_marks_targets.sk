@@ -1,0 +1,8 @@
+on fish approaching:
+    set test block under player event-player to gold_block
+
+on fish bite:
+    set test name of entity event-entity to "fish bite"
+
+on fish escape:
+    set test block under player event-player to iron_block

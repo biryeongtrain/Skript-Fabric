@@ -7,6 +7,8 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCauseContext;
 
 public final class SkriptPotionEffect implements Cloneable {
 
@@ -199,7 +201,9 @@ public final class SkriptPotionEffect implements Cloneable {
         if (entitySource == null) {
             return;
         }
-        entitySource.removeEffect(type);
-        entitySource.addEffect(asMobEffectInstance());
+        FabricPotionEffectCauseContext.run(FabricPotionEffectCause.PLUGIN, () -> {
+            entitySource.removeEffect(type);
+            entitySource.addEffect(asMobEffectInstance());
+        });
     }
 }

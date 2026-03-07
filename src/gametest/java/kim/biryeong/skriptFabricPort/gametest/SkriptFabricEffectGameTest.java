@@ -1,0 +1,679 @@
+package kim.biryeong.skriptFabricPort.gametest;
+
+import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.lang.Condition;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.TriggerItem;
+import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Timespan;
+import ch.njol.skript.util.Timespan.TimePeriod;
+import com.mojang.authlib.GameProfile;
+import com.mojang.math.Transformation;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Brightness;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.entity.Interaction;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.Dolphin;
+import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.projectile.ThrownSplashPotion;
+import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.inventory.FurnaceResultSlot;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WitherRoseBlock;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.ConduitBlockEntity;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import org.skriptlang.skript.bukkit.base.types.InventoryClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ItemStackClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ItemTypeClassInfo;
+import org.skriptlang.skript.bukkit.base.types.LocationClassInfo;
+import org.skriptlang.skript.bukkit.base.types.NameableClassInfo;
+import org.skriptlang.skript.bukkit.base.types.OfflinePlayerClassInfo;
+import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
+import org.skriptlang.skript.bukkit.base.types.VectorClassInfo;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondScalesWithDifficulty;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondWasIndirect;
+import org.skriptlang.skript.bukkit.displays.text.CondTextDisplayHasDropShadow;
+import org.skriptlang.skript.bukkit.brewing.elements.CondBrewingConsume;
+import org.skriptlang.skript.bukkit.fishing.elements.CondFishingLure;
+import org.skriptlang.skript.bukkit.fishing.elements.CondIsInOpenWater;
+import org.skriptlang.skript.bukkit.input.InputKey;
+import org.skriptlang.skript.bukkit.input.elements.conditions.CondIsPressingKey;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDamage;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDispensable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompInteract;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompShearable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompSwapEquipment;
+import org.skriptlang.skript.bukkit.interactions.elements.conditions.CondIsResponsive;
+import org.skriptlang.skript.bukkit.loottables.LootTable;
+import org.skriptlang.skript.bukkit.loottables.LootTableUtils;
+import org.skriptlang.skript.bukkit.loottables.elements.conditions.CondHasLootTable;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanAge;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanBreed;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsAdult;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsBaby;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsInLove;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondHasPotion;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPoisoned;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionAmbient;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionInstant;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasIcon;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasParticles;
+import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
+import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.bukkit.tags.elements.CondIsTagged;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.FabricBreedingState;
+import org.skriptlang.skript.fabric.compat.FabricFishingState;
+import org.skriptlang.skript.fabric.compat.FabricInventory;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
+import org.skriptlang.skript.fabric.compat.PrivateBlockEntityAccess;
+import org.skriptlang.skript.fabric.compat.PrivateEntityAccess;
+import org.skriptlang.skript.fabric.compat.PrivateFishingHookAccess;
+import org.skriptlang.skript.fabric.compat.PrivateFurnaceAccess;
+import org.skriptlang.skript.fabric.runtime.FabricAttackEntityHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBlockBreakHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBrewingFuelHandle;
+import org.skriptlang.skript.fabric.runtime.FabricDamageHandle;
+import org.skriptlang.skript.fabric.runtime.FabricFishingEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
+import org.skriptlang.skript.fabric.runtime.FabricFishingHandle;
+import org.skriptlang.skript.fabric.runtime.FabricPlayerInputHandle;
+import org.skriptlang.skript.fabric.runtime.FabricUseEntityHandle;
+import org.skriptlang.skript.fabric.runtime.FabricUseItemHandle;
+import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
+import org.skriptlang.skript.lang.properties.Property;
+import org.skriptlang.skript.lang.properties.handlers.WXYZHandler;
+import ch.njol.util.Kleenean;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+
+public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTestSupport {
+
+    @GameTest
+    public void preventAgingEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/allow_aging_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.LIME_WOOL,
+                () -> helper.assertTrue(
+                        !FabricBreedingState.canAge(cow),
+                        Component.literal("Expected prevent-aging effect to lock animal aging.")
+                )
+        );
+    }
+
+    @GameTest
+    public void makeUnbreedableEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/unbreedable_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.ORANGE_WOOL,
+                () -> helper.assertTrue(
+                        !FabricBreedingState.canBreed(cow),
+                        Component.literal("Expected breedable effect to persist custom unbreedable state.")
+                )
+        );
+    }
+
+    @GameTest
+    public void makeAdultEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, true);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/make_adult_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.WHITE_WOOL,
+                () -> helper.assertTrue(
+                        !cow.isBaby(),
+                        Component.literal("Expected make-adult effect to convert the cow into an adult.")
+                )
+        );
+    }
+
+    @GameTest
+    public void makeBabyEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/make_baby_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.BLACK_WOOL,
+                () -> helper.assertTrue(
+                        cow.isBaby(),
+                        Component.literal("Expected make-baby effect to convert the cow into a baby.")
+                )
+        );
+    }
+
+    @GameTest
+    public void brewingConsumeEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/prevent_brewing_consume_marks_block.sk");
+
+            BlockPos brewingRelative = new BlockPos(0, 1, 0);
+            BlockPos brewingAbsolute = helper.absolutePos(brewingRelative);
+            helper.getLevel().setBlockAndUpdate(brewingAbsolute, Blocks.BREWING_STAND.defaultBlockState());
+
+            BrewingStandBlockEntity brewingStand = (BrewingStandBlockEntity) helper.getLevel().getBlockEntity(brewingAbsolute);
+            helper.assertTrue(brewingStand != null, Component.literal("Expected brewing stand block entity to exist for effect test."));
+            if (brewingStand == null) {
+                throw new IllegalStateException("Brewing stand block entity was not created.");
+            }
+
+            FabricBrewingFuelHandle handle = new FabricBrewingFuelHandle(helper.getLevel(), brewingAbsolute, brewingStand, true);
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    handle,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+            helper.assertTrue(executed == 1, Component.literal("Expected brewing consume effect script to execute exactly one trigger."));
+            helper.assertTrue(!handle.willConsume(), Component.literal("Expected brewing consume effect to update the event handle."));
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(0, 2, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void textDisplayDropShadowEffectExecutesRealScript(GameTestHelper helper) {
+        Display.TextDisplay textDisplay = createTextDisplay(helper, (byte) 0);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/text_display_add_shadow_names_entity.sk",
+                textDisplay,
+                "shadow added",
+                () -> helper.assertTrue(
+                        (PrivateEntityAccess.textDisplayFlags(textDisplay) & Display.TextDisplay.FLAG_SHADOW) != 0,
+                        Component.literal("Expected drop-shadow effect to set the Mojang text display flag.")
+                )
+        );
+    }
+
+    @GameTest
+    public void textDisplaySeeThroughEffectExecutesRealScript(GameTestHelper helper) {
+        Display.TextDisplay textDisplay = createTextDisplay(helper, (byte) 0);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/text_display_make_see_through_names_entity.sk",
+                textDisplay,
+                "see through added",
+                () -> helper.assertTrue(
+                        (PrivateEntityAccess.textDisplayFlags(textDisplay) & Display.TextDisplay.FLAG_SEE_THROUGH) != 0,
+                        Component.literal("Expected see-through effect to set the Mojang text display flag.")
+                )
+        );
+    }
+
+    @GameTest
+    public void fishingLureEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/fishing_remove_lure_names_hook.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            FishingHook hook = new FishingHook(player, helper.getLevel(), 0, 3);
+            FabricFishingHandle handle = new FabricFishingHandle(helper.getLevel(), player, hook, true);
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    handle,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    player
+            ));
+            helper.assertTrue(executed == 1, Component.literal("Expected fishing lure effect script to execute exactly one trigger."));
+            helper.assertTrue(!handle.lureApplied(), Component.literal("Expected fishing lure effect to disable lure application."));
+            helper.assertTrue(
+                    hook.getCustomName() != null && "lure removed".equals(hook.getCustomName().getString()),
+                    Component.literal("Expected fishing lure effect script to name the hook after the condition re-check.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void pullHookedEntityEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/pull_hooked_entity_marks_block.sk");
+
+            BlockPos playerMarkerAbsolute = helper.absolutePos(new BlockPos(15, 1, 0));
+            helper.getLevel().setBlockAndUpdate(playerMarkerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+
+            FishingHook hook = new FishingHook(player, helper.getLevel(), 0, 0);
+            Cow cow = createCow(helper, false);
+            cow.setDeltaMovement(Vec3.ZERO);
+            setFishingHookedEntity(hook, cow);
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    new FabricFishingHandle(helper.getLevel(), player, hook, false),
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    player
+            ));
+            helper.assertTrue(executed == 1, Component.literal("Expected pull-hooked-entity effect script to execute exactly one trigger."));
+            helper.assertTrue(cow.getDeltaMovement().lengthSqr() > 0.0D, Component.literal("Expected pull-hooked-entity effect to change the hooked entity motion."));
+            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, new BlockPos(15, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void makeResponsiveEffectExecutesRealScript(GameTestHelper helper) {
+        Interaction interaction = createInteraction(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/make_responsive_names_entity.sk",
+                interaction,
+                "made responsive",
+                () -> helper.assertTrue(
+                        PrivateEntityAccess.interactionResponse(interaction),
+                        Component.literal("Expected responsive effect to toggle the Mojang interaction flag.")
+                )
+        );
+    }
+
+    @GameTest
+    public void equippableDamageEffectExecutesRealScript(GameTestHelper helper) {
+        assertUseItemScriptNamesItem(
+                helper,
+                "skript/gametest/effect/equippable_damage_effect_renames_item.sk",
+                createEquippableTestItem(false, false, false, false, false),
+                "damage effect",
+                held -> {
+                    Equippable equippable = held.get(DataComponents.EQUIPPABLE);
+                    helper.assertTrue(
+                            equippable != null && equippable.damageOnHurt(),
+                            Component.literal("Expected damage effect to enable equippable durability loss on injury. Actual: "
+                                    + describeEquippable(equippable))
+                    );
+                }
+        );
+    }
+
+    @GameTest
+    public void equippableDispensableEffectExecutesRealScript(GameTestHelper helper) {
+        assertUseItemScriptNamesItem(
+                helper,
+                "skript/gametest/effect/equippable_dispensable_effect_renames_item.sk",
+                createEquippableTestItem(false, true, false, false, false),
+                "dispense effect",
+                held -> {
+                    Equippable equippable = held.get(DataComponents.EQUIPPABLE);
+                    helper.assertTrue(
+                            equippable != null && !equippable.dispensable(),
+                            Component.literal("Expected dispense effect to disable equippable dispensing. Actual: "
+                                    + describeEquippable(equippable))
+                    );
+                }
+        );
+    }
+
+    @GameTest
+    public void equippableInteractEffectExecutesRealScript(GameTestHelper helper) {
+        assertUseItemScriptNamesItem(
+                helper,
+                "skript/gametest/effect/equippable_interact_effect_renames_item.sk",
+                createEquippableTestItem(false, false, false, false, false),
+                "interact effect",
+                held -> {
+                    Equippable equippable = held.get(DataComponents.EQUIPPABLE);
+                    helper.assertTrue(
+                            equippable != null && equippable.equipOnInteract(),
+                            Component.literal("Expected interact effect to enable equipping onto entities. Actual: "
+                                    + describeEquippable(equippable))
+                    );
+                }
+        );
+    }
+
+    @GameTest
+    public void equippableShearableEffectExecutesRealScript(GameTestHelper helper) {
+        assertUseItemScriptNamesItem(
+                helper,
+                "skript/gametest/effect/equippable_shearable_effect_renames_item.sk",
+                createEquippableTestItem(false, false, false, false, false),
+                "shear effect",
+                held -> {
+                    Equippable equippable = held.get(DataComponents.EQUIPPABLE);
+                    helper.assertTrue(
+                            equippable != null && equippable.canBeSheared(),
+                            Component.literal("Expected shear effect to enable equippable shearing. Actual: "
+                                    + describeEquippable(equippable))
+                    );
+                }
+        );
+    }
+
+    @GameTest
+    public void equippableSwappableEffectExecutesRealScript(GameTestHelper helper) {
+        assertUseItemScriptNamesItem(
+                helper,
+                "skript/gametest/effect/equippable_swappable_effect_renames_item.sk",
+                createEquippableTestItem(false, false, false, false, true),
+                "swap effect",
+                held -> {
+                    Equippable equippable = held.get(DataComponents.EQUIPPABLE);
+                    helper.assertTrue(
+                            equippable != null && !equippable.swappable(),
+                            Component.literal("Expected swap effect to disable equippable equipment swapping. Actual: "
+                                    + describeEquippable(equippable))
+                    );
+                }
+        );
+    }
+
+    @GameTest
+    public void generateLootEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/generate_loot_marks_block.sk");
+
+            BlockPos chestRelative = new BlockPos(14, 1, 0);
+            BlockPos chestAbsolute = helper.absolutePos(chestRelative);
+            helper.getLevel().setBlockAndUpdate(chestAbsolute, Blocks.CHEST.defaultBlockState());
+
+            ChestBlockEntity chest = (ChestBlockEntity) helper.getLevel().getBlockEntity(chestAbsolute);
+            helper.assertTrue(chest != null, Component.literal("Expected chest block entity to exist for generate-loot effect test."));
+            if (chest == null) {
+                throw new IllegalStateException("Chest block entity was not created.");
+            }
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(chestAbsolute.getX() + 0.5D, chestAbsolute.getY() + 1.0D, chestAbsolute.getZ() + 0.5D);
+            BlockHitResult hitResult = new BlockHitResult(Vec3.atCenterOf(chestAbsolute), Direction.UP, chestAbsolute, false);
+
+            InteractionResult result = UseBlockCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    hitResult
+            );
+            helper.assertTrue(result == InteractionResult.PASS, Component.literal("Expected generate-loot effect bridge to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(14, 2, 0));
+            boolean foundLoot = false;
+            StringBuilder contents = new StringBuilder();
+            for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+                if (!chest.getItem(slot).isEmpty()) {
+                    foundLoot = true;
+                    if (contents.length() > 0) {
+                        contents.append(", ");
+                    }
+                    contents.append(chest.getItem(slot).getItem());
+                }
+            }
+            helper.assertTrue(foundLoot, Component.literal("Expected generate-loot effect to insert loot into the chest. Contents: " + contents));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void rotateEffectExecutesRealScript(GameTestHelper helper) {
+        Display.TextDisplay textDisplay = createTextDisplay(helper, (byte) 0);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/rotate_display_marks_block.sk",
+                textDisplay,
+                new BlockPos(10, 1, 0),
+                Blocks.YELLOW_WOOL,
+                () -> {
+                    Transformation transformation = PrivateEntityAccess.displayTransformation(textDisplay);
+                    helper.assertTrue(
+                            Math.abs(transformation.getLeftRotation().y) > 0.5F,
+                            Component.literal("Expected rotate effect to modify the display left rotation quaternion.")
+                    );
+                }
+        );
+    }
+
+    @GameTest
+    public void applyPotionEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/apply_potion_names_entity.sk",
+                cow,
+                "applied poison",
+                () -> helper.assertTrue(
+                        cow.hasEffect(MobEffects.POISON),
+                        Component.literal("Expected apply-potion effect to add poison to the entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void poisonEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/poison_effect_names_entity.sk",
+                cow,
+                "poisoned by effect",
+                () -> helper.assertTrue(
+                        cow.hasEffect(MobEffects.POISON),
+                        Component.literal("Expected poison effect to add poison to the entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void curePoisonEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/cure_poison_marks_block.sk",
+                cow,
+                new BlockPos(10, 1, 0),
+                Blocks.CYAN_WOOL,
+                () -> helper.assertTrue(
+                        !cow.hasEffect(MobEffects.POISON),
+                        Component.literal("Expected cure-poison effect to remove poison from the entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void potionAmbientEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0, false, true, true));
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/potion_ambient_effect_names_entity.sk",
+                cow,
+                "ambient potion",
+                () -> {
+                    MobEffectInstance effect = cow.getEffect(MobEffects.POISON);
+                    helper.assertTrue(effect != null && effect.isAmbient(), Component.literal("Expected ambient potion effect modifier to update the active entity effect."));
+                }
+        );
+    }
+
+    @GameTest
+    public void potionIconEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0, false, true, true));
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/potion_icon_effect_names_entity.sk",
+                cow,
+                "hidden icon potion",
+                () -> {
+                    MobEffectInstance effect = cow.getEffect(MobEffects.POISON);
+                    helper.assertTrue(effect != null && !effect.showIcon(), Component.literal("Expected icon potion effect modifier to hide the icon on the active entity effect."));
+                }
+        );
+    }
+
+    @GameTest
+    public void potionParticlesEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0, false, true, true));
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/potion_particles_effect_names_entity.sk",
+                cow,
+                "hidden particles potion",
+                () -> {
+                    MobEffectInstance effect = cow.getEffect(MobEffects.POISON);
+                    helper.assertTrue(effect != null && !effect.isVisible(), Component.literal("Expected particle potion effect modifier to hide particles on the active entity effect."));
+                }
+        );
+    }
+
+    @GameTest
+    public void potionInfiniteEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        cow.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0, false, true, true));
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/potion_infinite_effect_marks_block.sk",
+                cow,
+                new BlockPos(10, 1, 0),
+                Blocks.MAGENTA_WOOL,
+                () -> {
+                    MobEffectInstance effect = cow.getEffect(MobEffects.POISON);
+                    helper.assertTrue(effect != null && effect.isInfiniteDuration(), Component.literal("Expected infinite potion effect modifier to update the active entity effect duration."));
+                }
+        );
+    }
+
+    @GameTest
+    public void registerTagEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/register_custom_tag_renames_item.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+
+            InteractionResult result = UseItemCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND
+            );
+            helper.assertTrue(result == InteractionResult.PASS, Component.literal("Expected register-tag effect script to keep Fabric callback flow in PASS state."));
+            ItemStack held = player.getItemInHand(InteractionHand.MAIN_HAND);
+            helper.assertTrue(
+                    held.getCustomName() != null && "custom tagged item".equals(held.getCustomName().getString()),
+                    Component.literal("Expected register-tag effect to create a custom runtime tag and satisfy the follow-up condition.")
+            );
+            helper.assertTrue(
+                    org.skriptlang.skript.bukkit.tags.TagSupport.isTagged(held, "skript:effect_test_items"),
+                    Component.literal("Expected the newly registered custom tag to be visible through TagSupport.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/play_bone_meal_effect_marks_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+            helper.assertTrue(executed == 1, Component.literal("Expected play-effect script to execute exactly one trigger."));
+            helper.assertBlockPresent(Blocks.LIME_CONCRETE, new BlockPos(8, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+}

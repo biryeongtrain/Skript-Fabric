@@ -10,7 +10,11 @@
   "environment": "server",
   "entrypoints": {
     "fabric-gametest": [
-      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricGameTest"
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricBaseGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricConditionGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEffectGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEventGameTest"
     ]
   }
 }

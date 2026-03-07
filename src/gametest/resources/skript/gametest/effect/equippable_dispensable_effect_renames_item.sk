@@ -1,3 +1,3 @@
 on use item:
-    prevent equippable component of event-item from being dispensed
+    prevent event-item from being dispensed
     set test name of item event-item to "dispense effect"

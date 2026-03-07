@@ -1,0 +1,5 @@
+on brewing complete for potion:
+    set test block above event-block to diamond_block
+
+on brewing complete for lingering potion:
+    set test block above event-block to gold_block

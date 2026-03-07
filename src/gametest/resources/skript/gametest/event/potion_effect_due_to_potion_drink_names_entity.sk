@@ -1,0 +1,2 @@
+on entity potion effect of poison added due to potion drink:
+    set test name of entity event-entity to "potion drink"

@@ -1,6 +1,6 @@
 # Fabric Port Stages
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Goal
 
@@ -16,9 +16,9 @@ It means:
 
 ## Current measured state
 
-- `src/main/java/org/skriptlang/skript/bukkit`: 218 classes
-- direct `org.bukkit` / Paper references in `src/main/java`: 3657 hits
-- clean `./gradlew compileJava --rerun-tasks`: fails immediately on missing `org.bukkit.*`
+- `src/main/java/org/skriptlang/skript/bukkit`: 199 classes
+- direct `org.bukkit` / Paper references in `src/main/java`: 0 hits
+- clean `./gradlew compileJava --rerun-tasks`: passes
 
 ## Execution policy
 
@@ -134,8 +134,23 @@ Current completed slices:
 
 - base condition seed: `is empty`, `is named`
 - breeding condition batch: `can age`, `can breed`, `is adult`, `is baby`, `is in love`
+- brewing complete event batch: `on brewing complete`, including item/potion-effect filter forms
+- brewing start event batch: `on brewing start`
 - damage source condition batch: `scales damage with difficulty`, `was indirectly caused`
 - brewing / fishing / input condition batch: `brewing stand will consume fuel`, `lure enchantment bonus is applied`, `entity is in open water`, `player is pressing key`
+- breeding event batch: `on breeding`
+- bucket catch event batch: `on bucket catch`
+- love mode enter event batch: `on love mode enter`
+- entity potion effect event batch: `on entity potion effect [modification]`
+- furnace event batch: `on fuel burn`, `on smelting start`, `on furnace smelt`, `on furnace extract`
+- loot generate event batch: `on loot generate`
+
+Known remaining Stage 5 gaps:
+
+- missing event families: none in the currently tracked package-local Bukkit surface
+- partial parity in existing families: none in the current Fabric target surface
+- intentionally dropped deprecated residue:
+  - `PATROL_CAPTAIN` potion cause
 
 ## Stage 6: Port conditions, expressions, effects package-by-package
 
@@ -191,7 +206,12 @@ Acceptance:
 
 - GameTests load scripts, execute them, and verify state transitions
 
-Status: `pending`
+Status: `in_progress`
+
+Current completed slices:
+
+- `fabric-gametest` runtime harness is active
+- current real-script Fabric GameTest suite is green at `181 / 181`
 
 ## Stage 8: Parity audit
 
@@ -208,7 +228,32 @@ Acceptance:
 
 - no silent omissions
 
-Status: `pending`
+Status: `in_progress`
+
+Current audited Stage 8 slice:
+
+- natural-script event/filter forms that depend on registry-backed plain-token parsing are now rechecked live for breeding, bucket catch, brewing complete, brewing fuel, furnace filtered event forms, and potion-effect id filters
+- timed event payload parsing now accepts both `past ...` and `future ...` forms in the active runtime
+- section-backed control flow now includes minimal `if <condition>:` support so live `.sk` parity fixtures can express original guarded event logic instead of flattening branches into synthetic test-only syntax
+- `145c3c9` package-local audit matrix is now written for `23 / 214` classes (`10.7%`) across `breeding (12 / 12)`, `input (5 / 5)`, and `interactions (6 / 6)`
+- `breeding` is rechecked live against the original module/event-value role, including breeding `event-item` presence in real `.sk` and direct handle/expression verification that the captured bred-with item resolves as wheat
+- `input` is rechecked live against the original module/event-value role, including `past current input keys of event-player`
+- `interactions` is rechecked live against the original module role, including original natural date/player forms such as `last time %entity% was interacted with`
+
+Current audited package-local matrix:
+
+| Package | `145c3c9` package-local classes | Status | Notes |
+| --- | --- | --- | --- |
+| `breeding` | `12 / 12` | package-local parity-complete | module, conditions, effects, event syntax, and expressions are covered; `EntityBreedEvent#getBredWith` parity is verified through real `.sk` event-item presence plus direct event-handle/expression checks |
+| `input` | `5 / 5` | package-local parity-complete | enum, module, event syntax, condition, and expression are covered, including past-state input values |
+| `interactions` | `6 / 6` | package-local parity-complete | module, condition, effect, dimensions expression, last-player expressions, and original last-date expressions are covered |
+
+Still remaining before Stage 8 can be called complete:
+
+- package-local coverage matrix progress is `23 / 214`, so `191 / 214` package-local classes still need audit
+- top-level non-package Bukkit helpers outside that package-local matrix still remaining: `4`
+- a cross-cutting base-surface gap remains outside the three completed packages: ambiguous bare item-id equality through generic compare is not parity-complete yet, for example `event-item is wheat`
+- further audit slices still need to confirm parser/runtime behavior row-by-row outside the three completed packages and the earlier natural-script event/filter surface
 
 ## Notes
 
@@ -225,6 +270,10 @@ Status: `pending`
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `ServerTickEvents.END_SERVER_TICK` into the Skript runtime and executing an `on server tick` script without manual dispatch.
 - 2026-03-06: `./gradlew build` passed after serializing GameTest access to the shared `SkriptRuntime`, removing cross-test flakiness from event-bridge verification.
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `PlayerBlockBreakEvents.AFTER` into the Skript runtime and executing a real `.sk` file from a mock player block break.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed after wiring `Animal.finalizeSpawnChildFromBreeding` into the Skript runtime and executing a real `.sk` breeding event script against live cow entities.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed at `181 / 181` after the `breeding` / `input` / `interactions` Stage 8 audit slice, including live coverage for breeding `event-item`, past current input keys, and original interaction player/date forms.
+- 2026-03-07: `./gradlew build --rerun-tasks` passed after the same Stage 8 audit slice.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed after wiring `BrewingStandBlockEntity.serverTick` successful brew completion into the Skript runtime and executing a real `.sk` brewing complete script that cleared brewed results.
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after porting the original `org/skriptlang/skript/bukkit/breeding/elements` condition batch and validating real `.sk` fixtures against Mojang cows for adult, baby, breed-ready, can-age, and in-love states.
 - 2026-03-06: `./gradlew build` passed with `19` Fabric GameTests green after the breeding condition batch landed.
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after restoring modern expression registration, exposing `event-block` / `event-player`, and consuming both inside real `.sk` fixtures.
@@ -257,6 +306,27 @@ Status: `pending`
 - 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `90` Fabric GameTests green after the potion expression batch landed cleanly.
 - 2026-03-07: `./gradlew compileJava compileGametestJava --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build` all passed after registering the remaining expression/event batches and closing the expression port at source level.
 - 2026-03-07: the original Bukkit `Expr*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `84 / 84`, remaining source-level expression ports `0`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after fixing equippable effect fixture syntax to target direct object holders, broadening loot-generation assertions to valid generated loot instead of a single fixed item, and closing the remaining effect verification failures.
+- 2026-03-07: `./gradlew compileJava --rerun-tasks` passed with active `org.bukkit` / Paper direct references reduced to `0` in `src/main/java`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `120 / 120` Fabric GameTests green after wiring the furnace event family (`on fuel burn`, `on smelting start`, `on furnace smelt`, `on furnace extract`) and fixing furnace-time parser registration so plain `cook time` / `cooking time` forms both bind correctly.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `127 / 127` Fabric GameTests green after wiring `on loot generate` through the live loot-table return path and verifying filtered furnace event forms across burn/start/smelt/extract with real `.sk` fixtures.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `128 / 128` Fabric GameTests green after wiring `BrewingStandBlockEntity.serverTick` start-brew flow into `on brewing start` and verifying same-tick `brewing time` mutation from a real `.sk` fixture.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `130 / 130` Fabric GameTests green after fixing the live bucket-catch `.sk` fixture, verifying `event-player` resolution, and adding real filter coverage for `on bucket catching of pufferfish`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `134 / 134` Fabric GameTests green after wiring `on entity potion effect [modification]` through live add/update/remove callbacks; action-header dispatch is verified, but type-filter and event-payload parity still remain open.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `135 / 135` Fabric GameTests green after wiring `on love mode enter` through `Animal` love-mode transitions and verifying `event-entity` / `event-player` from a live breeding-item interaction.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `136 / 136` Fabric GameTests green after teaching `SkriptParser` to resolve `past ...` event payload expressions, verifying current/past potion payload access from real `.sk` headers, and narrowing the remaining potion-event gap to `due to %-potioncauses%`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `140 / 140` Fabric GameTests green after restoring breeding offspring-type filters and brewing fuel item filters, then validating both positive and negative paths from live breeding and brewing-stand callbacks.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `142 / 142` Fabric GameTests green after restoring brewing complete item and potion-effect filter forms, then validating both positive and negative filter paths from live brewing completion callbacks.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `145 / 145` Fabric GameTests green after restoring `on player input` plain-form compatibility and adding live toggle/press/release + key-filter coverage through `ServerGamePacketListenerImpl.handlePlayerInput`, reducing the remaining Stage 5 gaps to `2`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `149 / 149` Fabric GameTests green after restoring original `on fishing` state variants through live `FishingHook` lifecycle hooks and validating cast, state-change, entity-hook, in-ground, lured, bite, escape, caught-fish, and reel-in flows from real `.sk` fixtures, reducing the remaining Stage 5 gaps to `1`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `152 / 152` Fabric GameTests green after restoring initial `on entity potion effect ... due to %potioncauses%` filtering, validating live `potion drink` and `area effect cloud` cause paths plus a non-matching negative filter, while keeping the broader potion-cause family partial.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `158 / 158` Fabric GameTests green after extending `on entity potion effect ... due to %potioncauses%` through live consumable, beacon, conduit, and `/effect` command paths; `food`, `milk`, `beacon`, `conduit`, and `command` are now verified alongside `potion drink` and `area effect cloud`, but the family remains partial at `7 / 25` original Bukkit cause values.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `162 / 162` Fabric GameTests green after restoring typed `potioncauses` parsing, fixing consumable cause-context leaks across mutable item consumption, and validating live `attack`, `arrow`, `unknown`, and `potion splash` cause paths; the potion-cause family remains partial at `11 / 25` original Bukkit cause values.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `175 / 175` Fabric GameTests green after tagging Skript-driven potion mutations as `plugin`, dispatching death-driven potion removal as `death`, and validating live `dolphin`, `turtle helmet`, `illusion`, `plugin`, and `death` cause paths; `on entity potion effect ... due to %potioncauses%` now has `24 / 25` original cause values live-verified, with only deprecated-unused `patrol captain` still unresolved.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `176 / 176` Fabric GameTests green after removing deprecated-unused `PATROL_CAPTAIN` from the supported potion-cause surface, switching potion-effect type matching to registry-safe comparison, and adding real `.sk` coverage for explicit namespaced effect ids such as `minecraft:poison`; tracked Stage 5 implementation gaps are now closed in the current Fabric target surface.
+- 2026-03-07: Stage 8 parity audit is now `in_progress`; `./gradlew runGameTest --rerun-tasks` and `./gradlew build --rerun-tasks` passed with `176 / 176` Fabric GameTests green after adding minimal `if <condition>:` section execution, teaching timed event expressions to parse `future ...`, tightening registry-backed item/entity/potion token lookup for plain natural-script forms, and revalidating the live filtered bucket-catch path that uses `future event-item` inside nested `if` sections.
+- 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
+- 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 
 ## Stage 3 Completed Scope
 
@@ -304,7 +374,7 @@ Completed in this slice:
 - item display transform restored through Mojang `ItemDisplayContext`, including script-level comparison and changer coverage
 - loottable expressions restored for entity/block loot-table access, direct string-to-loot-table parsing, and loot-table seed access with live setter verification
 - remaining original Bukkit expression classes restored and registered under the Fabric bootstrap, including damage-source sections, loot-context sections, furnace expressions, tag expressions, particle expressions, equippable/item-component expressions, rotation/text helpers, breeding-event payloads, and potion-section expressions
-- supplemental Fabric events registered for breeding, brewing complete, loot generate, and furnace-specific event kinds
+- supplemental Fabric events registered for breeding, brewing start/complete, loot generate, and furnace-specific event kinds
 - `./gradlew runGameTest --rerun-tasks` and `./gradlew build` pass with the fully-restored expression source set active
 
 Still missing before Stage 6 can be called complete:
@@ -328,9 +398,11 @@ Completed in this slice:
 - `UseBlockCallback.EVENT`, `UseEntityCallback.EVENT`, `UseItemCallback.EVENT`, and `AttackEntityCallback.EVENT` now bridge live player interaction payloads into the runtime
 - mixin-backed `on brewing fuel`, `on fishing`, and `on player input` event contexts are now available for condition verification
 - GameTests cover live `.sk` execution for brewing consume, fishing lure/open-water, and player input state
+- later event slices now also bridge `on breeding`, `on bucket catch`, `on brewing start`, `on brewing complete`, `on loot generate`, and the full furnace event family through real `.sk` + Fabric GameTests
+- later event slices now also bridge `on love mode enter`, `on entity potion effect [modification]`, initial potion-cause filters for `potion drink` / `area effect cloud`, original `on player input` toggle/press/release + key-filter forms, and original `on fishing` state variants through real `.sk` + Fabric GameTests
 
-Still missing before Stage 5 can be called complete:
+Tracked Stage 5 implementation gaps are currently closed in the active Fabric target surface.
 
-- Bukkit event by event mapping onto Mojang/Fabric hooks
-- event payload parity for player/entity/block/inventory contexts
-- representative mapped events beyond the currently bridged lifecycle, interaction, brewing, fishing, damage, and player-input hooks
+- intentionally dropped deprecated residue:
+  - `PATROL_CAPTAIN` potion cause
+- full Stage 8 parity audit is still pending before any event class can be called parity-complete

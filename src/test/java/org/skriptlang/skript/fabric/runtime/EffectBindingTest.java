@@ -43,42 +43,42 @@ final class EffectBindingTest {
 
     @Test
     void displayShadowFixtureBindsEntityTargetAndPositiveMode() throws Exception {
-        EffTextDisplayDropShadow effect = loadFirstEffect("skript/gametest/text_display_add_shadow_names_entity.sk", EffTextDisplayDropShadow.class);
+        EffTextDisplayDropShadow effect = loadFirstEffect("skript/gametest/effect/text_display_add_shadow_names_entity.sk", EffTextDisplayDropShadow.class);
         assertTrue(readBoolean(effect, "addShadow"));
         assertEquals("event-entity", expression(effect, "displays").toString(null, false));
     }
 
     @Test
     void displaySeeThroughFixtureBindsEntityTargetAndPositiveMode() throws Exception {
-        EffTextDisplaySeeThroughBlocks effect = loadFirstEffect("skript/gametest/text_display_make_see_through_names_entity.sk", EffTextDisplaySeeThroughBlocks.class);
+        EffTextDisplaySeeThroughBlocks effect = loadFirstEffect("skript/gametest/effect/text_display_make_see_through_names_entity.sk", EffTextDisplaySeeThroughBlocks.class);
         assertTrue(readBoolean(effect, "canSee"));
         assertEquals("event-entity", expression(effect, "displays").toString(null, false));
     }
 
     @Test
     void responsiveFixtureBindsEntityTargetAndPositiveMode() throws Exception {
-        EffMakeResponsive effect = loadFirstEffect("skript/gametest/make_responsive_names_entity.sk", EffMakeResponsive.class);
+        EffMakeResponsive effect = loadFirstEffect("skript/gametest/effect/make_responsive_names_entity.sk", EffMakeResponsive.class);
         assertTrue(!readBoolean(effect, "negated"));
         assertEquals("event-entity", expression(effect, "entities").toString(null, false));
     }
 
     @Test
     void equippableFixtureBindsEquippableComponentExpression() throws Exception {
-        EffEquipCompDamageable effect = loadFirstEffect("skript/gametest/equippable_damage_effect_renames_item.sk", EffEquipCompDamageable.class);
+        EffEquipCompDamageable effect = loadFirstEffect("skript/gametest/effect/equippable_damage_effect_renames_item.sk", EffEquipCompDamageable.class);
         assertTrue(readBoolean(effect, "loseDurability"));
-        assertTrue(expression(effect, "values").toString(null, false).contains("equippable component of event-item"));
+        assertEquals("event-item", expression(effect, "values").toString(null, false));
     }
 
     @Test
     void lootFixtureBindsLootTableAndBlockTarget() throws Exception {
-        EffGenerateLoot effect = loadFirstEffect("skript/gametest/generate_loot_marks_block.sk", EffGenerateLoot.class);
+        EffGenerateLoot effect = loadFirstEffect("skript/gametest/effect/generate_loot_marks_block.sk", EffGenerateLoot.class);
         assertEquals("event-block", expression(effect, "targets").toString(null, false));
         assertNotNull(expression(effect, "lootTables").getSingle(null));
     }
 
     @Test
     void applyPotionFixtureBindsPotionExpressionEntityTargetAndDuration() throws Exception {
-        EffApplyPotionEffect effect = loadFirstEffect("skript/gametest/apply_potion_names_entity.sk", EffApplyPotionEffect.class);
+        EffApplyPotionEffect effect = loadFirstEffect("skript/gametest/effect/apply_potion_names_entity.sk", EffApplyPotionEffect.class);
         assertEquals("event-entity", expression(effect, "entities").toString(null, false));
         assertNotNull(expression(effect, "duration"));
         assertNotNull(expression(effect, "potions").getSingle(null));
@@ -86,7 +86,7 @@ final class EffectBindingTest {
 
     @Test
     void poisonFixtureBindsEntityTargetAndDuration() throws Exception {
-        EffPoison effect = loadFirstEffect("skript/gametest/poison_effect_names_entity.sk", EffPoison.class);
+        EffPoison effect = loadFirstEffect("skript/gametest/effect/poison_effect_names_entity.sk", EffPoison.class);
         assertEquals("event-entity", expression(effect, "entities").toString(null, false));
         assertNotNull(expression(effect, "duration"));
         assertTrue(!readBoolean(effect, "cure"));
@@ -94,7 +94,7 @@ final class EffectBindingTest {
 
     @Test
     void potionAmbientFixtureBindsPotionExpression() throws Exception {
-        EffPotionAmbient effect = loadFirstEffect("skript/gametest/potion_ambient_effect_names_entity.sk", EffPotionAmbient.class);
+        EffPotionAmbient effect = loadFirstEffect("skript/gametest/effect/potion_ambient_effect_names_entity.sk", EffPotionAmbient.class);
         String rendered = expression(effect, "potions").toString(null, false);
         assertTrue(rendered.contains("poison"));
         assertTrue(rendered.contains("event-entity"));
@@ -103,7 +103,7 @@ final class EffectBindingTest {
 
     @Test
     void registerTagFixtureBindsStringNameAndItemContents() throws Exception {
-        EffRegisterTag effect = loadFirstEffect("skript/gametest/register_custom_tag_renames_item.sk", EffRegisterTag.class);
+        EffRegisterTag effect = loadFirstEffect("skript/gametest/effect/register_custom_tag_renames_item.sk", EffRegisterTag.class);
         assertTrue(expression(effect, "name").toString(null, false).contains("effect_test_items"));
         assertEquals("event-item", expression(effect, "contents").toString(null, false));
         assertEquals("ITEM", readObject(effect, "target").toString());

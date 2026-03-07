@@ -7,10 +7,12 @@ import ch.njol.skript.registrations.Classes;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
+import org.skriptlang.skript.fabric.compat.MinecraftRegistryLookup;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
@@ -52,16 +54,44 @@ public final class ItemTypeClassInfo {
                 normalized = matcher.group(2).trim();
             }
 
-            try {
-                var itemId = MinecraftResourceParser.parse(normalized);
-                Item item = BuiltInRegistries.ITEM.getValue(itemId);
-                if (item == null || item == Items.AIR && !"minecraft:air".equals(itemId.toString())) {
-                    return null;
-                }
-                return new FabricItemType(item, amount, null);
-            } catch (RuntimeException ignored) {
+            Item item = MinecraftRegistryLookup.lookup(normalized, ItemTypeParser::itemFromId);
+            if (item == null) {
+                item = itemFromAlias(normalized);
+            }
+            if (item == null) {
                 return null;
             }
+            return new FabricItemType(item, amount, null);
+        }
+
+        private static @Nullable Item itemFromId(ResourceLocation id) {
+            Item item = BuiltInRegistries.ITEM.getValue(id);
+            ResourceLocation key = item == null ? null : BuiltInRegistries.ITEM.getKey(item);
+            return id.equals(key) ? item : null;
+        }
+
+        private static @Nullable Item itemFromAlias(String raw) {
+            var lookupKeys = MinecraftRegistryLookup.candidateLookupKeys(raw);
+            if (lookupKeys.isEmpty()) {
+                return null;
+            }
+            for (Item item : BuiltInRegistries.ITEM) {
+                ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+                if (key == null) {
+                    continue;
+                }
+                if (matchesAlias(lookupKeys, key.toString())
+                        || matchesAlias(lookupKeys, MinecraftResourceParser.display(key))
+                        || matchesAlias(lookupKeys, new ItemStack(item).getHoverName().getString())) {
+                    return item;
+                }
+            }
+            return null;
+        }
+
+        private static boolean matchesAlias(java.util.Set<String> lookupKeys, String alias) {
+            String normalized = MinecraftRegistryLookup.normalizeAlias(alias);
+            return !normalized.isBlank() && lookupKeys.contains(normalized);
         }
     }
 

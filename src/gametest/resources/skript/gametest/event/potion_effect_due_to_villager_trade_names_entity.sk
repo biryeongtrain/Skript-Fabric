@@ -1,0 +1,2 @@
+on entity potion effect due to villager trade:
+    set test name of entity event-entity to "villager trade"

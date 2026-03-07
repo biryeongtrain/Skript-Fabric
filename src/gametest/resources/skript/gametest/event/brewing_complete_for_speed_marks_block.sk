@@ -1,0 +1,5 @@
+on brewing complete for speed potion:
+    set test block above event-block to emerald_block
+
+on brewing complete for poison potion:
+    set test block above event-block to gold_block

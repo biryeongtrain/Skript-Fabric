@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
 import org.skriptlang.skript.registration.SyntaxInfo;
 
 public class SkriptParser {
@@ -71,6 +72,10 @@ public class SkriptParser {
             if (registered != null) {
                 return registered;
             }
+            Expression<? extends T> timed = parseTimedExpression(expression, returnTypes);
+            if (timed != null) {
+                return timed;
+            }
         }
         if ((flags & PARSE_LITERALS) != 0) {
             Literal<? extends T> literal = new UnparsedLiteral(expression).getConvertedExpression(context, returnTypes);
@@ -81,6 +86,37 @@ public class SkriptParser {
             if (fallback != null) {
                 return (Expression<? extends T>) new SimpleLiteral<>(fallback, false);
             }
+        }
+        return null;
+    }
+
+    private <T> @Nullable Expression<? extends T> parseTimedExpression(String expression, Class<? extends T>[] returnTypes) {
+        if (expression == null || expression.isBlank()) {
+            return null;
+        }
+        String normalized = normalizeWhitespace(expression);
+        String lowerCase = normalized.toLowerCase(Locale.ENGLISH);
+        String prefix = timedPrefix(lowerCase);
+        if (prefix == null) {
+            return null;
+        }
+        String remainder = normalized.substring(prefix.length()).trim();
+        if (remainder.isEmpty()) {
+            return null;
+        }
+        Expression<? extends T> parsed = new SkriptParser(remainder, flags, context).parseExpression(returnTypes);
+        if (parsed == null || !parsed.setTime(1)) {
+            return null;
+        }
+        return parsed;
+    }
+
+    private @Nullable String timedPrefix(String lowerCase) {
+        if (lowerCase.startsWith("past ")) {
+            return "past ";
+        }
+        if (lowerCase.startsWith("future ")) {
+            return "future ";
         }
         return null;
     }
@@ -379,6 +415,7 @@ public class SkriptParser {
                 case "integer", "int", "number" -> Integer.class;
                 case "decimal", "double" -> Double.class;
                 case "boolean", "bool" -> Boolean.class;
+                case "potioncause", "potioneffectcause" -> FabricPotionEffectCause.class;
                 case "object", "value", "any", "expression" -> Object.class;
                 default -> Object.class;
             };

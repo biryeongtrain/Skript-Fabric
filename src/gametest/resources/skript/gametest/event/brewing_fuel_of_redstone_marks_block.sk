@@ -1,0 +1,2 @@
+on brewing fuel of redstone dust:
+    set test block above event-block to redstone_block

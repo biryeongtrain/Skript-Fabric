@@ -1,0 +1,434 @@
+# Implemented Syntax Inventory
+
+Last updated: 2026-03-07
+
+This document is a maintenance readme for the currently active Skript-on-Fabric syntax surface.
+
+It is:
+
+- a summary of what is currently registered in the Fabric runtime
+- a guide to what is actually verified today
+- a pointer map for future event/backend work
+
+It is not:
+
+- a parity claim against Bukkit/Paper
+- a complete alias dump for every pattern variant
+- a promise that every registered event already has a real Fabric/Mojang backend
+
+## Snapshot
+
+- Source-level condition port: `28 / 28`
+- Source-level expression port: `84 / 84`
+- Source-level effect port: `24 / 24`
+- Verified Fabric GameTests: `181 / 181`
+- Latest full verification:
+  - `./gradlew runGameTest --rerun-tasks`
+  - `./gradlew build --rerun-tasks`
+
+## Stage 8 Audit Snapshot
+
+- `145c3c9` package-local classes audited: `23 / 214`
+- Package-local parity-complete slice:
+  - `breeding`: `12 / 12`
+  - `input`: `5 / 5`
+  - `interactions`: `6 / 6`
+- Package-local classes still remaining: `191 / 214`
+- Cross-cutting Stage 8 gap outside those packages:
+  - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
+
+Primary registration sources:
+
+- [SkriptFabricBootstrap.java](src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java)
+- [SkriptFabricAdditionalSyntax.java](src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java)
+- [SkriptFabricAdditionalEffects.java](src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalEffects.java)
+
+Related tracking docs:
+
+- [FABRIC_EVENT_MAPPING.md](FABRIC_EVENT_MAPPING.md)
+- [FABRIC_PORT_STAGES.md](FABRIC_PORT_STAGES.md)
+
+## Events
+
+### Runtime-backed and verified
+
+| Syntax family | Representative syntax | Main payload |
+| --- | --- | --- |
+| GameTest | `on gametest` | `GameTestHelper` handle for runtime verification |
+| Server tick | `on server tick` | server/world |
+| Block break | `on block break` | `event-block`, `event-player` |
+| Use block | `on use block` | `event-block`, `event-player` |
+| Use entity | `on use entity` | `event-entity`, `event-player` |
+| Use item | `on use item` | `event-item`, `event-player` |
+| Attack entity | `on attack entity` | attacked entity, player |
+| Damage | `on damage` | damaged entity, `event-damage source` |
+| Breeding | `on breeding`, `on breeding of cow` | breeding mother, father, offspring, breeder, `event-item`; live coverage confirms non-empty breeding `event-item`, and direct event-handle/expression checks confirm the captured bred-with item resolves as wheat |
+| Bucket catch | `on bucket catch`, `on bucket catching of pufferfish` | bucketed entity, `event-player` |
+| Love mode enter | `on love mode enter` | `event-entity`, `event-player` when available |
+| Brewing start | `on brewing start` | brewing stand block, brewing time |
+| Brewing complete | `on brewing complete`, `on brewing complete for potion`, `on brewing complete for speed` | brewing stand block, brewed result list |
+| Brewing fuel | `on brewing fuel`, `on brewing fuel of blaze_powder` | brewing stand block, fuel consume state |
+| Entity potion effect | `on entity potion effect of poison added/changed/removed/cleared`, `on entity potion effect of minecraft:poison added`, `on entity potion effect of poison added due to potion drink`, `on entity potion effect of poison added due to area effect cloud`, `on entity potion effect of poison added due to food`, `on entity potion effect of poison cleared due to milk`, `on entity potion effect of speed added due to beacon`, `on entity potion effect of conduit_power added due to conduit`, `on entity potion effect of poison added/cleared due to command`, `on entity potion effect of poison added due to attack`, `on entity potion effect of poison added due to arrow`, `on entity potion effect of poison added due to unknown`, `on entity potion effect of poison added due to potion splash`, `on entity potion effect due to plugin`, `on entity potion effect due to death` | `event-entity`, typed action headers, `event-potion effect`, `past event-potion effect`, action/amplifier payload expressions; status-effect type filters and expressions are registry-backed, `bare id` values default to `minecraft`, explicit namespaces are preserved, and cause-filter forms are live-verified for every retained supported cause value: `potion drink`, `area effect cloud`, `food`, `milk`, `beacon`, `conduit`, `command`, `attack`, `arrow`, `unknown`, `potion splash`, `totem`, `wither rose`, `conversion`, `axolotl`, `warden`, `spider spawn`, `villager trade`, `expiration`, `dolphin`, `turtle helmet`, `illusion`, `plugin`, and `death`; deprecated-unused `PATROL_CAPTAIN` was intentionally dropped from the supported surface |
+| Fishing | `on fishing`, `on fishing line cast`, `on fish caught`, `on entity hooked`, `on bobber hit ground`, `on fish approaching`, `on fish bite`, `on fish escape`, `on fishing rod reel in`, `on fishing state change` | hook entity, state, lure/open-water state, event entity when available |
+| Loot generate | `on loot generate` | loot table, generated loot, looter/looted entity, loot location |
+| Player input | `on player input`, `on input key press`, `on forward movement key release`, `on sneak key toggle` | current and previous input state, any-key and keyed toggle/press/release headers |
+| Furnace burn | `on fuel burn` | furnace block, source item, burned fuel |
+| Furnace smelting start | `on smelting start` | furnace block, source item, fuel, furnace times |
+| Furnace smelt | `on furnace smelt` | furnace block, smelted item, result |
+| Furnace extract | `on furnace extract` | furnace block, extracted item, player |
+
+### Registered, but not runtime-backed yet
+
+None in the current Fabric registration set.
+
+### Known event-syntax gaps
+
+- No currently tracked runtime-backed event-syntax gaps remain in the active Fabric target surface.
+- Generic status-effect type parsing is registry-backed: `bare id` values default to `minecraft`, explicit namespaces are preserved, and real `.sk` coverage now includes `minecraft:poison`.
+- Package-local Stage 8 parity-complete slice now covers `breeding (12 / 12)`, `input (5 / 5)`, and `interactions (6 / 6)`.
+- A cross-cutting base-surface gap still remains outside those packages: ambiguous bare item-id equality through generic compare, for example `event-item is wheat`.
+
+## Conditions
+
+### Base
+
+- `is empty`
+  - representative forms: `%itemstack% is empty`, `%slot% is empty`, `%inventory% is empty`
+- `is named`
+  - representative forms: `%entity% is named`, `%itemstack% is named`
+- generic comparison
+  - representative forms: `%objects% is %objects%`
+  - current audit note: ambiguous bare item-id equality is not parity-complete yet
+
+### Breeding
+
+- `can age`
+- `can breed`
+- `is adult`
+- `is baby`
+- `is in love`
+
+### Brewing
+
+- `brewing stand will consume fuel`
+
+### Damage source
+
+- `scales damage with difficulty`
+- `was indirectly caused`
+
+### Fishing
+
+- `lure enchantment bonus is applied`
+- `entity is in open water`
+
+### Input
+
+- `player is pressing key`
+  - supports current and past-state forms
+
+### Displays and interactions
+
+- text display has drop shadow
+- text display is visible through blocks
+- entity is responsive
+
+### Loot tables
+
+- block/entity has loot table
+- block/entity is lootable
+
+### Potion
+
+- living entity has potion effect
+- entity is poisoned
+- potion effect is ambient
+- potion effect is instant
+- potion effect has icon
+- potion effect has particles
+
+### Tags
+
+- object is tagged as/with another object
+
+### Equippable component
+
+- loses durability when injured
+- can be dispensed
+- can be equipped on entities
+- can be sheared off
+- can swap equipment on right click
+
+## Expressions
+
+The expression port is source-complete at `84 / 84`.
+The list below groups the active syntax by domain and calls out the representative forms that are useful during maintenance.
+
+### Base runtime payload
+
+- `event-block`
+- `event-player`
+- `event-entity`
+- `event-item`
+- `event-damage source`
+
+### Base mapped types and utilities
+
+- mapped core types are available through registered class infos:
+  - player
+  - world
+  - entity
+  - location
+  - block
+  - item stack
+  - inventory
+  - vector
+  - slot
+  - timespan
+  - quaternion
+
+### Breeding
+
+- `love time of %entities%`
+- `breeding mother`
+- `breeding father`
+- `bred offspring`
+- `breeder`
+
+### Brewing
+
+- `brewing fuel level of %blocks%`
+- `brewing fuel slot`
+- `brewing ingredient slot`
+- `brewing result slot`
+- `brewing time of %blocks%`
+- `brewing results`
+
+### Furnace
+
+- furnace event items
+  - representative forms: `smelted item`, `extracted item`, `smelting item`, `burned fuel`
+- furnace slots
+  - representative forms: input/fuel/result slot expressions from `ExprFurnaceSlot`
+- furnace times
+  - representative forms:
+    - `cook time`
+    - `cooking time`
+    - `total cook time`
+    - `total cooking time`
+    - `fuel burn time`
+    - each also supports `of %blocks%`
+
+### Damage source
+
+- `causing entity`
+- `direct entity`
+- `source location`
+- `damage location`
+- `food exhaustion`
+- `damage type`
+- `created damage source`
+- `a custom damage source`
+
+### Fishing
+
+- `fishing hook`
+- `hooked entity`
+- `minimum / maximum fishing wait time`
+- `fishing bite time`
+- `minimum / maximum fishing approach angle`
+
+### Input
+
+- `current input keys of %players%`
+  - supports current and past-state forms in both direct event evaluation and real `.sk` fixtures
+
+### Interactions
+
+- `interaction width of %entities%`
+- `interaction height of %entities%`
+- `last player to attack/interact/click %entities%`
+- `last attack/interact/click time of %entities%`
+  - original natural forms such as `last time %entity% was attacked/interacted with/clicked on` are live-covered
+
+### Displays
+
+- generic display state
+  - `billboard`
+  - `brightness override`
+  - `display height`
+  - `display width`
+  - `shadow radius`
+  - `shadow strength`
+  - `view range`
+- interpolation and teleport timing
+  - `interpolation delay`
+  - `interpolation duration`
+  - `teleport duration`
+- transformations
+  - `left rotation`
+  - `right rotation`
+  - `transformation scale`
+  - `transformation translation`
+- item display
+  - `item display transform`
+- text display
+  - `text alignment`
+  - `line width`
+  - `text opacity`
+  - `glow color override`
+  - `text of %entities%`
+
+### Loot tables and loot context
+
+- `loot table of event-entity / event-block / %entities% / %blocks%`
+- `loot table seed of ...`
+- `loot tables from %strings%`
+- `loot`
+- `loot items of %objects%`
+- `loot context`
+- `a loot context at %locations%`
+- `looted entity`
+- `loot location`
+- `looter`
+- `loot luck`
+
+### Potion
+
+- `active potion effects of %entities%`
+- `specific potion effect of %entities%`
+- `potion duration`
+- `potion amplifier`
+- `potion category`
+- `event-potion effect`
+- `past event-potion effect`
+- `event-potion effect action`
+  - registered for entity potion events, but real-script parity coverage is still partial
+
+### Particles and misc
+
+- particle data expressions
+  - `particle count`
+  - `particle distribution`
+  - `particle offset`
+  - `particle speed`
+  - dust/item particle builders
+- rotation helpers
+  - quaternion axis
+  - quaternion angle
+  - rotated vectors/entities/objects
+- item/entity helpers
+  - `item of %entities%`
+
+### Equippable component
+
+- `equippable component of %objects%`
+- `a blank equippable component`
+- `camera overlay`
+- `allowed entities`
+- `equip sound`
+- `equipped model/asset id`
+- `shear sound`
+- `equipment slot`
+- `item component copy`
+
+### Tags
+
+- tags-of-type style expressions are active through the `tags` package registration path
+
+## Effects
+
+### Base/runtime utility
+
+- test-only verification helpers
+  - `set test block at ...`
+  - `set test block for %block% ...`
+  - `set test block above %block% ...`
+  - `set test block at %location% ...`
+  - `set test block under player %player% ...`
+  - `set test name of entity %entity% ...`
+  - `set test name of item %itemstack% ...`
+- generic changer effect
+  - `set %object% to %object%`
+  - `add %object% to %object%`
+  - `remove %object% from %object%`
+  - `reset %object%`
+  - `delete %object%`
+- fishing approach-angle setter
+
+### Breeding
+
+- lock/unlock age
+- prevent/allow aging
+- make breedable / sterilize
+- make adult / make baby
+
+### Brewing
+
+- make brewing stand consume fuel
+- prevent brewing stand from consuming fuel
+
+### Displays and interactions
+
+- add/remove text display drop shadow
+- make entity visible through blocks
+- make entity responsive / unresponsive
+- rotate objects/entities/locations
+
+### Fishing
+
+- apply/remove lure enchantment bonus
+- reel/pull in hooked entity
+
+### Loot tables
+
+- generate loot of/using a loot table in a target
+
+### Potion
+
+- apply/grant potion effects
+- poison / cure poison
+- ambient toggle
+- icon toggle
+- infinite/permanent toggle
+- particle toggle
+
+### Particles
+
+- play/show/draw particles or game effects at locations or on entities
+
+### Tags
+
+- register custom item/block/entity tags
+
+### Equippable component
+
+- toggle damage-on-hurt
+- toggle dispensable
+- toggle equip-on-interact
+- toggle shearable
+- toggle swap-equipment
+
+## Statements and sections
+
+There is no large separate user-facing statement inventory being tracked here beyond the currently registered effects, expressions, conditions, and events.
+
+The notable helper syntax that behaves like a builder/context entry point today is:
+
+- `a loot context at %locations%`
+
+The currently supported control-flow section syntax is:
+
+- `if <condition>:`
+
+## What This Document Does Not Guarantee
+
+- Registered event syntax is not automatically runtime-backed.
+- Registered syntax is not automatically parity-complete with the original Bukkit implementation.
+- Some syntax families are verified only by parser/unit coverage, while others are verified end-to-end by real `.sk` + Fabric GameTest.
+
+## Immediate Known Gaps
+
+- Tracked Stage 5 event/backend implementation gaps are closed in the current Fabric target surface.
+- Deprecated-unused `PATROL_CAPTAIN` was intentionally dropped instead of emulated.
+- Full Stage 8 parity audit is not complete yet.

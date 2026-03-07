@@ -11,6 +11,8 @@ import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCauseContext;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class EffApplyPotionEffect extends Effect {
@@ -55,7 +57,8 @@ public final class EffApplyPotionEffect extends Effect {
             }
             for (Entity entity : entities.getAll(event)) {
                 if (entity instanceof LivingEntity livingEntity) {
-                    livingEntity.addEffect(applied.asMobEffectInstance());
+                    FabricPotionEffectCauseContext.run(FabricPotionEffectCause.PLUGIN,
+                            () -> livingEntity.addEffect(applied.asMobEffectInstance()));
                 }
             }
         }

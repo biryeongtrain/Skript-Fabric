@@ -1,0 +1,8 @@
+on bucket catching of a puffer fish:
+    if future event-item is not empty:
+        set test block under player event-player to gold_block
+    if future event-item is pufferfish bucket:
+        set test name of entity event-player to "puffer catcher"
+
+on bucket catching of salmon:
+    set test name of entity event-player to "salmon catcher"

@@ -47,6 +47,16 @@ public final class ExprPotionAmplifier extends SimpleExpression<Integer> {
     }
 
     @Override
+    public boolean setTime(int time) {
+        return values.setTime(time);
+    }
+
+    @Override
+    public int getTime() {
+        return values.getTime();
+    }
+
+    @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         return "amplifier of " + values.toString(event, debug);
     }

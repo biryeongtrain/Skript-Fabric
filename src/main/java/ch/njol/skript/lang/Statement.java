@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.function.EffFunctionCall;
 import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
 import java.util.Iterator;
@@ -52,6 +53,13 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             if (effect != null) {
                 log.printLog();
                 return effect;
+            }
+            log.clear();
+
+            EffectSection ifSection = SecIf.parse(expression, node, items);
+            if (ifSection != null) {
+                log.printLog();
+                return new EffectSectionEffect(ifSection);
             }
             log.clear();
 

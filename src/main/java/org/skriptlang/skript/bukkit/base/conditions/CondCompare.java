@@ -7,15 +7,18 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Timespan;
+import com.mojang.authlib.GameProfile;
+import java.util.Objects;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.authlib.GameProfile;
 import org.joml.Quaternionf;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.comparator.Comparators;
 import org.skriptlang.skript.lang.comparator.Relation;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -67,6 +70,18 @@ public final class CondCompare extends Condition {
         }
         if (leftValue instanceof String leftString && rightValue instanceof Number rightNumber) {
             return Relation.get(matchesNumericAlias(rightNumber, leftString));
+        }
+        if (leftValue instanceof ItemStack leftItemStack) {
+            return Relation.get(matchesItemStackAlias(leftItemStack, rightValue));
+        }
+        if (rightValue instanceof ItemStack rightItemStack) {
+            return Relation.get(matchesItemStackAlias(rightItemStack, leftValue));
+        }
+        if (leftValue instanceof FabricItemType leftItemType) {
+            return Relation.get(matchesItemTypeAlias(leftItemType, rightValue));
+        }
+        if (rightValue instanceof FabricItemType rightItemType) {
+            return Relation.get(matchesItemTypeAlias(rightItemType, leftValue));
         }
         if (leftValue instanceof Display.TextDisplay.Align leftAlign && rightValue instanceof String rightString) {
             return Relation.get(matchesAlignAlias(leftAlign, rightString));
@@ -168,6 +183,45 @@ public final class CondCompare extends Condition {
         String normalized = normalize(renderComparableValue(value));
         return !normalized.isEmpty()
                 && (normalize(enumValue.name()).equals(normalized) || normalize(enumValue.toString()).equals(normalized));
+    }
+
+    private boolean matchesItemStackAlias(ItemStack stack, @Nullable Object value) {
+        if (value == null || stack.isEmpty()) {
+            return false;
+        }
+        if (value instanceof ItemStack otherStack) {
+            return stack.getCount() == otherStack.getCount() && ItemStack.isSameItemSameComponents(stack, otherStack);
+        }
+        FabricItemType parsed = parseItemType(value);
+        return parsed != null && parsed.matches(stack);
+    }
+
+    private boolean matchesItemTypeAlias(FabricItemType itemType, @Nullable Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof ItemStack stack) {
+            return itemType.matches(stack);
+        }
+        FabricItemType parsed = parseItemType(value);
+        return parsed != null && itemTypesEqual(itemType, parsed);
+    }
+
+    private @Nullable FabricItemType parseItemType(@Nullable Object value) {
+        if (value instanceof FabricItemType itemType) {
+            return itemType;
+        }
+        if (value == null) {
+            return null;
+        }
+        return Classes.parse(String.valueOf(value), FabricItemType.class, ParseContext.DEFAULT);
+    }
+
+    private boolean itemTypesEqual(FabricItemType left, FabricItemType right) {
+        return left.item() == right.item()
+                && left.amount() == right.amount()
+                && Objects.equals(left.name(), right.name())
+                && Objects.equals(left.equippable(), right.equippable());
     }
 
     private boolean matchesPotionEffectAlias(SkriptPotionEffect potionEffect, @Nullable Object value) {

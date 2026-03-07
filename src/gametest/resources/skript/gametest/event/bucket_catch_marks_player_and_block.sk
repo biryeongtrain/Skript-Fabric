@@ -1,0 +1,3 @@
+on bucket catching:
+    set test block under player event-player to emerald_block
+    set test name of entity event-player to "bucket catcher"

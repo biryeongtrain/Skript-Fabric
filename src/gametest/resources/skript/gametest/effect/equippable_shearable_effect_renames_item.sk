@@ -1,0 +1,3 @@
+on use item:
+    allow event-item to be sheared off of entities
+    set test name of item event-item to "shear effect"

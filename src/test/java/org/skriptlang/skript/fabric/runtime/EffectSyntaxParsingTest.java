@@ -53,23 +53,23 @@ final class EffectSyntaxParsingTest {
     @Test
     void failingEffectScriptsStillLoadExpectedEffectItems() throws Exception {
         Map<String, Class<?>> expectations = Map.ofEntries(
-                Map.entry("skript/gametest/make_adult_marks_block.sk", EffMakeAdultOrBaby.class),
-                Map.entry("skript/gametest/make_baby_marks_block.sk", EffMakeAdultOrBaby.class),
-                Map.entry("skript/gametest/text_display_add_shadow_names_entity.sk", EffTextDisplayDropShadow.class),
-                Map.entry("skript/gametest/text_display_make_see_through_names_entity.sk", EffTextDisplaySeeThroughBlocks.class),
-                Map.entry("skript/gametest/make_responsive_names_entity.sk", EffMakeResponsive.class),
-                Map.entry("skript/gametest/equippable_damage_effect_renames_item.sk", EffEquipCompDamageable.class),
-                Map.entry("skript/gametest/equippable_dispensable_effect_renames_item.sk", EffEquipCompDispensable.class),
-                Map.entry("skript/gametest/equippable_interact_effect_renames_item.sk", EffEquipCompInteract.class),
-                Map.entry("skript/gametest/equippable_shearable_effect_renames_item.sk", EffEquipCompShearable.class),
-                Map.entry("skript/gametest/equippable_swappable_effect_renames_item.sk", EffEquipCompSwapEquipment.class),
-                Map.entry("skript/gametest/generate_loot_marks_block.sk", EffGenerateLoot.class),
-                Map.entry("skript/gametest/apply_potion_names_entity.sk", EffApplyPotionEffect.class),
-                Map.entry("skript/gametest/poison_effect_names_entity.sk", EffPoison.class),
-                Map.entry("skript/gametest/potion_ambient_effect_names_entity.sk", EffPotionAmbient.class),
-                Map.entry("skript/gametest/potion_icon_effect_names_entity.sk", EffPotionIcon.class),
-                Map.entry("skript/gametest/potion_particles_effect_names_entity.sk", EffPotionParticles.class),
-                Map.entry("skript/gametest/register_custom_tag_renames_item.sk", EffRegisterTag.class)
+                Map.entry("skript/gametest/effect/make_adult_marks_block.sk", EffMakeAdultOrBaby.class),
+                Map.entry("skript/gametest/effect/make_baby_marks_block.sk", EffMakeAdultOrBaby.class),
+                Map.entry("skript/gametest/effect/text_display_add_shadow_names_entity.sk", EffTextDisplayDropShadow.class),
+                Map.entry("skript/gametest/effect/text_display_make_see_through_names_entity.sk", EffTextDisplaySeeThroughBlocks.class),
+                Map.entry("skript/gametest/effect/make_responsive_names_entity.sk", EffMakeResponsive.class),
+                Map.entry("skript/gametest/effect/equippable_damage_effect_renames_item.sk", EffEquipCompDamageable.class),
+                Map.entry("skript/gametest/effect/equippable_dispensable_effect_renames_item.sk", EffEquipCompDispensable.class),
+                Map.entry("skript/gametest/effect/equippable_interact_effect_renames_item.sk", EffEquipCompInteract.class),
+                Map.entry("skript/gametest/effect/equippable_shearable_effect_renames_item.sk", EffEquipCompShearable.class),
+                Map.entry("skript/gametest/effect/equippable_swappable_effect_renames_item.sk", EffEquipCompSwapEquipment.class),
+                Map.entry("skript/gametest/effect/generate_loot_marks_block.sk", EffGenerateLoot.class),
+                Map.entry("skript/gametest/effect/apply_potion_names_entity.sk", EffApplyPotionEffect.class),
+                Map.entry("skript/gametest/effect/poison_effect_names_entity.sk", EffPoison.class),
+                Map.entry("skript/gametest/effect/potion_ambient_effect_names_entity.sk", EffPotionAmbient.class),
+                Map.entry("skript/gametest/effect/potion_icon_effect_names_entity.sk", EffPotionIcon.class),
+                Map.entry("skript/gametest/effect/potion_particles_effect_names_entity.sk", EffPotionParticles.class),
+                Map.entry("skript/gametest/effect/register_custom_tag_renames_item.sk", EffRegisterTag.class)
         );
 
         List<Executable> assertions = new ArrayList<>();

@@ -1,0 +1,5 @@
+on fishing line cast:
+    set test block under player event-player to emerald_block
+
+on fishing state change:
+    set test name of entity event-player to "state changed"

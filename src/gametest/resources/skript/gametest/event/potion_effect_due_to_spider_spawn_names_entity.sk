@@ -1,0 +1,2 @@
+on entity potion effect due to spider spawn:
+    set test name of entity event-entity to "spider spawn"

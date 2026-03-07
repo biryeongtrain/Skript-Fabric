@@ -1,0 +1,5 @@
+on entity potion effect of poison changed:
+    event-potion effect action is "changed"
+    potion amplifier of past event-potion effect is 1
+    potion amplifier of event-potion effect is 2
+    set test name of entity event-entity to "poison changed"

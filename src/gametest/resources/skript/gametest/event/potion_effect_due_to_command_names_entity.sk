@@ -1,0 +1,2 @@
+on entity potion effect of poison added due to command:
+    set test name of entity event-entity to "command"

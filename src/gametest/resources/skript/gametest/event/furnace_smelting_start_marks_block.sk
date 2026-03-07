@@ -1,0 +1,3 @@
+on smelting start:
+    set total cook time of event-block to 40 ticks
+    set test block above event-block to diamond_block

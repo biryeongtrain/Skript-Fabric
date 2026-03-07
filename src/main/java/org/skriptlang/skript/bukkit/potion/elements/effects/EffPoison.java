@@ -12,6 +12,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCauseContext;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class EffPoison extends Effect {
@@ -39,7 +41,8 @@ public final class EffPoison extends Effect {
         if (cure) {
             for (Entity entity : entities.getAll(event)) {
                 if (entity instanceof LivingEntity livingEntity) {
-                    livingEntity.removeEffect(MobEffects.POISON);
+                    FabricPotionEffectCauseContext.run(FabricPotionEffectCause.PLUGIN,
+                            () -> livingEntity.removeEffect(MobEffects.POISON));
                 }
             }
             return;
@@ -58,7 +61,8 @@ public final class EffPoison extends Effect {
             }
             MobEffectInstance existing = livingEntity.getEffect(MobEffects.POISON);
             int totalTicks = existing != null ? Math.max(0, ticks + existing.getDuration()) : ticks;
-            livingEntity.addEffect(new MobEffectInstance(MobEffects.POISON, totalTicks, 0));
+            FabricPotionEffectCauseContext.run(FabricPotionEffectCause.PLUGIN,
+                    () -> livingEntity.addEffect(new MobEffectInstance(MobEffects.POISON, totalTicks, 0)));
         }
     }
 

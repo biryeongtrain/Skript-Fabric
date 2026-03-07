@@ -1,0 +1,5 @@
+on player forward movement key release:
+    set test block under player event-player to emerald_block
+
+on player jump key release:
+    set test name of entity event-player to "jump release"

@@ -55,6 +55,7 @@ import org.skriptlang.skript.bukkit.input.elements.conditions.CondIsPressingKey;
 import org.skriptlang.skript.bukkit.interactions.elements.conditions.CondIsResponsive;
 import org.skriptlang.skript.bukkit.interactions.elements.expressions.ExprInteractionDimensions;
 import org.skriptlang.skript.bukkit.interactions.elements.expressions.ExprLastInteractionPlayer;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableComponentClassInfo;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDamage;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDispensable;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompInteract;
@@ -73,6 +74,7 @@ import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionAmbie
 import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionInstant;
 import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasIcon;
 import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasParticles;
+import org.skriptlang.skript.bukkit.potion.PotionCauseClassInfo;
 import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionAmplifier;
 import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionDuration;
 import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionEffect;
@@ -158,6 +160,7 @@ public final class SkriptFabricBootstrap {
                 DisplayBillboardConstraintsClassInfo.register();
                 ItemDisplayTransformClassInfo.register();
                 OfflinePlayerClassInfo.register();
+                PotionCauseClassInfo.register();
                 QuaternionClassInfo.register();
                 TextDisplayAlignClassInfo.register();
                 TimespanClassInfo.register();
@@ -167,6 +170,7 @@ public final class SkriptFabricBootstrap {
                 BlockClassInfo.register();
                 SlotClassInfo.register();
                 VectorClassInfo.register();
+                EquippableComponentClassInfo.register();
                 SkriptFabricEventBridge.register();
                 Skript.registerCondition(
                         CondIsEmpty.class,
@@ -345,11 +349,11 @@ public final class SkriptFabricBootstrap {
                 );
                 Skript.registerEvent(EvtFabricBlockBreak.class, "on block break");
                 Skript.registerEvent(EvtAttackEntity.class, "on attack entity");
-                Skript.registerEvent(EvtBrewingFuel.class, "on brewing fuel");
+                Skript.registerEvent(EvtBrewingFuel.class, EvtBrewingFuel.patterns());
                 Skript.registerEvent(EvtDamage.class, "on damage");
                 Skript.registerEvent(EvtFabricGameTest.class, "on gametest");
-                Skript.registerEvent(EvtFishing.class, "on fishing");
-                Skript.registerEvent(EvtPlayerInput.class, "on player input");
+                Skript.registerEvent(EvtFishing.class, EvtFishing.patterns());
+                Skript.registerEvent(EvtPlayerInput.class, EvtPlayerInput.patterns());
                 Skript.registerEvent(EvtFabricServerTick.class, "on server tick");
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");

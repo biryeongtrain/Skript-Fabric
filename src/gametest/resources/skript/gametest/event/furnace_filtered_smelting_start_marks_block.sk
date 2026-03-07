@@ -1,0 +1,2 @@
+on smelting start of raw iron:
+    set test block above event-block to diamond_block

@@ -1,0 +1,2 @@
+on smelt of raw iron:
+    set test block above event-block to gold_block
