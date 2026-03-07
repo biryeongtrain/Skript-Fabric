@@ -1,0 +1,3 @@
+on use entity:
+    active potion effects of event-entity is poison
+    set test name of entity event-entity to "active potion effects"

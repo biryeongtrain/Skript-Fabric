@@ -1,0 +1,3 @@
+on use entity:
+    left rotation of event-entity is "quaternion(0.1, 0.2, 0.3, 0.4)"
+    set test name of entity event-entity to "left rotated text"

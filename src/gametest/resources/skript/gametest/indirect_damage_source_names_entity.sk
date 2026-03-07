@@ -1,0 +1,3 @@
+on damage:
+    event-damage source was indirectly caused
+    set test name of entity event-entity to "indirect target"

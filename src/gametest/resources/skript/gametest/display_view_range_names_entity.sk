@@ -1,0 +1,3 @@
+on use entity:
+    view range of event-entity is "2.5"
+    set test name of entity event-entity to "long range text"

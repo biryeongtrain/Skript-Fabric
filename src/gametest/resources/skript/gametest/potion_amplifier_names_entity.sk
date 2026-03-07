@@ -1,0 +1,3 @@
+on use entity:
+    potion amplifier of poison effect of event-entity is 2
+    set test name of entity event-entity to "potion amplifier"

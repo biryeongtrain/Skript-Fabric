@@ -1,0 +1,3 @@
+on attack entity:
+    set test name of entity event-entity to "attacked entity"
+    set test block under player event-player to red_wool

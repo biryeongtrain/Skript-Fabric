@@ -1,0 +1,3 @@
+on fishing:
+    remove the lure enchantment bonus
+    set test name of entity fishing hook to "lure removed"

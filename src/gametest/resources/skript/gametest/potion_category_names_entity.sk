@@ -1,0 +1,3 @@
+on use entity:
+    potion effect type category of poison is harmful
+    set test name of entity event-entity to "potion category"

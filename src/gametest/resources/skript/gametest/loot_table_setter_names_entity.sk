@@ -1,0 +1,6 @@
+on use entity:
+    set loot table of event-entity to chests/simple_dungeon
+    set loot table seed of event-entity to 23
+    loot table of event-entity is chests/simple_dungeon
+    loot table seed of event-entity is 23
+    set test name of entity event-entity to "loot table set"

@@ -1,0 +1,3 @@
+on use entity:
+    hide the potion icons of poison effect of event-entity
+    set test name of entity event-entity to "hidden icon potion"

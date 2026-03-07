@@ -1,0 +1,3 @@
+on use entity:
+    set interpolation duration of event-entity to 4 ticks
+    set test block under player event-player to blue_wool

@@ -1,0 +1,3 @@
+on use entity:
+    event-entity has a loot table
+    set test name of entity event-entity to "loot table entity"

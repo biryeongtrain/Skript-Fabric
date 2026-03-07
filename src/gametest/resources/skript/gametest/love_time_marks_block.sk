@@ -1,0 +1,4 @@
+on use entity:
+    set love time of event-entity to 30 seconds
+    love time of event-entity is "30 seconds"
+    set test block under player event-player to blue_wool

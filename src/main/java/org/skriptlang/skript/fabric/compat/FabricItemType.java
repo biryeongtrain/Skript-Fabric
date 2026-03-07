@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.equipment.Equippable;
 import org.jetbrains.annotations.Nullable;
 
 public final class FabricItemType {
@@ -13,6 +14,7 @@ public final class FabricItemType {
     private final Item item;
     private int amount;
     private @Nullable String customName;
+    private @Nullable Equippable equippable;
 
     public FabricItemType(Item item) {
         this(item, 1, null);
@@ -44,17 +46,28 @@ public final class FabricItemType {
         this.customName = customName;
     }
 
+    public @Nullable Equippable equippable() {
+        return equippable;
+    }
+
+    public void equippable(@Nullable Equippable equippable) {
+        this.equippable = equippable;
+    }
+
     public ItemStack toStack() {
         ItemStack stack = new ItemStack(item, amount);
         if (customName != null && !customName.isBlank()) {
             stack.set(DataComponents.CUSTOM_NAME, Component.literal(customName));
+        }
+        if (equippable != null) {
+            stack.set(DataComponents.EQUIPPABLE, equippable);
         }
         return stack;
     }
 
     public String itemId() {
         ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
-        return key != null ? key.toString() : item.toString();
+        return key != null ? MinecraftResourceParser.display(key) : item.toString();
     }
 
     @Override

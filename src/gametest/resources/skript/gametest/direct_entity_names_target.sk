@@ -1,0 +1,3 @@
+on damage:
+    direct entity of event-damage source is named
+    set test name of entity event-entity to "direct target"

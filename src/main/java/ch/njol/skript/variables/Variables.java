@@ -71,6 +71,31 @@ public final class Variables {
         LOCAL_VARIABLES.clear();
     }
 
+    public static void withLocalVariables(
+            @Nullable SkriptEvent source,
+            @Nullable SkriptEvent target,
+            Runnable action
+    ) {
+        Object sourceKey = eventScopeKey(source);
+        Object targetKey = eventScopeKey(target);
+        Map<String, Object> sourceLocals = LOCAL_VARIABLES.get(sourceKey);
+        Map<String, Object> backup = LOCAL_VARIABLES.get(targetKey);
+        if (sourceLocals != null && !sourceLocals.isEmpty()) {
+            LOCAL_VARIABLES.put(targetKey, new ConcurrentHashMap<>(sourceLocals));
+        } else {
+            LOCAL_VARIABLES.remove(targetKey);
+        }
+        try {
+            action.run();
+        } finally {
+            if (backup == null || backup.isEmpty()) {
+                LOCAL_VARIABLES.remove(targetKey);
+            } else {
+                LOCAL_VARIABLES.put(targetKey, backup);
+            }
+        }
+    }
+
     private static Map<String, Object> localMap(@Nullable SkriptEvent event, boolean create) {
         Object key = eventScopeKey(event);
         if (!create) {

@@ -1,0 +1,6 @@
+on use entity:
+    set interaction width of event-entity to 2
+    set interaction height of event-entity to 3
+    interaction width of event-entity is 2
+    interaction height of event-entity is 3
+    set test block under player event-player to red_wool

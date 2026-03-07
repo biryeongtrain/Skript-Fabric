@@ -1,2 +1,2 @@
 on server tick:
-    set test block at 1, 80, 1 to "minecraft:lapis_block"
+    set test block at 1, 80, 1 to lapis_block

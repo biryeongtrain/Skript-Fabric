@@ -1,0 +1,3 @@
+on fishing:
+    set fishing bite time to 7 ticks
+    set test block under player event-player to iron_block

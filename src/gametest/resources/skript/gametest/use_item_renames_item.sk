@@ -1,0 +1,4 @@
+on use item:
+    event-item is not empty
+    set test name of item event-item to "used item"
+    set test block under player event-player to blue_wool

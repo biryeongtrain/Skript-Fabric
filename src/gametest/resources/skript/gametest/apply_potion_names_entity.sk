@@ -1,0 +1,3 @@
+on use entity:
+    apply a potion effect of poison to event-entity for 5 seconds
+    set test name of entity event-entity to "applied poison"

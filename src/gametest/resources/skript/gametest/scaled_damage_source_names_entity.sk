@@ -1,0 +1,3 @@
+on damage:
+    event-damage source scales damage with difficulty
+    set test name of entity event-entity to "scaled target"

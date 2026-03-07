@@ -1,0 +1,3 @@
+on fishing:
+    lure enchantment bonus is applied
+    set test name of entity event-entity to "lured hook"

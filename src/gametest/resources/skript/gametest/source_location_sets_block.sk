@@ -1,0 +1,2 @@
+on damage:
+    set test block at source location of event-damage source to red_wool

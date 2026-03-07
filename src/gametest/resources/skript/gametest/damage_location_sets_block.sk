@@ -1,0 +1,2 @@
+on damage:
+    set test block at damage location of event-damage source to blue_wool

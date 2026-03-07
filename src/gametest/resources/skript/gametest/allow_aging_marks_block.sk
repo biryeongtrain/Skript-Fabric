@@ -1,0 +1,3 @@
+on use entity:
+    prevent aging of event-entity
+    set test block under player event-player to lime_wool

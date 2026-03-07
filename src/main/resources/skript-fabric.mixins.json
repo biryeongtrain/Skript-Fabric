@@ -4,6 +4,9 @@
   "package": "kim.biryeong.skriptFabric.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "BrewingStandBlockEntityMixin",
+    "FishingHookMixin",
+    "ServerGamePacketListenerImplMixin"
   ],
   "client": [
   ],

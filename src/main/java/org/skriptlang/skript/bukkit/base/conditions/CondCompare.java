@@ -1,0 +1,243 @@
+package org.skriptlang.skript.bukkit.base.conditions;
+
+import ch.njol.skript.lang.Condition;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.util.Kleenean;
+import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Timespan;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
+import com.mojang.authlib.GameProfile;
+import org.joml.Quaternionf;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
+import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.lang.comparator.Comparators;
+import org.skriptlang.skript.lang.comparator.Relation;
+import org.skriptlang.skript.lang.event.SkriptEvent;
+
+public final class CondCompare extends Condition {
+
+    private Expression<?> left;
+    private Expression<?> right;
+
+    @Override
+    public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        if (expressions.length != 2) {
+            return false;
+        }
+        if (expressions[0].canReturn(Entity.class)) {
+            return false;
+        }
+        left = expressions[0];
+        right = expressions[1];
+        setNegated(matchedPattern > 0);
+        return true;
+    }
+
+    @Override
+    public boolean check(SkriptEvent event) {
+        Object[] leftValues = left.getAll(event);
+        Object[] rightValues = right.getAll(event);
+        boolean equal = false;
+        for (Object leftValue : leftValues) {
+            for (Object rightValue : rightValues) {
+                if (compare(leftValue, rightValue) == Relation.EQUAL) {
+                    equal = true;
+                    break;
+                }
+            }
+            if (equal) {
+                break;
+            }
+        }
+        return isNegated() ? !equal : equal;
+    }
+
+    private Relation compare(@Nullable Object leftValue, @Nullable Object rightValue) {
+        if (leftValue instanceof Number leftNumber && rightValue instanceof Number rightNumber) {
+            return Relation.get(Double.compare(leftNumber.doubleValue(), rightNumber.doubleValue()) == 0);
+        }
+        if (leftValue instanceof Number leftNumber && rightValue instanceof String rightString) {
+            return Relation.get(matchesNumericAlias(leftNumber, rightString));
+        }
+        if (leftValue instanceof String leftString && rightValue instanceof Number rightNumber) {
+            return Relation.get(matchesNumericAlias(rightNumber, leftString));
+        }
+        if (leftValue instanceof Display.TextDisplay.Align leftAlign && rightValue instanceof String rightString) {
+            return Relation.get(matchesAlignAlias(leftAlign, rightString));
+        }
+        if (leftValue instanceof String leftString && rightValue instanceof Display.TextDisplay.Align rightAlign) {
+            return Relation.get(matchesAlignAlias(rightAlign, leftString));
+        }
+        if (leftValue instanceof StringRepresentable leftRepresentable) {
+            return Relation.get(matchesRepresentableAlias(leftRepresentable, rightValue));
+        }
+        if (rightValue instanceof StringRepresentable rightRepresentable) {
+            return Relation.get(matchesRepresentableAlias(rightRepresentable, leftValue));
+        }
+        if (leftValue instanceof Enum<?> leftEnum) {
+            return Relation.get(matchesEnumAlias(leftEnum, rightValue));
+        }
+        if (rightValue instanceof Enum<?> rightEnum) {
+            return Relation.get(matchesEnumAlias(rightEnum, leftValue));
+        }
+        if (leftValue instanceof SkriptPotionEffect leftPotionEffect) {
+            return Relation.get(matchesPotionEffectAlias(leftPotionEffect, rightValue));
+        }
+        if (rightValue instanceof SkriptPotionEffect rightPotionEffect) {
+            return Relation.get(matchesPotionEffectAlias(rightPotionEffect, leftValue));
+        }
+        if (leftValue instanceof Timespan leftTimespan && rightValue instanceof String rightString) {
+            return Relation.get(matchesTimespanAlias(leftTimespan, rightString));
+        }
+        if (leftValue instanceof String leftString && rightValue instanceof Timespan rightTimespan) {
+            return Relation.get(matchesTimespanAlias(rightTimespan, leftString));
+        }
+        if (leftValue instanceof GameProfile leftProfile && rightValue instanceof String rightString) {
+            return Relation.get(matchesProfileAlias(leftProfile, rightString));
+        }
+        if (leftValue instanceof String leftString && rightValue instanceof GameProfile rightProfile) {
+            return Relation.get(matchesProfileAlias(rightProfile, leftString));
+        }
+        if (leftValue instanceof Vec3 leftVector && rightValue instanceof String rightString) {
+            return Relation.get(matchesVectorAlias(leftVector, rightString));
+        }
+        if (leftValue instanceof String leftString && rightValue instanceof Vec3 rightVector) {
+            return Relation.get(matchesVectorAlias(rightVector, leftString));
+        }
+        if (leftValue instanceof Quaternionf leftQuaternion && rightValue instanceof String rightString) {
+            return Relation.get(matchesQuaternionAlias(leftQuaternion, rightString));
+        }
+        if (leftValue instanceof String leftString && rightValue instanceof Quaternionf rightQuaternion) {
+            return Relation.get(matchesQuaternionAlias(rightQuaternion, leftString));
+        }
+        return Comparators.compare(leftValue, rightValue);
+    }
+
+    private boolean matchesAlignAlias(Display.TextDisplay.Align align, String value) {
+        String normalized = value == null ? "" : value.trim().toLowerCase();
+        return switch (align) {
+            case LEFT -> normalized.equals("left") || normalized.equals("left aligned");
+            case RIGHT -> normalized.equals("right") || normalized.equals("right aligned");
+            case CENTER -> normalized.equals("center")
+                    || normalized.equals("centered")
+                    || normalized.equals("centre")
+                    || normalized.equals("centred")
+                    || normalized.equals("center aligned")
+                    || normalized.equals("centre aligned")
+                    || normalized.equals("centered aligned")
+                    || normalized.equals("centred aligned");
+        };
+    }
+
+    private boolean matchesNumericAlias(Number number, String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        try {
+            String normalized = value.trim();
+            if (number instanceof Float || number instanceof Double) {
+                return Float.compare(number.floatValue(), Float.parseFloat(normalized)) == 0;
+            }
+            return Long.compare(number.longValue(), Long.parseLong(normalized)) == 0;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+
+    private boolean matchesRepresentableAlias(StringRepresentable representable, @Nullable Object value) {
+        String normalized = normalize(renderComparableValue(value));
+        if (normalized.isEmpty()) {
+            return false;
+        }
+        if (normalize(representable.getSerializedName()).equals(normalized)) {
+            return true;
+        }
+        if (representable instanceof Enum<?> enumValue) {
+            return normalize(enumValue.name()).equals(normalized);
+        }
+        return false;
+    }
+
+    private boolean matchesEnumAlias(Enum<?> enumValue, @Nullable Object value) {
+        String normalized = normalize(renderComparableValue(value));
+        return !normalized.isEmpty()
+                && (normalize(enumValue.name()).equals(normalized) || normalize(enumValue.toString()).equals(normalized));
+    }
+
+    private boolean matchesPotionEffectAlias(SkriptPotionEffect potionEffect, @Nullable Object value) {
+        if (value == null) {
+            return false;
+        }
+        SkriptPotionEffect parsedEffect = PotionEffectSupport.parsePotionEffect(value);
+        if (parsedEffect != null && parsedEffect.type().value() == potionEffect.type().value()) {
+            return true;
+        }
+        String normalized = normalize(renderComparableValue(value));
+        return !normalized.isEmpty() && normalize(potionEffect.toString()).equals(normalized);
+    }
+
+    private boolean matchesTimespanAlias(Timespan timespan, String value) {
+        Timespan parsed = Classes.parse(value, Timespan.class, ParseContext.DEFAULT);
+        return parsed != null && parsed.equals(timespan);
+    }
+
+    private boolean matchesProfileAlias(GameProfile profile, String value) {
+        String normalized = normalize(value);
+        if (normalized.isEmpty()) {
+            return false;
+        }
+        if (normalize(profile.getName()).equals(normalized)) {
+            return true;
+        }
+        return profile.getId() != null && normalize(profile.getId().toString()).equals(normalized);
+    }
+
+    private boolean matchesVectorAlias(Vec3 vector, String value) {
+        Vec3 parsed = Classes.parse(value, Vec3.class, ParseContext.DEFAULT);
+        return parsed != null
+                && Double.compare(vector.x, parsed.x) == 0
+                && Double.compare(vector.y, parsed.y) == 0
+                && Double.compare(vector.z, parsed.z) == 0;
+    }
+
+    private boolean matchesQuaternionAlias(Quaternionf quaternion, String value) {
+        Quaternionf parsed = Classes.parse(value, Quaternionf.class, ParseContext.DEFAULT);
+        return parsed != null
+                && Float.compare(quaternion.x, parsed.x) == 0
+                && Float.compare(quaternion.y, parsed.y) == 0
+                && Float.compare(quaternion.z, parsed.z) == 0
+                && Float.compare(quaternion.w, parsed.w) == 0;
+    }
+
+    private String normalize(@Nullable String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.trim().toLowerCase().replace('_', ' ').replace('-', ' ').replaceAll("\\s+", " ");
+    }
+
+    private @Nullable String renderComparableValue(@Nullable Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof GameProfile profile) {
+            return profile.getName();
+        }
+        if (value instanceof Enum<?> enumValue) {
+            return enumValue.name();
+        }
+        return String.valueOf(value);
+    }
+
+    @Override
+    public String toString(@Nullable SkriptEvent event, boolean debug) {
+        String operator = isNegated() ? " is not " : " is ";
+        return left.toString(event, debug) + operator + right.toString(event, debug);
+    }
+}

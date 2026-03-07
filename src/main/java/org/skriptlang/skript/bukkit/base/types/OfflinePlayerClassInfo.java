@@ -14,6 +14,7 @@ import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHan
 public final class OfflinePlayerClassInfo {
 
     private static final Pattern PLAYER_NAME = Pattern.compile("^[A-Za-z0-9_]{1,16}$");
+    private static final Pattern NUMERIC_LITERAL = Pattern.compile("^[+-]?(?:\\d+|\\d+\\.\\d+)$");
 
     private OfflinePlayerClassInfo() {
     }
@@ -38,6 +39,11 @@ public final class OfflinePlayerClassInfo {
                 return null;
             }
             String normalized = input.trim();
+            if (NUMERIC_LITERAL.matcher(normalized).matches()
+                    || "true".equalsIgnoreCase(normalized)
+                    || "false".equalsIgnoreCase(normalized)) {
+                return null;
+            }
             try {
                 UUID uuid = UUID.fromString(normalized);
                 return new GameProfile(uuid, normalized);

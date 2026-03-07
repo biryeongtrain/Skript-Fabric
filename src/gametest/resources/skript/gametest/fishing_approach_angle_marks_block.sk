@@ -1,0 +1,4 @@
+on fishing:
+    set minimum fishing approach angle to 30
+    set maximum fishing approach angle to 300
+    set test block under player event-player to diamond_block

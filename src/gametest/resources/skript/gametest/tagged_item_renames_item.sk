@@ -1,0 +1,3 @@
+on use item:
+    event-item is tagged with "piglin_loved"
+    set test name of item event-item to "tagged item"

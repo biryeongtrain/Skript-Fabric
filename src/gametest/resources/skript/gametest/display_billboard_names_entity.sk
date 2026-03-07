@@ -1,0 +1,3 @@
+on use entity:
+    billboard of event-entity is "center"
+    set test name of entity event-entity to "center billboard"

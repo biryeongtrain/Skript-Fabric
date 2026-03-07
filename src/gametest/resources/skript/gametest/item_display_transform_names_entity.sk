@@ -1,0 +1,3 @@
+on use entity:
+    item transform of event-entity is "first person left hand"
+    set test name of entity event-entity to "left hand transform"

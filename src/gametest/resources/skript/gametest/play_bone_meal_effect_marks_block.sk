@@ -1,0 +1,3 @@
+on gametest:
+    play bone meal effect with 7 particles at 8, 1, 0
+    set test block at 8 1 0 to lime_concrete

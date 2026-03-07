@@ -130,6 +130,13 @@ Acceptance:
 
 Status: `in_progress`
 
+Current completed slices:
+
+- base condition seed: `is empty`, `is named`
+- breeding condition batch: `can age`, `can breed`, `is adult`, `is baby`, `is in love`
+- damage source condition batch: `scales damage with difficulty`, `was indirectly caused`
+- brewing / fishing / input condition batch: `brewing stand will consume fuel`, `lure enchantment bonus is applied`, `entity is in open water`, `player is pressing key`
+
 ## Stage 6: Port conditions, expressions, effects package-by-package
 
 Objective:
@@ -165,7 +172,7 @@ Acceptance:
 
 - each package has dedicated runtime tests and GameTests
 
-Status: `pending`
+Status: `in_progress`
 
 ## Stage 7: Fabric GameTest verification suite
 
@@ -218,10 +225,38 @@ Status: `pending`
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `ServerTickEvents.END_SERVER_TICK` into the Skript runtime and executing an `on server tick` script without manual dispatch.
 - 2026-03-06: `./gradlew build` passed after serializing GameTest access to the shared `SkriptRuntime`, removing cross-test flakiness from event-bridge verification.
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `PlayerBlockBreakEvents.AFTER` into the Skript runtime and executing a real `.sk` file from a mock player block break.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after porting the original `org/skriptlang/skript/bukkit/breeding/elements` condition batch and validating real `.sk` fixtures against Mojang cows for adult, baby, breed-ready, can-age, and in-love states.
+- 2026-03-06: `./gradlew build` passed with `19` Fabric GameTests green after the breeding condition batch landed.
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after restoring modern expression registration, exposing `event-block` / `event-player`, and consuming both inside real `.sk` fixtures.
 - 2026-03-06: `./gradlew build` passed after wiring `UseBlockCallback.EVENT` into the Skript runtime and validating `on use block` through GameTests.
 - 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `UseEntityCallback.EVENT`, exposing `event-entity`, and mutating a real `ArmorStand` through a loaded `.sk` file.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `UseItemCallback.EVENT`, exposing `event-item`, and mutating a real held `ItemStack` through a loaded `.sk` file.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed after wiring `AttackEntityCallback.EVENT` and executing a real `.sk` file from an attack-entity callback with live entity/player payloads.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after moving shared base expressions/effects from `fabric/syntax` into `org/skriptlang/skript/bukkit/base`, starting Stage 6 with a package-local syntax layer.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after adding the first real base conditions (`is empty`, `is named`) and validating both true and false trigger flow through loaded `.sk` files.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after wiring `ServerLivingEntityEvents.ALLOW_DAMAGE`, exposing `event-damage source`, and validating the first `damagesource` condition batch through real `.sk` fixtures.
+- 2026-03-06: all original Bukkit `Cond*.java` classes from commit `145c3c9` are now present in the active Fabric source tree: `28 / 28`, remaining source-level condition ports `0`.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed with `41` Fabric GameTests green after converting the latest condition fixtures to the runtime-supported plain-condition form.
+- 2026-03-06: `./gradlew build` passed after restoring `InputSource.parseExpression()` compatibility while keeping `%objects%` plain-string parsing available for script syntax.
 - 2026-03-06: `./gradlew build` passed with 7 Fabric GameTests, including automatic server-tick and block-break bridge coverage.
+- 2026-03-06: the current original Bukkit `Expr*.java` slice is active in the Fabric source tree at `23 / 84`, remaining source-level expression ports `61`.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed with `45` Fabric GameTests green after adding `ExprBrewingSlot`, `ExprFishingHook`, `ExprFishingHookEntity`, and `ExprCurrentInputKeys` plus real `.sk` fixtures that consume them.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` passed with `51` Fabric GameTests green after adding damage-source payload expressions (`causing entity`, `direct entity`, `source location`, `damage location`, `food exhaustion`) plus `ExprBrewingFuelLevel` and validating them through loaded `.sk` files.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed with `55` Fabric GameTests green after restoring text-display expressions for `text alignment`, `line width`, and `text opacity`, plus a minimal generic comparison condition used to validate them from real `.sk` files.
+- 2026-03-06: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed with `61` Fabric GameTests green after restoring generic display expressions for `billboard`, `brightness override`, `display height/width`, `shadow radius/strength`, and `view range`, including changer coverage against Mojang `Display` state.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `65` Fabric GameTests green after restoring `ExprDisplayInterpolation` and `ExprDisplayTeleportDuration`, plus a generic change effect path that executes `set/add/remove/reset/delete` against change-capable expressions from real `.sk` files.
+- 2026-03-07: `./gradlew build` passed after validating that display interpolation and teleport-duration expressions mutate live Mojang `Display` state under Fabric GameTest.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after restoring `ExprLoveTime`, `ExprInteractionDimensions`, and `ExprLastInteractionPlayer`, plus interaction-state tracking for attack/use callbacks and real `.sk` fixtures that consume those expressions.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after restoring `ExprDisplayTransformationRotation`, `ExprDisplayTransformationScaleTranslation`, and `ExprItemDisplayTransform`, adding `Quaternionf` / `ItemDisplayContext` type parsing, and validating both direct changer behavior and real `.sk` comparison paths against live Mojang `Display` state.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after restoring `ExprLootTable`, `ExprLootTableFromString`, and `ExprLootTableSeed`, tightening parser precedence around `loot table seed of ...`, and validating both entity/block loot-table setters through live `.sk` fixtures.
+- 2026-03-07: the current original Bukkit `Expr*.java` slice is active in the Fabric source tree at `38 / 84`, remaining source-level expression ports `46`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `80` Fabric GameTests green after the latest interaction and display expression batches.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `84` Fabric GameTests green after the loottable expression batch landed cleanly.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` and `./gradlew build` passed after restoring potion expressions for `active potion effects`, specific `potion effect`, `potion duration`, `potion amplifier`, and `potion effect type category`, including bare-token handling when Skript parses effect ids as offline-player names.
+- 2026-03-07: the current original Bukkit `Expr*.java` slice is active in the Fabric source tree at `43 / 84`, remaining source-level expression ports `41`.
+- 2026-03-07: `./gradlew runGameTest --rerun-tasks` passed with `90` Fabric GameTests green after the potion expression batch landed cleanly.
+- 2026-03-07: `./gradlew compileJava compileGametestJava --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build` all passed after registering the remaining expression/event batches and closing the expression port at source level.
+- 2026-03-07: the original Bukkit `Expr*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `84 / 84`, remaining source-level expression ports `0`.
 
 ## Stage 3 Completed Scope
 
@@ -246,6 +281,40 @@ Remaining parity work after Stage 4:
 
 - behavior expansion from type registration into the higher-level condition/expression/effect packages
 
+## Stage 6 Current Scope
+
+Completed in this slice:
+
+- shared event payload expressions now live under `org/skriptlang/skript/bukkit/base/expressions`
+- shared runtime validation effects now live under `org/skriptlang/skript/bukkit/base/effects`
+- bootstrap now registers base package syntax from `org/skriptlang/skript/bukkit/base` instead of `fabric/syntax`
+- existing GameTests still pass after the package move, proving no behavioral regression from the Stage 6 structure shift
+- first real base conditions added under `org/skriptlang/skript/bukkit/base/conditions`
+- `.sk` fixtures now exercise base conditions on `event-item` and `event-entity`
+- dedicated GameTests cover runtime evaluation of base conditions for item stack, slot, inventory, and named entity state
+- first original Bukkit expression slice added under `brewing`, `fishing`, and `input`
+- dedicated GameTests now cover parsing and runtime execution for brewing slots, fishing hook payloads, hooked entities, and current input keys
+- damage-source payload expressions restored for attacker, direct entity, source position, explicit damage position, and food exhaustion
+- brewing stand fuel level expression restored through Mojang block-entity reflection and verified from a loaded `on use block` script
+- text-display expressions restored for alignment, line width, and opacity, including changer behavior verified against Mojang `Display.TextDisplay`
+- minimal generic comparison condition added so scalar/derived expressions can be asserted inside real `.sk` fixtures without introducing more test-only effects
+- generic display expressions restored for billboard constraints, light override, display dimensions, shadow properties, and view range through Mojang `Display` reflection
+- interaction expressions restored for mutable interaction hitbox dimensions, last click/attack player tracking, and love time on breedable animals
+- display transformation expressions restored for translation, scale, and left/right rotation, with dedicated parsers and comparison support for `Vec3` and `Quaternionf`
+- item display transform restored through Mojang `ItemDisplayContext`, including script-level comparison and changer coverage
+- loottable expressions restored for entity/block loot-table access, direct string-to-loot-table parsing, and loot-table seed access with live setter verification
+- remaining original Bukkit expression classes restored and registered under the Fabric bootstrap, including damage-source sections, loot-context sections, furnace expressions, tag expressions, particle expressions, equippable/item-component expressions, rotation/text helpers, breeding-event payloads, and potion-section expressions
+- supplemental Fabric events registered for breeding, brewing complete, loot generate, and furnace-specific event kinds
+- `./gradlew runGameTest --rerun-tasks` and `./gradlew build` pass with the fully-restored expression source set active
+
+Still missing before Stage 6 can be called complete:
+
+- original Bukkit-side non-type base syntax classes are still absent from the active source tree and must be reintroduced class-by-class
+- base package condition coverage is still partial
+- parity validation against the original Bukkit class list is still missing
+- original Bukkit `Cond*.java` class list is now source-complete at `28 / 28`; remaining source-level condition ports: `0`
+- original Bukkit `Expr*.java` class list is now source-complete at `84 / 84`; remaining source-level expression ports: `0`
+
 ## Stage 5 Current Scope
 
 Completed in this slice:
@@ -256,9 +325,12 @@ Completed in this slice:
 - initial event mapping matrix documented in `FABRIC_EVENT_MAPPING.md`
 - `PlayerBlockBreakEvents.AFTER` now bridges into the runtime through a Mojang-backed block break handle
 - GameTest coverage added for mock-player block breaking that executes a real `.sk` file
+- `UseBlockCallback.EVENT`, `UseEntityCallback.EVENT`, `UseItemCallback.EVENT`, and `AttackEntityCallback.EVENT` now bridge live player interaction payloads into the runtime
+- mixin-backed `on brewing fuel`, `on fishing`, and `on player input` event contexts are now available for condition verification
+- GameTests cover live `.sk` execution for brewing consume, fishing lure/open-water, and player input state
 
 Still missing before Stage 5 can be called complete:
 
 - Bukkit event by event mapping onto Mojang/Fabric hooks
 - event payload parity for player/entity/block/inventory contexts
-- representative mapped events beyond lifecycle tick and block break hooks
+- representative mapped events beyond the currently bridged lifecycle, interaction, brewing, fishing, damage, and player-input hooks

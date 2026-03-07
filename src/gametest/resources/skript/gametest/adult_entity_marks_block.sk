@@ -1,0 +1,3 @@
+on use entity:
+    event-entity is an adult
+    set test block under player event-player to lime_wool

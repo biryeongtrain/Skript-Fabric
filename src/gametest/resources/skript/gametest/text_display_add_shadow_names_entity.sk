@@ -1,0 +1,3 @@
+on use entity:
+    add drop shadow to text of event-entity
+    set test name of entity event-entity to "shadow added"

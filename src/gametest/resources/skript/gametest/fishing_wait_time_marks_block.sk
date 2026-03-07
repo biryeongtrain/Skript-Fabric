@@ -1,0 +1,4 @@
+on fishing:
+    set minimum fishing wait time to 5 ticks
+    set maximum fishing wait time to 10 ticks
+    set test block under player event-player to gold_block

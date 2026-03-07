@@ -1,0 +1,4 @@
+on use block:
+    brewing time of event-block is 5 ticks
+    set brewing time of event-block to 6 ticks
+    set test block above event-block to diamond_block

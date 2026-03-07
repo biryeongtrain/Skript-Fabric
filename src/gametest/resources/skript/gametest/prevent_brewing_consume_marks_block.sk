@@ -1,0 +1,3 @@
+on brewing fuel:
+    prevent the brewing stand from consuming the fuel
+    set test block above event-block to diamond_block

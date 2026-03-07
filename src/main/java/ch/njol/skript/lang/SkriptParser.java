@@ -77,11 +77,9 @@ public class SkriptParser {
             if (literal != null) {
                 return literal;
             }
-            if (!containsOnlyObject(returnTypes)) {
-                Object fallback = parseUntypedLiteral(expression, returnTypes);
-                if (fallback != null) {
-                    return (Expression<? extends T>) new SimpleLiteral<>(fallback, false);
-                }
+            Object fallback = parseUntypedLiteral(expression, returnTypes);
+            if (fallback != null) {
+                return (Expression<? extends T>) new SimpleLiteral<>(fallback, false);
             }
         }
         return null;
@@ -332,7 +330,11 @@ public class SkriptParser {
                 }
                 continue;
             }
-            if (ch == '(' || ch == ')' || ch == '|') {
+            if (ch == '(') {
+                regex.append("(?:");
+                continue;
+            }
+            if (ch == ')' || ch == '|') {
                 regex.append(ch);
                 continue;
             }

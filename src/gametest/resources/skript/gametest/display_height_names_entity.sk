@@ -1,0 +1,3 @@
+on use entity:
+    display height of event-entity is "2.5"
+    set test name of entity event-entity to "tall text"

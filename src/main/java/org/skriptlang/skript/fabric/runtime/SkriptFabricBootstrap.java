@@ -2,6 +2,83 @@ package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
+import org.skriptlang.skript.bukkit.base.conditions.CondCompare;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsNamed;
+import org.skriptlang.skript.bukkit.base.types.DamageSourceClassInfo;
+import org.skriptlang.skript.bukkit.brewing.elements.CondBrewingConsume;
+import org.skriptlang.skript.bukkit.brewing.elements.ExprBrewingFuelLevel;
+import org.skriptlang.skript.bukkit.brewing.elements.ExprBrewingSlot;
+import org.skriptlang.skript.bukkit.brewing.elements.ExprBrewingTime;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanAge;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanBreed;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsAdult;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsBaby;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsInLove;
+import org.skriptlang.skript.bukkit.breeding.elements.ExprLoveTime;
+import org.skriptlang.skript.bukkit.damagesource.elements.ExprCausingEntity;
+import org.skriptlang.skript.bukkit.damagesource.elements.ExprDamageLocation;
+import org.skriptlang.skript.bukkit.damagesource.elements.ExprDirectEntity;
+import org.skriptlang.skript.bukkit.damagesource.elements.ExprFoodExhaustion;
+import org.skriptlang.skript.bukkit.damagesource.elements.ExprSourceLocation;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondScalesWithDifficulty;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondWasIndirect;
+import org.skriptlang.skript.bukkit.displays.generic.DisplayBillboardConstraintsClassInfo;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayBillboard;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayBrightness;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayHeightWidth;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayInterpolation;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayShadow;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayTeleportDuration;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayTransformationRotation;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayTransformationScaleTranslation;
+import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayViewRange;
+import org.skriptlang.skript.bukkit.displays.item.ExprItemDisplayTransform;
+import org.skriptlang.skript.bukkit.displays.item.ItemDisplayTransformClassInfo;
+import org.skriptlang.skript.bukkit.displays.text.CondTextDisplayHasDropShadow;
+import org.skriptlang.skript.bukkit.displays.text.CondTextDisplaySeeThroughBlocks;
+import org.skriptlang.skript.bukkit.displays.text.ExprTextDisplayAlignment;
+import org.skriptlang.skript.bukkit.displays.text.ExprTextDisplayLineWidth;
+import org.skriptlang.skript.bukkit.displays.text.ExprTextDisplayOpacity;
+import org.skriptlang.skript.bukkit.displays.text.TextDisplayAlignClassInfo;
+import org.skriptlang.skript.bukkit.fishing.elements.ExprFishingHook;
+import org.skriptlang.skript.bukkit.fishing.elements.ExprFishingHookEntity;
+import org.skriptlang.skript.bukkit.fishing.elements.ExprFishingApproachAngle;
+import org.skriptlang.skript.bukkit.fishing.elements.ExprFishingBiteTime;
+import org.skriptlang.skript.bukkit.fishing.elements.ExprFishingWaitTime;
+import org.skriptlang.skript.bukkit.fishing.elements.EffSetFishingApproachAngle;
+import org.skriptlang.skript.bukkit.fishing.elements.CondFishingLure;
+import org.skriptlang.skript.bukkit.fishing.elements.CondIsInOpenWater;
+import org.skriptlang.skript.bukkit.input.InputKeyClassInfo;
+import org.skriptlang.skript.bukkit.input.elements.expressions.ExprCurrentInputKeys;
+import org.skriptlang.skript.bukkit.input.elements.conditions.CondIsPressingKey;
+import org.skriptlang.skript.bukkit.interactions.elements.conditions.CondIsResponsive;
+import org.skriptlang.skript.bukkit.interactions.elements.expressions.ExprInteractionDimensions;
+import org.skriptlang.skript.bukkit.interactions.elements.expressions.ExprLastInteractionPlayer;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDamage;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDispensable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompInteract;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompShearable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompSwapEquipment;
+import org.skriptlang.skript.bukkit.loottables.LootTable;
+import org.skriptlang.skript.bukkit.loottables.LootTableClassInfo;
+import org.skriptlang.skript.bukkit.loottables.elements.conditions.CondHasLootTable;
+import org.skriptlang.skript.bukkit.loottables.elements.conditions.CondIsLootable;
+import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootTable;
+import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootTableFromString;
+import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootTableSeed;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondHasPotion;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPoisoned;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionAmbient;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionInstant;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasIcon;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasParticles;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionAmplifier;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionDuration;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionEffect;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionEffectTypeCategory;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionEffects;
+import org.skriptlang.skript.bukkit.tags.elements.CondIsTagged;
 import org.skriptlang.skript.bukkit.base.types.EntityClassInfo;
 import org.skriptlang.skript.bukkit.base.types.InventoryClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ItemStackClassInfo;
@@ -10,27 +87,46 @@ import org.skriptlang.skript.bukkit.base.types.LocationClassInfo;
 import org.skriptlang.skript.bukkit.base.types.NameableClassInfo;
 import org.skriptlang.skript.bukkit.base.types.OfflinePlayerClassInfo;
 import org.skriptlang.skript.bukkit.base.types.PlayerClassInfo;
+import org.skriptlang.skript.bukkit.base.types.QuaternionClassInfo;
 import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
+import org.skriptlang.skript.bukkit.base.types.TimespanClassInfo;
 import org.skriptlang.skript.bukkit.base.types.VectorClassInfo;
 import org.skriptlang.skript.bukkit.base.types.WorldClassInfo;
 import org.skriptlang.skript.fabric.SkriptFabric;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
-import org.skriptlang.skript.fabric.syntax.effect.EffSetTestBlockAtLocation;
-import org.skriptlang.skript.fabric.syntax.effect.EffSetTestBlockAtBlock;
-import org.skriptlang.skript.fabric.syntax.effect.EffSetTestBlock;
-import org.skriptlang.skript.fabric.syntax.effect.EffSetTestEntityName;
-import org.skriptlang.skript.fabric.syntax.effect.EffSetTestBlockUnderPlayer;
+import org.skriptlang.skript.bukkit.base.effects.EffChange;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAtLocation;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAtBlock;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAboveBlock;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlock;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestEntityName;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestItemName;
+import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockUnderPlayer;
+import org.skriptlang.skript.fabric.syntax.event.EvtAttackEntity;
+import org.skriptlang.skript.fabric.syntax.event.EvtBrewingFuel;
+import org.skriptlang.skript.fabric.syntax.event.EvtDamage;
 import org.skriptlang.skript.fabric.syntax.event.EvtFabricBlockBreak;
 import org.skriptlang.skript.fabric.syntax.event.EvtFabricGameTest;
 import org.skriptlang.skript.fabric.syntax.event.EvtFabricServerTick;
 import org.skriptlang.skript.fabric.syntax.event.EvtFabricUseBlock;
+import org.skriptlang.skript.fabric.syntax.event.EvtFishing;
+import org.skriptlang.skript.fabric.syntax.event.EvtPlayerInput;
 import org.skriptlang.skript.fabric.syntax.event.EvtUseEntity;
-import org.skriptlang.skript.fabric.syntax.expression.ExprEventBlock;
-import org.skriptlang.skript.fabric.syntax.expression.ExprEventEntity;
-import org.skriptlang.skript.fabric.syntax.expression.ExprEventPlayer;
+import org.skriptlang.skript.fabric.syntax.event.EvtUseItem;
+import org.skriptlang.skript.bukkit.base.expressions.ExprEventBlock;
+import org.skriptlang.skript.bukkit.base.expressions.ExprEventDamageSource;
+import org.skriptlang.skript.bukkit.base.expressions.ExprEventEntity;
+import org.skriptlang.skript.bukkit.base.expressions.ExprEventItem;
+import org.skriptlang.skript.bukkit.base.expressions.ExprEventPlayer;
 import org.skriptlang.skript.lang.properties.Property;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 public final class SkriptFabricBootstrap {
 
@@ -55,20 +151,465 @@ public final class SkriptFabricBootstrap {
                 InventoryClassInfo.register();
                 ItemStackClassInfo.register();
                 ItemTypeClassInfo.register();
+                InputKeyClassInfo.register();
                 LocationClassInfo.register();
+                LootTableClassInfo.register();
                 NameableClassInfo.register();
+                DisplayBillboardConstraintsClassInfo.register();
+                ItemDisplayTransformClassInfo.register();
                 OfflinePlayerClassInfo.register();
+                QuaternionClassInfo.register();
+                TextDisplayAlignClassInfo.register();
+                TimespanClassInfo.register();
                 WorldClassInfo.register();
                 EntityClassInfo.register();
+                DamageSourceClassInfo.register();
                 BlockClassInfo.register();
                 SlotClassInfo.register();
                 VectorClassInfo.register();
                 SkriptFabricEventBridge.register();
+                Skript.registerCondition(
+                        CondIsEmpty.class,
+                        "%itemstack% is empty",
+                        "%itemstack% is not empty",
+                        "%slot% is empty",
+                        "%slot% is not empty",
+                        "%inventory% is empty",
+                        "%inventory% is not empty"
+                );
+                Skript.registerCondition(
+                        CondIsNamed.class,
+                        "%entity% is named",
+                        "%entity% is not named",
+                        "%itemstack% is named",
+                        "%itemstack% is not named"
+                );
+                Skript.registerCondition(
+                        CondBrewingConsume.class,
+                        "[the] brewing stand will consume [the] fuel",
+                        "[the] brewing stand (will not|won't) consume [the] fuel"
+                );
+                Skript.registerCondition(
+                        CondCanAge.class,
+                        "%entity% can (age|grow (up|old[er]))",
+                        "%entity% can(n't| not) (age|grow (up|old[er]))"
+                );
+                Skript.registerCondition(
+                        CondCanBreed.class,
+                        "%entity% can (breed|be bred)",
+                        "%entity% can(n't| not) (breed|be bred)"
+                );
+                Skript.registerCondition(
+                        CondIsAdult.class,
+                        "%entity% is [an] adult",
+                        "%entity% is(n't| not) [an] adult"
+                );
+                Skript.registerCondition(
+                        CondIsBaby.class,
+                        "%entity% is a (child|baby)",
+                        "%entity% is(n't| not) a (child|baby)"
+                );
+                Skript.registerCondition(
+                        CondIsInLove.class,
+                        "%entity% is in lov(e|ing) [state|mode]",
+                        "%entity% is(n't| not) in lov(e|ing) [state|mode]"
+                );
+                Skript.registerCondition(
+                        CondScalesWithDifficulty.class,
+                        "%damagesources% ((does|do) scale|scales) damage with difficulty",
+                        "%damagesources% (do not|don't|does not|doesn't) scale damage with difficulty",
+                        "%damagesources%'[s] damage ((does|do) scale|scales) with difficulty",
+                        "%damagesources%'[s] damage (do not|don't|does not|doesn't) scale with difficulty"
+                );
+                Skript.registerCondition(
+                        CondWasIndirect.class,
+                        "%damagesources% (was|were) (indirectly caused|caused indirectly)",
+                        "%damagesources% (was not|wasn't|were not|weren't) (indirectly caused|caused indirectly)",
+                        "%damagesources% (was|were) (directly caused|caused directly)",
+                        "%damagesources% (was not|wasn't|were not|weren't) (directly caused|caused directly)"
+                );
+                Skript.registerCondition(
+                        CondFishingLure.class,
+                        "lure enchantment bonus is (applied|active)",
+                        "lure enchantment bonus is(n't| not) (applied|active)"
+                );
+                Skript.registerCondition(
+                        CondIsInOpenWater.class,
+                        "%entity% (is|are) in open water[s]",
+                        "%entity% (isn't|is not|aren't|are not) in open water[s]"
+                );
+                Skript.registerCondition(
+                        CondIsPressingKey.class,
+                        "%players% (is|are) pressing %inputkeys%",
+                        "%players% (isn't|is not|aren't|are not) pressing %inputkeys%",
+                        "%players% (was|were) pressing %inputkeys%",
+                        "%players% (wasn't|was not|weren't|were not) pressing %inputkeys%"
+                );
+                Skript.registerCondition(
+                        CondTextDisplayHasDropShadow.class,
+                        "[[the] text of] %entities% (has|have) [a] (drop|text) shadow",
+                        "%entities%'[s] text (has|have) [a] (drop|text) shadow",
+                        "[[the] text of] %entities% (doesn't|does not|do not|don't) have [a] (drop|text) shadow",
+                        "%entities%'[s] text (doesn't|does not|do not|don't) have [a] (drop|text) shadow"
+                );
+                Skript.registerCondition(
+                        CondTextDisplaySeeThroughBlocks.class,
+                        "%entities% (is|are) visible through (blocks|walls)",
+                        "%entities% (isn't|is not|aren't|are not) visible through (blocks|walls)"
+                );
+                Skript.registerCondition(
+                        CondIsResponsive.class,
+                        "%entities% (is|are) responsive",
+                        "%entities% (isn't|is not|aren't|are not) responsive",
+                        "%entities% (is|are) unresponsive",
+                        "%entities% (isn't|is not|aren't|are not) unresponsive"
+                );
+                Skript.registerCondition(
+                        CondHasLootTable.class,
+                        "%blocks/entities% has [a] loot[ ]table",
+                        "%blocks/entities% does(n't| not) have [a] loot[ ]table"
+                );
+                Skript.registerCondition(
+                        CondIsLootable.class,
+                        "%blocks/entities% (is|are) lootable",
+                        "%blocks/entities% (isn't|is not|aren't|are not) lootable"
+                );
+                Skript.registerCondition(
+                        CondHasPotion.class,
+                        "%livingentities% (has|have) ([any|a[n]] [active] potion effect[s]|[any|a] potion effect[s] active)",
+                        "%livingentities% (doesn't|does not|do not|don't) have ([any|a[n]] [active] potion effect[s]|[any|a] potion effect[s] active)",
+                        "%livingentities% (has|have) %objects% [active]",
+                        "%livingentities% (doesn't|does not|do not|don't) have %objects% [active]"
+                );
+                Skript.registerCondition(
+                        CondIsPoisoned.class,
+                        "%livingentities% (is|are) poisoned",
+                        "%livingentities% (isn't|is not|aren't|are not) poisoned"
+                );
+                Skript.registerCondition(
+                        CondIsPotionAmbient.class,
+                        "%objects% (is|are) ambient",
+                        "%objects% (isn't|is not|aren't|are not) ambient"
+                );
+                Skript.registerCondition(
+                        CondIsPotionInstant.class,
+                        "%objects% (is|are) instant",
+                        "%objects% (isn't|is not|aren't|are not) instant"
+                );
+                Skript.registerCondition(
+                        CondPotionHasIcon.class,
+                        "%objects% (has|have) ([an] icon|icons)",
+                        "%objects% (doesn't|does not|do not|don't) have ([an] icon|icons)"
+                );
+                Skript.registerCondition(
+                        CondPotionHasParticles.class,
+                        "%objects% (has|have) particles",
+                        "%objects% (doesn't|does not|do not|don't) have particles"
+                );
+                Skript.registerCondition(
+                        CondIsTagged.class,
+                        "%objects% (is|are) tagged (as|with) %objects%",
+                        "%objects% (isn't|is not|aren't|are not) tagged (as|with) %objects%"
+                );
+                Skript.registerCondition(
+                        CondEquipCompDamage.class,
+                        "%objects% will (lose durability|be damaged) (on [wearer['s]] injury|when [[the] wearer [is]] (hurt|injured|damaged))",
+                        "%objects% (will not|won't) (lose durability|be damaged) (on [wearer['s]] injury|when [[the] wearer [is]] (hurt|injured|damaged))"
+                );
+                Skript.registerCondition(
+                        CondEquipCompDispensable.class,
+                        "%objects% can be dispensed",
+                        "%objects% (can not|can't) be dispensed",
+                        "%objects% (is|are) (able to be dispensed|dispensable)",
+                        "%objects% (isn't|is not|aren't|are not) (able to be dispensed|dispensable)"
+                );
+                Skript.registerCondition(
+                        CondEquipCompInteract.class,
+                        "%objects% can be (equipped|put) on[to] entities",
+                        "%objects% (can not|can't) be (equipped|put) on[to] entities"
+                );
+                Skript.registerCondition(
+                        CondEquipCompShearable.class,
+                        "%objects% can be sheared off [of entities]",
+                        "%objects% (can not|can't) be sheared off [of entities]"
+                );
+                Skript.registerCondition(
+                        CondEquipCompSwapEquipment.class,
+                        "%objects% can swap equipment [on right click|when right clicked]",
+                        "%objects% (can not|can't) swap equipment [on right click|when right clicked]"
+                );
+                Skript.registerCondition(
+                        CondCompare.class,
+                        "%objects% (is|are) %objects%",
+                        "%objects% (isn't|is not|aren't|are not) %objects%"
+                );
                 Skript.registerEvent(EvtFabricBlockBreak.class, "on block break");
+                Skript.registerEvent(EvtAttackEntity.class, "on attack entity");
+                Skript.registerEvent(EvtBrewingFuel.class, "on brewing fuel");
+                Skript.registerEvent(EvtDamage.class, "on damage");
                 Skript.registerEvent(EvtFabricGameTest.class, "on gametest");
+                Skript.registerEvent(EvtFishing.class, "on fishing");
+                Skript.registerEvent(EvtPlayerInput.class, "on player input");
                 Skript.registerEvent(EvtFabricServerTick.class, "on server tick");
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
+                Skript.registerEvent(EvtUseItem.class, "on use item");
+                Skript.registerExpression(
+                        ExprLoveTime.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "[the] love time of %entities%",
+                        "%entities%'[s] love time"
+                );
+                Skript.registerExpression(
+                        ExprBrewingFuelLevel.class,
+                        Integer.class,
+                        "[the] brewing [stand] fuel (level|amount) of %blocks%",
+                        "%blocks%'s brewing [stand] fuel (level|amount)"
+                );
+                Skript.registerExpression(
+                        ExprBrewingSlot.class,
+                        net.minecraft.world.inventory.Slot.class,
+                        ExprBrewingSlot.patterns()
+                );
+                Skript.registerExpression(
+                        ExprBrewingTime.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "[current|remaining] brewing time of %blocks%",
+                        "%blocks%'[s] [current|remaining] brewing time"
+                );
+                Skript.registerExpression(
+                        ExprCausingEntity.class,
+                        Entity.class,
+                        "[the] (causing|responsible) entity of %damagesources%",
+                        "%damagesources%'s (causing|responsible) entity"
+                );
+                Skript.registerExpression(
+                        ExprDirectEntity.class,
+                        Entity.class,
+                        "[the] direct entity of %damagesources%",
+                        "%damagesources%'s direct entity"
+                );
+                Skript.registerExpression(
+                        ExprDamageLocation.class,
+                        org.skriptlang.skript.fabric.compat.FabricLocation.class,
+                        "[the] damage location of %damagesources%",
+                        "%damagesources%'s damage location"
+                );
+                Skript.registerExpression(
+                        ExprSourceLocation.class,
+                        org.skriptlang.skript.fabric.compat.FabricLocation.class,
+                        "[the] source location of %damagesources%",
+                        "%damagesources%'s source location"
+                );
+                Skript.registerExpression(
+                        ExprFoodExhaustion.class,
+                        Float.class,
+                        "[the] food exhaustion of %damagesources%",
+                        "%damagesources%'s food exhaustion"
+                );
+                Skript.registerExpression(
+                        ExprDisplayBillboard.class,
+                        Display.BillboardConstraints.class,
+                        "billboard of %entities%",
+                        "billboarding of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayBrightness.class,
+                        Integer.class,
+                        "block light override of %entities%",
+                        "sky light override of %entities%",
+                        "brightness override of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayHeightWidth.class,
+                        Float.class,
+                        "display height of %entities%",
+                        "display width of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayShadow.class,
+                        Float.class,
+                        "shadow radius of %entities%",
+                        "shadow strength of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayInterpolation.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "interpolation delay of %entities%",
+                        "interpolation duration of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayTransformationRotation.class,
+                        Quaternionf.class,
+                        "left [transformation] rotation of %entities%",
+                        "right [transformation] rotation of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayTransformationScaleTranslation.class,
+                        Vec3.class,
+                        "[display] transformation scale of %entities%",
+                        "[display] transformation translation of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayTeleportDuration.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "teleport duration of %entities%",
+                        "teleportation duration of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprDisplayViewRange.class,
+                        Float.class,
+                        "view range of %entities%",
+                        "view radius of %entities%"
+                );
+                Skript.registerExpression(
+                        ExprItemDisplayTransform.class,
+                        ItemDisplayContext.class,
+                        "[the] item [display] transform of %entities%",
+                        "%entities%'[s] item [display] transform"
+                );
+                Skript.registerExpression(
+                        ExprLootTable.class,
+                        LootTable.class,
+                        "[the] (loot[ ]table|loot[ ]tables) of event-entity",
+                        "[the] (loot[ ]table|loot[ ]tables) of event-block",
+                        "[the] (loot[ ]table|loot[ ]tables) of %entities%",
+                        "%entities%'[s] (loot[ ]table|loot[ ]tables)",
+                        "[the] (loot[ ]table|loot[ ]tables) of %blocks%",
+                        "%blocks%'[s] (loot[ ]table|loot[ ]tables)"
+                );
+                Skript.registerExpression(
+                        ExprLootTableSeed.class,
+                        Long.class,
+                        "[the] (loot[[ ]table] seed|loot[[ ]table] seeds) of event-entity",
+                        "[the] (loot[[ ]table] seed|loot[[ ]table] seeds) of event-block",
+                        "[the] (loot[[ ]table] seed|loot[[ ]table] seeds) of %entities%",
+                        "%entities%'[s] (loot[[ ]table] seed|loot[[ ]table] seeds)",
+                        "[the] (loot[[ ]table] seed|loot[[ ]table] seeds) of %blocks%",
+                        "%blocks%'[s] (loot[[ ]table] seed|loot[[ ]table] seeds)"
+                );
+                Skript.registerExpression(
+                        ExprLootTableFromString.class,
+                        LootTable.class,
+                        "[the] (loot[ ]table|loot[ ]tables) %strings%"
+                );
+                Skript.registerExpression(
+                        ExprPotionEffects.class,
+                        org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect.class,
+                        "[the] [active] (potion effect|potion effects) of %entities%",
+                        "%entities%'[s] [active] (potion effect|potion effects)"
+                );
+                Skript.registerExpression(
+                        ExprPotionDuration.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "[the] [potion] duration of %objects%",
+                        "%objects%'[s] [potion] duration",
+                        "[the] [potion] length of %objects%",
+                        "%objects%'[s] [potion] length"
+                );
+                Skript.registerExpression(
+                        ExprPotionAmplifier.class,
+                        Integer.class,
+                        "[the] [potion] amplifier of %objects%",
+                        "%objects%'[s] [potion] amplifier",
+                        "[the] potion tier of %objects%",
+                        "%objects%'[s] potion tier",
+                        "[the] potion level of %objects%",
+                        "%objects%'[s] potion level"
+                );
+                Skript.registerExpression(
+                        ExprPotionEffect.class,
+                        org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect.class,
+                        "[the] %strings% [active] effect of %entities%",
+                        "[the] %strings% [active] effects of %entities%",
+                        "%entities%'[s] %strings% [active] effect",
+                        "%entities%'[s] %strings% [active] effects",
+                        "[the] %objects% [active] effect of %entities%",
+                        "[the] %objects% [active] effects of %entities%",
+                        "%entities%'[s] %objects% [active] effect",
+                        "%entities%'[s] %objects% [active] effects"
+                );
+                Skript.registerExpression(
+                        ExprPotionEffectTypeCategory.class,
+                        net.minecraft.world.effect.MobEffectCategory.class,
+                        "[the] potion [effect [type]] category of %strings%",
+                        "%strings%'[s] potion [effect [type]] category",
+                        "[the] potion [effect [type]] category of %objects%",
+                        "%objects%'[s] potion [effect [type]] category"
+                );
+                Skript.registerExpression(
+                        ExprTextDisplayAlignment.class,
+                        Display.TextDisplay.Align.class,
+                        "[the] text alignment of %entities%",
+                        "%entities%'[s] text alignment[s]"
+                );
+                Skript.registerExpression(
+                        ExprTextDisplayLineWidth.class,
+                        Integer.class,
+                        "[the] line width of %entities%",
+                        "%entities%'[s] line width"
+                );
+                Skript.registerExpression(
+                        ExprTextDisplayOpacity.class,
+                        Integer.class,
+                        "[the] [display] [text] opacity of %entities%",
+                        "%entities%'[s] [display] [text] opacity"
+                );
+                Skript.registerExpression(
+                        ExprFishingHook.class,
+                        Entity.class,
+                        "fish[ing] (hook|bobber)"
+                );
+                Skript.registerExpression(
+                        ExprFishingApproachAngle.class,
+                        Float.class,
+                        "min[imum] fishing approach angle",
+                        "min[imum] fishing approaching angle",
+                        "max[imum] fishing approach angle",
+                        "max[imum] fishing approaching angle"
+                );
+                Skript.registerExpression(
+                        ExprFishingBiteTime.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "fish[ing] bit(e|ing) [wait] time"
+                );
+                Skript.registerExpression(
+                        ExprFishingHookEntity.class,
+                        Entity.class,
+                        "hook[ed] entity"
+                );
+                Skript.registerExpression(
+                        ExprFishingWaitTime.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "min[imum] fishing wait time",
+                        "min[imum] fishing waiting time",
+                        "max[imum] fishing wait time",
+                        "max[imum] fishing waiting time"
+                );
+                Skript.registerExpression(
+                        ExprCurrentInputKeys.class,
+                        org.skriptlang.skript.bukkit.input.InputKey.class,
+                        "[current] (inputs|input keys) of %players%",
+                        "%players%'[s] [current] (inputs|input keys)"
+                );
+                Skript.registerExpression(
+                        ExprInteractionDimensions.class,
+                        Float.class,
+                        "[the] interaction width of %entities%",
+                        "%entities%'[s] interaction width",
+                        "[the] interaction height of %entities%",
+                        "%entities%'[s] interaction height"
+                );
+                Skript.registerExpression(
+                        ExprLastInteractionPlayer.class,
+                        com.mojang.authlib.GameProfile.class,
+                        "[the] last player to attack %entities%",
+                        "[the] last player who attacked %entities%",
+                        "[the] last player to interact with %entities%",
+                        "[the] last player who interacted with %entities%",
+                        "[the] last player to click on %entities%",
+                        "[the] last player who clicked on %entities%"
+                );
                 Skript.registerExpression(
                         ExprEventBlock.class,
                         FabricBlock.class,
@@ -93,6 +634,24 @@ public final class SkriptFabricBootstrap {
                         "the event-entity",
                         "the event entity"
                 );
+                Skript.registerExpression(
+                        ExprEventItem.class,
+                        ItemStack.class,
+                        "event-item",
+                        "event item",
+                        "the event-item",
+                        "the event item"
+                );
+                Skript.registerExpression(
+                        ExprEventDamageSource.class,
+                        DamageSource.class,
+                        "event-damage source",
+                        "event damage source",
+                        "the event-damage source",
+                        "the event damage source"
+                );
+                SkriptFabricAdditionalSyntax.register();
+                SkriptFabricAdditionalEffects.register();
                 Skript.registerEffect(
                         EffSetTestBlock.class,
                         "set test block at %integer% %integer% %integer% to %string%"
@@ -100,6 +659,10 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEffect(
                         EffSetTestBlockAtBlock.class,
                         "set test block for %block% to %string%"
+                );
+                Skript.registerEffect(
+                        EffSetTestBlockAboveBlock.class,
+                        "set test block above %block% to %string%"
                 );
                 Skript.registerEffect(
                         EffSetTestBlockAtLocation.class,
@@ -112,6 +675,25 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEffect(
                         EffSetTestEntityName.class,
                         "set test name of entity %entity% to %string%"
+                );
+                Skript.registerEffect(
+                        EffSetTestItemName.class,
+                        "set test name of item %itemstack% to %string%"
+                );
+                Skript.registerEffect(
+                        EffSetFishingApproachAngle.class,
+                        "set min[imum] fishing approach angle to %object%",
+                        "set min[imum] fishing approaching angle to %object%",
+                        "set max[imum] fishing approach angle to %object%",
+                        "set max[imum] fishing approaching angle to %object%"
+                );
+                Skript.registerEffect(
+                        EffChange.class,
+                        "set %object% to %object%",
+                        "add %object% to %object%",
+                        "remove %object% from %object%",
+                        "reset %object%",
+                        "delete %object%"
                 );
             } finally {
                 Skript.setAcceptRegistrations(false);

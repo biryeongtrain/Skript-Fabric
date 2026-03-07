@@ -1,0 +1,3 @@
+on player input:
+    event-player was pressing forward movement key
+    set test block under player event-player to orange_wool

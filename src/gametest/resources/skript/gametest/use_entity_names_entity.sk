@@ -1,3 +1,4 @@
 on use entity:
+    event-entity is not named
     set test name of entity event-entity to "clicked entity"
-    set test block under player event-player to "minecraft:amethyst_block"
+    set test block under player event-player to amethyst_block

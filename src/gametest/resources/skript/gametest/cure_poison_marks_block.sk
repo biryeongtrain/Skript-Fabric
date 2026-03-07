@@ -1,0 +1,3 @@
+on use entity:
+    cure event-entity from poison
+    set test block under player event-player to cyan_wool

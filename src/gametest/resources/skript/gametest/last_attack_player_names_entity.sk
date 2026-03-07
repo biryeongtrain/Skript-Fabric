@@ -1,0 +1,3 @@
+on attack entity:
+    last player who attacked event-entity is "test-mock-player"
+    set test name of entity event-entity to "attacked interaction"

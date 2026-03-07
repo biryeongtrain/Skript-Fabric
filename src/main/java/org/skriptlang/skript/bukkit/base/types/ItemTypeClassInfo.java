@@ -7,11 +7,11 @@ import ch.njol.skript.registrations.Classes;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
+import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -52,42 +52,16 @@ public final class ItemTypeClassInfo {
                 normalized = matcher.group(2).trim();
             }
 
-            normalized = normalizeItemId(normalized);
-
-            ResourceLocation itemId;
             try {
-                itemId = normalized.indexOf(':') >= 0
-                        ? ResourceLocation.parse(normalized)
-                        : ResourceLocation.withDefaultNamespace(normalized);
+                var itemId = MinecraftResourceParser.parse(normalized);
+                Item item = BuiltInRegistries.ITEM.getValue(itemId);
+                if (item == null || item == Items.AIR && !"minecraft:air".equals(itemId.toString())) {
+                    return null;
+                }
+                return new FabricItemType(item, amount, null);
             } catch (RuntimeException ignored) {
                 return null;
             }
-            Item item = BuiltInRegistries.ITEM.getValue(itemId);
-            if (item == null || item == Items.AIR && !"minecraft:air".equals(itemId.toString())) {
-                return null;
-            }
-            return new FabricItemType(item, amount, null);
-        }
-
-        private String normalizeItemId(String input) {
-            String normalized = input;
-            while (normalized.length() >= 2) {
-                if ((normalized.startsWith("\"") && normalized.endsWith("\""))
-                        || (normalized.startsWith("'") && normalized.endsWith("'"))) {
-                    normalized = normalized.substring(1, normalized.length() - 1).trim();
-                    continue;
-                }
-                if ((normalized.startsWith("\\\"") && normalized.endsWith("\\\""))
-                        || (normalized.startsWith("\\'") && normalized.endsWith("\\'"))) {
-                    normalized = normalized.substring(2, normalized.length() - 2).trim();
-                    continue;
-                }
-                break;
-            }
-            return normalized
-                    .replace("\\\"", "")
-                    .replace("\\'", "")
-                    .replaceAll("\\s+", "");
         }
     }
 

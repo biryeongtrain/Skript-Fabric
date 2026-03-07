@@ -1,0 +1,3 @@
+on use entity:
+    shadow radius of event-entity is "1.75"
+    set test name of entity event-entity to "shadow radius text"

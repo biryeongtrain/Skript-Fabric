@@ -1,0 +1,3 @@
+on use entity:
+    make event-entity responsive
+    set test name of entity event-entity to "made responsive"

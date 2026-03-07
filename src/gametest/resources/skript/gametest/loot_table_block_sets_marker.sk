@@ -1,0 +1,6 @@
+on use block:
+    set loot table of event-block to chests/simple_dungeon
+    set loot table seed of event-block to 29
+    loot table of event-block is chests/simple_dungeon
+    loot table seed of event-block is 29
+    set test block above event-block to emerald_block

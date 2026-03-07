@@ -1,0 +1,3 @@
+on use entity:
+    poison effect of event-entity is poison
+    set test name of entity event-entity to "specific potion effect"

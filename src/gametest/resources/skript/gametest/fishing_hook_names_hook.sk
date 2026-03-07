@@ -1,0 +1,2 @@
+on fishing:
+    set test name of entity fishing hook to "fishing hook"

@@ -1,0 +1,3 @@
+on use entity:
+    last player who clicked on event-entity is "test-mock-player"
+    set test name of entity event-entity to "clicked interaction"
