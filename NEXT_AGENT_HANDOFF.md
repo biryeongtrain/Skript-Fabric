@@ -9,8 +9,8 @@ Current headline:
 - keep Stage 8 package-local audit state frozen at `23 / 214`
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`, continuing `Part 1A`, and the already-started `Part 1B` dependency closure
-- latest verified runtime baseline is `205 / 205`
-- latest closed slice is raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics
+- latest verified runtime baseline is `207 / 207`
+- latest closed slice is inner-expression variable-name validation, classinfo-backed omitted placeholder defaults, and built-in `EffChange` local hints
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `205 / 205` scheduled Fabric GameTests completed without build failure
+  - `207 / 207` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -52,21 +52,23 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next three-lane coordinator slice for raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics
-- raw list-variable compatibility landed:
-  - [src/main/java/ch/njol/skript/variables/Variables.java](../../src/main/java/ch/njol/skript/variables/Variables.java) now reconstructs upstream-style nested `TreeMap` values for `Variables.getVariable("name::*", ...)`, including `null` sentinel parent entries when a direct parent value and descendants coexist
-  - added focused coverage in [src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java) for descendant-only and direct-parent-plus-descendant raw list reads, while keeping shallow prefix reads unchanged
-- prefixed variable parser compatibility landed:
-  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now accepts upstream-prefixed variable expressions such as `var {x}`, `variable {x}`, and `the variable {x}`
-  - [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) now proves both direct parser recognition and effect-driven runtime storage through those exact forms
-  - added [src/gametest/resources/skript/gametest/base/prefixed_variable_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/prefixed_variable_set_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that executes a real `.sk` file using `set var {MiXeDBlock} ...`
-- statement-fallback quality retention landed:
-  - [src/main/java/ch/njol/skript/lang/Statement.java](../../src/main/java/ch/njol/skript/lang/Statement.java) now keeps an earlier higher-quality effect or condition parse error when a later plain statement fails with a lower-quality specific diagnostic on the same syntax line
-  - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) and [src/gametest/resources/skript/gametest/base/higher_quality_parse_error_prefers_effect_test_block.sk](../../src/gametest/resources/skript/gametest/base/higher_quality_parse_error_prefers_effect_test_block.sk) now lock both the loader-only and real `.sk` paths
+- merged the next three-lane coordinator slice for inner-expression variable-name validation, classinfo-backed omitted placeholder defaults, and built-in `EffChange` local hints
+- variable-name validation compatibility landed:
+  - [src/main/java/ch/njol/skript/lang/Variable.java](../../src/main/java/ch/njol/skript/lang/Variable.java) now ignores `*` characters inside paired `%...%` spans when validating variable names, restoring accepted forms such as `result::%{source::*}%` and `result::%{source::*}%::*`
+  - [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) now proves accepted and rejected forms through `isValidVariableName(...)`, `newInstance(...)`, and parser-facing variable-expression coverage
+  - added [src/gametest/resources/skript/gametest/base/variable_name_expression_inner_list_marker_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/variable_name_expression_inner_list_marker_set_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that executes a real `.sk` file using `set {result::%{source::*}%} ...`
+- classinfo-backed omitted-default compatibility landed:
+  - [src/main/java/ch/njol/skript/classes/ClassInfo.java](../../src/main/java/ch/njol/skript/classes/ClassInfo.java) now exposes `defaultExpression(...)` / `getDefaultExpression()`
+  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now falls back from parser-scoped `DefaultValueData` to exact `ClassInfo` default expressions for omitted non-optional placeholders
+  - [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) now proves parser-scoped defaults still win while exact `ClassInfo` defaults backfill omitted forms like `default number`
+- built-in local-hint compatibility landed:
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java) now publishes parse-time local-variable hints when the exact built-in `set %object% to %object%` path successfully targets a hintable local variable
+  - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) now proves both `set {_value} to 1` -> `%integer%` and later `set {_value} to "text"` -> `%string%`
+  - added [src/gametest/resources/skript/gametest/base/built_in_set_local_hint_test_block.sk](../../src/gametest/resources/skript/gametest/base/built_in_set_local_hint_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that executes the exact built-in `set` syntax through the live resource-loader path
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `205 / 205`
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `207 / 207`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `207 / 207`
 
 ## What Landed In This Slice
 
@@ -84,13 +86,16 @@ New immediate priority:
 - landed the current `Part 1A` / `Part 1B` slices:
   - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, and `TriggerItem.walk(...)` now exposes the current event through `CurrentSkriptEvent` so live `%namespace:path%` placeholders resolve on active message/name paths
   - locked runtime GameTests now clear Skript variables before and after each body, preventing suite-order leakage while leaving production variable semantics unchanged
+  - `Variable.isValidVariableName(...)` now ignores `*` inside paired `%...%` spans, restoring dynamic forms such as `result::%{source::*}%`
+  - `ClassInfo` now exposes default expressions, and `SkriptParser` now falls back to them when omitted non-optional placeholders have no parser-scoped default
+  - `EffChange.init(...)` now publishes parse-time local-variable hints for the exact built-in `set %object% to %object%` path when it targets a hintable local variable
   - `Variables.getVariable("name::*", ...)` now reconstructs upstream-style nested list maps, including `null` parent sentinels when a direct parent value and descendants coexist, while `getVariablesWithPrefix(...)` keeps the current shallow direct-child view
   - `SkriptParser` now recognizes upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}`
   - `Statement.selectRetainedFailure(...)` now keeps earlier higher-quality effect/condition parse errors over later lower-quality plain-statement failures on the same syntax line
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, and `higher_quality_parse_error_prefers_effect_test_block.sk`, increasing the current Fabric GameTest suite to `205 / 205`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, and `built_in_set_local_hint_test_block.sk`, increasing the current Fabric GameTest suite to `207 / 207`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup
@@ -158,7 +163,8 @@ New immediate priority:
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing section-level execution-intent propagation
   - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing explicit literal-pattern ordering parity
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging the latest parse-log-aware class parsing, ordered duplicate parser tags, and statement fallback slice
-  - `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging classinfo-backed omitted defaults, inner-expression variable-name list-marker validation, and built-in `EffChange` local hints
+  - `./gradlew runGameTest --rerun-tasks` passed with `207 / 207`
   - `./gradlew build --rerun-tasks` passed
 
 ## Files Changed In This Slice
@@ -361,9 +367,9 @@ Recommended order:
 - Effect 24/24 완료
 - Stage 5 closure 22/22
 - Stage 8 package-local audit 23/214
-- latest verified GameTest 196/196
+- latest verified GameTest 207/207
 - build 통과
-- new `ch/njol/skript` baseline: local 119 / upstream 1189
+- new `ch/njol/skript` baseline: local 128 / upstream 1189
 
 중요 제약:
 - 사용자 Skript 문법에 fabric 접두/접미사를 넣지 마

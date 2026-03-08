@@ -153,7 +153,7 @@ That means the real gap is behavior, not class presence.
 - kept root-level filenames as entrypoint pointers for prompt compatibility
 - froze and recorded the current Stage 8 verified baseline:
   - `23 / 214` package-local audited
-  - `205 / 205` Fabric GameTests on the last runtime verification
+  - `207 / 207` Fabric GameTests on the last runtime verification
   - `./gradlew build --rerun-tasks` passed on the last runtime verification
 - measured the upstream/local `ch/njol/skript` source gap:
   - upstream `1189`
@@ -225,6 +225,13 @@ That means the real gap is behavior, not class presence.
   - `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
   - `./gradlew build --rerun-tasks` passed with the full `205 / 205` runtime suite
+  - `Variable.isValidVariableName(...)` now ignores `*` inside paired `%...%` expression spans, restoring dynamic variable-name forms such as `result::%{source::*}%`
+  - `ClassInfo` now exposes default expressions, and `SkriptParser.parseModern(...)` / `parseStatic(...)` now fall back to exact `ClassInfo` defaults when omitted non-optional placeholders have no parser-scoped default
+  - `EffChange.init(...)` now publishes parse-time local-variable hints for the exact built-in `set %object% to %object%` path when it successfully targets a hintable local variable
+  - real base `.sk` GameTests now also cover `variable_name_expression_inner_list_marker_set_test_block.sk` and `built_in_set_local_hint_test_block.sk`
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `207 / 207`
+  - `./gradlew build --rerun-tasks` passed with the full `207 / 207` runtime suite
   - `HintManager` is now present locally, `ParserInstance` now exposes it per script load, and `Variable.newInstance(...)` now consumes parse-time local variable type hints when narrowing simple local variables
   - `PatternCompiler` now builds a lightweight `PatternElement` graph, and `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)` while keeping matching on the shared compiled path
   - `ScriptLoader.loadItems(...)` and `parseSectionTriggerItem(...)` now manage section and temporary non-section hint scopes, so failed section parses clear temporary hints while successful section loads can propagate, freeze, or merge hints through current stop-flow behavior

@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `205 / 205` scheduled Fabric GameTests completed without build failure
+  - `207 / 207` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -209,6 +209,15 @@ Landed slices so far:
 - Patbox placeholder runtime closure:
   - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, so exact `%namespace:path%` runtime placeholders resolve on live message/name paths when a Skript event context is active
   - `TriggerItem.walk(...)` now scopes the active event through `CurrentSkriptEvent`, which gives Patbox placeholder resolution access to the current server, world, player, entity, or command source without changing non-message string semantics
+- classinfo-backed omitted-placeholder default closure:
+  - `ClassInfo` now carries default expressions, and `SkriptParser.parseModern(...)` / `parseStatic(...)` now fall back from parser-scoped `DefaultValueData` to exact `ClassInfo` defaults for omitted non-optional placeholders
+  - exact forms such as `default number [%number%]`, `default number`, and `default number 5` are now regression-covered through the registry-backed parser path
+- variable-name validation closure:
+  - `Variable.isValidVariableName(...)` now ignores `*` characters that appear inside paired `%...%` expression spans, so forms such as `result::%{source::*}%` and `result::%{source::*}%::*` are accepted again while invalid outer-asterisk forms stay rejected
+  - real base `.sk` coverage now proves that a live script containing `set {result::%{source::*}%} to "ignored"` loads and executes
+- built-in local hint-producer closure:
+  - `EffChange.init(...)` now publishes parse-time local-variable hints when the exact built-in `set %object% to %object%` path successfully targets a hintable local variable
+  - later sibling lines now see the built-in `set {_value} to 1` / `set {_value} to "text"` type flow through the same live loader path that the custom hint harnesses already exercised
 - section-expression object-safe closure:
   - custom damage source, potion effect, and loot-context section expressions now tolerate object-backed local values instead of assuming typed runtime arrays
   - real expression `.sk` coverage now includes section-local propagation for custom damage source, potion effect, and loot context creation sections
@@ -225,6 +234,8 @@ Landed slices so far:
   - options replacement path
   - comment-aware loader parsing path
   - mixed-case variable set/lookup path
+  - variable-name expressions with inner list markers such as `set {result::%{source::*}%} to "ignored"`
+  - built-in local hint flow through `set {_value} to 1`, `capture hinted integer {_value}`, `set {_value} to "gold_block"`, and `capture hinted text {_value}`
   - conditional `if / else if / else` chain path
   - parenthesized conditional chain path
   - `parse if` / `else parse if` conditional chain path
@@ -266,8 +277,9 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed after routing message-mode runtime placeholders through Patbox `TextPlaceholderAPI`
 - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after revalidating the variable runtime around the GameTest isolation harness change
 - `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics
-- `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `205 / 205` scheduled Fabric GameTests
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging classinfo-backed omitted defaults, inner-expression variable-name list-marker validation, and built-in `EffChange` local hints
+- `./gradlew runGameTest --rerun-tasks` passed with `207 / 207`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `207 / 207` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -279,7 +291,7 @@ The following foundations were already built before this priority shift:
 - function compatibility scaffolding, including signatures, registries, dynamic references, expression/effect call wrappers, and namespace fallback behavior
 - variable and literal compatibility primitives, including `Variable`, `Variables`, `LiteralString`, `UnparsedLiteral`, `InputSource`, and section-expression helpers
 - foundational utility scaffolding in `classes`, `config`, `log`, `patterns`, `registrations`, `util`, and `variables`
-- active Fabric runtime harness and Fabric GameTest suite with `205 / 205` passing tests on the last code-verification run
+- active Fabric runtime harness and Fabric GameTest suite with `207 / 207` passing tests on the last code-verification run
 - Stage 8 parity-audited package-local Bukkit slice for `breeding`, `input`, and `interactions`
 
 ## Current Gaps

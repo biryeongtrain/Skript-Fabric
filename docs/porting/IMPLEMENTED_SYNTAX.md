@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `205 / 205`
+- Verified Fabric GameTests: `207 / 207`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -105,6 +105,9 @@ None in the current Fabric registration set.
 - `{...}` variable expressions are parsed directly by `SkriptParser`
 - upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}` are also parsed as variable expressions
 - `ParserInstance` now owns a `HintManager`, and parse-time local variable type hints can narrow simple local variables away from generic `%object%` requests while rejecting incompatible typed lookups
+- variable-name validation now ignores `*` inside paired `%...%` spans, so dynamic forms such as `result::%{source::*}%` parse again while invalid outer list markers still fail
+- exact built-in `set {_value} to ...` lines now publish parse-time local-variable hints for later sibling lines through `EffChange`
+- omitted non-optional placeholders can now fall back to exact `ClassInfo` default expressions when the parser did not register a narrower default
 - variables default to case-insensitive storage and lookup
 - list-variable `set` copies keyed list sources into reindexed numeric target slots instead of preserving source keys
 - prefix/list iteration now uses natural numeric ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set`
