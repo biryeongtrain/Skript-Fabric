@@ -17,7 +17,13 @@ public final class PatternCompiler {
     }
 
     public static SkriptPattern compile(String pattern) {
-        return new SkriptPattern(pattern, compilePattern(pattern));
+        try {
+            return new SkriptPattern(pattern, compilePattern(pattern));
+        } catch (MalformedPatternException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            throw new MalformedPatternException(pattern, "caught exception while compiling pattern", exception);
+        }
     }
 
     static CompiledPattern compilePattern(@Nullable String pattern) {
@@ -234,7 +240,13 @@ public final class PatternCompiler {
             }
             if (first == null) {
                 first = tokenFirst;
-            } else if (last != null) {
+                last = lastElement(tokenFirst);
+                continue;
+            }
+            if (last != null) {
+                PatternElement spacer = new LiteralPatternElement(" ");
+                last.setOriginalNext(spacer);
+                last = spacer;
                 last.setOriginalNext(tokenFirst);
             }
             last = lastElement(tokenFirst);
@@ -428,16 +440,7 @@ public final class PatternCompiler {
     }
 
     private static PatternElement compileParenthesizedElementGroup(String pattern, AtomicInteger expressionAmount) {
-        List<String> branches = splitTopLevel(pattern, '|');
-        if (branches.size() == 1) {
-            return new GroupPatternElement(compileElementSequence(pattern, expressionAmount));
-        }
-        List<PatternElement> compiledBranches = new ArrayList<>(branches.size());
-        for (String branch : branches) {
-            PatternElement compiled = compileElementSequence(branch, expressionAmount);
-            compiledBranches.add(compiled == null ? new LiteralPatternElement("") : compiled);
-        }
-        return new ChoicePatternElement(compiledBranches);
+        return new GroupPatternElement(compileElementGroupContent(pattern, expressionAmount));
     }
 
     private static @Nullable PatternElement metadataElement(String metadata, char kind, String token) {
