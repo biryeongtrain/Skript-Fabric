@@ -14,6 +14,7 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 class UnparsedLiteralCompatibilityTest {
@@ -92,6 +93,38 @@ class UnparsedLiteralCompatibilityTest {
         assertNull(parsed);
     }
 
+    @Test
+    void conversionUsesRegisteredConvertersAfterParsingAnotherType() {
+        ClassInfo<BridgeSource> info = new ClassInfo<>(BridgeSource.class, "bridgesource");
+        info.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public BridgeSource parse(String input, ParseContext context) {
+                if (!input.startsWith("bridge-")) {
+                    return null;
+                }
+                try {
+                    return new BridgeSource(Integer.parseInt(input.substring(7)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(info);
+        Converters.registerConverter(BridgeSource.class, BridgeTarget.class, value -> new BridgeTarget(value.value()));
+
+        UnparsedLiteral literal = new UnparsedLiteral("bridge-9");
+        Literal<? extends BridgeTarget> converted = literal.getConvertedExpression(BridgeTarget.class);
+
+        assertNotNull(converted);
+        assertEquals(new BridgeTarget(9), converted.getSingle(SkriptEvent.EMPTY));
+        assertTrue(literal.wasConverted());
+    }
+
     private static void registerFooParser() {
         ClassInfo<FooType> info = new ClassInfo<>(FooType.class);
         info.setParser(new ClassInfo.Parser<>() {
@@ -159,6 +192,12 @@ class UnparsedLiteralCompatibilityTest {
     }
 
     private record NumericB(int value) {
+    }
+
+    private record BridgeSource(int value) {
+    }
+
+    private record BridgeTarget(int value) {
     }
 
     private static class NumericParserA implements ClassInfo.Parser<NumericA> {

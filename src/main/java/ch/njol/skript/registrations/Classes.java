@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.ConverterInfo;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.lang.properties.Property;
 
 public final class Classes {
@@ -186,6 +188,31 @@ public final class Classes {
 
     @SuppressWarnings("unchecked")
     public static <T> @Nullable T parse(String text, Class<T> type, ParseContext context) {
+        T parsed = parseDirect(text, type, context);
+        if (parsed != null) {
+            return parsed;
+        }
+
+        for (ConverterInfo<?, ?> converterInfo : Converters.getConverterInfos()) {
+            if (!type.isAssignableFrom(converterInfo.getTo())) {
+                continue;
+            }
+
+            Object source = parseDirect(text, (Class<Object>) converterInfo.getFrom(), context);
+            if (source == null) {
+                continue;
+            }
+
+            Object converted = ((ConverterInfo<Object, ?>) converterInfo).getConverter().convert(source);
+            if (type.isInstance(converted)) {
+                return (T) converted;
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> @Nullable T parseDirect(String text, Class<T> type, ParseContext context) {
         if (type == String.class) {
             return (T) text;
         }

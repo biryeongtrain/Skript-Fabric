@@ -19,10 +19,21 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the local variable type-hint infrastructure slice.
+- Continue `Part 1B` after the `Classes.parse(...)` converter-fallback slice.
 
 ## Work Log
 
+- fetched the requested upstream snapshot with `git fetch --depth 1 https://github.com/SkriptLang/Skript.git e6ec744dd83cb1a362dd420cde11a0d74aef977d` and compared the owned surface against `FETCH_HEAD`
+- selected the next `Classes` compatibility gap from that diff:
+  - upstream `Classes.parse(...)` retries through registered converters after direct parser lookup fails
+  - the local shim only attempted direct exact/assignable parser paths
+- closed the next `Classes` parsing semantics slice around converter-backed fallback
+- `Classes.parse(...)` now keeps its direct parser path first, then retries through registered converter source types and returns converted values when the requested target type is only reachable through a converter
+- added regression coverage proving:
+  - direct `Classes.parse(...)` now resolves values through a registered parser-plus-converter chain
+  - `UnparsedLiteral.getConvertedExpression(...)` now follows that same converter-backed parsing path
+- did not run GameTest for this slice because the current runtime bootstrap does not register any live converter-backed class parse path yet; verification stayed on the parser-facing unit surface
+- did not claim parity complete
 - closed the next upstream `variables` gap around local variable type hints
 - added `ch/njol/skript/variables/HintManager` with upstream-style scope enter/exit, scope clear/merge, and local-variable hint set/add/remove/delete/get operations
 - `ParserInstance` now exposes a dedicated hint manager and resets it on script changes so parse-time scopes do not leak across script/test boundaries
@@ -56,38 +67,33 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
 - `src/main/java/ch/njol/skript/registrations/Classes.java`
-- `src/main/java/ch/njol/skript/variables/HintManager.java`
 - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-- `src/main/java/ch/njol/skript/lang/Variable.java`
-- `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
+- `src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
-  - failed
-  - Gradle reported `No tests found for given includes: [ch.njol.skript.registrations.ClassesCompatibilityTest](--tests filter)` for the package-private JUnit 5 test class
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks`
+- `git fetch --depth 1 https://github.com/SkriptLang/Skript.git e6ec744dd83cb1a362dd420cde11a0d74aef977d`
   - passed
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --rerun-tasks`
+  - fetched the requested upstream snapshot to `FETCH_HEAD`
+- `git diff --stat FETCH_HEAD -- src/main/java/ch/njol/skript/variables src/main/java/ch/njol/skript/config src/main/java/ch/njol/skript/structures src/main/java/ch/njol/skript/registrations/Classes.java src/main/java/ch/njol/skript/lang/Variable.java src/test/java/ch/njol/skript`
   - passed
-- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`
+  - confirmed the lane-owned surface still differed materially from upstream; the next selected owned-file gap was missing converter-backed fallback inside `Classes.parse(...)`
+- `./gradlew test --tests '*ClassesCompatibilityTest' --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks`
   - passed
-- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`
-  - passed after closing explicit literal-pattern ordering parity
-- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
-  - passed after closing list-variable loop-alias and `check(...)` parity
-- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
-  - passed after adding local variable type-hint coverage
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks`
+  - passed
+
+## Unresolved Risks
+
+- no live converter registrations currently exist in the runtime bootstrap, so this slice is verified through direct registry/parser unit coverage rather than real `.sk` GameTests
+- broader upstream `Classes` parity is still open beyond this slice, including richer helper APIs such as parse-log-aware `parseSimple(...)`, `getParser(...)`, and user-input-pattern handling
 
 ## Merge Notes
 
 - low conflict surface:
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-- current-cycle conflict surface:
-  - `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
-  - `src/main/java/ch/njol/skript/lang/Variable.java`
-  - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
+  - `src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java`
+- no cross-lane owned-file overlap was required for this slice

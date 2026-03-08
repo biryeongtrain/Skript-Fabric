@@ -11,6 +11,7 @@ import ch.njol.skript.lang.ParseContext;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.converter.Converters;
 
 class ClassesCompatibilityTest {
 
@@ -133,6 +134,35 @@ class ClassesCompatibilityTest {
         assertEquals(List.of(alpha, gamma, beta), Classes.getPatternInfos("shared"));
     }
 
+    @Test
+    void parseFallsBackThroughRegisteredConverters() {
+        ClassInfo<ParsedType> parsed = new ClassInfo<>(ParsedType.class, "parsed");
+        parsed.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public ParsedType parse(String input, ParseContext context) {
+                if (!input.startsWith("parsed-")) {
+                    return null;
+                }
+                try {
+                    return new ParsedType(Integer.parseInt(input.substring(7)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(parsed);
+        Converters.registerConverter(ParsedType.class, ConvertedType.class, value -> new ConvertedType(value.value()));
+
+        ConvertedType parsedValue = Classes.parse("parsed-42", ConvertedType.class, ParseContext.DEFAULT);
+
+        assertEquals(new ConvertedType(42), parsedValue);
+    }
+
     private static final class FooType {
     }
 
@@ -167,5 +197,11 @@ class ClassesCompatibilityTest {
     }
 
     private static final class GammaType {
+    }
+
+    private record ParsedType(int value) {
+    }
+
+    private record ConvertedType(int value) {
     }
 }
