@@ -121,6 +121,22 @@ class VariableCompatibilityTest {
     }
 
     @Test
+    void listVariablesSkipNestedDescendantEntriesWithoutDirectParentValues() {
+        Variable<String> nested = Variable.newInstance("scores::group::1", new Class[]{String.class});
+        Variable<String> plain = Variable.newInstance("scores::plain", new Class[]{String.class});
+        Variable<String> source = Variable.newInstance("scores::*", new Class[]{String.class});
+        assertNotNull(nested);
+        assertNotNull(plain);
+        assertNotNull(source);
+
+        nested.change(SkriptEvent.EMPTY, new Object[]{"gold_block"}, ChangeMode.SET);
+        plain.change(SkriptEvent.EMPTY, new Object[]{"emerald_block"}, ChangeMode.SET);
+
+        assertArrayEquals(new String[]{"emerald_block"}, source.getArray(SkriptEvent.EMPTY));
+        assertArrayEquals(new String[]{"plain"}, source.getArrayKeys(SkriptEvent.EMPTY));
+    }
+
+    @Test
     void listVariablesExposeLegacyLoopAliases() {
         Variable<String> variable = Variable.newInstance("scores::*", new Class[]{String.class});
         assertNotNull(variable);
@@ -315,5 +331,36 @@ class VariableCompatibilityTest {
 
         assertEquals("gold_block", first.getSingle(SkriptEvent.EMPTY));
         assertEquals("emerald_block", second.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void parsedListToListSetSkipsNestedDescendantEntriesFromShallowSourceRead() {
+        Skript.registerEffect(
+                EffChange.class,
+                "set %object% to %object%",
+                "add %object% to %object%",
+                "remove %object% from %object%",
+                "reset %object%",
+                "delete %object%"
+        );
+
+        Statement setNested = Statement.parse("set {source::group::1} to \"gold_block\"", "failed");
+        Statement setPlain = Statement.parse("set {source::plain} to \"emerald_block\"", "failed");
+        Statement copyList = Statement.parse("set {target::*} to {source::*}", "failed");
+        Variable<String> first = Variable.newInstance("target::1", new Class[]{String.class});
+        Variable<String> second = Variable.newInstance("target::2", new Class[]{String.class});
+
+        assertNotNull(setNested);
+        assertNotNull(setPlain);
+        assertNotNull(copyList);
+        assertNotNull(first);
+        assertNotNull(second);
+
+        TriggerItem.walk(setNested, SkriptEvent.EMPTY);
+        TriggerItem.walk(setPlain, SkriptEvent.EMPTY);
+        TriggerItem.walk(copyList, SkriptEvent.EMPTY);
+
+        assertEquals("emerald_block", first.getSingle(SkriptEvent.EMPTY));
+        assertNull(second.getSingle(SkriptEvent.EMPTY));
     }
 }

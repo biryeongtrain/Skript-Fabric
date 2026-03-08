@@ -19,52 +19,57 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the `Classes.parseSimple(...)` parse-log fallback slice.
+- Continue `Part 1B` after the shallow list-variable read slice.
 
 ## Work Log
 
-- fetched the requested upstream snapshot with `git fetch --depth 1 https://github.com/SkriptLang/Skript.git e6ec744dd83cb1a362dd420cde11a0d74aef977d` and compared the owned surface against `FETCH_HEAD`
-- selected the next `Classes` compatibility gap from that diff:
-  - upstream `Classes.parseSimple(...)` and `Classes.parse(...)` clear retained parse-log errors between parser attempts and before successful fallback branches
-  - the local shim still parsed values correctly, but a failed earlier parser could leak a stale error into the surrounding parse log even when a later parser or converter branch succeeded
-- closed the next `Classes` parse-log semantics slice around successful direct and converter fallback
-- `Classes` now exposes a compatibility `parseSimple(...)` helper that preserves the current primitive bridge and clears retained parse-log state before each registered parser attempt
-- `Classes.parse(...)` now routes through that helper and clears retained direct-parse diagnostics before successful converter-backed fallback, so stale earlier parser errors do not survive a later successful parse path
+- compared the current local variable runtime against upstream `e6ec744` and selected one contained `Variables` semantics gap:
+  - upstream `VariablesMap.getVariable(...)` plus `Variable.ShallowListProvider` treat `{list::*}` as a shallow read
+  - descendant-only entries like `{list::group::1}` do not appear in `{list::*}` unless `{list::group}` itself also has a direct value
+  - the local flat-prefix bridge still exposed every descendant key under the prefix, so `{source::*}` incorrectly included nested descendants during list reads and `set {target::*} to {source::*}`
+- closed that shallow list-read slice in `Variables.getVariablesWithPrefix(...)`
+- `Variables` now returns only direct child entries for list-prefix reads, restoring upstream-style shallow behavior while preserving the existing natural numeric ordering
 - added regression coverage proving:
-  - `Classes.parseSimple(...)` no longer leaks the exact error text `"first parser should not leak"` when a later compatible parser succeeds on the exact text `"fallback-14"`
-  - `Classes.parse(...)` no longer leaks the exact error text `"direct parser should not leak"` when converter-backed fallback succeeds on the exact text `"convert-28"`
-  - the earlier converter-backed `UnparsedLiteral` path stays green on the exact text `"bridge-9"`
-- did not run GameTest for this slice because the change stays inside the `Classes` parser helper's retained-log handling and does not change syntax strings, loader behavior, or structure execution; verification stayed on the targeted parser-facing unit surface
+  - `Variable.getArray(...)` / `getArrayKeys(...)` now skip descendant-only entries under the exact source path `scores::group::1`
+  - parsed `set {target::*} to {source::*}` now ignores the nested descendant-only source entry `source::group::1` and copies only `source::plain`
+- added real `.sk` coverage in `list_variable_shallow_copy_set_test_block.sk`, and the full Fabric GameTest run now completes with `200 / 200` required tests passing
 - did not claim parity complete
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/registrations/Classes.java`
-- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/variables/Variables.java`
+- `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
+- `src/gametest/resources/skript/gametest/base/list_variable_shallow_copy_set_test_block.sk`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Verification
 
-- `git fetch --depth 1 https://github.com/SkriptLang/Skript.git e6ec744dd83cb1a362dd420cde11a0d74aef977d`
+- `git show e6ec744dd83cb1a362dd420cde11a0d74aef977d:src/main/java/ch/njol/skript/variables/VariablesMap.java | sed -n '130,260p'`
   - passed
-  - fetched the requested upstream snapshot to `FETCH_HEAD`
-- `git diff --stat FETCH_HEAD -- src/main/java/ch/njol/skript/variables src/main/java/ch/njol/skript/config src/main/java/ch/njol/skript/structures src/main/java/ch/njol/skript/registrations/Classes.java src/test/java/ch/njol/skript`
+  - confirmed upstream list-variable reads come from direct child map nodes in `VariablesMap.getVariable(...)`
+- `git show e6ec744dd83cb1a362dd420cde11a0d74aef977d:src/main/java/ch/njol/skript/lang/Variable.java | sed -n '780,860p'`
   - passed
-  - confirmed the lane-owned surface still differed materially from upstream; the next selected owned-file gap was missing parse-log-aware direct/converter fallback handling inside `Classes.parseSimple(...)` / `Classes.parse(...)`
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks`
+  - confirmed upstream `ShallowListProvider` only emits direct child values, skipping descendant-only entries unless a direct parent slot exists
+- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
   - passed
-  - exercised the exact parse texts `"fallback-14"`, `"convert-28"`, and `"bridge-9"`
+  - exercised the new shallow-read regressions around `scores::group::1`, `source::group::1`, and `source::plain`
+- `./gradlew runGameTest --rerun-tasks`
+  - passed
+  - full Fabric GameTest suite finished with `200 / 200` required tests passing, including the new real `.sk` shallow-copy coverage
 
 ## Unresolved Risks
 
-- broader upstream `Classes` parity is still open beyond this slice, including exact-parser helper parity and regex-backed user-input-pattern handling
-- this slice proves retained parse-log cleanup through the helper surface, but it does not yet add a live `.sk` regression around a runtime caller that reaches `Classes.parse(...)`
+- broader upstream `Variables` parity is still open beyond this slice, especially the missing tree-backed `VariablesMap` / recursive nested-list compatibility surface
+- this slice proves the default shallow read path and list-to-list copy behavior, but it does not yet add coverage for cases where a direct parent value and deeper descendants coexist on the same source key
 
 ## Merge Notes
 
 - low conflict surface:
-  - `src/main/java/ch/njol/skript/registrations/Classes.java`
-  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/variables/Variables.java`
+  - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
+  - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
+  - `src/gametest/resources/skript/gametest/base/list_variable_shallow_copy_set_test_block.sk`
 - lane-local status update:
   - `docs/porting/parallel/LANE_C_STATUS.md`
 - no cross-lane owned-file overlap was required for this slice

@@ -1,0 +1,7 @@
+on gametest:
+    set {source::group::1} to "gold_block"
+    set {source::plain} to "emerald_block"
+    set {target::*} to {source::*}
+    set test block at 0 1 0 to {target::1}
+    if {target::2} is "gold_block":
+        set test block at 1 1 0 to {target::2}
