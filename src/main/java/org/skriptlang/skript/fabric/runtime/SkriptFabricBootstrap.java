@@ -6,6 +6,7 @@ import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsAlive;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsBurning;
 import org.skriptlang.skript.bukkit.base.conditions.CondCompare;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsInvulnerable;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsNamed;
@@ -204,6 +205,11 @@ public final class SkriptFabricBootstrap {
                         CondIsAlive.class,
                         "%entities% (is|are) (alive|1¦dead)",
                         "%entities% (isn't|is not|aren't|are not) (alive|1¦dead)"
+                );
+                Skript.registerCondition(
+                        CondIsBurning.class,
+                        "%entities% (is|are) (burning|ignited|on fire)",
+                        "%entities% (isn't|is not|aren't|are not) (burning|ignited|on fire)"
                 );
                 Skript.registerCondition(
                         CondIsSilent.class,
