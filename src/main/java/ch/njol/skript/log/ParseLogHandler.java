@@ -5,18 +5,20 @@ import java.util.List;
 import java.util.logging.Level;
 import org.jetbrains.annotations.Nullable;
 
-public class ParseLogHandler implements AutoCloseable {
+public class ParseLogHandler extends LogHandler {
 
     private final List<LogEntry> logEntries = new ArrayList<>();
     private @Nullable LogEntry error;
-    private boolean active;
 
     public ParseLogHandler start() {
-        if (!active) {
+        if (isStopped()) {
             SkriptLogger.startLogHandler(this);
-            active = true;
         }
         return this;
+    }
+
+    public void error(String message, ErrorQuality quality) {
+        log(new LogEntry(Level.SEVERE, quality, message));
     }
 
     public void printError() {
@@ -46,9 +48,15 @@ public class ParseLogHandler implements AutoCloseable {
     }
 
     public void printLog() {
+        printLog(true);
+    }
+
+    public void printLog(boolean includeErrors) {
         stop();
         for (LogEntry entry : logEntries) {
-            SkriptLogger.log(entry);
+            if (includeErrors || entry.getLevel().intValue() < Level.SEVERE.intValue()) {
+                SkriptLogger.log(entry);
+            }
         }
     }
 
@@ -62,6 +70,10 @@ public class ParseLogHandler implements AutoCloseable {
 
     public boolean hasError() {
         return error != null;
+    }
+
+    public int getNumErrors() {
+        return error == null ? 0 : 1;
     }
 
     public @Nullable LogEntry getError() {
@@ -91,27 +103,16 @@ public class ParseLogHandler implements AutoCloseable {
         error = copy.error;
     }
 
-    public void stop() {
-        if (!active) {
-            return;
-        }
-        active = false;
-        SkriptLogger.stopLogHandler(this);
-    }
-
-    void log(LogEntry entry) {
+    @Override
+    public LogResult log(LogEntry entry) {
         if (entry == null) {
-            return;
+            return LogResult.CACHED;
         }
         logEntries.add(entry);
         if (entry.getLevel().intValue() >= Level.SEVERE.intValue()
                 && (error == null || entry.getQuality().priority() > error.getQuality().priority())) {
             error = entry;
         }
-    }
-
-    @Override
-    public void close() {
-        stop();
+        return LogResult.CACHED;
     }
 }
