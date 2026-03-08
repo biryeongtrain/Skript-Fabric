@@ -2,6 +2,7 @@ package ch.njol.skript.lang.parser;
 
 import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.variables.HintManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ public final class ParserInstance {
     private @Nullable String currentEventName;
     private Class<?>[] currentEventClasses = new Class<?>[0];
     private List<TriggerSection> currentSections = new ArrayList<>();
+    private HintManager hintManager = new HintManager(true);
 
     public static ParserInstance get() {
         return LOCAL.get();
@@ -70,6 +72,7 @@ public final class ParserInstance {
 
     public void setCurrentScript(@Nullable Script currentScript) {
         this.currentScript = currentScript;
+        this.hintManager = new HintManager(true);
     }
 
     public @Nullable Node getNode() {
@@ -118,6 +121,10 @@ public final class ParserInstance {
 
     public List<TriggerSection> getCurrentSections() {
         return currentSections;
+    }
+
+    public HintManager getHintManager() {
+        return hintManager;
     }
 
     /**

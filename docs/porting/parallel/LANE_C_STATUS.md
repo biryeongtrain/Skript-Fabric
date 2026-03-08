@@ -19,10 +19,22 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the class-registry ordering follow-up slice.
+- Continue `Part 1B` after the local variable type-hint infrastructure slice.
 
 ## Work Log
 
+- closed the next upstream `variables` gap around local variable type hints
+- added `ch/njol/skript/variables/HintManager` with upstream-style scope enter/exit, scope clear/merge, and local-variable hint set/add/remove/delete/get operations
+- `ParserInstance` now exposes a dedicated hint manager and resets it on script changes so parse-time scopes do not leak across script/test boundaries
+- `Variable.newInstance(...)` now consumes known local hints for simple local variables:
+  - generic `%object%` local variables narrow to the hinted runtime type set
+  - typed local variables narrow to compatible requested types when hints match
+  - incompatible requested types now fail early with a retained variable-type diagnostic instead of silently accepting the wrong type
+- added regression coverage proving:
+  - hinted local `%object%` variables narrow to the known hinted type
+  - hinted local variables reject incompatible requested types
+- kept this slice inside the variable/runtime compatibility layer and did not touch canonical docs
+- did not claim parity complete: actual parse-time hint producers in loader/effect flow still need to be wired by later lanes
 - closed the next `Classes` registry semantics slice around upstream-style class-info ordering
 - `Classes` now computes a stable sorted class-info order that prefers narrower assignable types and honors `before(...)` / `after(...)` dependency hints instead of using raw registration order
 - `getSuperClassInfo(...)`, `getClassInfos()`, parser-backed `getPatternInfos(...)`, and `parse(...)` now consume that sorted order
@@ -44,7 +56,9 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
 - `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/main/java/ch/njol/skript/variables/HintManager.java`
 - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/lang/Variable.java`
 - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
@@ -65,6 +79,8 @@ Last updated: 2026-03-08
   - passed after closing explicit literal-pattern ordering parity
 - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
   - passed after closing list-variable loop-alias and `check(...)` parity
+- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+  - passed after adding local variable type-hint coverage
 
 ## Merge Notes
 
@@ -72,5 +88,6 @@ Last updated: 2026-03-08
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - current-cycle conflict surface:
+  - `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
   - `src/main/java/ch/njol/skript/lang/Variable.java`
   - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`

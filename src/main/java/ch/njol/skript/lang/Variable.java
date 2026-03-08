@@ -3,6 +3,7 @@ package ch.njol.skript.lang;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.StringMode;
 import ch.njol.skript.util.Utils;
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -153,6 +155,41 @@ public class Variable<T> implements Expression<T>, KeyReceiverExpression<T>, Key
         VariableString variableString = VariableString.newInstance(stripped, StringMode.VARIABLE_NAME);
         if (variableString == null) {
             return null;
+        }
+
+        if (isLocal && variableString.isSimple()) {
+            Set<Class<?>> hints = ParserInstance.get().getHintManager().get(variableString.toString(null));
+            if (!hints.isEmpty()) {
+                if (types[0] == Object.class) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends T>[] hintedTypes = hints.toArray(Class[]::new);
+                    return new Variable<>(variableString, hintedTypes, true, isEphemeral, isPlural, null);
+                }
+
+                List<Class<? extends T>> potentialTypes = new ArrayList<>();
+                for (Class<? extends T> type : types) {
+                    boolean compatible = hints.stream()
+                            .anyMatch(hint -> type.isAssignableFrom(hint) || Converters.converterExists(hint, type));
+                    if (compatible) {
+                        potentialTypes.add(type);
+                    }
+                }
+                if (!potentialTypes.isEmpty()) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends T>[] narrowedTypes = potentialTypes.toArray(Class[]::new);
+                    return new Variable<>(variableString, narrowedTypes, true, isEphemeral, isPlural, null);
+                }
+
+                String expectedTypes = Classes.toString(Arrays.stream(types)
+                        .map(type -> Classes.getSuperClassInfo(type).getCodeName())
+                        .toArray(String[]::new), false);
+                String actualTypes = Classes.toString(hints.stream()
+                        .map(type -> Classes.getSuperClassInfo(type).getCodeName())
+                        .toArray(String[]::new), false);
+                Skript.error("Expected variable '{_" + variableString.toString(null)
+                        + "}' to be " + expectedTypes + ", but it is " + actualTypes);
+                return null;
+            }
         }
 
         return new Variable<>(variableString, types, isLocal, isEphemeral, isPlural, null);

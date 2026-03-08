@@ -11,11 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.lang.script.Script;
 
 class VariableCompatibilityTest {
 
@@ -24,6 +26,7 @@ class VariableCompatibilityTest {
         Variables.clearAll();
         Variables.caseInsensitiveVariables = true;
         Skript.instance().syntaxRegistry().clearAll();
+        ParserInstance.get().setCurrentScript(null);
     }
 
     @Test
@@ -43,6 +46,31 @@ class VariableCompatibilityTest {
         assertTrue(variable.isLocal());
         assertTrue(variable.isList());
         assertFalse(variable.isSingle());
+    }
+
+    @Test
+    void localVariablesUseKnownHintsToNarrowGenericObjectType() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        parser.getHintManager().enterScope(true);
+        parser.getHintManager().set("value", Integer.class);
+
+        Variable<Object> variable = Variable.newInstance("_value", new Class[]{Object.class});
+
+        assertNotNull(variable);
+        assertEquals(Integer.class, variable.getReturnType());
+    }
+
+    @Test
+    void localVariablesRejectIncompatibleKnownHints() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        parser.getHintManager().enterScope(true);
+        parser.getHintManager().set("value", Integer.class);
+
+        Variable<String> variable = Variable.newInstance("_value", new Class[]{String.class});
+
+        assertNull(variable);
     }
 
     @Test
