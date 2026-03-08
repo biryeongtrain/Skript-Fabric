@@ -93,6 +93,30 @@ class ClassesCompatibilityTest {
         assertTrue(Classes.isPluralClassInfoUserInput("foo bars", info));
     }
 
+    @Test
+    void superClassLookupPrefersMostSpecificRegisteredAssignableType() {
+        ClassInfo<ParentType> parent = new ClassInfo<>(ParentType.class, "parent");
+        ClassInfo<ChildType> child = new ClassInfo<>(ChildType.class, "child");
+        Classes.registerClassInfo(parent);
+        Classes.registerClassInfo(child);
+
+        assertSame(child, Classes.getSuperClassInfo(GrandChildType.class));
+        assertEquals(List.of(child, parent), Classes.getClassInfos());
+    }
+
+    @Test
+    void classInfoOrderHonorsBeforeAndAfterDependencies() {
+        ClassInfo<BetaType> beta = new ClassInfo<>(BetaType.class, "beta").after("gamma");
+        ClassInfo<AlphaType> alpha = new ClassInfo<>(AlphaType.class, "alpha").before("beta");
+        ClassInfo<GammaType> gamma = new ClassInfo<>(GammaType.class, "gamma");
+
+        Classes.registerClassInfo(beta);
+        Classes.registerClassInfo(alpha);
+        Classes.registerClassInfo(gamma);
+
+        assertEquals(List.of(alpha, gamma, beta), Classes.getClassInfos());
+    }
+
     private static final class FooType {
     }
 
@@ -109,5 +133,23 @@ class ClassesCompatibilityTest {
     }
 
     private static final class FooBarType {
+    }
+
+    private static class ParentType {
+    }
+
+    private static class ChildType extends ParentType {
+    }
+
+    private static final class GrandChildType extends ChildType {
+    }
+
+    private static final class AlphaType {
+    }
+
+    private static final class BetaType {
+    }
+
+    private static final class GammaType {
     }
 }

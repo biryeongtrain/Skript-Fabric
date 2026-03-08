@@ -19,42 +19,40 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the validator-backed `options:` and `SectionNode` config slice.
+- Continue `Part 1B` after the natural variable-ordering closure.
 
 ## Work Log
 
-- closed a deeper `Variables` runtime semantics slice around natural variable-name ordering for list/prefix iteration
-- ported the upstream-style numeric-aware comparator into `Variables.getVariablesWithPrefix(...)` so list keys like `2` and `10` no longer sort lexically as `10`, `2`
-- verified the runtime impact at three levels:
-  - direct list variable array/key exposure now returns numeric-like keys in natural order
-  - parsed `set {target::*} to {source::*}` now reindexes source keys using that natural order
-  - real `.sk` GameTest coverage now proves `{source::2}` lands in `{target::1}` ahead of `{source::10}`
-- did not touch canonical docs or parser/statement-owned files
+- closed the next `Classes` registry semantics slice around upstream-style class-info ordering
+- `Classes` now computes a stable sorted class-info order that prefers narrower assignable types and honors `before(...)` / `after(...)` dependency hints instead of using raw registration order
+- `getSuperClassInfo(...)`, `getClassInfos()`, parser-backed `getPatternInfos(...)`, and `parse(...)` now consume that sorted order
+- added unit coverage for:
+  - choosing the most specific registered assignable class info for subclass lookups
+  - honoring explicit `before(...)` / `after(...)` ordering constraints
+- kept this slice inside lane ownership and did not touch canonical docs or parser/statement-owned files
+- did not run GameTest because this slice tightened registry-internal compatibility behavior only; no direct user-visible `.sk` runtime path changed in isolation
 - did not claim parity complete
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/variables/Variables.java`
-- `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
-- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
-- `src/gametest/resources/skript/gametest/base/list_variable_numeric_order_set_test_block.sk`
+- `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+  - failed
+  - Gradle reported `No tests found for given includes: [ch.njol.skript.registrations.ClassesCompatibilityTest](--tests filter)` for the package-private JUnit 5 test class
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks`
   - passed
-- `./gradlew runGameTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --rerun-tasks`
   - passed
-  - `196` game tests completed
-  - `196 / 196` required tests passed
+- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`
+  - passed
 
 ## Merge Notes
 
-- likely conflict surface:
-  - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
 - low conflict surface:
-  - `src/main/java/ch/njol/skript/variables/Variables.java`
-  - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
-- new resource file added:
-  - `src/gametest/resources/skript/gametest/base/list_variable_numeric_order_set_test_block.sk`
+  - `src/main/java/ch/njol/skript/registrations/Classes.java`
+  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`

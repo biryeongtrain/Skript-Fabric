@@ -6,6 +6,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.util.StringMode;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -23,6 +24,7 @@ public final class Classes {
     private static final Map<String, ClassInfo<?>> INFOS_BY_CODE_NAME = new ConcurrentHashMap<>();
     private static final Map<String, List<ClassInfo<?>>> REGISTERED_LITERAL_PATTERNS = new ConcurrentHashMap<>();
     private static final CopyOnWriteArrayList<ClassInfo<?>> REGISTRATION_ORDER = new CopyOnWriteArrayList<>();
+    private static volatile List<ClassInfo<?>> SORTED_INFOS = List.of();
 
     private Classes() {
     }
@@ -37,7 +39,7 @@ public final class Classes {
         if (cached != null) {
             return (ClassInfo<T>) cached;
         }
-        for (ClassInfo<?> info : REGISTRATION_ORDER) {
+        for (ClassInfo<?> info : getSortedClassInfos()) {
             if (info.getC().isAssignableFrom(type)) {
                 SUPER_CLASS_CACHE.put(type, info);
                 return (ClassInfo<T>) info;
@@ -66,6 +68,8 @@ public final class Classes {
                     .computeIfAbsent(pattern, ignored -> new CopyOnWriteArrayList<>())
                     .add(info);
         }
+        SUPER_CLASS_CACHE.clear();
+        SORTED_INFOS = List.of();
     }
 
     public static void clearClassInfos() {
@@ -74,10 +78,11 @@ public final class Classes {
         INFOS_BY_CODE_NAME.clear();
         REGISTERED_LITERAL_PATTERNS.clear();
         REGISTRATION_ORDER.clear();
+        SORTED_INFOS = List.of();
     }
 
     public static List<ClassInfo<?>> getClassInfos() {
-        return List.copyOf(REGISTRATION_ORDER);
+        return getSortedClassInfos();
     }
 
     public static ClassInfo<?> getClassInfo(String codeName) {
@@ -169,7 +174,7 @@ public final class Classes {
             return List.copyOf(explicitMatches);
         }
         List<ClassInfo<?>> matches = new ArrayList<>();
-        for (ClassInfo<?> info : REGISTRATION_ORDER) {
+        for (ClassInfo<?> info : getSortedClassInfos()) {
             ClassInfo.Parser<?> parser = info.getParser();
             if (parser == null || !parser.canParse(ParseContext.DEFAULT) || parser.parse(text, ParseContext.DEFAULT) == null) {
                 continue;
@@ -216,7 +221,7 @@ public final class Classes {
             }
         }
 
-        for (ClassInfo<?> info : REGISTRATION_ORDER) {
+        for (ClassInfo<?> info : getSortedClassInfos()) {
             if (!type.isAssignableFrom(info.getC())) {
                 continue;
             }
@@ -256,5 +261,88 @@ public final class Classes {
             normalized.append(Character.toLowerCase(character));
         }
         return normalized.toString();
+    }
+
+    private static List<ClassInfo<?>> getSortedClassInfos() {
+        List<ClassInfo<?>> cached = SORTED_INFOS;
+        if (!cached.isEmpty() || REGISTRATION_ORDER.isEmpty()) {
+            return cached;
+        }
+        synchronized (Classes.class) {
+            if (!SORTED_INFOS.isEmpty() || REGISTRATION_ORDER.isEmpty()) {
+                return SORTED_INFOS;
+            }
+            SORTED_INFOS = sortClassInfos();
+            return SORTED_INFOS;
+        }
+    }
+
+    private static List<ClassInfo<?>> sortClassInfos() {
+        List<ClassInfo<?>> remaining = new ArrayList<>(REGISTRATION_ORDER);
+        Map<String, ClassInfo<?>> byCodeName = new ConcurrentHashMap<>();
+        for (ClassInfo<?> info : remaining) {
+            byCodeName.put(info.getCodeName(), info);
+        }
+
+        Map<ClassInfo<?>, Set<String>> dependencies = new ConcurrentHashMap<>();
+        for (ClassInfo<?> info : remaining) {
+            dependencies.put(info, new LinkedHashSet<>(info.after()));
+        }
+
+        for (ClassInfo<?> info : remaining) {
+            Set<String> before = info.before();
+            if (before == null) {
+                continue;
+            }
+            for (String codeName : before) {
+                ClassInfo<?> target = byCodeName.get(codeName);
+                if (target != null && target != info) {
+                    dependencies.get(target).add(info.getCodeName());
+                }
+            }
+        }
+
+        for (ClassInfo<?> info : remaining) {
+            for (ClassInfo<?> other : remaining) {
+                if (info == other) {
+                    continue;
+                }
+                if (info.getC().isAssignableFrom(other.getC())) {
+                    dependencies.get(info).add(other.getCodeName());
+                }
+            }
+        }
+
+        for (ClassInfo<?> info : remaining) {
+            dependencies.get(info).removeIf(codeName -> !byCodeName.containsKey(codeName) || info.getCodeName().equals(codeName));
+        }
+
+        List<ClassInfo<?>> sorted = new ArrayList<>(remaining.size());
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (int index = 0; index < remaining.size(); index++) {
+                ClassInfo<?> info = remaining.get(index);
+                if (!dependencies.get(info).isEmpty()) {
+                    continue;
+                }
+                sorted.add(info);
+                remaining.remove(index);
+                for (Set<String> after : dependencies.values()) {
+                    after.remove(info.getCodeName());
+                }
+                index--;
+                changed = true;
+            }
+        }
+
+        if (!remaining.isEmpty()) {
+            String circular = remaining.stream()
+                    .map(info -> info.getCodeName() + " (after: " + String.join(", ", dependencies.get(info)) + ")")
+                    .collect(Collectors.joining(", "));
+            throw new IllegalStateException("ClassInfos with circular dependencies detected: " + circular);
+        }
+
+        return List.copyOf(sorted);
     }
 }
