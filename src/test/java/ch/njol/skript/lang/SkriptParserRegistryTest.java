@@ -53,6 +53,7 @@ class SkriptParserRegistryTest {
         AutoTagAwareSection.lastMin = false;
         AutoTagAwareSection.lastMax = false;
         OptionalRegexSection.lastCapturedText = null;
+        TimeAwareCaptureEffect.lastTime = 0;
     }
 
     @Test
@@ -85,6 +86,48 @@ class SkriptParserRegistryTest {
         assertEquals(2, TypedArgsEffect.lastExpressions.length);
         assertEquals(5, TypedArgsEffect.lastExpressions[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
         assertEquals("hello", TypedArgsEffect.lastExpressions[1].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void literalOnlyPlaceholderRejectsRegisteredExpressions() {
+        Skript.registerExpression(NamedIntegerExpression.class, Integer.class, "named number");
+        Skript.registerEffect(TypedArgsEffect.class, "literal only %*integer%");
+
+        Statement expression = Statement.parse("literal only named number", null);
+        Statement literal = Statement.parse("literal only 5", "failed");
+
+        assertNull(expression);
+        assertNotNull(literal);
+        assertInstanceOf(TypedArgsEffect.class, literal);
+        assertNotNull(TypedArgsEffect.lastExpressions);
+        assertEquals(5, TypedArgsEffect.lastExpressions[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void expressionOnlyPlaceholderRejectsLiterals() {
+        Skript.registerExpression(NamedIntegerExpression.class, Integer.class, "named number");
+        Skript.registerEffect(TypedArgsEffect.class, "expression only %~integer%");
+
+        Statement literal = Statement.parse("expression only 5", null);
+        Statement expression = Statement.parse("expression only named number", "failed");
+
+        assertNull(literal);
+        assertNotNull(expression);
+        assertInstanceOf(TypedArgsEffect.class, expression);
+        assertNotNull(TypedArgsEffect.lastExpressions);
+        assertEquals(7, TypedArgsEffect.lastExpressions[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void placeholderTimeStatePropagatesToParsedExpression() {
+        Skript.registerExpression(TimeAwareStringExpression.class, String.class, "time aware text");
+        Skript.registerEffect(TimeAwareCaptureEffect.class, "timed %string@1%");
+
+        Statement parsed = Statement.parse("timed time aware text", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(TimeAwareCaptureEffect.class, parsed);
+        assertEquals(1, TimeAwareCaptureEffect.lastTime);
     }
 
     @Test
@@ -723,6 +766,116 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "optional regex section";
+        }
+    }
+
+    public static class NamedIntegerExpression extends SimpleExpression<Integer> {
+
+        @Override
+        protected Integer @Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return new Integer[]{7};
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            return expressions.length == 0;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "named number";
+        }
+    }
+
+    public static class TimeAwareStringExpression extends SimpleExpression<String> {
+
+        private int time;
+
+        @Override
+        protected String @Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return new String[]{"time-aware"};
+        }
+
+        @Override
+        public Class<? extends String> getReturnType() {
+            return String.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public boolean setTime(int time) {
+            if (time != 1) {
+                return false;
+            }
+            this.time = time;
+            return true;
+        }
+
+        @Override
+        public int getTime() {
+            return time;
+        }
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            return expressions.length == 0;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "time aware text";
+        }
+    }
+
+    public static class TimeAwareCaptureEffect extends Effect {
+
+        static int lastTime;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            if (expressions.length != 1 || expressions[0] == null) {
+                return false;
+            }
+            lastTime = expressions[0].getTime();
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "time aware capture effect";
         }
     }
 

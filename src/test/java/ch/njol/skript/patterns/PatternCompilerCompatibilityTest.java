@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.lang.SkriptParser;
 import org.junit.jupiter.api.Test;
 
 class PatternCompilerCompatibilityTest {
@@ -127,5 +128,21 @@ class PatternCompilerCompatibilityTest {
         assertEquals(1, pattern.getElements(ChoicePatternElement.class).size());
         assertEquals(0, pattern.getElements(TypePatternElement.class).getFirst().expressionIndex());
         assertEquals(3, pattern.getElements(TypePatternElement.class).getLast().expressionIndex());
+    }
+
+    @Test
+    void compiledPatternExposesPlaceholderMetadata() {
+        SkriptPattern pattern = PatternCompiler.compile("root %-*integer% then %strings@1%");
+
+        TypePatternElement first = pattern.getElements(TypePatternElement.class).getFirst();
+        TypePatternElement second = pattern.getElements(TypePatternElement.class).getLast();
+
+        assertTrue(first.isOptional());
+        assertEquals(SkriptParser.PARSE_LITERALS, first.flagMask());
+        assertFalse(first.pluralities()[0]);
+        assertFalse(second.isOptional());
+        assertEquals(SkriptParser.ALL_FLAGS, second.flagMask());
+        assertTrue(second.pluralities()[0]);
+        assertEquals(1, second.time());
     }
 }

@@ -16,10 +16,32 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on richer parser tag / mark / pattern parity after the `patterns` element-graph/API slice, without claiming parser-pattern parity complete.
+- Continue `Part 1A` on richer parser tag / mark / pattern parity after the placeholder flag/time metadata slice, without claiming parser-pattern parity complete.
 
 ## Work Log
 
+- closed the next shared-matcher placeholder-metadata slice in `PatternCompiler` / `SkriptPattern`
+- `PatternCompiler` now parses and preserves placeholder metadata beyond raw return types:
+  - literal-only / expression-only parse flags via `*` and `~`
+  - placeholder optional-marker metadata via leading `-`
+  - placeholder plural metadata for graph/API parity
+  - placeholder `@time` metadata
+- `TypePatternElement` now exposes the upstream-style metadata needed by the current compatibility surface:
+  - `pluralities()`
+  - `flagMask()`
+  - `time()`
+  - `isOptional()`
+- `SkriptPattern.match(...)` now applies placeholder-local parse flags and `@time` state when turning captured text into expressions, so patterns like `%*integer%`, `%~integer%`, and `%string@1%` now behave through the shared live parser path instead of silently flattening to unrestricted `%type%`
+- added parser regressions proving:
+  - literal-only placeholders reject registered expressions but still accept literals
+  - expression-only placeholders reject literals but still accept registered expressions
+  - placeholder `@time` metadata reaches the parsed expression instance
+  - the lightweight `TypePatternElement` graph now exposes the preserved placeholder metadata
+- attempted a stricter plurality-enforcement follow-up during the same slice, but real `.sk` verification showed that the currently green compatibility corpus still relies on several production expressions that report `isSingle()` more strictly than their effective parser usage:
+  - `brewing stand fuel slot`
+  - `brewing results`
+  - `loot`
+- narrowed the landed slice back to metadata preservation plus flag/time behavior only, so the live parser keeps the current green runtime surface while still closing the missing `*` / `~` / `@time` behavior gap
 - closed the next upstream `patterns` API gap around pattern-element graph introspection
 - added the missing `PatternElement` hierarchy locally:
   - `PatternElement`
@@ -60,23 +82,29 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/patterns/ChoicePatternElement.java`
-- `src/main/java/ch/njol/skript/patterns/GroupPatternElement.java`
-- `src/main/java/ch/njol/skript/patterns/LiteralPatternElement.java`
-- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
-- `src/main/java/ch/njol/skript/patterns/OptionalPatternElement.java`
-- `src/main/java/ch/njol/skript/patterns/ParseTagPatternElement.java`
-- `src/main/java/ch/njol/skript/patterns/PatternElement.java`
 - `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`
-- `src/main/java/ch/njol/skript/patterns/RegexPatternElement.java`
 - `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
 - `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`
-- `src/main/java/ch/njol/skript/patterns/MatchResult.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Verification
+
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+  - passed after landing placeholder flag/time metadata handling
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+  - passed after narrowing the slice away from plurality enforcement
+- `./gradlew runGameTest --rerun-tasks`
+  - first rerun failed after an overly strict plurality attempt by crashing `skript_fabric_base_game_test_executes_real_skript_file_using_list_variable_reindexing_on_set`
+  - second rerun failed after the first rollback with `3` required tests red:
+    - `skript_fabric_expression_game_test_brewing_fuel_slot_expression_executes_real_script`
+    - `skript_fabric_event_game_test_brewing_complete_event_executes_real_script`
+    - `skript_fabric_event_game_test_loot_generate_event_executes_real_script`
+  - final rerun passed after keeping plurality metadata exposed but non-enforcing in the shared matcher
+  - `197 / 197` required GameTests completed successfully
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+  - passed on the final tree
 
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - first run failed in `:compileJava` with stale `PatternMatch` references at `src/main/java/ch/njol/skript/lang/SkriptParser.java:307` and `:360`
@@ -98,12 +126,16 @@ Last updated: 2026-03-08
   - first run failed on the new graph traversal assertion because wrapper elements were being unwrapped before type collection
   - reran after fixing wrapper-element collection in `SkriptPattern.getElements(...)`; command passed
 
+## Unresolved Risks
+
+- placeholder plurality metadata is now preserved and exposed through `TypePatternElement`, but it is not enforced during live matching on the current compatibility surface; the real `.sk` corpus still depends on several production expressions that report `isSingle()` more strictly than their effective parser use
+- omitted-placeholder default-expression/default-value fallback is still open in `SkriptParser` parity; closing it likely needs coordinator guidance because the local `ClassInfo` surface is still much thinner than upstream and sits outside this lane’s owned files
+
 ## Merge Notes
 
-- highest conflict risk is `src/main/java/ch/njol/skript/lang/SkriptParser.java`; Lane A should not have touched it, but coordinator integration work or any out-of-lane parser edits will need manual reconciliation
-- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`; any concurrent pattern-parity work will need manual reconciliation around the new empty auto-tag helpers
+- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`; any concurrent pattern-parity work will need manual reconciliation around the new placeholder metadata parsing
+- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java` is the next conflict risk because the final matcher behavior now applies placeholder-local parse flags and `@time` state but intentionally leaves plurality metadata non-enforcing
+- `src/main/java/ch/njol/skript/patterns/TypePatternElement.java` is part of the active conflict surface because it now carries placeholder metadata that earlier local code did not preserve
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java` may conflict with any concurrent parser-regression additions
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` remains a likely conflict point for any concurrent parser-pattern compatibility additions
-- `src/main/java/ch/njol/skript/patterns/MatchResult.java` and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` are new files from this lane branch
-- current-cycle conflict surface remains `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
-- new current-cycle conflict surface also includes the added `src/main/java/ch/njol/skript/patterns/*PatternElement.java` files and the expanded `PatternCompiler.java` graph builder
+- current-cycle conflict surface is now `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`, `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`, `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
