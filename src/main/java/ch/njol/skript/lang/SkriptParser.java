@@ -356,10 +356,15 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.source = compiledPattern;
-                parseResult.exprs = applyDefaultValues(
+                Expression<?>[] withDefaults = applyDefaultValues(
                         matched.expressions(),
                         compiledPattern
                 );
+                if (withDefaults == null) {
+                    // Required placeholder omitted and no default available: pattern fails.
+                    continue;
+                }
+                parseResult.exprs = withDefaults;
                 parseResult.regexes = matched.regexes();
                 parseResult.tags = matched.tags();
                 parseResult.mark = matched.mark();
@@ -415,10 +420,15 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.source = compiledPattern;
-                parseResult.exprs = applyDefaultValues(
+                Expression<?>[] withDefaults = applyDefaultValues(
                         matched.expressions(),
                         compiledPattern
                 );
+                if (withDefaults == null) {
+                    // Required placeholder omitted and no default available: pattern fails.
+                    continue;
+                }
+                parseResult.exprs = withDefaults;
                 parseResult.regexes = matched.regexes();
                 parseResult.tags = matched.tags();
                 parseResult.mark = matched.mark();
@@ -482,7 +492,7 @@ public class SkriptParser {
         return compiledPattern.match(expr, flags, context);
     }
 
-    private static Expression<?>[] applyDefaultValues(
+    private static @Nullable Expression<?>[] applyDefaultValues(
             Expression<?>[] expressions,
             @Nullable SkriptPattern compiledPattern
     ) {
@@ -505,7 +515,11 @@ public class SkriptParser {
             DefaultExpression<?> defaultExpression = findDefaultValue(defaultValues, typePattern);
             if (defaultExpression != null) {
                 expressions[expressionIndex] = defaultExpression;
+                continue;
             }
+            // Upstream parity: if a required placeholder remains omitted and no default is available,
+            // the entire pattern must fail.
+            return null;
         }
         return expressions;
     }

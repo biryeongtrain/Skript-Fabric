@@ -19,43 +19,30 @@ Last updated: 2026-03-08
 
 ## Latest Slice
 
-- identified one remaining narrow gap in omitted-placeholder defaults:
-  - parser-scoped `DefaultValueData` and classinfo-backed default-expression fallback only resolved exact stored types
-  - result: an omitted placeholder such as `%integer%` could not reuse a compatible `Number`-typed parser default or `Number` classinfo default
-- restored compatible fallback on the parser/default-value surface:
-  - `DefaultValueData.getDefaultValue(...)` now prefers an exact match and otherwise uses the most specific compatible stored type
-  - `SkriptParser` now falls back from parser-owned defaults to the most specific compatible registered classinfo default instead of exact-class-only lookup
+- remaining upstream-visible mismatch after the compatible omitted-placeholder fallback:
+  - behavior: when a required placeholder is omitted via an optional bracket and no default exists for its type, upstream fails the pattern; local port still proceeded to `init(...)` with a null expression
+  - example: pattern `probe [%string%]` and input `probe` should fail unless a default `string` expression is available
+- minimal fix in parser:
+  - `SkriptParser.applyDefaultValues(...)` now returns `null` to signal failure if any non-optional placeholder remains null after default lookup
+  - `parseStatic/parseModern` detect this `null` and skip the pattern (matching upstream)
 
 ## Regression Added
 
-- `ParserCompatibilityDataAndStackTest.defaultValueDataUsesMostSpecificCompatibleTypeWhenExactMissing()`
-  - proves `DefaultValueData` prefers exact matches but otherwise resolves the most specific compatible stack entry
-- `SkriptParserRegistryTest.expressionPatternUsesCompatibleParserAndClassInfoDefaultsForOmittedPlaceholderForm()`
-  - registers `default integer value [%integer%]`
-  - proves omitted `%integer%` uses a compatible `Number` parser default first, then a compatible `Number` classinfo default once the parser default is removed
-  - verifies explicit input still wins
+- `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
+  - focused parse of single pattern `probe [%string%]` against input `probe`
+  - asserts parse fails (returns null) when no default `string` expression exists (matching upstream)
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/lang/SkriptParser.java`
-- `src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java`
-- `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
-- `src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java`
+- `src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
-- required first narrow command before edits:
-  - `./gradlew test --tests 'ch.njol.skript.lang.SkriptParserRegistryTest.expressionPatternUsesClassInfoDefaultValueForExactOmittedPlaceholderForm'`
-  - result:
-    - passed
-- targeted verification after the fix:
-  - `./gradlew test --tests 'ch.njol.skript.lang.SkriptParserRegistryTest.expressionPatternUsesCompatibleParserAndClassInfoDefaultsForOmittedPlaceholderForm'`
-  - result:
-    - passed
-  - `./gradlew test --tests 'ch.njol.skript.lang.SkriptParserRegistryTest.expressionPatternUsesCompatibleParserAndClassInfoDefaultsForOmittedPlaceholderForm' --tests 'ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest.defaultValueDataUsesMostSpecificCompatibleTypeWhenExactMissing'`
-  - result:
-    - passed
+- narrow, focused regression only:
+  - `./gradlew test --tests 'ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest'`
+  - result: passed
 
 ## Remaining Risks
 
