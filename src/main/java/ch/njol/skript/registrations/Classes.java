@@ -108,6 +108,12 @@ public final class Classes {
         if (userInput == null || userInput.isBlank()) {
             return null;
         }
+        String lowerCaseInput = userInput.trim().toLowerCase(Locale.ENGLISH);
+        for (ClassInfo<?> info : getSortedClassInfos()) {
+            if (info.matchesUserInput(lowerCaseInput)) {
+                return info;
+            }
+        }
         String normalized = normalizeUserInput(userInput);
         ClassInfo<?> exact = INFOS_BY_CODE_NAME.get(normalized);
         if (exact != null) {
@@ -122,6 +128,18 @@ public final class Classes {
     public static boolean isPluralClassInfoUserInput(@Nullable String userInput, @Nullable ClassInfo<?> classInfo) {
         if (userInput == null || userInput.isBlank() || classInfo == null) {
             return false;
+        }
+        String lowerCaseInput = userInput.trim().toLowerCase(Locale.ENGLISH);
+        if (classInfo.matchesUserInput(lowerCaseInput)) {
+            if (lowerCaseInput.endsWith("ies") && classInfo.matchesUserInput(lowerCaseInput.substring(0, lowerCaseInput.length() - 3) + "y")) {
+                return true;
+            }
+            if (lowerCaseInput.endsWith("es") && classInfo.matchesUserInput(lowerCaseInput.substring(0, lowerCaseInput.length() - 2))) {
+                return true;
+            }
+            if (lowerCaseInput.endsWith("s") && classInfo.matchesUserInput(lowerCaseInput.substring(0, lowerCaseInput.length() - 1))) {
+                return true;
+            }
         }
         String normalized = normalizeUserInput(userInput);
         return normalized.length() > 1

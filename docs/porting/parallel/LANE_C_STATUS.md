@@ -19,73 +19,71 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the variable-name validation slice, keeping the restored `%...%` / `*` compatibility forms green.
+- Continue `Part 1B` from the restored class-alias bridge and pick the next smallest lane-owned blocker that unlocks one more exact upstream live form.
 
 ## Work Log
 
-- compared the current local variable-name validator against upstream `e6ec744` and selected one contained compatibility gap:
-  - upstream `Variable.isValidVariableName(...)` ignores `*` characters that appear inside paired `%...%` expression spans
-  - the local compatibility layer still treated any non-terminal `*` as invalid, so forms like `result::%{source::*}%` were rejected even though the only asterisk was inside the nested expression
-- closed that validation slice in `Variable.isValidVariableName(...)`
-- `Variable` now counts only asterisks outside paired `%...%` spans when validating list-variable markers
-- restored accepted forms:
-  - `result::%{source::*}%`
-  - `result::%{source::*}%::*`
-- kept rejected forms:
-  - `result::%{source::*}%*`
-  - `result::*::tail`
-- added focused compatibility coverage proving:
-  - `Variable.isValidVariableName(...)` accepts the restored forms and still rejects invalid outer list-variable asterisks
-  - `Variable.newInstance(...)` rejects the invalid outer-asterisk form directly
-  - parser-facing variable-expression coverage still recognizes the restored accepted forms
-- added one real `.sk` GameTest fixture that loads and executes a script containing `set {result::%{source::*}%} to "ignored"`
-- lane-local verification work needed two follow-up test-only fixes before the final green pass:
-  - the first `VariableCompatibilityTest` draft used a parser-level rejection assertion that was broader than the product change, because the outer parser can still fall through to a non-variable expression after invalid variable parsing
-  - the first two GameTest passes failed due swapped neighboring base-test block expectations during lane-local editing, not due product-code regressions
+- compared the current local `Classes` compatibility layer against upstream `e6ec744` and selected one contained blocker with direct user-visible impact:
+  - upstream `ClassInfo` supports regex-backed `.user(...)` aliases that `Classes.getClassInfoFromUserInput(...)` uses for typed class names and parser-facing placeholder type lookup
+  - the local compatibility layer still only matched normalized code names, so exact upstream alias forms like `material` remained dead on those lookup paths
+- closed that alias bridge in the lane-owned compatibility surface:
+  - `ClassInfo` now stores regex-backed `.user(...)` patterns and exposes `matchesUserInput(...)`
+  - `Classes.getClassInfoFromUserInput(...)` now checks registered user patterns before falling back to normalized code-name matching
+  - `Classes.isPluralClassInfoUserInput(...)` now recognizes common `s` / `es` / `ies` plural forms for regex-backed aliases instead of only compact code names
+- wired one shipped class-info registration through that restored path:
+  - `ItemTypeClassInfo` now registers the upstream-style aliases `item ?types?` and `materials?`
+- used that bridge to unlock one exact live script form:
+  - a real `.sk` resource can now load a registered syntax pattern that declares `%material%` and execute it against the built-in item-type parser
+- added focused coverage proving:
+  - regex-backed alias lookup resolves singular and plural user input
+  - the real resource-loader path accepts `capture material alias stone` and executes through `%material%`
+- lane-local verification needed one follow-up product fix:
+  - the first alias unit test passed lookup but exposed that plural detection still only understood normalized code names; patched that heuristic before the final green pass
 - did not claim parity complete
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/Variable.java`
-- `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/classes/ClassInfo.java`
+- `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/main/java/org/skriptlang/skript/bukkit/base/types/ItemTypeClassInfo.java`
+- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
-- `src/gametest/resources/skript/gametest/base/variable_name_expression_inner_list_marker_set_test_block.sk`
+- `src/gametest/resources/skript/gametest/base/material_alias_placeholder_set_test_block.sk`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Verification
 
-- `git show e6ec744dd83cb1a362dd420cde11a0d74aef977d:src/main/java/ch/njol/skript/lang/Variable.java | sed -n '90,160p'`
+- `git grep -n "\\.user(" e6ec744dd83cb1a362dd420cde11a0d74aef977d -- 'src/main/java/**/*.java' | sed -n '1,260p'`
   - passed
-  - confirmed upstream discounts `*` characters inside paired `%...%` spans before validating the final outer `::*` marker
-- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+  - confirmed upstream still relies on `.user(...)` aliases broadly, including `materials?` on item-type class infos
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
   - failed first
-  - the first rejection assertion targeted the outer parser instead of `Variable.newInstance(...)`, and the outer parser can still fall through to a non-variable expression after invalid variable parsing
-- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+  - the new regex-alias test exposed that `Classes.isPluralClassInfoUserInput(...)` still only recognized normalized code-name plurals
+- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks`
+  - failed
+  - concurrent lane-local Gradle execution collided while writing test XML results for `AliveKillSyntaxTest`; this was an execution conflict, not a product regression
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
   - passed
-  - validated the restored accepted/rejected variable-name forms through `Variable.isValidVariableName(...)`, `Variable.newInstance(...)`, and parser acceptance coverage
-- `./gradlew runGameTest --rerun-tasks`
-  - failed first
-  - the new GameTest fixture assertion expected the wrong block after a lane-local test edit
-- `./gradlew runGameTest --rerun-tasks`
-  - failed second
-  - neighboring base GameTest assertions were still temporarily pointed at swapped block expectations; fixed in lane-local test code
+  - validated regex-backed alias lookup plus plural detection for registered class infos
 - `./gradlew runGameTest --rerun-tasks`
   - passed
-  - verified the full Fabric GameTest suite with `206 / 206` scheduled and the new real `.sk` fixture green
+  - verified the full Fabric GameTest suite with the new real `.sk` `%material%` fixture green on the live loader path
 
 ## Unresolved Risks
 
-- broader upstream variable-name parity is still open beyond this slice, especially list-variable colon checks inside `%...%` expressions and the thinner local `VariableString` runtime for dynamic variable names
-- the new GameTest proves load-and-execute acceptance for the restored form, not full upstream runtime evaluation parity for `%...%` inside variable names
+- broader upstream class-alias parity is still open beyond this slice:
+  - only the compatibility bridge plus `itemtype` / `material(s)` alias wiring landed here
+  - richer regex plural handling beyond the current `s` / `es` / `ies` heuristic is still thinner than upstream
+- the real `.sk` GameTest proves live `%material%` placeholder loading and execution, not every remaining class-alias consumer such as future typed-input or additional alias-heavy class infos
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/lang/Variable.java`
-  - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/classes/ClassInfo.java`
+  - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
 - added real-script fixture:
-  - `src/gametest/resources/skript/gametest/base/variable_name_expression_inner_list_marker_set_test_block.sk`
+  - `src/gametest/resources/skript/gametest/base/material_alias_placeholder_set_test_block.sk`
 - lane-local status update:
   - `docs/porting/parallel/LANE_C_STATUS.md`
 - note:
