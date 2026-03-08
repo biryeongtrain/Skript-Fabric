@@ -50,6 +50,8 @@ class SkriptParserRegistryTest {
         MarkAwareEffect.lastMark = 0;
         BranchTagAwareSection.lastFirst = false;
         BranchTagAwareSection.lastSecond = false;
+        AutoTagAwareSection.lastMin = false;
+        AutoTagAwareSection.lastMax = false;
     }
 
     @Test
@@ -183,6 +185,30 @@ class SkriptParserRegistryTest {
         assertInstanceOf(BranchTagAwareSection.class, parsed);
         assertFalse(BranchTagAwareSection.lastFirst);
         assertTrue(BranchTagAwareSection.lastSecond);
+    }
+
+    @Test
+    void sectionPatternProvidesAutoDerivedChoiceBranchParseTagInParseResult() {
+        Skript.registerSection(AutoTagAwareSection.class, "pick [:(min|max)[imum]] value");
+
+        SectionNode minimumNode = new SectionNode("pick minimum value");
+        Section minimum = Section.parse("pick minimum value", null, minimumNode, List.of());
+
+        assertNotNull(minimum);
+        assertInstanceOf(AutoTagAwareSection.class, minimum);
+        assertTrue(AutoTagAwareSection.lastMin);
+        assertFalse(AutoTagAwareSection.lastMax);
+
+        AutoTagAwareSection.lastMin = false;
+        AutoTagAwareSection.lastMax = false;
+
+        SectionNode maximumNode = new SectionNode("pick maximum value");
+        Section maximum = Section.parse("pick maximum value", null, maximumNode, List.of());
+
+        assertNotNull(maximum);
+        assertInstanceOf(AutoTagAwareSection.class, maximum);
+        assertFalse(AutoTagAwareSection.lastMin);
+        assertTrue(AutoTagAwareSection.lastMax);
     }
 
     @Test
@@ -485,6 +511,36 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "branch tag aware section";
+        }
+    }
+
+    public static class AutoTagAwareSection extends Section {
+
+        static boolean lastMin;
+        static boolean lastMax;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            lastMin = parseResult.hasTag("min");
+            lastMax = parseResult.hasTag("max");
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return null;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "auto tag aware section";
         }
     }
 

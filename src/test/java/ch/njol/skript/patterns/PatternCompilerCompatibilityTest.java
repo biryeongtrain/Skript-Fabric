@@ -40,4 +40,47 @@ class PatternCompilerCompatibilityTest {
 
         assertNotNull(result);
     }
+
+    @Test
+    void compiledPatternAutoDerivesLeadingLiteralTag() {
+        SkriptPattern pattern = PatternCompiler.compile("[:non(-| )]op[erator]s");
+
+        MatchResult hyphenated = pattern.match("non-operators");
+        MatchResult spaced = pattern.match("non operators");
+        MatchResult plain = pattern.match("operators");
+
+        assertNotNull(hyphenated);
+        assertTrue(hyphenated.tags().contains("non"));
+        assertNotNull(spaced);
+        assertTrue(spaced.tags().contains("non"));
+        assertNotNull(plain);
+        assertFalse(plain.tags().contains("non"));
+    }
+
+    @Test
+    void compiledPatternAutoDerivesChoiceBranchTags() {
+        SkriptPattern pattern = PatternCompiler.compile("[:(min|max)[imum]] [sea] pickle(s| (count|amount))");
+
+        MatchResult minimum = pattern.match("minimum sea pickle count");
+        MatchResult maximum = pattern.match("maximum sea pickles");
+        MatchResult plain = pattern.match("sea pickles");
+
+        assertNotNull(minimum);
+        assertTrue(minimum.tags().contains("min"));
+        assertNotNull(maximum);
+        assertTrue(maximum.tags().contains("max"));
+        assertNotNull(plain);
+        assertFalse(plain.tags().contains("min"));
+        assertFalse(plain.tags().contains("max"));
+    }
+
+    @Test
+    void compiledPatternAutoDerivedTagsAreLowerCasedFromLiteralBranches() {
+        SkriptPattern pattern = PatternCompiler.compile("hash with (:(MD5|SHA-256|SHA-384|SHA-512))");
+
+        MatchResult result = pattern.match("hash with SHA-256");
+
+        assertNotNull(result);
+        assertTrue(result.tags().contains("sha-256"));
+    }
 }
