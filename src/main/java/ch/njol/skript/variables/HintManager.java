@@ -34,20 +34,11 @@ public final class HintManager {
     }
 
     public void enterScope(boolean section) {
-        scopes.push(new Scope(new HashMap<>(), section));
-        if (scopes.size() > 1) {
-            mergeScope(1, 0, false);
-        }
+        pushScope(section, true);
     }
 
     public void exitScope() {
-        if (scopes.isEmpty()) {
-            return;
-        }
-        if (scopes.size() > 1) {
-            mergeScope(0, 1, false);
-        }
-        scopes.pop();
+        popScope(true);
     }
 
     public void clearScope(int level, boolean sectionOnly) {
@@ -168,6 +159,45 @@ public final class HintManager {
             String prefix = normalized.substring(0, normalized.length() - 1);
             scopes.getFirst().hints().keySet().removeIf(key -> key.startsWith(prefix));
         }
+    }
+
+    void pushScope(boolean section, boolean copyParentHints) {
+        Map<String, Set<Class<?>>> hints = new HashMap<>();
+        if (copyParentHints && !scopes.isEmpty()) {
+            mergeHints(scopes.getFirst().hints(), hints);
+        }
+        scopes.push(new Scope(hints, section));
+    }
+
+    void popScope(boolean mergeIntoParent) {
+        if (scopes.isEmpty()) {
+            return;
+        }
+        if (mergeIntoParent && scopes.size() > 1) {
+            mergeHints(scopes.getFirst().hints(), scopes.get(1).hints());
+        }
+        scopes.pop();
+    }
+
+    void resetScopes() {
+        scopes.clear();
+    }
+
+    boolean hasScopes() {
+        return !scopes.isEmpty();
+    }
+
+    void setSingleHint(String variableName, Class<?> hint) {
+        deleteInternal(variableName);
+        addInternal(variableName, Set.of(hint));
+    }
+
+    Class<?> getSingleHint(String variableName) {
+        if (scopes.isEmpty()) {
+            return null;
+        }
+        Set<Class<?>> hints = scopes.getFirst().hints().get(normalize(variableName));
+        return hints == null || hints.isEmpty() ? null : hints.iterator().next();
     }
 
     private boolean hintsUnavailable() {
