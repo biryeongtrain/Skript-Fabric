@@ -467,6 +467,37 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax() {
+        Skript.registerEffect(
+                EffChange.class,
+                "set %object% to %object%",
+                "add %object% to %object%",
+                "remove %object% from %object%",
+                "reset %object%",
+                "delete %object%"
+        );
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    section("set {_var} to true", line("mark inside"))
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("The line 'set {_var} to true' is a valid effect but cannot function as a section (:)")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this section: set {_var} to true")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsKeepsSpecificConditionSectionOwnershipError() {
         Skript.registerCondition(AlwaysTrueCondition.class, "always true");
 

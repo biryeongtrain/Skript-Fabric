@@ -21,6 +21,9 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+- added a narrow loader regression for the exact section header syntax `set {_var} to true:` using the existing `EffChange` registration pattern `set %object% to %object%`
+- verified that the current loader/log path already retains the specific effect ownership diagnostic for the exact line `set {_var} to true`
+- no production code changes were needed for this slice; the new regression passed with the existing `Statement` / `ScriptLoader` behavior
 - closed the next upstream `ScriptLoader` gap around parse-time local-variable hint scope lifecycle
 - `ScriptLoader.loadItems(...)` now opens a section-level hint scope for each loaded section body, matching the upstream loader model closely enough for nested section parsing
 - section-node parsing now also opens a temporary non-section hint scope around the `Section.parse(...)` attempt, so hints created by a failed section parse are cleared before falling back to statement parsing
@@ -71,6 +74,8 @@ Last updated: 2026-03-08
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax --rerun-tasks`
+  - passed
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
   - passed
 - `./gradlew runGameTest --rerun-tasks`
@@ -94,6 +99,7 @@ Last updated: 2026-03-08
 
 ## Unresolved Risks
 
+- coverage is intentionally narrow: it proves retained ownership diagnostics for `set {_var} to true:` through the `EffChange` pattern `set %object% to %object%`, but it does not broaden assertion coverage across other `EffChange` patterns
 - top-level script `function ...` structure loading is still not available in the current GameTest runtime, so the live `.sk` coverage for this slice uses the equivalent nested plain-effect argument path instead of a direct function-argument script
 - the new unit regression covers the upstream function-argument ownership bug directly, but broader runtime parity for script-defined functions remains outside this lane slice
 
