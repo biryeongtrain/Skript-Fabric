@@ -21,6 +21,34 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+### 2026-03-08 Section-Fallback Parse-Log Retention Slice
+
+- compared the local `ScriptLoader.parseSectionTriggerItem(...)` section-fallback path against upstream `ScriptLoader.loadItems(...)` from snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` in `/tmp/skript-upstream-e6ec744-2`
+- focused only on the open loader bug inside the existing local section fallback path:
+  - when `Section.parse(...)` fails on a section line with a specific warning/error
+  - and `Statement.parse(..., sectionNode, ...)` then succeeds
+  - the local loader was printing only the statement-side parse log, dropping the earlier section-specific diagnostic
+- added a targeted regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java` that uses:
+  - `RejectingWarningSection` to emit a specific section warning and fail
+  - `DirectClaimFallbackStatement` to succeed through `Statement.parse(...)` on the same section line without using a `SectionExpression`
+  - assertions that the fallback still succeeds as a statement, the specific section warning survives, and `Can't understand this section: warn then fallback` does not leak
+- implemented the smallest fix across the allowed loader/log files:
+  - `src/main/java/ch/njol/skript/ScriptLoader.java`
+    - when statement fallback succeeds for a section line, it now replays only non-default section parse diagnostics into the active parse log before printing
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+    - added `getLogEntries()` so the loader can selectively replay retained section log entries
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/ScriptLoader.java`
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - first run failed at `loadItemsKeepsSpecificSectionWarningWhenStatementFallbackSucceeds`, confirming the warning was dropped before the fix
+    - second run passed after the loader/log patch
+- unresolved risks kept open:
+  - this slice only preserves earlier section diagnostics on the successful section-line statement fallback path; it does not change how later statement-side diagnostics are ordered relative to the replayed section entries
+  - coverage is intentionally narrow to one warning-producing section syntax plus one direct-claim statement form inside `ScriptLoaderCompatibilityTest`
+
 ### 2026-03-08 Legacy Log-Handler Compatibility Slice
 
 - compared the local `ch/njol/skript/log/**` package against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` in `/tmp/skript-upstream-e6ec744-2`

@@ -128,6 +128,7 @@ public final class ScriptLoader {
                     triggerItems
             );
             if (item != null) {
+                restoreSpecificSectionDiagnostics(log, sectionLog, sectionError);
                 log.printLog();
                 return item;
             }
@@ -150,6 +151,18 @@ public final class ScriptLoader {
                 parser.getHintManager().clearScope(0, false);
             }
             parser.getHintManager().exitScope();
+        }
+    }
+
+    private static void restoreSpecificSectionDiagnostics(
+            ParseLogHandler log,
+            ParseLogHandler sectionLog,
+            String sectionError
+    ) {
+        for (LogEntry entry : sectionLog.getLogEntries()) {
+            if (!sectionError.equals(entry.getMessage())) {
+                log.log(entry);
+            }
         }
     }
 

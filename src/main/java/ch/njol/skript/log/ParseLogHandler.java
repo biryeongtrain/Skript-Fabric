@@ -80,6 +80,10 @@ public class ParseLogHandler extends LogHandler {
         return error;
     }
 
+    public List<LogEntry> getLogEntries() {
+        return new ArrayList<>(logEntries);
+    }
+
     public List<LogEntry> getErrors() {
         List<LogEntry> errors = new ArrayList<>();
         for (LogEntry entry : logEntries) {

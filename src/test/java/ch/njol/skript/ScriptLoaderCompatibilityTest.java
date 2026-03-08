@@ -733,6 +733,31 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsKeepsSpecificSectionWarningWhenStatementFallbackSucceeds() {
+        Skript.registerSection(RejectingWarningSection.class, "warn then fallback");
+        Skript.registerStatement(DirectClaimFallbackStatement.class, "warn then fallback");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    section("warn then fallback", line("ignored child"))
+            ));
+
+            assertEquals(1, items.size());
+            assertTrue(items.getFirst() instanceof DirectClaimFallbackStatement);
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("specific section warning before fallback")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this section: warn then fallback")
+                    )
+            );
+        }
+    }
+
+    @Test
     void plainStatementParseClearsOuterExpressionSectionOwnershipForFunctionArguments() {
         Skript.registerExpression(TestNumberSectionExpression.class, Integer.class, "a test number");
 
@@ -1390,6 +1415,57 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "loading hint section";
+        }
+    }
+
+    public static final class RejectingWarningSection extends Section {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            Skript.warning("specific section warning before fallback");
+            return false;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return null;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "warn then fallback";
+        }
+    }
+
+    public static final class DirectClaimFallbackStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Section.SectionContext sectionContext = ParserInstance.get().getData(Section.SectionContext.class);
+            return sectionContext.claim(this, parseResult.expr);
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            statementExecution.add("direct-claim-fallback");
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "warn then fallback";
         }
     }
 
