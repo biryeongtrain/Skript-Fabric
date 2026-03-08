@@ -56,7 +56,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             }
             log.clear();
 
-            Condition condition = Condition.parse(expression, null);
+            Condition condition = parseCondition(expression, node, items, sectionContext);
             if (condition != null) {
                 log.printLog();
                 return condition;
@@ -91,6 +91,26 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             if (parsed != null && !sectionContext.claimed()) {
                 Skript.error("The line '" + expression
                         + "' is a valid function call but cannot function as a section (:) because there is no parameter to manage it.");
+                return null;
+            }
+            return parsed;
+        });
+    }
+
+    private static @Nullable Condition parseCondition(
+            String expression,
+            @Nullable SectionNode node,
+            @Nullable List<TriggerItem> items,
+            Section.SectionContext sectionContext
+    ) {
+        if (node == null) {
+            return Condition.parse(expression, null);
+        }
+        return sectionContext.modify(node, items, () -> {
+            Condition parsed = Condition.parse(expression, null);
+            if (parsed != null && !sectionContext.claimed()) {
+                Skript.error("The line '" + expression
+                        + "' is a valid condition but cannot function as a section (:) because there is no syntax in the line to manage it.");
                 return null;
             }
             return parsed;
