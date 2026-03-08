@@ -1,0 +1,3 @@
+on gametest:
+    set {result::%{source::*}%} to "ignored"
+    set test block at 0 1 0 to diamond_block
