@@ -18,7 +18,9 @@ import ch.njol.skript.lang.function.FunctionRegistry;
 import ch.njol.skript.lang.function.Functions;
 import ch.njol.skript.lang.function.Parameter;
 import ch.njol.skript.lang.function.Signature;
+import ch.njol.skript.lang.parser.DefaultValueData;
 import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
 import java.util.List;
@@ -128,6 +130,37 @@ class SkriptParserRegistryTest {
         assertNotNull(parsed);
         assertInstanceOf(TimeAwareCaptureEffect.class, parsed);
         assertEquals(1, TimeAwareCaptureEffect.lastTime);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void expressionPatternUsesParserDefaultValueForOmittedPlaceholder() {
+        Skript.registerExpression(DefaultNumberExpression.class, Integer.class, "default number [%number%]");
+
+        DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
+        data.addDefaultValue(Integer.class, new SimpleLiteral<>(7, true));
+        try {
+            Expression<? extends Integer> omitted = new SkriptParser(
+                    "default number",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Integer.class});
+            Expression<? extends Integer> explicit = new SkriptParser(
+                    "default number 5",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Integer.class});
+
+            assertNotNull(omitted);
+            assertInstanceOf(DefaultNumberExpression.class, omitted);
+            assertEquals(7, omitted.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+
+            assertNotNull(explicit);
+            assertInstanceOf(DefaultNumberExpression.class, explicit);
+            assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+        } finally {
+            data.removeDefaultValue(Integer.class);
+        }
     }
 
     @Test
@@ -799,6 +832,50 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "named number";
+        }
+    }
+
+    public static class DefaultNumberExpression extends SimpleExpression<Integer> {
+
+        private @Nullable Expression<? extends Integer> value;
+
+        @Override
+        protected Integer @Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            if (value == null) {
+                return null;
+            }
+            Integer single = value.getSingle(event);
+            return single == null ? null : new Integer[]{single};
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            if (expressions.length != 1 || expressions[0] == null) {
+                return false;
+            }
+            value = (Expression<? extends Integer>) expressions[0];
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "default number";
         }
     }
 

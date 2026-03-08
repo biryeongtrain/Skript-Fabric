@@ -5,6 +5,7 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.expressions.ExprInput;
 import ch.njol.skript.lang.function.ExprFunctionCall;
 import ch.njol.skript.lang.function.FunctionReference;
+import ch.njol.skript.lang.parser.DefaultValueData;
 import ch.njol.skript.lang.parser.ParseStackOverflowException;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.parser.ParsingStack;
@@ -12,9 +13,11 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.patterns.MatchResult;
 import ch.njol.skript.patterns.PatternCompiler;
 import ch.njol.skript.patterns.SkriptPattern;
+import ch.njol.skript.patterns.TypePatternElement;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -304,10 +307,12 @@ public class SkriptParser {
             for (int matchedPattern = 0; patterns != null && matchedPattern < patterns.length; matchedPattern++) {
                 ParsingStack.Element stackElement = new ParsingStack.Element(legacySyntaxInfo(info), matchedPattern);
                 E element = null;
+                SkriptPattern compiledPattern = null;
                 MatchResult matched = null;
                 try {
                     parsingStack.push(stackElement);
-                    matched = match(input, patterns[matchedPattern], context, PARSE_LITERALS);
+                    compiledPattern = compilePattern(patterns[matchedPattern]);
+                    matched = compiledPattern != null ? compiledPattern.match(input, PARSE_LITERALS, context) : null;
                     if (matched != null) {
                         element = instantiate(info.getElementClass());
                     }
@@ -323,12 +328,15 @@ public class SkriptParser {
                 }
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
-                parseResult.exprs = matched.expressions();
+                parseResult.exprs = applyDefaultValues(
+                        matched.expressions(),
+                        compiledPattern
+                );
                 parseResult.regexes = matched.regexes();
                 parseResult.tags = matched.tags();
                 parseResult.mark = matched.mark();
                 try {
-                    if (element.init(matched.expressions(), matchedPattern, Kleenean.FALSE, parseResult)) {
+                    if (element.init(parseResult.exprs, matchedPattern, Kleenean.FALSE, parseResult)) {
                         return element;
                     }
                 } catch (StackOverflowError error) {
@@ -357,10 +365,12 @@ public class SkriptParser {
             for (int matchedPattern = 0; patterns != null && matchedPattern < patterns.length; matchedPattern++) {
                 ParsingStack.Element stackElement = new ParsingStack.Element(rawSyntaxInfo(info), matchedPattern);
                 E element = null;
+                SkriptPattern compiledPattern = null;
                 MatchResult matched = null;
                 try {
                     parsingStack.push(stackElement);
-                    matched = match(input, patterns[matchedPattern], context, ALL_FLAGS);
+                    compiledPattern = compilePattern(patterns[matchedPattern]);
+                    matched = compiledPattern != null ? compiledPattern.match(input, ALL_FLAGS, context) : null;
                     if (matched != null) {
                         element = instantiate(info.type());
                     }
@@ -376,12 +386,15 @@ public class SkriptParser {
                 }
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
-                parseResult.exprs = matched.expressions();
+                parseResult.exprs = applyDefaultValues(
+                        matched.expressions(),
+                        compiledPattern
+                );
                 parseResult.regexes = matched.regexes();
                 parseResult.tags = matched.tags();
                 parseResult.mark = matched.mark();
                 try {
-                    if (element.init(matched.expressions(), matchedPattern, Kleenean.FALSE, parseResult)) {
+                    if (element.init(parseResult.exprs, matchedPattern, Kleenean.FALSE, parseResult)) {
                         return element;
                     }
                 } catch (StackOverflowError error) {
@@ -421,17 +434,76 @@ public class SkriptParser {
 
     private static final Map<String, SkriptPattern> PATTERNS = new ConcurrentHashMap<>();
 
-    private static @Nullable MatchResult match(String expr, String pattern, ParseContext context, int flags) {
+    private static @Nullable SkriptPattern compilePattern(String pattern) {
         if (pattern == null || pattern.isBlank()) {
             return null;
         }
-        SkriptPattern compiled;
         try {
-            compiled = PATTERNS.computeIfAbsent(pattern, PatternCompiler::compile);
+            return PATTERNS.computeIfAbsent(pattern, PatternCompiler::compile);
         } catch (IllegalArgumentException exception) {
             return null;
         }
-        return compiled.match(expr, flags, context);
+    }
+
+    private static @Nullable MatchResult match(String expr, String pattern, ParseContext context, int flags) {
+        SkriptPattern compiledPattern = compilePattern(pattern);
+        if (compiledPattern == null) {
+            return null;
+        }
+        return compiledPattern.match(expr, flags, context);
+    }
+
+    private static Expression<?>[] applyDefaultValues(
+            Expression<?>[] expressions,
+            @Nullable SkriptPattern compiledPattern
+    ) {
+        if (compiledPattern == null || expressions.length == 0) {
+            return expressions;
+        }
+
+        List<TypePatternElement> typePatterns = new ArrayList<>(compiledPattern.getElements(TypePatternElement.class));
+        if (typePatterns.isEmpty()) {
+            return expressions;
+        }
+        typePatterns.sort(Comparator.comparingInt(TypePatternElement::expressionIndex));
+
+        DefaultValueData defaultValues = ParserInstance.get().getData(DefaultValueData.class);
+        for (TypePatternElement typePattern : typePatterns) {
+            int expressionIndex = typePattern.expressionIndex();
+            if (expressionIndex >= expressions.length || expressions[expressionIndex] != null || typePattern.isOptional()) {
+                continue;
+            }
+            DefaultExpression<?> defaultExpression = findDefaultValue(defaultValues, typePattern);
+            if (defaultExpression != null) {
+                expressions[expressionIndex] = defaultExpression;
+            }
+        }
+        return expressions;
+    }
+
+    private static @Nullable DefaultExpression<?> findDefaultValue(
+            DefaultValueData defaultValues,
+            TypePatternElement typePattern
+    ) {
+        ExprInfo exprInfo = new ExprInfo();
+        exprInfo.flagMask = typePattern.flagMask();
+        exprInfo.isPlural = typePattern.pluralities();
+        exprInfo.time = typePattern.time();
+
+        Class<?>[] returnTypes = typePattern.returnTypes();
+        for (int i = 0; i < returnTypes.length; i++) {
+            DefaultExpression<?> defaultExpression = defaultValues.getDefaultValue(returnTypes[i]);
+            if (DefaultExpressionUtils.isValid(defaultExpression, exprInfo, i) != null) {
+                continue;
+            }
+            if (defaultExpression == null) {
+                continue;
+            }
+            if (defaultExpression.init()) {
+                return defaultExpression;
+            }
+        }
+        return null;
     }
 
     private static String normalizeWhitespace(String value) {
