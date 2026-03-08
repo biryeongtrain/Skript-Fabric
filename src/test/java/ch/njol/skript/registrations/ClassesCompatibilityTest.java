@@ -117,6 +117,22 @@ class ClassesCompatibilityTest {
         assertEquals(List.of(alpha, gamma, beta), Classes.getClassInfos());
     }
 
+    @Test
+    void explicitLiteralPatternMatchesUseStableClassInfoOrdering() {
+        ClassInfo<BetaType> beta = new ClassInfo<>(BetaType.class, "beta").after("gamma");
+        beta.literalPatterns("shared");
+        ClassInfo<AlphaType> alpha = new ClassInfo<>(AlphaType.class, "alpha").before("beta");
+        alpha.literalPatterns("shared");
+        ClassInfo<GammaType> gamma = new ClassInfo<>(GammaType.class, "gamma");
+        gamma.literalPatterns("shared");
+
+        Classes.registerClassInfo(beta);
+        Classes.registerClassInfo(alpha);
+        Classes.registerClassInfo(gamma);
+
+        assertEquals(List.of(alpha, gamma, beta), Classes.getPatternInfos("shared"));
+    }
+
     private static final class FooType {
     }
 
