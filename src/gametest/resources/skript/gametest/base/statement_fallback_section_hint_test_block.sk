@@ -1,0 +1,4 @@
+on gametest:
+    statement-managed hint statement hint value:
+        set {_value} to 1
+    capture statement fallback hinted integer {_value}

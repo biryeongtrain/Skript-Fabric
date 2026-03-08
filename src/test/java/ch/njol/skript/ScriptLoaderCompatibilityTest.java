@@ -149,6 +149,23 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void successfulStatementFallbackSectionParsePropagatesHintsToLaterSiblingLines() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        Skript.registerExpression(StatementManagedHintExpression.class, Integer.class, "statement hint value");
+        Skript.registerStatement(StatementManagedHintStatement.class, "statement-managed hint %integer%");
+        Skript.registerEffect(CaptureHintedIntegerEffect.class, "capture hinted integer %integer%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("statement-managed hint statement hint value"),
+                line("capture hinted integer {_value}")
+        ));
+
+        assertEquals(2, items.size());
+        assertEquals(Integer.class, CaptureHintedIntegerEffect.lastReturnType);
+    }
+
+    @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     void builtInSetEffectHintsIntegerLocalsForLaterSiblingLines() {
         ParserInstance parser = ParserInstance.get();
@@ -1280,6 +1297,68 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "loading hint section";
+        }
+    }
+
+    public static final class StatementManagedHintStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "statement-managed hint";
+        }
+    }
+
+    public static final class StatementManagedHintExpression extends SectionExpression<Integer> {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int pattern,
+                Kleenean delayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode node,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            ParserInstance.get().getHintManager().set("value", Integer.class);
+            if (node != null) {
+                loadOptionalCode(node);
+            }
+            return true;
+        }
+
+        @Override
+        protected Integer @Nullable [] get(SkriptEvent event) {
+            return new Integer[]{1};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "statement hint value";
         }
     }
 

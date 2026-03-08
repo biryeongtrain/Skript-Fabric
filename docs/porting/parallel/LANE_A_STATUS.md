@@ -21,6 +21,38 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+### 2026-03-08 Statement Fallback Section-Hint Slice
+
+- compared the local `ScriptLoader.parseSectionTriggerItem(...)` cleanup path against upstream `ScriptLoader.loadItems(...)` from snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` in `/tmp/skript-upstream-ueogiz`
+- selected one contained upstream-backed gap that stays inside Lane A ownership:
+  - the temporary non-section hint scope for a section line should only be cleared when the entire line fails, not when `Section.parse(...)` fails but later `Statement.parse(...)` succeeds on that same section header
+- closed that loader hint-flow gap in `src/main/java/ch/njol/skript/ScriptLoader.java`:
+  - `parseSectionTriggerItem(...)` now tracks the final parsed `TriggerItem` instead of only the initial section candidate
+  - temporary section-line hints are now cleared only when both the section parse and the statement fallback fail
+  - successful statement-managed section lines now keep their parse-time hints available to later sibling lines, matching upstream `item == null` cleanup behavior more closely
+- added focused `ScriptLoaderCompatibilityTest` coverage in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - registered a statement-managed section expression that publishes an `Integer` local-variable hint while parsing a section line through `Statement.parse(...)`
+  - proved a later sibling line `capture hinted integer {_value}` now parses after that section-line statement fallback succeeds
+- added real `.sk` coverage in `src/gametest/resources/skript/gametest/base/statement_fallback_section_hint_test_block.sk` plus a matching `SkriptFabricBaseGameTest` harness:
+  - the live resource-loader path now verifies that a statement-managed section line loads, its section body executes, and a later sibling `%integer%` line reads the hinted local value
+  - this new live regression increased the full Fabric GameTest total from `229 / 229` to `230 / 230`
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/ScriptLoader.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
+  - `src/gametest/resources/skript/gametest/base/statement_fallback_section_hint_test_block.sk`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - passed
+  - `./gradlew runGameTest --rerun-tasks`
+    - first run failed with `1` required failure because the new GameTest asserted an extra block-placement side effect that was not required to prove the loader-hint behavior
+    - trimmed that extra assertion and kept the test focused on the live hinted local-variable path
+  - `./gradlew runGameTest --rerun-tasks`
+    - passed with `230 / 230` required GameTests completed
+- unresolved risks kept open:
+  - this slice only restores hint retention when a section header succeeds through `Statement.parse(...)`; broader remaining hint-producer parity still sits in other effect/statement families
+  - the live regression proves later sibling parse and execution for one statement-managed section shape, not every possible section-claiming statement/expression combination
+
 ### 2026-03-08 Invisible/Visible Condition Slice
 
 - compared the current local tree against upstream `CondIsInvisible` from snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and confirmed Lane B had only landed the invisible/visible effect family, not the matching condition family
