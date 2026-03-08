@@ -1,6 +1,6 @@
 # Codex Parallel Prompts
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 
 These prompts are designed for the next Codex app session.
 Use one prompt per worktree.
@@ -19,10 +19,10 @@ Before doing anything:
 5. Read docs/porting/CODEX_PARALLEL_PROMPTS.md
 
 Your role:
-- assign workers to Lane A, Lane B, and Lane C worktrees
+- assign workers to Lane A, Lane B, Lane C, Lane D, and Lane E worktrees
 - enforce the file-ownership matrix from CODEX_PARALLEL_WORKFLOW.md
 - do not let worker lanes edit canonical docs under docs/porting/*.md
-- merge lane branches in this order unless conflicts force a different order: Lane C, Lane B, Lane A
+- merge lane branches in this order unless conflicts force a different order: Lane C, Lane B, Lane D, Lane E, Lane A
 - apply only integration fixes in the coordinator worktree
 - rerun final verification after merge:
   - ./gradlew runGameTest --rerun-tasks
@@ -176,6 +176,98 @@ Rules:
 - record exact commands and results in that lane file
 ```
 
+## Lane D Prompt
+
+```text
+You are Lane D in a parallel Codex run.
+Your worktree is /Users/qf/IdeaProjects/Skript-Fabric-port-lane-d.
+
+Read in this order:
+1. docs/porting/README.md
+2. docs/porting/NEXT_AGENT_HANDOFF.md
+3. docs/porting/CH_NJOL_SKRIPT_AUDIT.md
+4. docs/porting/CODEX_PARALLEL_WORKFLOW.md
+5. docs/porting/parallel/LANE_D_STATUS.md
+
+Your scope is only:
+- lang/function runtime
+- overload/default-parameter parity
+- parser-default helper closure that stays inside lang/function-owned files
+- matching tests and real .sk coverage if live function behavior changes
+
+Primary owned files:
+- src/main/java/ch/njol/skript/lang/function/**
+- src/main/java/ch/njol/skript/lang/DefaultExpression.java
+- src/main/java/ch/njol/skript/lang/DefaultExpressionUtils.java
+- src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java
+- matching function/parser-default tests
+
+Do not edit:
+- src/main/java/ch/njol/skript/lang/SkriptParser.java
+- src/main/java/ch/njol/skript/lang/Statement.java
+- src/main/java/ch/njol/skript/ScriptLoader.java
+- src/main/java/ch/njol/skript/variables/**
+- docs/porting/*.md canonical docs
+
+Current target:
+- continue Part 1A on broader function runtime and default-parameter parity
+- preserve the already-green exact-type overload behavior
+- do not widen scope into parser ownership; hand that back to the coordinator
+
+Rules:
+- do not claim parity-complete
+- if live .sk behavior changes, run real .sk verification
+- update only docs/porting/parallel/LANE_D_STATUS.md for documentation
+- record exact commands and results in that lane file
+```
+
+## Lane E Prompt
+
+```text
+You are Lane E in a parallel Codex run.
+Your worktree is /Users/qf/IdeaProjects/Skript-Fabric-port-lane-e.
+
+Read in this order:
+1. docs/porting/README.md
+2. docs/porting/NEXT_AGENT_HANDOFF.md
+3. docs/porting/CH_NJOL_SKRIPT_AUDIT.md
+4. docs/porting/CODEX_PARALLEL_WORKFLOW.md
+5. docs/porting/parallel/LANE_E_STATUS.md
+
+Your scope is only:
+- parser/runtime bridge files
+- InputSource / ParserInstance parity
+- upstream diff-driven reproductions that stay outside Lane A-D ownership
+- matching tests and real .sk coverage if bridge behavior changes
+
+Primary owned files:
+- src/main/java/ch/njol/skript/lang/InputSource.java
+- src/main/java/ch/njol/skript/lang/parser/ParserInstance.java
+- src/main/java/ch/njol/skript/expressions/ExprInput.java
+- src/main/java/ch/njol/skript/lang/TriggerItem.java
+- src/main/java/ch/njol/skript/lang/TriggerSection.java
+- tightly matching tests
+
+Do not edit:
+- src/main/java/ch/njol/skript/lang/SkriptParser.java
+- src/main/java/ch/njol/skript/lang/Statement.java
+- src/main/java/ch/njol/skript/ScriptLoader.java
+- src/main/java/ch/njol/skript/variables/**
+- src/main/java/ch/njol/skript/registrations/Classes.java
+- docs/porting/*.md canonical docs
+
+Current target:
+- continue upstream diff-driven reproduction work on parser/runtime bridge files
+- prefer one contained mismatch with a focused regression over broad exploratory edits
+- stop and return to the coordinator if the reproducer needs parser, classes, or statement ownership files
+
+Rules:
+- do not claim parity-complete
+- if live .sk behavior changes, run real .sk verification
+- update only docs/porting/parallel/LANE_E_STATUS.md for documentation
+- record exact commands and results in that lane file
+```
+
 ## Post-Merge Coordinator Prompt
 
 ```text
@@ -184,7 +276,7 @@ All lane work is merged or ready to merge.
 Now act only as the integration coordinator in /Users/qf/IdeaProjects/Skript-Fabric-port.
 
 Tasks:
-1. merge Lane C, then Lane B, then Lane A unless actual conflicts force a different order
+1. merge Lane C, then Lane B, then Lane D, then Lane E, then Lane A unless actual conflicts force a different order
 2. resolve integration fallout only in the coordinator worktree
 3. rerun:
    - ./gradlew runGameTest --rerun-tasks

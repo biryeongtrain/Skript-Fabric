@@ -1,6 +1,6 @@
 # Parallel Lane Docs
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 
 This directory is for worker-lane notes during a parallel Codex session.
 
@@ -17,3 +17,5 @@ Lane files:
 - `LANE_A_STATUS.md`
 - `LANE_B_STATUS.md`
 - `LANE_C_STATUS.md`
+- `LANE_D_STATUS.md`
+- `LANE_E_STATUS.md`
