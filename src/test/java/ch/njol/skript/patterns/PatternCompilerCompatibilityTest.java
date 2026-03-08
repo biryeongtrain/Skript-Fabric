@@ -1,5 +1,6 @@
 package ch.njol.skript.patterns;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -136,6 +137,28 @@ class PatternCompilerCompatibilityTest {
 
         assertNotNull(explicit);
         assertEquals(5, explicit.expressions()[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void compiledPatternKeepsSlashSeparatedPlaceholderUnionTypes() {
+        SkriptPattern pattern = PatternCompiler.compile("value %integer/boolean%");
+
+        TypePatternElement type = pattern.getElements(TypePatternElement.class).getFirst();
+
+        assertArrayEquals(new Class<?>[]{Integer.class, Boolean.class}, type.returnTypes());
+    }
+
+    @Test
+    void compiledPatternRejectsValuesOutsideSlashSeparatedPlaceholderUnion() {
+        SkriptPattern pattern = PatternCompiler.compile("value %integer/boolean%");
+
+        MatchResult integer = pattern.match("value 5");
+        MatchResult bool = pattern.match("value true");
+        MatchResult string = pattern.match("value hello");
+
+        assertNotNull(integer);
+        assertNotNull(bool);
+        assertNull(string);
     }
 
     @Test

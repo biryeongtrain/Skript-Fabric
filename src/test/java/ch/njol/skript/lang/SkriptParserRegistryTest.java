@@ -92,6 +92,26 @@ class SkriptParserRegistryTest {
     }
 
     @Test
+    void effectPatternPreservesSlashSeparatedPlaceholderUnions() {
+        Skript.registerEffect(TypedArgsEffect.class, "union %integer/boolean%");
+
+        Statement integer = Statement.parse("union 5", "failed");
+        assertNotNull(integer);
+        assertInstanceOf(TypedArgsEffect.class, integer);
+        assertNotNull(TypedArgsEffect.lastExpressions);
+        assertEquals(5, TypedArgsEffect.lastExpressions[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+
+        Statement bool = Statement.parse("union true", "failed");
+        assertNotNull(bool);
+        assertInstanceOf(TypedArgsEffect.class, bool);
+        assertNotNull(TypedArgsEffect.lastExpressions);
+        assertEquals(true, TypedArgsEffect.lastExpressions[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+
+        Statement string = Statement.parse("union hello", null);
+        assertNull(string);
+    }
+
+    @Test
     void literalOnlyPlaceholderRejectsRegisteredExpressions() {
         Skript.registerExpression(NamedIntegerExpression.class, Integer.class, "named number");
         Skript.registerEffect(TypedArgsEffect.class, "literal only %*integer%");

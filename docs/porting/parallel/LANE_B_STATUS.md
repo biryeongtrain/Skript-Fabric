@@ -20,6 +20,19 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+- closed the next upstream-backed parser/runtime parity slice around slash-separated placeholder unions
+- upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` still keeps `%type/type%` placeholder unions intact through `patterns.TypePatternElement.fromString(...)`, while the local compatibility matcher was rewriting any `word/word` pair too early in `PatternCompiler.normalizePattern(...)`
+- that early normalization flattened placeholder unions such as parser-regression `%integer/boolean%` and live runtime `%blocks/entities%` syntax into generic object-like placeholders before type parsing
+- `PatternCompiler.normalizePattern(...)` now normalizes slash shorthand only in literal chunks outside `%...%` placeholders and `<...>` regex captures, so slash-separated placeholder unions stay typed
+- added parser regressions proving:
+  - direct compiled patterns keep `%integer/boolean%` as a two-type union in `TypePatternElement.returnTypes()`
+  - the shared matcher now accepts `value 5` and `value true` for `value %integer/boolean%` while rejecting `value hello`
+  - registry-backed parsing now accepts `union 5` and `union true` for `union %integer/boolean%` while rejecting `union hello`
+- live parser behavior changed in a currently shipped syntax family, so added real `.sk` coverage for the block branch of the existing `%blocks/entities% (is|are) lootable` condition:
+  - [src/gametest/resources/skript/gametest/condition/lootable_block_marks_block.sk](../../../src/gametest/resources/skript/gametest/condition/lootable_block_marks_block.sk)
+  - [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricConditionGameTest.java](../../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricConditionGameTest.java)
+- reran the full Fabric GameTest corpus after the matcher change; the existing natural-script forms, parse-if coverage, parse tags/marks, and repeated-tag ordering all stayed green
+- did not mark parity complete: broader upstream pattern/runtime parity is still open outside this contained slash-union placeholder fix
 - closed the next parser-owned tag parity slice around ordered duplicate-preserving parse tags
 - upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` still keeps parse tags as ordered lists through `patterns.MatchResult` and `SkriptParser.ParseResult`, while the local shim had collapsed them into a set
 - `SkriptPattern.match(...)` now accumulates parse tags in encounter order without deduplicating repeated tags
@@ -107,15 +120,21 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
-- `src/main/java/ch/njol/skript/patterns/MatchResult.java`
-- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
+- `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricConditionGameTest.java`
+- `src/gametest/resources/skript/gametest/condition/lootable_block_marks_block.sk`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+  - first run failed because the initial regression used `%integer/string%`, and `true` still matches upstream-compatibly as a string literal
+  - reran after tightening the negative case to `%integer/boolean%`; command passed
+- `./gradlew runGameTest --rerun-tasks`
+  - passed after restoring slash-separated placeholder union parsing
+  - `200 / 200` required GameTests completed successfully
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - passed after restoring ordered duplicate-preserving parse-tag accumulation
 - `./gradlew runGameTest --rerun-tasks`
@@ -165,6 +184,10 @@ Last updated: 2026-03-08
 
 ## Exact Syntax Exercised
 
+- pattern text: `value %integer/boolean%`
+- accepted forms: `value 5`, `value true`
+- rejected form: `value hello`
+- live `.sk` condition: `event-block is lootable`
 - pattern text: `repeat:alpha unique:beta repeat:gamma`
 - pattern text: `default number [%number%]`
 - omitted form: `default number`
@@ -172,6 +195,7 @@ Last updated: 2026-03-08
 
 ## Unresolved Risks
 
+- slash-separated placeholder unions now stay typed through the local matcher, but the surrounding literal-slash shorthand path is still a local normalization shim rather than full upstream literal matcher parity
 - ordered duplicate-preserving tags now match upstream more closely, but broader parser tag/mark parity is still incomplete outside this slice; the local compatibility layer still lacks the full upstream matcher/runtime behavior around the richer pattern element graph
 - placeholder plurality metadata is now preserved and exposed through `TypePatternElement`, but it is not enforced during live matching on the current compatibility surface; the real `.sk` corpus still depends on several production expressions that report `isSingle()` more strictly than their effective parser use
 - omitted-placeholder fallback is now closed only for explicit parser-scoped `DefaultValueData` values; full upstream classinfo-backed `defaultExpression(...)` parity is still open because the local `ClassInfo` surface is thinner than upstream and sits outside this lane’s owned files
@@ -179,8 +203,8 @@ Last updated: 2026-03-08
 
 ## Merge Notes
 
-- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/lang/SkriptParser.java`; any concurrent parser-flow work will need manual reconciliation around the ordered parse-tag list restore, the omitted-placeholder default-value backfill, and the restored private matcher bridge
-- `src/main/java/ch/njol/skript/patterns/MatchResult.java` and `src/main/java/ch/njol/skript/patterns/SkriptPattern.java` now carry the ordered-tag behavior and may conflict with any concurrent matcher/parity slice
+- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`; any concurrent matcher/parity work will need manual reconciliation around the new literal-only slash normalization path outside placeholders and regex captures
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java` may conflict with any concurrent parser-regression additions
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` remains a likely conflict point for any concurrent parser-pattern compatibility additions
-- current-cycle conflict surface is now `src/main/java/ch/njol/skript/lang/SkriptParser.java`, `src/main/java/ch/njol/skript/patterns/MatchResult.java`, `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricConditionGameTest.java` and `src/gametest/resources/skript/gametest/condition/lootable_block_marks_block.sk` now carry the block-side real `.sk` coverage for `%blocks/entities%`
+- current-cycle conflict surface is now `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`, `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricConditionGameTest.java`, and `src/gametest/resources/skript/gametest/condition/lootable_block_marks_block.sk`
