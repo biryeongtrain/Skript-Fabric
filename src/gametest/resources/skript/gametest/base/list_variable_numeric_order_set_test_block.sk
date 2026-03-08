@@ -1,0 +1,6 @@
+on gametest:
+    set {source::10} to "emerald_block"
+    set {source::2} to "gold_block"
+    set {target::*} to {source::*}
+    set test block at 0 1 0 to {target::1}
+    set test block at 1 1 0 to {target::2}
