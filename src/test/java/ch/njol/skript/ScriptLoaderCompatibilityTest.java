@@ -697,6 +697,19 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsDoesNotLeakSectionOwnershipAcrossEffectCandidates() {
+        Skript.registerExpression(LeakyOwnershipExpression.class, Object.class, "ownership token");
+        Skript.registerEffect(RejectingClaimingEffect.class, "ownership leak %object%");
+        Skript.registerEffect(LiteralFallbackEffect.class, "ownership leak ownership token");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("ownership leak ownership token", line("mark inside"))
+        ));
+
+        assertTrue(items.isEmpty());
+    }
+
+    @Test
     void loadItemsKeepsSpecificConditionSectionOwnershipError() {
         Skript.registerCondition(AlwaysTrueCondition.class, "always true");
 
@@ -1006,6 +1019,86 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public boolean check(SkriptEvent event) {
             return true;
+        }
+    }
+
+    public static final class LeakyOwnershipExpression extends SectionExpression<Object> {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int pattern,
+                Kleenean delayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode node,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            return true;
+        }
+
+        @Override
+        protected Object @Nullable [] get(SkriptEvent event) {
+            return new Object[]{"owned"};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<?> getReturnType() {
+            return Object.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "ownership token";
+        }
+    }
+
+    public static final class RejectingClaimingEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("rejecting claiming effect");
+            return false;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "rejecting claiming effect";
+        }
+    }
+
+    public static final class LiteralFallbackEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "literal fallback effect";
         }
     }
 
