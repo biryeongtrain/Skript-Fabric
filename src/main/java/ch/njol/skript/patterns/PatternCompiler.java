@@ -1,6 +1,7 @@
 package ch.njol.skript.patterns;
 
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.registrations.Classes;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,52 +49,106 @@ public final class PatternCompiler {
     }
 
     static Class<?>[] resolvePlaceholderTypes(String placeholder) {
-        if (placeholder == null || placeholder.isBlank()) {
-            return new Class[]{Object.class};
-        }
-        String[] parts = placeholder.strip().replace("*", "").replace("~", "").split("/");
-        List<Class<?>> resolved = new ArrayList<>(parts.length);
-        for (String part : parts) {
-            String typeText = stripOptionalMarkers(part.trim());
-            if (typeText.isEmpty()) {
-                resolved.add(Object.class);
-                continue;
-            }
-
-            ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(typeText);
-            if (classInfo != null) {
-                resolved.add(classInfo.getC());
-                continue;
-            }
-
-            String normalized = typeText.toLowerCase(Locale.ENGLISH).replace("-", "").replace(" ", "");
-            if (normalized.endsWith("s") && normalized.length() > 1) {
-                normalized = normalized.substring(0, normalized.length() - 1);
-            }
-            Class<?> type = switch (normalized) {
-                case "string", "text" -> String.class;
-                case "integer", "int", "number" -> Integer.class;
-                case "decimal", "double" -> Double.class;
-                case "boolean", "bool" -> Boolean.class;
-                case "potioncause", "potioneffectcause" -> FabricPotionEffectCause.class;
-                case "object", "value", "any", "expression" -> Object.class;
-                default -> Object.class;
-            };
-            resolved.add(type);
-        }
-        return resolved.toArray(Class[]::new);
+        return parsePlaceholderSpec(placeholder).returnTypes();
     }
 
-    private static String stripOptionalMarkers(String value) {
-        int start = 0;
-        int end = value.length();
-        while (start < end && value.charAt(start) == '-') {
-            start++;
+    private static PlaceholderSpec parsePlaceholderSpec(String placeholder) {
+        if (placeholder == null || placeholder.isBlank()) {
+            return new PlaceholderSpec(new Class[]{Object.class}, new boolean[]{false}, SkriptParser.ALL_FLAGS, 0, false);
         }
-        while (end > start && value.charAt(end - 1) == '-') {
-            end--;
+        String value = placeholder.strip();
+        int cursor = 0;
+        int flagMask = SkriptParser.ALL_FLAGS;
+        boolean optional = false;
+        while (cursor < value.length()) {
+            char marker = value.charAt(cursor);
+            if (marker == '-') {
+                optional = true;
+            } else if (marker == '*') {
+                flagMask &= ~SkriptParser.PARSE_EXPRESSIONS;
+            } else if (marker == '~') {
+                flagMask &= ~SkriptParser.PARSE_LITERALS;
+            } else {
+                break;
+            }
+            cursor++;
         }
-        return value.substring(start, end);
+
+        int time = 0;
+        int timeIndex = value.indexOf('@', cursor);
+        String typeText = timeIndex >= 0 ? value.substring(cursor, timeIndex).trim() : value.substring(cursor).trim();
+        if (timeIndex >= 0) {
+            String timeText = value.substring(timeIndex + 1).trim();
+            if (timeText.isEmpty()) {
+                throw new IllegalArgumentException("Missing time state in placeholder: " + placeholder);
+            }
+            time = Integer.parseInt(timeText);
+        }
+
+        if (typeText.isEmpty()) {
+            return new PlaceholderSpec(new Class[]{Object.class}, new boolean[]{false}, flagMask, time, optional);
+        }
+
+        String[] parts = typeText.split("/");
+        List<Class<?>> resolved = new ArrayList<>(parts.length);
+        boolean[] pluralities = new boolean[parts.length];
+        for (String part : parts) {
+            ResolvedPlaceholderType resolvedType = resolvePlaceholderType(part.trim());
+            if (resolvedType.type() == Object.class && resolvedType.raw().isEmpty()) {
+                resolved.add(Object.class);
+                pluralities[resolved.size() - 1] = false;
+                continue;
+            }
+            resolved.add(resolvedType.type());
+            pluralities[resolved.size() - 1] = resolvedType.plural();
+        }
+        return new PlaceholderSpec(resolved.toArray(Class[]::new), pluralities, flagMask, time, optional);
+    }
+
+    private static ResolvedPlaceholderType resolvePlaceholderType(String rawType) {
+        String value = rawType == null ? "" : rawType.trim();
+        if (value.isEmpty()) {
+            return new ResolvedPlaceholderType(Object.class, false, "");
+        }
+
+        ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(value);
+        if (classInfo != null) {
+            return new ResolvedPlaceholderType(
+                    classInfo.getC(),
+                    Classes.isPluralClassInfoUserInput(value, classInfo),
+                    value
+            );
+        }
+
+        String normalized = value.toLowerCase(Locale.ENGLISH).replace("-", "").replace(" ", "");
+        boolean plural = normalized.endsWith("s") && normalized.length() > 1;
+        if (plural) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        Class<?> type = switch (normalized) {
+            case "string", "text" -> String.class;
+            case "integer", "int", "number" -> Integer.class;
+            case "decimal", "double" -> Double.class;
+            case "boolean", "bool" -> Boolean.class;
+            case "potioncause", "potioneffectcause" -> FabricPotionEffectCause.class;
+            case "object", "value", "any", "expression" -> Object.class;
+            default -> Object.class;
+        };
+        return new ResolvedPlaceholderType(type, plural, value);
+    }
+
+    private static TypePatternElement buildTypePatternElement(String placeholder, int expressionIndex) {
+        PlaceholderSpec spec = parsePlaceholderSpec(placeholder);
+        return new TypePatternElement(
+                placeholder,
+                spec.returnTypes(),
+                spec.pluralities(),
+                spec.flagMask(),
+                spec.time(),
+                spec.optional(),
+                expressionIndex
+        );
     }
 
     private static @Nullable PatternElement compileElementSequence(String pattern, AtomicInteger expressionAmount) {
@@ -162,11 +217,7 @@ public final class PatternCompiler {
                     throw new IllegalArgumentException("Unclosed placeholder in token: " + token);
                 }
                 String placeholder = token.substring(i + 1, end).trim();
-                PatternElement type = new TypePatternElement(
-                        placeholder,
-                        resolvePlaceholderTypes(placeholder),
-                        expressionAmount.getAndIncrement()
-                );
+                PatternElement type = buildTypePatternElement(placeholder, expressionAmount.getAndIncrement());
                 if (first == null) {
                     first = type;
                 } else if (last != null) {
@@ -461,7 +512,7 @@ public final class PatternCompiler {
                 }
                 String placeholder = token.substring(i + 1, end).trim();
                 regex.append("(.+?)");
-                captures.add(CaptureSpec.expression(resolvePlaceholderTypes(placeholder)));
+                captures.add(CaptureSpec.expression(buildTypePatternElement(placeholder, -1)));
                 i = end;
                 continue;
             }
@@ -858,13 +909,13 @@ public final class PatternCompiler {
 
     record CaptureSpec(
             CaptureKind kind,
-            @Nullable Class<?>[] returnTypes,
+            @Nullable TypePatternElement typePattern,
             @Nullable Pattern regexPattern,
             @Nullable String tag,
             int mark
     ) {
-        static CaptureSpec expression(Class<?>[] returnTypes) {
-            return new CaptureSpec(CaptureKind.EXPRESSION, returnTypes, null, null, 0);
+        static CaptureSpec expression(TypePatternElement typePattern) {
+            return new CaptureSpec(CaptureKind.EXPRESSION, typePattern, null, null, 0);
         }
 
         static CaptureSpec regex(Pattern regexPattern) {
@@ -883,5 +934,17 @@ public final class PatternCompiler {
             @Nullable PatternElement first,
             int expressionAmount
     ) {
+    }
+
+    private record PlaceholderSpec(
+            Class<?>[] returnTypes,
+            boolean[] pluralities,
+            int flagMask,
+            int time,
+            boolean optional
+    ) {
+    }
+
+    private record ResolvedPlaceholderType(Class<?> type, boolean plural, String raw) {
     }
 }

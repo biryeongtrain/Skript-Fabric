@@ -42,13 +42,15 @@ public final class SkriptPattern {
             PatternCompiler.CaptureSpec capture = captures.get(i);
             switch (capture.kind()) {
                 case EXPRESSION -> {
+                    TypePatternElement typePattern = capture.typePattern();
+                    if (typePattern == null) {
+                        return null;
+                    }
                     if (captured == null) {
                         expressions.add(null);
                         continue;
                     }
-                    @SuppressWarnings("unchecked")
-                    Expression<?> parsed = new SkriptParser(captured.trim(), flags, parseContext)
-                            .parseExpression((Class<? extends Object>[]) capture.returnTypes());
+                    Expression<?> parsed = parseCapturedExpression(captured, flags, parseContext, typePattern);
                     if (parsed == null) {
                         return null;
                     }
@@ -149,5 +151,26 @@ public final class SkriptPattern {
             }
             element = element.getOriginalNext();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static @Nullable Expression<?> parseCapturedExpression(
+            String captured,
+            int flags,
+            ParseContext parseContext,
+            TypePatternElement typePattern
+    ) {
+        Expression<?> parsed = new SkriptParser(
+                captured.trim(),
+                flags & typePattern.flagMask(),
+                parseContext
+        ).parseExpression((Class<? extends Object>[]) typePattern.returnTypes());
+        if (parsed == null) {
+            return null;
+        }
+        if (typePattern.time() != 0 && !parsed.setTime(typePattern.time())) {
+            return null;
+        }
+        return parsed;
     }
 }
