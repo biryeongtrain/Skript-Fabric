@@ -146,6 +146,7 @@ Landed slices so far:
   - unmatched optional and alternation-scoped raw-regex captures now stay matchable through the shared matcher path instead of failing `ParseResult` construction
   - `PatternCompiler` now also preserves placeholder-local parse flags (`*` / `~`), leading optional markers, plural metadata, and `@time` metadata through `TypePatternElement`
   - `SkriptPattern` now applies placeholder-local parse flags plus `@time` when turning captured text into expressions through the shared matcher, while leaving placeholder plurality metadata exposed but non-enforcing on the current green corpus
+  - `SkriptParser.parseModern(...)` and `parseStatic(...)` now backfill omitted non-optional placeholder values from parser-scoped `DefaultValueData` when the exact pattern and parser supply a valid default, while matcher captures still stay null for the omitted form of `default number [%number%]`
   - `PatternCompilerCompatibilityTest` and `SkriptParserRegistryTest` now cover branch tags, parse marks, and the already-green inline optional whitespace natural form through the shared matcher
 - script-loading options closure:
   - `options:` entries are now represented by `EntryNode`
@@ -169,6 +170,7 @@ Landed slices so far:
   - `Statement.parse(...)` now stops on captured function/effect/condition parse errors and prints the retained diagnostic instead of falling through to a generic section fallback
   - `Statement.parse(...)` now also clears any inherited outer `Section.SectionContext` owner when parsing plain statements (`node == null`), so nested function/effect/condition arguments do not accidentally inherit an enclosing expression section
   - `ScriptLoaderCompatibilityTest` now proves that a valid effect used as a section keeps its specific ownership error without also logging `Can't understand this section`
+  - `ScriptLoaderCompatibilityTest` now also proves that exact `set {_var} to true:` retains the specific `EffChange` ownership diagnostic instead of collapsing to `Can't understand this section`
 - loader fallback diagnostic closure:
   - `ParseLogHandler` now exposes snapshot/restore helpers and retained-error accessors so loader-owned section fallback can compare section and statement diagnostics without printing both
   - `ScriptLoader.loadItems(...)` now retries section-node parsing through both `Section.parse(...)` and `Statement.parse(...)`, then restores the more specific retained diagnostic instead of defaulting to the generic fallback
@@ -187,6 +189,7 @@ Landed slices so far:
   - `ClassInfo` and `Classes` now close the missing codename, literal-pattern, and supertype resolution behavior that the parser/runtime depends on
   - `Classes` now also computes stable class-info ordering that prefers narrower assignable types and honors `before(...)` / `after(...)` dependencies instead of using raw registration order
   - shared literal-pattern matches returned by `Classes.getPatternInfos(...)` now follow that same stable ordering when multiple class infos register the same alias
+  - `Classes.getParser(...)` now also falls back through registered converters after direct parser lookup, so converter-backed parser owners can still satisfy requested class infos on the current compatibility surface
   - `Classes.parse(...)` now falls back through registered converters after direct parser lookup, so converter-backed source types can still satisfy requested class infos on the current compatibility surface
 - variable/runtime closure:
   - `SkriptParser` now recognizes `{...}` variable expressions directly
@@ -242,9 +245,8 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing parse-time local variable type hints
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after adding lightweight pattern element graph APIs
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing loader hint-scope lifecycle
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks` passed after closing converter-backed class parsing fallback
-- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing placeholder flag/time metadata flow
-- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing plain-statement section-context ownership
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after closing converter-backed parser helper fallback plus parser-owned default-value backfill
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax --rerun-tasks` passed after locking the exact `set {_var} to true:` ownership regression
 - `./gradlew runGameTest --rerun-tasks` passed with `198 / 198`
 - `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `198 / 198` scheduled Fabric GameTests
 

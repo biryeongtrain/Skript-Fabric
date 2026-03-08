@@ -53,22 +53,20 @@ New immediate priority:
 ## Latest Closure Slice
 
 - merged the next coordinator batch in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
-- Lane C closed converter-backed class parsing fallback:
-  - `Classes.parse(...)` now retries through registered converter source types after direct parser lookup
-  - added regressions in [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java) and [src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java) for converter-backed class parsing and unparsed-literal conversion
-- Lane B closed placeholder flag/time metadata parity:
-  - `PatternCompiler` now preserves placeholder-local `*` / `~`, leading `-`, plural metadata, and `@time`
-  - `TypePatternElement` now exposes `flagMask()`, `time()`, `isOptional()`, and `pluralities()`
-  - `SkriptPattern` now applies placeholder-local parse flags and `@time` through the shared matcher while keeping plurality metadata non-enforcing on the current green corpus
-  - added regressions in [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) and [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) for literal-only / expression-only placeholders, time propagation, and metadata exposure
-- Lane A closed the plain-statement section-context regression:
-  - `Statement.parse(...)` now temporarily clears any outer `Section.SectionContext` owner when parsing plain statements (`node == null`)
-  - added regression coverage in [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) proving nested function-call arguments no longer inherit outer expression-section ownership
-  - added real `.sk` coverage in [src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk](../../src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk) plus the matching [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java) harness
+- Lane C closed converter-backed parser helper fallback:
+  - `Classes.getParser(...)` now retries through registered converter source types after direct parser lookup, so converter-backed parser owners can still satisfy requested class infos on the current compatibility surface
+  - added regressions in [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java) for exact converter-backed parser lookup paths and in [src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java) for downstream unparsed-literal conversion
+- Lane B closed parser-owned omitted-placeholder default-value backfill:
+  - `SkriptParser.parseModern(...)` and `parseStatic(...)` now backfill omitted non-optional placeholder values from parser-scoped `DefaultValueData` when the active pattern and parser agree on a valid default
+  - matcher capture itself stays null for the exact upstream syntax `default number [%number%]`, while the parser result now still initializes the omitted `%number%` path correctly for `default number`
+  - restored the private `SkriptParser.match(String, String, ParseContext, int)` bridge because the active Fabric GameTest helper reflects that exact helper shape
+  - added regressions in [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) and [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) for exact `default number [%number%]`, omitted `default number`, and explicit `default number 5`
+- Lane A closed the exact section-ownership regression for `set {_var} to true:`:
+  - no production code changed in this lane; the current loader path already retained the more specific ownership diagnostic
+  - added regression coverage in [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) proving exact `set {_var} to true:` keeps the specific `EffChange` ownership error instead of collapsing to `Can't understand this section`
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks` passed
-  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `198 / 198`
   - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `198 / 198`
 
@@ -280,12 +278,12 @@ New immediate priority:
 - After that upstream closure track, the repo still has to continue the broader Bukkit-behavior parity push toward 100% verified-equivalent behavior.
 - Entire upstream top-level packages are still absent locally, including `effects`, `events`, `entity`, `command`, `aliases`, and others listed in the audit doc.
 - `ch/njol/skript/lang` is close in file count but not in behavioral completeness.
-- `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, remaining input-source usage, placeholder default-expression/default-value parity, and deeper variable/class runtime semantics are still pending.
+- `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, remaining input-source usage, broader classinfo-backed default-expression/default-value parity, and deeper variable/class runtime semantics are still pending.
 - pure registered section loading is now closed in `ScriptLoader`, loader fallback now restores the better retained section-versus-statement diagnostic, nested section-contained stop-trigger intent now propagates through loader/runtime, local hint scopes now open/freeze/merge through the current stop-flow path, plain conditions no longer masquerade as section headers, and plain statement parsing no longer leaks outer expression-section ownership into nested argument parsing; the remaining gap is broader statement orchestration and richer built-in hint producers.
 - do not reopen the just-closed inline optional-whitespace and inline alternation parser gap unless a new failing unit reproducer or real `.sk` path appears; the current verified closure covers `on[to]`, `when injured`, and `not breedable`
-- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails when optional or alternation-scoped raw-regex captures are omitted, and now exposes a lightweight `PatternElement` graph API; broader upstream pattern element-graph/runtime parity plus omitted-default-expression parity are still open
+- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails when optional or alternation-scoped raw-regex captures are omitted, and now lets parser-owned `DefaultValueData` backfill omitted non-optional placeholders on exact forms such as `default number [%number%]`; broader upstream pattern element-graph/runtime parity plus fuller classinfo-backed default-expression/default-value parity are still open
 - validator-backed recursive `options:` loading for both runtime `EntryNode` trees and manual raw simple-entry trees is now closed, but broader structure/config validation and diagnostics are still pending.
-- the specific list-variable `set {target::*} to {source::*}` reindexing path, natural numeric ordering for prefix/list iteration, legacy list-variable loop aliases, all-values list-check semantics, parse-time local variable type hints, converter-backed class parsing fallback, and shared literal-pattern ordering are now closed; remaining variable and class-registry gaps are deeper runtime semantics beyond these ordering, hint-consumption, and conversion-bridge paths.
+- the specific list-variable `set {target::*} to {source::*}` reindexing path, natural numeric ordering for prefix/list iteration, legacy list-variable loop aliases, all-values list-check semantics, parse-time local variable type hints, converter-backed class parse/parser helper fallback, and shared literal-pattern ordering are now closed; remaining variable and class-registry gaps are deeper runtime semantics beyond these ordering, hint-consumption, and conversion-bridge paths.
 - grouped-parenthesis condition parsing is now closed for the current real-script `if` path, but general statement/orchestration parity is still open.
 - do not reopen the just-closed comment-aware loader parsing unless a new failing unit reproducer or real `.sk` path appears
 
@@ -305,7 +303,7 @@ Recommended order:
    - `ch/njol/skript/variables/Variables`
 2. prioritize the still-open parser/runtime gaps that were not closed in this slice:
    - `Statement` orchestration and diagnostics beyond the now-closed plain-statement section-context regression
-   - remaining `SkriptParser` placeholder/default-expression parity beyond the now-landed `*` / `~` / `@time` handling
+   - remaining `SkriptParser` classinfo-backed default-expression/default-value parity beyond the now-landed parser-owned `DefaultValueData` backfill
    - remaining `Classes` and `Variables` behavior that still diverges from upstream beyond ordering, hint-consumption, and converter fallback
    - broader `InputSource` usage paths beyond the now-landed typed `input` forms
 3. land real behavior, not just placeholders, and add regression coverage

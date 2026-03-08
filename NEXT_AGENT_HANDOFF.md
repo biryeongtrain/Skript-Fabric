@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`, continuing `Part 1A`, and the already-started `Part 1B` dependency closure
 - latest verified runtime baseline is `198 / 198`
-- latest closed slice is the merged converter-backed class parsing, placeholder flag/time metadata, and plain-statement section-context follow-up
+- latest closed slice is the merged `Classes.getParser(...)` converter fallback, parser-scoped omitted-placeholder default-value backfill, and exact `set {_var} to true:` ownership regression
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`
