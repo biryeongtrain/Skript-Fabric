@@ -8,6 +8,7 @@ import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsAlive;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsBurning;
 import org.skriptlang.skript.bukkit.base.conditions.CondCompare;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsInvisible;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsInvulnerable;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsNamed;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsSilent;
@@ -215,6 +216,11 @@ public final class SkriptFabricBootstrap {
                         CondIsSilent.class,
                         "%entities% (is|are) silent",
                         "%entities% (isn't|is not|aren't|are not) silent"
+                );
+                Skript.registerCondition(
+                        CondIsInvisible.class,
+                        "%livingentities% (is|are) (invisible|:visible)",
+                        "%livingentities% (isn't|is not|aren't|are not) (invisible|:visible)"
                 );
                 Skript.registerCondition(
                         CondIsInvulnerable.class,
