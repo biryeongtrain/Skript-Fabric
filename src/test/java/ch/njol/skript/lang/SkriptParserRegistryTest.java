@@ -1,6 +1,7 @@
 package ch.njol.skript.lang;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -46,6 +47,9 @@ class SkriptParserRegistryTest {
         TestStructure.initCalls = 0;
         TestEvent.initCalls = 0;
         NodeAwareEffect.lastNodeKey = null;
+        MarkAwareEffect.lastMark = 0;
+        BranchTagAwareSection.lastFirst = false;
+        BranchTagAwareSection.lastSecond = false;
     }
 
     @Test
@@ -155,6 +159,30 @@ class SkriptParserRegistryTest {
         assertNotNull(parsed);
         assertInstanceOf(TagAwareSection.class, parsed);
         assertTrue(TagAwareSection.lastImplicit);
+    }
+
+    @Test
+    void effectPatternProvidesXorParseMarkInParseResult() {
+        Skript.registerEffect(MarkAwareEffect.class, "1¦ping 3¦pong");
+
+        Statement parsed = Statement.parse("ping pong", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(MarkAwareEffect.class, parsed);
+        assertEquals(2, MarkAwareEffect.lastMark);
+    }
+
+    @Test
+    void sectionPatternProvidesMatchedBranchParseTagInParseResult() {
+        Skript.registerSection(BranchTagAwareSection.class, "guard (first:alpha|second:beta|gamma)");
+
+        SectionNode node = new SectionNode("guard beta");
+        Section parsed = Section.parse("guard beta", null, node, List.of());
+
+        assertNotNull(parsed);
+        assertInstanceOf(BranchTagAwareSection.class, parsed);
+        assertFalse(BranchTagAwareSection.lastFirst);
+        assertTrue(BranchTagAwareSection.lastSecond);
     }
 
     @Test
@@ -407,6 +435,56 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "typed args effect";
+        }
+    }
+
+    public static class MarkAwareEffect extends Effect {
+
+        static int lastMark;
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, ch.njol.util.Kleenean isDelayed, ParseResult parseResult) {
+            lastMark = parseResult.mark;
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "mark aware effect";
+        }
+    }
+
+    public static class BranchTagAwareSection extends Section {
+
+        static boolean lastFirst;
+        static boolean lastSecond;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            lastFirst = parseResult.hasTag("first");
+            lastSecond = parseResult.hasTag("second");
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return null;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "branch tag aware section";
         }
     }
 
