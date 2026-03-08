@@ -3,6 +3,7 @@ package ch.njol.skript.patterns;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.lang.SkriptParser;
@@ -109,6 +110,21 @@ class PatternCompilerCompatibilityTest {
         assertTrue(literal.regexes().isEmpty());
         assertNotNull(regex);
         assertEquals("42", regex.regexes().getFirst().group());
+    }
+
+    @Test
+    void compiledPatternLeavesOmittedPlaceholderCaptureNull() {
+        SkriptPattern pattern = PatternCompiler.compile("default number [%number%]");
+
+        MatchResult omitted = pattern.match("default number");
+        MatchResult explicit = pattern.match("default number 5");
+
+        assertNotNull(omitted);
+        assertEquals(1, omitted.expressions().length);
+        assertNull(omitted.expressions()[0]);
+
+        assertNotNull(explicit);
+        assertEquals(5, explicit.expressions()[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
     }
 
     @Test

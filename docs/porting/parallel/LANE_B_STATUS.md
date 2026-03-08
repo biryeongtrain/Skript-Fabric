@@ -16,10 +16,24 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on richer parser tag / mark / pattern parity after the placeholder flag/time metadata slice, without claiming parser-pattern parity complete.
+- Continue `Part 1A` on the remaining parser parity after the safe explicit default-value slice, without claiming parser-pattern parity complete.
 
 ## Work Log
 
+- closed the safe parser-owned subset of omitted-placeholder default-value parity in `SkriptParser`
+- `SkriptParser.parseModern(...)` and `parseStatic(...)` now backfill omitted non-optional placeholder captures from `DefaultValueData` when a valid parser default value exists for the placeholder return type
+- intentionally kept the fallback additive instead of fully enforcing upstream failure semantics when no default exists:
+  - current local runtime still has omitted-group syntaxes that remain green by receiving `null`
+  - local `ClassInfo` still does not expose upstream `defaultExpression(...)`
+- restored the private `SkriptParser.match(String, String, ParseContext, int)` bridge after the first GameTest rerun exposed that the current GameTest helper reflects that exact method signature
+- added parser regressions anchored to the exact upstream syntax string `default number [%number%]` from `ch/njol/skript/test/runner/ExprDefaultNumberValue.java`
+- added coverage proving:
+  - the compiled matcher still leaves the omitted `%number%` capture as `null` for `default number`
+  - the registry-backed parser now injects an explicit parser default value for `default number`
+  - explicit input still wins for `default number 5`
+- did not add a new real `.sk` fixture:
+  - current shipped runtime still does not register `DefaultValueData` into any live syntax path
+  - reran the existing GameTest corpus instead to confirm the slice stays inert for the current live `.sk` coverage
 - closed the next shared-matcher placeholder-metadata slice in `PatternCompiler` / `SkriptPattern`
 - `PatternCompiler` now parses and preserves placeholder metadata beyond raw return types:
   - literal-only / expression-only parse flags via `*` and `~`
@@ -82,15 +96,20 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`
-- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
-- `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`
+- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+  - passed after landing explicit parser default-value backfill for omitted placeholders
+- `./gradlew runGameTest --rerun-tasks`
+  - first rerun failed because the current GameTest helper reflects the private matcher bridge and the refactor had removed `SkriptParser.match(String, String, ParseContext, int)`
+  - failure surfaced as `NoSuchMethodException: ch.njol.skript.lang.SkriptParser.match(java.lang.String,java.lang.String,ch.njol.skript.lang.ParseContext,int)`
+  - reran after restoring that private bridge; command passed
+  - `198 / 198` required GameTests completed successfully
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - passed after landing placeholder flag/time metadata handling
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
@@ -126,16 +145,21 @@ Last updated: 2026-03-08
   - first run failed on the new graph traversal assertion because wrapper elements were being unwrapped before type collection
   - reran after fixing wrapper-element collection in `SkriptPattern.getElements(...)`; command passed
 
+## Exact Syntax Exercised
+
+- pattern text: `default number [%number%]`
+- omitted form: `default number`
+- explicit form: `default number 5`
+
 ## Unresolved Risks
 
 - placeholder plurality metadata is now preserved and exposed through `TypePatternElement`, but it is not enforced during live matching on the current compatibility surface; the real `.sk` corpus still depends on several production expressions that report `isSingle()` more strictly than their effective parser use
-- omitted-placeholder default-expression/default-value fallback is still open in `SkriptParser` parity; closing it likely needs coordinator guidance because the local `ClassInfo` surface is still much thinner than upstream and sits outside this lane’s owned files
+- omitted-placeholder fallback is now closed only for explicit parser-scoped `DefaultValueData` values; full upstream classinfo-backed `defaultExpression(...)` parity is still open because the local `ClassInfo` surface is thinner than upstream and sits outside this lane’s owned files
+- full upstream failure semantics for omitted non-optional placeholders without any valid default remain intentionally deferred so the current live syntax corpus does not regress on patterns that still expect `null` when optional groups are omitted
 
 ## Merge Notes
 
-- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`; any concurrent pattern-parity work will need manual reconciliation around the new placeholder metadata parsing
-- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java` is the next conflict risk because the final matcher behavior now applies placeholder-local parse flags and `@time` state but intentionally leaves plurality metadata non-enforcing
-- `src/main/java/ch/njol/skript/patterns/TypePatternElement.java` is part of the active conflict surface because it now carries placeholder metadata that earlier local code did not preserve
+- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/lang/SkriptParser.java`; any concurrent parser-flow work will need manual reconciliation around the omitted-placeholder default-value backfill and the restored private matcher bridge
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java` may conflict with any concurrent parser-regression additions
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` remains a likely conflict point for any concurrent parser-pattern compatibility additions
-- current-cycle conflict surface is now `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`, `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`, `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- current-cycle conflict surface is now `src/main/java/ch/njol/skript/lang/SkriptParser.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
