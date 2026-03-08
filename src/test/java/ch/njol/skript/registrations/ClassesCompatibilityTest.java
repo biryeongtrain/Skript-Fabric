@@ -65,7 +65,8 @@ class ClassesCompatibilityTest {
         Classes.registerClassInfo(parser);
 
         assertEquals(List.of(explicit), Classes.getPatternInfos("shared"));
-        assertEquals(List.of(parser), Classes.getPatternInfos("parser-only"));
+        // Upstream getPatternInfos only matches explicit literal patterns; parser-only input yields no matches.
+        assertNull(Classes.getPatternInfos("parser-only"));
     }
 
     @Test

@@ -206,15 +206,9 @@ public final class Classes {
         if (explicitMatches != null && !explicitMatches.isEmpty()) {
             return orderBySortedClassInfos(explicitMatches);
         }
-        List<ClassInfo<?>> matches = new ArrayList<>();
-        for (ClassInfo<?> info : getSortedClassInfos()) {
-            ClassInfo.Parser<?> parser = info.getParser();
-            if (parser == null || !parser.canParse(ParseContext.DEFAULT) || parser.parse(text, ParseContext.DEFAULT) == null) {
-                continue;
-            }
-            matches.add(info);
-        }
-        return matches.isEmpty() ? null : List.copyOf(matches);
+        // Upstream behavior only considers explicitly registered literal patterns here.
+        // Parser-based fallback belongs in Classes.parse(...) and getParser(...), not in pattern info lookup.
+        return null;
     }
 
     @SuppressWarnings("unchecked")

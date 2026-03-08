@@ -1,6 +1,6 @@
 # Next Agent Handoff
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 
 ## Read Order
 
@@ -33,7 +33,7 @@ For the next Codex app parallel session, use:
 - Remaining package-local Stage 8 scope: `191 / 214`
 - Top-level non-package Bukkit helpers still outside that matrix: `4`
 - Cross-cutting Stage 8 base gap still open: ambiguous bare item-id generic compare, for example `event-item is wheat`
-- Latest verified runtime baseline from 2026-03-08:
+- Latest verified runtime baseline from 2026-03-09:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
   - `230 / 230` scheduled Fabric GameTests completed without build failure
@@ -56,28 +56,25 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next focused `lang` core closure batch:
-  - [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now keeps `getClassInfo(...)` and `getClassInfoNoError(...)` case-sensitive again, so mixed-case probes no longer resolve lowercase-only registered codenames
-  - [src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java](../../src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java) now prefers exact non-`Object` parameter matches over broader assignable overloads, so calls like `over(1)` no longer collapse to `AMBIGUOUS` when an exact `Integer` branch exists
-  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now fails the full pattern when a required placeholder is omitted through an optional branch and neither parser-owned nor classinfo defaults exist, instead of carrying a `null` expression farther than upstream would allow
+- merged the next focused `lang` / registry closure batch:
+  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now runs legacy `parseStatic(...)` matches with `ALL_FLAGS`, so expression-only placeholders such as `%~integer%` work through legacy `SyntaxElementInfo` parsing again while placeholder-level masks still restrict literal versus expression acceptance
+  - [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now limits `getPatternInfos(...)` to explicitly registered literal patterns, which restores upstream unparsed-literal candidate discovery instead of parser-backed fallback matches
   - a fresh lane audit reran the current `Statement` / `ScriptLoader` / `Section` corpus and found no remaining mergeable mismatch in the green corpus, so that lane stayed docs-only for this cycle
 - parser/runtime verification landed:
+  - [src/test/java/ch/njol/skript/lang/parser/SkriptParserStaticFlagsCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/SkriptParserStaticFlagsCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
-  - [src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java)
-  - [src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java)
-  - [src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
-  - [src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
-  - [src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java](../../src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java)
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.parser.SkriptParserStaticFlagsCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
   - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `230 / 230`
 - next likely `lang` follow-ups:
-  - broader parser default-value and placeholder-omission parity beyond the current fail-fast path
-  - broader function namespace/default-parameter/runtime parity beyond exact-type overload disambiguation
-  - broader statement/loading orchestration only once a new concrete mismatch is reproduced, because the latest audit did not find another mergeable `Statement` / `ScriptLoader` / `Section` gap in the current green corpus
+  - broader parser default-value and placeholder-omission parity beyond the current fail-fast path plus restored legacy static flags
+  - broader classinfo/parser registry parity beyond explicit literal-pattern lookup and current converter/default-expression closure
+  - broader statement/loading orchestration only once a new concrete mismatch is reproduced, because the latest audit still did not find another mergeable `Statement` / `ScriptLoader` / `Section` gap in the current green corpus
 
 ## What Landed In This Slice
 

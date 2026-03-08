@@ -150,10 +150,13 @@ class UnparsedLiteralCompatibilityTest {
 
     private static void registerNumericParsers() {
         ClassInfo<NumericA> a = new ClassInfo<>(NumericA.class, "numerica");
+        // Register an explicit literal alias so getPatternInfos matches like upstream.
+        a.literalPatterns("55");
         a.setParser(new NumericParserA());
         Classes.registerClassInfo(a);
 
         ClassInfo<NumericB> b = new ClassInfo<>(NumericB.class, "numericb");
+        b.literalPatterns("55");
         b.setParser(new NumericParserB());
         Classes.registerClassInfo(b);
     }

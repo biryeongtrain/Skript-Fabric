@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is `lang` core closure for case-sensitive classinfo lookup, exact-type function overload tie-breakers, and fail-fast required omitted-placeholder parsing
+- latest closed slice is `lang` / registry closure for legacy `parseStatic` expression-placeholder flags and explicit-literal-only `Classes.getPatternInfos(...)`
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`
