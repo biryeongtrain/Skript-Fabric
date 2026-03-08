@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`, continuing `Part 1A`, and the already-started `Part 1B` dependency closure
 - latest verified runtime baseline is `197 / 197`
-- latest closed slice is the merged optional-regex matcher parity and variable expression-contract follow-up
+- latest closed slice is the merged local-variable type hints, lightweight pattern-element graph APIs, and loader hint-scope follow-up
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

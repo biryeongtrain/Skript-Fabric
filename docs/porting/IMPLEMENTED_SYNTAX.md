@@ -37,7 +37,7 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `119`
+  - local `ch/njol/skript`: `128`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
 
@@ -103,6 +103,7 @@ None in the current Fabric registration set.
 - the active runtime script parser now strips inline comments, preserves quoted `#`, unescapes doubled `##`, and skips `###` block comments through `Node.splitLine(...)`
 - live `.sk` coverage now includes comment-aware loader parsing for commented section headers, commented option entries, quoted hashes, and block-commented invalid syntax
 - `{...}` variable expressions are parsed directly by `SkriptParser`
+- `ParserInstance` now owns a `HintManager`, and parse-time local variable type hints can narrow simple local variables away from generic `%object%` requests while rejecting incompatible typed lookups
 - variables default to case-insensitive storage and lookup
 - list-variable `set` copies keyed list sources into reindexed numeric target slots instead of preserving source keys
 - prefix/list iteration now uses natural numeric ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set`
@@ -112,6 +113,7 @@ None in the current Fabric registration set.
 - `SkriptParser` now supports minimal raw regex captures for registered syntax patterns like `if <.+>`, plus the minimal leading `implicit:` tag needed by registered conditional sections
 - `SkriptParser` now routes matching through the shared `patterns` package and receives general parse tags plus XOR marks through `ParseResult.mark` on the current compatibility surface, including the current bare leading `:` auto-tag derivation path
 - `PatternCompiler` / `SkriptPattern` now support placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦`
+- `PatternCompiler` now also builds a lightweight `PatternElement` graph, and `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)` for the current upstream-introspection compatibility surface
 - the shared matcher now keeps omitted optional raw-regex captures and unmatched alternation regex branches from failing `ParseResult` construction
 - `SkriptParser` now preserves required whitespace around omitted inline optional groups and inline alternation branches for the currently verified natural-script surface, which keeps live forms like `%objects% can be equipped on[to] entities`, `%objects% will lose durability when injured`, and `make %entities% not breedable` green again
 - chained `if / else if / else` sections execute in real `.sk` files, including grouped outer parentheses around conditions, and now load through the normal registered `Section` path instead of a dedicated `Statement` fallback
@@ -121,6 +123,7 @@ None in the current Fabric registration set.
 - `input`, typed `%classinfo% input`, and `input index` resolve directly in active `InputSource` context
 - registered pure `Section` nodes now load through `ScriptLoader.loadItems(...)` instead of being dropped into statement-only fallback
 - `ScriptLoader` section-node fallback now restores the more specific retained section-versus-statement diagnostic when both parse paths fail
+- `ScriptLoader.loadItems(...)` and `parseSectionTriggerItem(...)` now manage section and temporary non-section hint scopes, so failed section parses clear temporary hints while successful section loads can propagate, freeze, or merge hints through the active stop-flow path
 - stopping statements now make `ScriptLoader` emit the upstream-style unreachable-code warning behind `ScriptWarning.UNREACHABLE_CODE` suppression, and real `.sk` coverage verifies that the later line never executes
 - nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results now propagate through `TriggerItem.walk(...)`, and registered sections now surface stop-trigger intent back to `ScriptLoader` for unreachable-code warnings
 - plain conditions used as section headers now report a specific ownership error instead of silently returning a body-less condition item
