@@ -8,6 +8,7 @@ import ch.njol.skript.config.EntryNode;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Section;
 import ch.njol.skript.lang.TriggerItem;
@@ -262,6 +263,29 @@ class ScriptLoaderCompatibilityTest {
         }
     }
 
+    @Test
+    void loadItemsKeepsSpecificConditionSectionOwnershipError() {
+        Skript.registerCondition(AlwaysTrueCondition.class, "always true");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    section("always true", line("mark inside"))
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("The line 'always true' is a valid condition but cannot function as a section (:)")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this section: always true")
+                    )
+            );
+        }
+    }
+
     private static SectionNode root(Node... children) {
         SectionNode root = new SectionNode("root");
         for (Node child : children) {
@@ -338,6 +362,24 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return label == null ? "record effect" : label;
+        }
+    }
+
+    public static final class AlwaysTrueCondition extends Condition {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return true;
         }
     }
 

@@ -6,6 +6,9 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.log.LogEntry;
+import ch.njol.skript.log.ParseLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,13 +75,83 @@ public final class ScriptLoader {
             return null;
         }
         if (node instanceof SectionNode sectionNode) {
-            TriggerItem section = ch.njol.skript.lang.Section.parse(parsedInput, null, sectionNode, triggerItems);
-            if (section != null) {
-                return section;
-            }
-            return Statement.parse(parsedInput, "Can't understand this section: " + parsedInput, sectionNode, triggerItems);
+            return parseSectionTriggerItem(parsedInput, sectionNode, triggerItems);
         }
         return Statement.parse(parsedInput, triggerItems, "Can't understand this condition/effect: " + parsedInput);
+    }
+
+    private static @Nullable TriggerItem parseSectionTriggerItem(
+            String parsedInput,
+            SectionNode sectionNode,
+            List<TriggerItem> triggerItems
+    ) {
+        String sectionError = "Can't understand this section: " + parsedInput;
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            TriggerItem section = ch.njol.skript.lang.Section.parse(parsedInput, sectionError, sectionNode, triggerItems);
+            if (section != null) {
+                log.printLog();
+                return section;
+            }
+
+            ParseLogHandler sectionLog = log.backup();
+            log.clear();
+            log.clearError();
+
+            TriggerItem statement = Statement.parse(
+                    parsedInput,
+                    "Can't understand this condition/effect: " + parsedInput,
+                    sectionNode,
+                    triggerItems
+            );
+            if (statement != null) {
+                log.printLog();
+                return statement;
+            }
+
+            ParseLogHandler statementLog = log.backup();
+            if (shouldRestoreSectionLog(parsedInput, sectionLog, statementLog)) {
+                log.restore(sectionLog);
+            } else {
+                log.restore(statementLog);
+            }
+
+            if (log.getErrors().isEmpty()) {
+                log.printError(sectionError);
+            } else {
+                log.printLog();
+            }
+            return null;
+        }
+    }
+
+    private static boolean shouldRestoreSectionLog(
+            String parsedInput,
+            ParseLogHandler sectionLog,
+            ParseLogHandler statementLog
+    ) {
+        List<LogEntry> statementErrors = statementLog.getErrors();
+        if (statementErrors.isEmpty()) {
+            return true;
+        }
+
+        String defaultStatementError = "Can't understand this condition/effect: " + parsedInput;
+        boolean onlyDefaultStatementErrors = true;
+        for (LogEntry error : statementErrors) {
+            if (!defaultStatementError.equals(error.getMessage())) {
+                onlyDefaultStatementErrors = false;
+                break;
+            }
+        }
+        if (onlyDefaultStatementErrors) {
+            return true;
+        }
+
+        for (LogEntry error : sectionLog.getErrors()) {
+            if (error.getMessage().contains("tried to claim the current section")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static final class OptionsData implements ScriptData {

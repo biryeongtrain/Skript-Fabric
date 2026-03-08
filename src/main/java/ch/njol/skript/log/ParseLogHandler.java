@@ -56,8 +56,39 @@ public class ParseLogHandler implements AutoCloseable {
         logEntries.clear();
     }
 
+    public void clearError() {
+        error = null;
+    }
+
     public boolean hasError() {
         return error != null;
+    }
+
+    public @Nullable LogEntry getError() {
+        return error;
+    }
+
+    public List<LogEntry> getErrors() {
+        List<LogEntry> errors = new ArrayList<>();
+        for (LogEntry entry : logEntries) {
+            if (entry.getLevel().intValue() >= Level.SEVERE.intValue()) {
+                errors.add(entry);
+            }
+        }
+        return errors;
+    }
+
+    public ParseLogHandler backup() {
+        ParseLogHandler copy = new ParseLogHandler();
+        copy.logEntries.addAll(logEntries);
+        copy.error = error;
+        return copy;
+    }
+
+    public void restore(ParseLogHandler copy) {
+        logEntries.clear();
+        logEntries.addAll(copy.logEntries);
+        error = copy.error;
     }
 
     public void stop() {
