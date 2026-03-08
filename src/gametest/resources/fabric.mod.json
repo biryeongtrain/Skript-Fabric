@@ -10,6 +10,7 @@
   "environment": "server",
   "entrypoints": {
     "fabric-gametest": [
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricAIGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricBaseGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricAliveKillGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricConditionGameTest",

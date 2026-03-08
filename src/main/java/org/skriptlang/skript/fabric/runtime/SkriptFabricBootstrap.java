@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
+import org.skriptlang.skript.bukkit.base.conditions.CondAI;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsAlive;
 import org.skriptlang.skript.bukkit.base.conditions.CondCompare;
@@ -214,6 +215,11 @@ public final class SkriptFabricBootstrap {
                         CondIsInvulnerable.class,
                         "%entities% (is|are) (invulnerable|invincible)",
                         "%entities% (isn't|is not|aren't|are not) (invulnerable|invincible)"
+                );
+                Skript.registerCondition(
+                        CondAI.class,
+                        "%livingentities% (has|have) (ai|artificial intelligence)",
+                        "%livingentities% (doesn't|does not|do not|don't) have (ai|artificial intelligence)"
                 );
                 Skript.registerCondition(
                         CondBrewingConsume.class,

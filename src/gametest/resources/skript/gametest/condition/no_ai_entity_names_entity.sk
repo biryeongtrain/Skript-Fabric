@@ -1,0 +1,3 @@
+on use entity:
+    event-entity does not have artificial intelligence
+    set test name of entity event-entity to "no ai"
