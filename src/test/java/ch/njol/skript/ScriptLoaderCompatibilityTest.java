@@ -2,6 +2,7 @@ package ch.njol.skript;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.config.EntryNode;
@@ -49,6 +50,7 @@ class ScriptLoaderCompatibilityTest {
         RecordingSection.executed.clear();
         RecordingEffect.executed.clear();
         statementExecution.clear();
+        CaptureHintedObjectEffect.lastReturnType = null;
         Variables.clearAll();
     }
 
@@ -92,6 +94,85 @@ class ScriptLoaderCompatibilityTest {
         TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
 
         assertEquals(List.of("section", "inside", "after"), RecordingSection.executed);
+    }
+
+    @Test
+    void failedSectionParseDoesNotLeakHintScopeIntoLaterLines() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        Skript.registerSection(RejectingHintSection.class, "reject hinted section");
+        Skript.registerEffect(ExpectTextEffect.class, "expect text %string%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("reject hinted section", line("ignored child")),
+                line("expect text {_value}")
+        ));
+
+        assertEquals(1, items.size());
+        assertTrue(items.getFirst() instanceof ExpectTextEffect);
+    }
+
+    @Test
+    void successfulSectionParsePropagatesHintsToLaterSiblingLines() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        Skript.registerSection(HintingSection.class, "hinting section");
+        Skript.registerEffect(CaptureHintedObjectEffect.class, "capture hinted object %object%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("hinting section"),
+                line("capture hinted object {_value}")
+        ));
+
+        assertEquals(2, items.size());
+        assertEquals(Integer.class, CaptureHintedObjectEffect.lastReturnType);
+    }
+
+    @Test
+    void stopTriggerFreezesSectionHintsBeforeLaterSiblingParsing() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        registerExecutionIntentStatements();
+        Skript.registerSection(LoadingHintSection.class, "outer hint section");
+        Skript.registerEffect(HintIntegerEffect.class, "hint local integer");
+        Skript.registerEffect(CaptureHintedObjectEffect.class, "capture hinted object %object%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section(
+                        "outer hint section",
+                        line("stop test trigger"),
+                        line("hint local integer")
+                ),
+                line("capture hinted object {_value}")
+        ));
+
+        assertEquals(2, items.size());
+        assertEquals(Object.class, CaptureHintedObjectEffect.lastReturnType);
+    }
+
+    @Test
+    void stopSectionMergesCurrentHintsIntoResumeScope() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        Skript.registerSection(LoadingHintSection.class, "outer hint section", "nested hint section");
+        Skript.registerStatement(StopCurrentSectionStatement.class, "stop current section");
+        Skript.registerEffect(HintIntegerEffect.class, "hint local integer");
+        Skript.registerEffect(CaptureHintedObjectEffect.class, "capture hinted object %object%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section(
+                        "outer hint section",
+                        section(
+                                "nested hint section",
+                                line("hint local integer"),
+                                line("stop current section")
+                        ),
+                        line("capture hinted object {_value}")
+                )
+        ));
+
+        assertEquals(1, items.size());
+        assertEquals(Integer.class, CaptureHintedObjectEffect.lastReturnType);
     }
 
     @Test
@@ -509,6 +590,76 @@ class ScriptLoaderCompatibilityTest {
         }
     }
 
+    public static final class ExpectTextEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "expect text";
+        }
+    }
+
+    public static final class CaptureHintedObjectEffect extends ch.njol.skript.lang.Effect {
+
+        private static @Nullable Class<?> lastReturnType;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            lastReturnType = expressions[0].getReturnType();
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "capture hinted object";
+        }
+    }
+
+    public static final class HintIntegerEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            ParserInstance.get().getHintManager().set("value", Integer.class);
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "hint local integer";
+        }
+    }
+
     public static final class AlwaysTrueCondition extends Condition {
 
         @Override
@@ -609,6 +760,90 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "stop current section";
+        }
+    }
+
+    public static final class HintingSection extends Section {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            ParserInstance.get().getHintManager().set("value", Integer.class);
+            if (sectionNode != null) {
+                loadCode(sectionNode);
+            }
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return walk(event, true);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "hinting section";
+        }
+    }
+
+    public static final class RejectingHintSection extends Section {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            ParserInstance.get().getHintManager().set("value", Integer.class);
+            return false;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return null;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "reject hinted section";
+        }
+    }
+
+    public static final class LoadingHintSection extends Section {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            if (sectionNode == null) {
+                return false;
+            }
+            loadCode(sectionNode);
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return walk(event, true);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "loading hint section";
         }
     }
 

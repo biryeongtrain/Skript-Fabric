@@ -2,6 +2,7 @@ package ch.njol.skript;
 
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.TriggerItem;
@@ -46,6 +47,8 @@ public final class ScriptLoader {
         Node previousNode = parser.getNode();
         TriggerItem previousItem = null;
         boolean executionStops = false;
+        boolean freezeScope = false;
+        parser.getHintManager().enterScope(true);
         try {
             for (Node child : node) {
                 parser.setNode(child);
@@ -59,13 +62,21 @@ public final class ScriptLoader {
                     }
                     items.add(item);
                     previousItem = item;
-                    executionStops = (item instanceof Statement statement
-                            && statement.loaderExecutionIntent() != null)
-                            || (item instanceof TriggerSection triggerSection
-                            && triggerSection.loaderExecutionIntent() != null);
+                    ExecutionIntent intent = loaderExecutionIntent(item);
+                    executionStops = intent != null;
+                    if (executionStops && !freezeScope) {
+                        freezeScope = true;
+                        if (intent instanceof ExecutionIntent.StopSections stopSections) {
+                            parser.getHintManager().mergeScope(0, stopSections.levels(), true);
+                        }
+                    }
                 }
             }
         } finally {
+            if (freezeScope) {
+                parser.getHintManager().clearScope(0, false);
+            }
+            parser.getHintManager().exitScope();
             parser.setNode(previousNode);
         }
         return items;
@@ -96,8 +107,11 @@ public final class ScriptLoader {
             List<TriggerItem> triggerItems
     ) {
         String sectionError = "Can't understand this section: " + parsedInput;
+        ParserInstance parser = ParserInstance.get();
+        parser.getHintManager().enterScope(false);
+        TriggerItem section = null;
         try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
-            TriggerItem section = ch.njol.skript.lang.Section.parse(parsedInput, sectionError, sectionNode, triggerItems);
+            section = ch.njol.skript.lang.Section.parse(parsedInput, sectionError, sectionNode, triggerItems);
             if (section != null) {
                 log.printLog();
                 return section;
@@ -131,6 +145,11 @@ public final class ScriptLoader {
                 log.printLog();
             }
             return null;
+        } finally {
+            if (section == null) {
+                parser.getHintManager().clearScope(0, false);
+            }
+            parser.getHintManager().exitScope();
         }
     }
 
@@ -170,6 +189,16 @@ public final class ScriptLoader {
         }
         var currentScript = parser.getCurrentScript();
         return currentScript != null && !currentScript.suppressesWarning(ScriptWarning.UNREACHABLE_CODE);
+    }
+
+    private static @Nullable ExecutionIntent loaderExecutionIntent(TriggerItem item) {
+        if (item instanceof Statement statement) {
+            return statement.loaderExecutionIntent();
+        }
+        if (item instanceof TriggerSection triggerSection) {
+            return triggerSection.loaderExecutionIntent();
+        }
+        return null;
     }
 
     public static final class OptionsData implements ScriptData {
