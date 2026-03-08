@@ -93,6 +93,30 @@ class VariableCompatibilityTest {
     }
 
     @Test
+    void listVariablesExposeLegacyLoopAliases() {
+        Variable<String> variable = Variable.newInstance("scores::*", new Class[]{String.class});
+        assertNotNull(variable);
+
+        assertTrue(variable.isLoopOf("index"));
+        assertTrue(variable.isLoopOf("var"));
+        assertTrue(variable.isLoopOf("variable"));
+        assertTrue(variable.isLoopOf("value"));
+        assertFalse(variable.isLoopOf("player"));
+    }
+
+    @Test
+    void listVariableChecksRequireAllValuesToMatchWhenAndSemanticsApply() {
+        Variable<Integer> variable = Variable.newInstance("scores::*", new Class[]{Integer.class});
+        assertNotNull(variable);
+
+        variable.change(SkriptEvent.EMPTY, new Object[]{2, 4, 6}, ChangeMode.SET);
+
+        assertTrue(variable.check(SkriptEvent.EMPTY, value -> value % 2 == 0));
+        assertFalse(variable.check(SkriptEvent.EMPTY, value -> value >= 4));
+        assertTrue(variable.getAnd());
+    }
+
+    @Test
     void localVariablesAreScopedByEventHandle() {
         Variable<String> variable = Variable.newInstance("_session", new Class[]{String.class});
         assertNotNull(variable);

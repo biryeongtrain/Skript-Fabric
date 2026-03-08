@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -342,7 +343,51 @@ public class Variable<T> implements Expression<T>, KeyReceiverExpression<T>, Key
 
     @Override
     public boolean isLoopOf(String input) {
-        return list && input != null && input.equalsIgnoreCase("index");
+        return list
+                && input != null
+                && (input.equalsIgnoreCase("index")
+                || input.equalsIgnoreCase("var")
+                || input.equalsIgnoreCase("variable")
+                || input.equalsIgnoreCase("value"));
+    }
+
+    @Override
+    public boolean check(SkriptEvent event, Predicate<? super T> checker, boolean negated) {
+        return checkValues(getAll(event), checker, negated, getAnd());
+    }
+
+    @Override
+    public boolean check(SkriptEvent event, Predicate<? super T> checker) {
+        return checkValues(getAll(event), checker, false, getAnd());
+    }
+
+    @Override
+    public boolean getAnd() {
+        return true;
+    }
+
+    private boolean checkValues(T[] values, Predicate<? super T> checker, boolean negated, boolean and) {
+        if (values == null) {
+            return negated;
+        }
+        boolean hasElement = false;
+        for (T value : values) {
+            if (value == null) {
+                continue;
+            }
+            hasElement = true;
+            boolean matched = checker.test(value);
+            if (and && !matched) {
+                return negated;
+            }
+            if (!and && matched) {
+                return !negated;
+            }
+        }
+        if (!hasElement) {
+            return negated;
+        }
+        return negated ^ and;
     }
 
     private void changeSingle(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
