@@ -1,0 +1,3 @@
+on use entity:
+    event-entity has ai
+    set test name of entity event-entity to "has ai"
