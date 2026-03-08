@@ -8,6 +8,42 @@ Last updated: 2026-03-08
 - kept strictly inside the allowed lang/function closure
 - no syntax-import or non-lane doc changes
 
+### 2026-03-08 Upstream Syntax Import: Glowing Property
+
+- imported the exact upstream user-visible property expression for entity glowing state
+  - patterns: `[the] glowing of %entities%`, `%entities%'[s] glowing`
+- added `ExprGlowing` under `org/skriptlang/skript/bukkit/base/expressions`
+- registered the expression in `SkriptFabricAdditionalSyntax.register(...)`
+- added a focused parser regression `GlowingSyntaxTest` that verifies the exact set-form parses to `EffChange`:
+  - `set glowing of event-entity to true`
+
+Changed files:
+
+- `src/main/java/org/skriptlang/skript/bukkit/base/expressions/ExprGlowing.java`
+- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java`
+- `src/test/java/org/skriptlang/skript/fabric/runtime/GlowingSyntaxTest.java`
+
+Exact commands and results:
+
+```
+./scripts/gradle-automation.sh test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --rerun-tasks
+  # sanity check harness — passed
+
+./scripts/gradle-automation.sh test --tests "org.skriptlang.skript.fabric.runtime.*" --rerun-tasks
+  # runtime test package — passed
+
+./scripts/gradle-automation.sh runGameTest --rerun-tasks
+  # GameTests — passed (230/230 scheduled)
+
+./scripts/gradle-automation.sh build --rerun-tasks
+  # full build — passed
+```
+
+Merge notes:
+
+- slice is self-contained and limited to expression registration and a parser-only unit; no runtime behavior changes beyond the new property setter/getter
+- zero conflicts expected; files are lane-local and additive
+
 ## Owned Files
 
 - `src/main/java/ch/njol/skript/lang/function/Parameter.java`

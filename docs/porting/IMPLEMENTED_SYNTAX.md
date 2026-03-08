@@ -31,6 +31,7 @@ It is not:
   - `%livingentities% (has|have) (ai|artificial intelligence)`
   - `%players% (is|are) sprinting`
   - exact sprinting start/stop effect forms
+  - glowing property expression: `[the] glowing of %entities%`, `%entities%'[s] glowing` (settable)
 
 ## Stage 8 Audit Snapshot
 

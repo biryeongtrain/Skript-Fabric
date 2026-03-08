@@ -122,6 +122,7 @@ Landed slices so far:
   - user-pattern class infos now honor regex-backed aliases again, so `%material%` and `%materials%` resolve through registered class info aliases instead of only codenames
   - exact upstream condition/effect forms now also cover `feed [the] %players% [by %-number% [beef[s]]]`, `%entities% (is|are) (burning|ignited|on fire)`, `%livingentities% (is|are) (invisible|visible)`, `%livingentities% (has|have) (ai|artificial intelligence)`, `%players% (is|are) sprinting`, `make %livingentities% invisible`, `make %livingentities% not visible`, `make %livingentities% visible`, `make %livingentities% not invisible`, and exact sprinting start/stop effect forms
   - dedicated parser/bootstrap unit tests plus real `.sk` Fabric GameTests now verify the newer feed, invisible/visible, burning, AI, and sprinting forms through the live resource-loader path
+  - added the upstream entity glowing property expression (`[the] glowing of %entities%`, `%entities%'[s] glowing`) with a focused parser regression
 - shortfall-focused helper-surface closure:
   - `ch/njol/skript/log` now restores the missing legacy handler stack through `LogHandler`, `BlockingLogHandler`, `FilteringLogHandler`, `CountingLogHandler`, and `RetainingLogHandler`, while wiring `ParseLogHandler` and `SkriptLogger` back through that compatibility surface
   - `ch/njol/skript/patterns/Keyword` now exists locally and `SkriptPattern` again applies the upstream-style keyword prefilter before the heavier matcher path
