@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
+import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -156,6 +157,8 @@ class SkriptParserRegistryTest {
     @Test
     @SuppressWarnings("unchecked")
     void expressionPatternUsesParserDefaultValueForOmittedPlaceholder() {
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number").defaultExpression(new SimpleLiteral<>(11, true)));
         Skript.registerExpression(DefaultNumberExpression.class, Integer.class, "default number [%number%]");
 
         DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
@@ -181,6 +184,38 @@ class SkriptParserRegistryTest {
             assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
         } finally {
             data.removeDefaultValue(Integer.class);
+            Classes.clearClassInfos();
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void expressionPatternUsesClassInfoDefaultValueForExactOmittedPlaceholderForm() {
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number").defaultExpression(new SimpleLiteral<>(11, true)));
+        Skript.registerExpression(DefaultNumberExpression.class, Integer.class, "default number [%number%]");
+
+        try {
+            Expression<? extends Integer> omitted = new SkriptParser(
+                    "default number",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Integer.class});
+            Expression<? extends Integer> explicit = new SkriptParser(
+                    "default number 5",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Integer.class});
+
+            assertNotNull(omitted);
+            assertInstanceOf(DefaultNumberExpression.class, omitted);
+            assertEquals(11, omitted.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+
+            assertNotNull(explicit);
+            assertInstanceOf(DefaultNumberExpression.class, explicit);
+            assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+        } finally {
+            Classes.clearClassInfos();
         }
     }
 
