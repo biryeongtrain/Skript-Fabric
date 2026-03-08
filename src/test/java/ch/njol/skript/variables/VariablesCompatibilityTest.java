@@ -41,6 +41,41 @@ class VariablesCompatibilityTest {
     }
 
     @Test
+    void getVariableReturnsListRootNullSentinelWhenBranchHasDirectValueAndDescendants() {
+        Variables.setVariable("scores", "lapis_block", SkriptEvent.EMPTY, false);
+        Variables.setVariable("scores::group", "diamond_block", SkriptEvent.EMPTY, false);
+        Variables.setVariable("scores::group::1", "gold_block", SkriptEvent.EMPTY, false);
+
+        Object raw = Variables.getVariable("scores::*", SkriptEvent.EMPTY, false);
+
+        Map<?, ?> values = assertInstanceOf(Map.class, raw);
+        assertEquals(Arrays.asList(null, "group"), new ArrayList<>(values.keySet()));
+        assertEquals("lapis_block", values.get(null));
+
+        Map<?, ?> group = assertInstanceOf(Map.class, values.get("group"));
+        assertEquals("diamond_block", group.get(null));
+        assertEquals("gold_block", group.get("1"));
+    }
+
+    @Test
+    void getVariableReturnsNestedListNullSentinelWhenNestedBranchHasDirectValueAndDescendants() {
+        Variables.setVariable("scores::group", "diamond_block", SkriptEvent.EMPTY, false);
+        Variables.setVariable("scores::group::plain", "emerald_block", SkriptEvent.EMPTY, false);
+        Variables.setVariable("scores::group::nested::1", "gold_block", SkriptEvent.EMPTY, false);
+
+        Object raw = Variables.getVariable("scores::group::*", SkriptEvent.EMPTY, false);
+
+        Map<?, ?> values = assertInstanceOf(Map.class, raw);
+        assertEquals(Arrays.asList(null, "nested", "plain"), new ArrayList<>(values.keySet()));
+        assertEquals("diamond_block", values.get(null));
+        assertEquals("emerald_block", values.get("plain"));
+
+        Map<?, ?> nested = assertInstanceOf(Map.class, values.get("nested"));
+        assertNull(nested.get(null));
+        assertEquals("gold_block", nested.get("1"));
+    }
+
+    @Test
     void getVariablesWithPrefixKeepsShallowDirectParentValuesWhenDescendantsExist() {
         Variables.setVariable("scores::plain", "emerald_block", SkriptEvent.EMPTY, false);
         Variables.setVariable("scores::group", "diamond_block", SkriptEvent.EMPTY, false);

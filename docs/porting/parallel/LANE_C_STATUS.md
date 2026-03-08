@@ -4,82 +4,64 @@ Last updated: 2026-03-08
 
 ## Scope
 
-- exact upstream sprinting syntax import for the active Fabric runtime
+- Part 1B variables runtime semantics only
+- exact upstream-backed closure slice: restore direct-parent `null` sentinel exposure when `Variables.getVariable(...)` reads a list branch that has both a direct value and descendants
 
 ## Owned Files
 
-- `src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSprinting.java`
-- `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSprinting.java`
-- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-- `src/test/java/org/skriptlang/skript/fabric/runtime/SprintingSyntaxTest.java`
-- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricSprintingGameTest.java`
-- `src/gametest/resources/skript/gametest/condition/sprinting_player_names_player.sk`
-- `src/gametest/resources/skript/gametest/effect/make_player_start_sprinting_names_player.sk`
-- `src/gametest/resources/skript/gametest/effect/make_player_stop_sprinting_names_player.sk`
-- `src/gametest/resources/fabric.mod.json`
+- `src/main/java/ch/njol/skript/variables/Variables.java`
+- `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
+- `docs/porting/parallel/LANE_C_STATUS.md`
 
-## Goal For Next Session
+## Goal For This Session
 
-- merge this lane branch cleanly into the main porting line without renaming the imported sprinting forms
+- close one contained upstream `Variables` runtime gap without touching parser, statement, classes, config, structures, or canonical docs
 
 ## Work Log
 
-- imported the missing upstream sprinting condition as a player-only compatibility class:
-  - `CondIsSprinting` now accepts `%players% (is|are) sprinting` and `%players% (isn't|is not|aren't|are not) sprinting`
-  - runtime evaluation uses the Mojang `ServerPlayer.isSprinting()` flag
-- imported the missing upstream sprinting effect as a player-only compatibility class:
-  - `EffSprinting` now accepts the exact upstream effect forms
-  - positive forms:
-    - `make %players% (start sprinting|sprint)`
-    - `force %players% to (start sprinting|sprint)`
-  - negative forms:
-    - `make %players% (stop sprinting|not sprint)`
-    - `force %players% to (stop sprinting|not sprint)`
-  - runtime execution uses `ServerPlayer.setSprinting(...)`
-- registered both syntax families explicitly in `SkriptFabricBootstrap` so they are live in the active Fabric runtime
-- added focused parser/bootstrap coverage proving the exact upstream surface parses on the active runtime bootstrap
-- added real `.sk` GameTest coverage proving:
-  - `event-player is sprinting` gates trigger execution in a live script
-  - `force event-player to start sprinting` sets the live Mojang sprinting flag
-  - `force event-player to not sprint` clears the live Mojang sprinting flag
+- compared local `src/main/java/ch/njol/skript/variables/Variables.java` with upstream snapshot `/tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/variables/Variables.java`
+- narrowed the gap to raw list-branch reconstruction in `Variables.getVariable(...)`
+- restored the upstream-style `null` sentinel for the direct branch value when a queried list branch exists because descendants are present:
+  - `scores::*` now includes `null -> value` when both `{scores}` and descendants like `{scores::group}` exist
+  - `scores::group::*` now includes `null -> value` when both `{scores::group}` and descendants like `{scores::group::plain}` exist
+- preserved the existing shallow list behavior used by `Variable.getArray(...)` and `getVariablesWithPrefix(...)`
+- added focused regressions for both root and nested list branches
 - did not claim parity complete
+- did not update Stage 8 counts
+- did not add new `.sk` fixtures because this parity gap is only observable through the internal `Variables.getVariable(...)` API; it is not surfaced by the current script-facing list variable APIs
 
 ## Files Changed
 
-- `src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSprinting.java`
-- `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSprinting.java`
-- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-- `src/test/java/org/skriptlang/skript/fabric/runtime/SprintingSyntaxTest.java`
-- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricSprintingGameTest.java`
-- `src/gametest/resources/skript/gametest/condition/sprinting_player_names_player.sk`
-- `src/gametest/resources/skript/gametest/effect/make_player_start_sprinting_names_player.sk`
-- `src/gametest/resources/skript/gametest/effect/make_player_stop_sprinting_names_player.sk`
-- `src/gametest/resources/fabric.mod.json`
+- `src/main/java/ch/njol/skript/variables/Variables.java`
+- `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
+
+## Exact Counts Changed
+
+- Stage 8 package-local audit counts changed: `0`
+- canonical porting doc counts changed: `0`
+- Java source file count changed in `src/main/java/ch/njol/skript/variables`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript/variables`: `0` added, `1` modified
+- real `.sk` fixture count changed: `0`
 
 ## Verification
 
-- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
   - passed
-  - verified exact upstream sprinting condition/effect forms through the active Fabric bootstrap
+  - verified the new root-branch and nested-branch null-sentinel regressions plus the existing variable runtime compatibility suite
 - `./gradlew runGameTest --rerun-tasks`
   - passed
-  - verified the full Fabric GameTest suite with the new live sprinting `.sk` coverage green on the resource-loader path
-  - suite result: `223 / 223` required tests passed
+  - regression-checked the live runtime, including the existing list-variable `.sk` fixtures
+  - suite result: `229 / 229` required tests passed
 
 ## Unresolved Risks
 
-- sprinting on a stationary player still inherits Mojang’s runtime quirks that upstream documents; this slice preserves syntax and flag mutation, not a deeper normalization layer over vanilla sprint behavior
-- live coverage currently proves `start sprinting`, `not sprint`, and the condition form; the parser/bootstrap unit test covers the remaining exact synonym forms
+- this slice restores internal `Variables.getVariable(...)` branch-map parity only; it does not import the broader upstream `VariablesMap`/storage subsystem
+- no new real `.sk` fixture was added because the restored behavior is not observable through the current script API; if a later slice exposes raw list-branch maps to scripts, that surface will need dedicated runtime coverage
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-  - `src/gametest/resources/fabric.mod.json`
-- added real-script fixtures:
-  - `src/gametest/resources/skript/gametest/condition/sprinting_player_names_player.sk`
-  - `src/gametest/resources/skript/gametest/effect/make_player_start_sprinting_names_player.sk`
-  - `src/gametest/resources/skript/gametest/effect/make_player_stop_sprinting_names_player.sk`
-- lane-local status update:
-  - `docs/porting/parallel/LANE_C_STATUS.md`
+  - `src/main/java/ch/njol/skript/variables/Variables.java`
+  - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
+- no overlap expected with active parser or statement lanes under the current ownership matrix
