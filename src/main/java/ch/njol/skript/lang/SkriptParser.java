@@ -339,7 +339,9 @@ public class SkriptParser {
                 try {
                     parsingStack.push(stackElement);
                     compiledPattern = compilePattern(patterns[matchedPattern]);
-                    matched = compiledPattern != null ? compiledPattern.match(input, PARSE_LITERALS, context) : null;
+                    // Upstream parity: legacy parse path should allow both expressions and literals.
+                    // Placeholder-level flag masks (e.g., %*type% or %~type%) further restrict what is allowed.
+                    matched = compiledPattern != null ? compiledPattern.match(input, ALL_FLAGS, context) : null;
                     if (matched != null) {
                         element = instantiate(info.getElementClass());
                     }
