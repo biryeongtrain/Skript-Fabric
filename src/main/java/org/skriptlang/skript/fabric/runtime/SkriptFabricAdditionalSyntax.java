@@ -137,6 +137,12 @@ final class SkriptFabricAdditionalSyntax {
                 "%entities%'[s] glow [color] override"
         );
         Skript.registerExpression(
+                org.skriptlang.skript.bukkit.base.expressions.ExprGlowing.class,
+                Boolean.class,
+                "[the] glowing of %entities%",
+                "%entities%'[s] glowing"
+        );
+        Skript.registerExpression(
                 ExprEventPotionEffect.class,
                 (Class) SkriptPotionEffect.class,
                 "[the] event-potion effect",
