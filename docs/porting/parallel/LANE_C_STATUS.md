@@ -19,57 +19,54 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the shallow list-variable read slice.
+- Continue `Part 1B` after the raw list-variable map-read slice.
 
 ## Work Log
 
-- compared the current local variable runtime against upstream `e6ec744` and selected one contained `Variables` semantics gap:
-  - upstream `VariablesMap.getVariable(...)` plus `Variable.ShallowListProvider` treat `{list::*}` as a shallow read
-  - descendant-only entries like `{list::group::1}` do not appear in `{list::*}` unless `{list::group}` itself also has a direct value
-  - the local flat-prefix bridge still exposed every descendant key under the prefix, so `{source::*}` incorrectly included nested descendants during list reads and `set {target::*} to {source::*}`
-- closed that shallow list-read slice in `Variables.getVariablesWithPrefix(...)`
-- `Variables` now returns only direct child entries for list-prefix reads, restoring upstream-style shallow behavior while preserving the existing natural numeric ordering
-- added regression coverage proving:
-  - `Variable.getArray(...)` / `getArrayKeys(...)` now skip descendant-only entries under the exact source path `scores::group::1`
-  - parsed `set {target::*} to {source::*}` now ignores the nested descendant-only source entry `source::group::1` and copies only `source::plain`
-- added real `.sk` coverage in `list_variable_shallow_copy_set_test_block.sk`, and the full Fabric GameTest run now completes with `200 / 200` required tests passing
+- compared the current local `Variables` raw-read surface against upstream `e6ec744` and selected one contained compatibility gap:
+  - upstream `VariablesMap.getVariable(...)` returns a nested `TreeMap` for `{list::*}` reads
+  - when direct parent values and descendants coexist, the parent value is stored under a `null` sentinel key inside that nested map
+  - the local flat storage bridge still returned `null` for list-variable reads like `Variables.getVariable("scores::*", ...)`, so the upstream raw list API was missing even though shallow `Variable` reads were green
+- closed that raw list-map slice in `Variables.getVariable(...)`
+- `Variables` now reconstructs upstream-style nested list maps for list-variable reads from the flat store, preserving:
+  - natural numeric ordering for keys like `2` before `10`
+  - descendant-only nested maps such as `group -> {1=...}`
+  - direct-parent-plus-descendant maps such as `group -> {null=parent, 1=child}`
+- `Variables.getVariablesWithPrefix(...)` now derives its shallow direct-child view from that same reconstructed list map, keeping the existing `Variable` runtime path aligned with the raw compatibility surface
+- added focused unit coverage proving:
+  - `Variables.getVariable("scores::*", ...)` now returns the expected nested map shape for both descendant-only and direct-parent-plus-descendant cases
+  - shallow prefix reads still expose only direct child values when a child key also owns deeper descendants
+- did not run GameTests because this slice restores the raw compatibility API and does not change user-visible `.sk` syntax or the already-green shallow runtime path
 - did not claim parity complete
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/variables/Variables.java`
-- `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
-- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
-- `src/gametest/resources/skript/gametest/base/list_variable_shallow_copy_set_test_block.sk`
+- `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Verification
 
 - `git show e6ec744dd83cb1a362dd420cde11a0d74aef977d:src/main/java/ch/njol/skript/variables/VariablesMap.java | sed -n '130,260p'`
   - passed
-  - confirmed upstream list-variable reads come from direct child map nodes in `VariablesMap.getVariable(...)`
-- `git show e6ec744dd83cb1a362dd420cde11a0d74aef977d:src/main/java/ch/njol/skript/lang/Variable.java | sed -n '780,860p'`
+  - confirmed upstream `{list::*}` reads return nested map nodes from `VariablesMap.getVariable(...)`
+- `git show e6ec744dd83cb1a362dd420cde11a0d74aef977d:src/main/java/ch/njol/skript/lang/Variable.java | sed -n '420,520p'`
   - passed
-  - confirmed upstream `ShallowListProvider` only emits direct child values, skipping descendant-only entries unless a direct parent slot exists
-- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+  - confirmed upstream `Variable` consumes those raw nested maps through list providers, with shallow reads using direct child values and direct-parent `null` sentinels
+- `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
   - passed
-  - exercised the new shallow-read regressions around `scores::group::1`, `source::group::1`, and `source::plain`
-- `./gradlew runGameTest --rerun-tasks`
-  - passed
-  - full Fabric GameTest suite finished with `200 / 200` required tests passing, including the new real `.sk` shallow-copy coverage
+  - exercised the new raw-map regressions plus the existing shallow variable behavior after routing prefix reads through the reconstructed nested map
 
 ## Unresolved Risks
 
-- broader upstream `Variables` parity is still open beyond this slice, especially the missing tree-backed `VariablesMap` / recursive nested-list compatibility surface
-- this slice proves the default shallow read path and list-to-list copy behavior, but it does not yet add coverage for cases where a direct parent value and deeper descendants coexist on the same source key
+- broader upstream `Variables` parity is still open beyond this slice, especially the missing native tree-backed `VariablesMap`, recursive nested-list APIs such as iterator support, and queued storage semantics
+- this slice reconstructs raw list maps on read from the flat store; it does not yet restore upstream write-time tree maintenance or the remaining local-variable helper surface
 
 ## Merge Notes
 
 - low conflict surface:
   - `src/main/java/ch/njol/skript/variables/Variables.java`
-  - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
-  - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
-  - `src/gametest/resources/skript/gametest/base/list_variable_shallow_copy_set_test_block.sk`
+  - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
 - lane-local status update:
   - `docs/porting/parallel/LANE_C_STATUS.md`
 - no cross-lane owned-file overlap was required for this slice
