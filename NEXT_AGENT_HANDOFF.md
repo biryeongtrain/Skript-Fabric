@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is `lang` core closure for dynamic-function validation caching, recursive `Classes.clone(...)` array isolation, and `SkriptParser.ParseResult.source`
+- latest closed slice is `lang` core closure for local function-first registry fallback, section-scope hint clearing, effect-candidate section ownership reset, and retained section diagnostics on statement fallback success
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

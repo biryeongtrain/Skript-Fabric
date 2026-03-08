@@ -57,20 +57,23 @@ New immediate priority:
 ## Latest Closure Slice
 
 - merged the next focused `lang` core closure batch:
-  - [src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java](../../src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java) now distinguishes validation-cache entries by both parameter types and concrete parameter expressions, so same-return-type dynamic calls with different expression shapes no longer reuse stale validation results
-  - [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now recursively clones arrays, which closes caller-visible array mutation leaks on keyed function arguments
-  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now restores `ParseResult.source` and populates it on both `parseModern(...)` and `parseStatic(...)`
+  - [src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java](../../src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java) now prefers script-local signature/function matches before global fallback, so compatible global overloads no longer make valid local calls ambiguous
+  - [src/main/java/ch/njol/skript/variables/HintManager.java](../../src/main/java/ch/njol/skript/variables/HintManager.java) now removes the targeted section scope frame on `clearScope(level, true)` instead of only clearing its hint map, so removed section hints no longer leak into later local-variable parsing
+  - [src/main/java/ch/njol/skript/lang/Effect.java](../../src/main/java/ch/njol/skript/lang/Effect.java) now resets `Section.SectionContext` ownership between registered effect candidates on section lines, so an earlier failed section-claiming candidate cannot let a later literal effect parse the line incorrectly
+  - [src/main/java/ch/njol/skript/ScriptLoader.java](../../src/main/java/ch/njol/skript/ScriptLoader.java) now preserves retained non-default section diagnostics when `Section.parse(...)` fails but `Statement.parse(...)` fallback succeeds, and [src/main/java/ch/njol/skript/log/ParseLogHandler.java](../../src/main/java/ch/njol/skript/log/ParseLogHandler.java) now exposes raw retained entries for that comparison
 - parser/runtime verification landed:
+  - [src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
-  - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
-  - [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
+  - [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
   - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `230 / 230`
-- deferred but now better-scoped open follow-up:
-  - successful section-line fallback from `Section.parse(...)` to `Statement.parse(...)` still drops retained non-default section logs
-  - one parallel worker reproduced the gap but the first regression shape was invalid because `SectionExpression` ownership claimed the section before the intended fallback path; retry with a non-section-claiming statement form in the next loader batch
+- next likely `lang` follow-ups:
+  - broader `InputSource` bare-string mapping parity
+  - any corresponding condition-side section-ownership reset gap if a real mismatch remains
+  - broader parser default-value and pattern-runtime parity beyond the current green corpus
 
 ## What Landed In This Slice
 

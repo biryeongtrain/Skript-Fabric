@@ -46,7 +46,7 @@ It is not:
   - local `ch/njol/skript`: `140`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored dynamic-function validation cache discrimination, recursive `Classes.clone(...)` array isolation, and `SkriptParser.ParseResult.source`
+  - latest shortfall-focused closure restored local function-first registry fallback, section-scope hint clearing, effect-candidate section ownership reset, and retained section diagnostics on statement fallback success
 
 Primary registration sources:
 
@@ -124,6 +124,7 @@ None in the current Fabric registration set.
 - list-variable predicate checks now use upstream-style all-values `getAnd()` semantics instead of collapsing back to a single-value/default-expression path
 - quoted string literals remain strings in generic `%object%` contexts during live script loading
 - exact Patbox-style placeholders such as `%player:name%` now resolve through Patbox `TextPlaceholderAPI` on active message/name string paths when live event context exists
+- `FunctionRegistry` now prefers local script signatures and functions before global fallback, so compatible global overloads no longer make valid local calls ambiguous
 - statement fallback now keeps earlier higher-quality parse diagnostics instead of replacing them with lower-quality later plain-statement failures on the same syntax line
 - `SkriptParser` now supports minimal raw regex captures for registered syntax patterns like `if <.+>`, plus the minimal leading `implicit:` tag needed by registered conditional sections
 - `SkriptParser` now routes matching through the shared `patterns` package and receives general parse tags plus XOR marks through `ParseResult.mark` on the current compatibility surface, including the current bare leading `:` auto-tag derivation path
@@ -143,17 +144,20 @@ None in the current Fabric registration set.
 - `ScriptLoader` section-node fallback now restores the more specific retained section-versus-statement diagnostic when both parse paths fail
 - `ScriptLoader.parseSectionTriggerItem(...)` now keeps temporary local-variable hints when a section line fails `Section.parse(...)` but succeeds through statement fallback, and that path is live-covered by `statement_fallback_section_hint_test_block.sk`
 - `ScriptLoader.loadItems(...)` and `parseSectionTriggerItem(...)` now manage section and temporary non-section hint scopes, so failed section parses clear temporary hints while successful section loads can propagate, freeze, or merge hints through the active stop-flow path
+- section-only hint-scope clearing now removes the targeted section frame instead of leaving copied hints behind for later local-variable parsing
 - stopping statements now make `ScriptLoader` emit the upstream-style unreachable-code warning behind `ScriptWarning.UNREACHABLE_CODE` suppression, and real `.sk` coverage verifies that the later line never executes
 - nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results now propagate through `TriggerItem.walk(...)`, and registered sections now surface stop-trigger intent back to `ScriptLoader` for unreachable-code warnings
 - plain conditions used as section headers now report a specific ownership error instead of silently returning a body-less condition item
 - `Statement.parse(...)` now lets a later same-pattern plain statement win after earlier effect/condition init failures, while restoring the best prior specific error if no statement ultimately matches
 - `Statement.parse(...)` now clears inherited outer section ownership on plain statement parses, so nested function/effect/condition arguments no longer accidentally inherit an enclosing expression section
+- section-line effect parsing now resets section ownership between effect candidates, so a failed section-claiming effect candidate cannot let a later literal effect parse the same section line incorrectly
 - plain effects with section-managing expressions now receive their `SectionNode` through `Effect.parse(...)`, so real lines like `set {_component} to a blank equippable component:` execute their section body and propagate local-variable mutations back to the outer event scope
 - real `.sk` coverage now also includes a nested plain-effect argument inside an outer expression section
 - section-managed custom damage source, potion effect, and loot-context expressions now tolerate object-backed locals instead of assuming typed runtime arrays
 - shared literal-pattern class lookups now honor the same stable class-info ordering used by superclass resolution when multiple class infos register the same alias
 - `Classes.parse(...)` now falls back through registered converters after direct parser lookup, and `UnparsedLiteral` conversion can now reuse that path for converter-backed source types
 - `Classes.parse(...)` now also clears stale direct-parser failures before later parser or converter fallback success, so successful fallback does not leak earlier parser diagnostics
+- successful section-line fallback from `Section.parse(...)` to `Statement.parse(...)` now preserves specific non-default section diagnostics instead of collapsing them to only the generic section error
 - when a section expression swaps the current event type, outer event payloads should be captured into locals before entering the section body; the currently verified real `.sk` paths do this for custom damage source, potion effect, loot context, and blank equippable component sections
 - `Statement.parse(...)` now retains specific parse errors across nested parser scopes, so valid effects or function calls used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
 - real `.sk` coverage now also includes statement fallback after failed effect parse through `ambiguous loader syntax`
