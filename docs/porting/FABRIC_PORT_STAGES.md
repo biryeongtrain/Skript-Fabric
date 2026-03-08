@@ -72,13 +72,16 @@ Current measured baseline for that workstream:
   - `EffChange` now only forwards keyed deltas when the source expression explicitly recommends them
   - quoted string literals remain string literals in generic `%object%` contexts during live `.sk` loading
   - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, and `TriggerItem.walk(...)` now scopes the active event through `CurrentSkriptEvent`, so exact `%namespace:path%` placeholders resolve on live message/name paths
+  - `Variables.getVariable("name::*", ...)` now reconstructs upstream-style nested list maps from the flat store, while `getVariablesWithPrefix(...)` keeps the current shallow direct-child behavior
+  - `SkriptParser` now recognizes upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}`
+  - `Statement.selectRetainedFailure(...)` now keeps earlier higher-quality effect/condition parse errors over later lower-quality plain-statement failures on the same syntax line
   - section-managed custom damage source, potion effect, and loot-context expressions now tolerate object-backed local values instead of assuming typed runtime arrays
   - `Node.splitLine(...)` now strips inline comments, preserves quoted `#`, unescapes doubled `##`, and tracks `###` block comments for the active runtime parser
   - `SkriptRuntime.parseScript(...)` now uses that split logic, so trailing comments on section headers, option entries, conditions, and effects no longer break live `.sk` loading
   - `ParseLogHandler`, `SkriptLogger`, and `Statement.parse(...)` now retain specific parse errors across nested parser scopes, so valid effects used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
   - locked runtime GameTests now clear Skript variables before and after each body through `Variables.clearAll()`, which keeps real `.sk` verification isolated from suite-order leakage without changing production variable semantics
   - targeted unit verification passed on 2026-03-08
-  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `203 / 203`
+  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `205 / 205`
   - `./gradlew build --rerun-tasks` passed on 2026-03-08, including the full Fabric GameTest task
 
 This workstream runs in parallel with the Stage 5 and Stage 8 records below.
@@ -270,7 +273,7 @@ Status: `in_progress`
 Current completed slices:
 
 - `fabric-gametest` runtime harness is active
-- current real-script Fabric GameTest suite is green at `203 / 203`
+- current real-script Fabric GameTest suite is green at `205 / 205`
 
 ## Stage 8: Parity audit
 
@@ -398,6 +401,7 @@ Still remaining before Stage 8 can be called complete:
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the converter-backed class parsing, placeholder flag/time metadata, and plain-statement section-context slices; the active suite increased to `198 / 198`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the parse-log-aware `Classes.parse(...)`, ordered duplicate parser-tag accumulation, and statement fallback after failed effect/condition init slices; the active suite increased to `199 / 199`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after routing runtime message/name placeholders through Patbox `TextPlaceholderAPI`, adding a live `%player:name%` GameTest fixture, and clearing Skript variables before/after each locked runtime GameTest body to prevent suite-order leakage; the active suite increased to `203 / 203`.
+- 2026-03-08: `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics; the active suite increased to `205 / 205`.
 - 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
 - 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 

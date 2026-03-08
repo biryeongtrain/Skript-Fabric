@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `203 / 203` scheduled Fabric GameTests completed without build failure
+  - `205 / 205` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -196,11 +196,13 @@ Landed slices so far:
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success, so successful fallback no longer leaks earlier parser diagnostics
 - variable/runtime closure:
   - `SkriptParser` now recognizes `{...}` variable expressions directly
+  - `SkriptParser` now also recognizes the upstream-prefixed forms `var {x}`, `variable {x}`, and `the variable {x}` on the current compatibility surface
   - `Variable.newInstance(...)` now consumes parse-time local variable type hints through `ParserInstance` / `HintManager`, narrows generic `%object%` locals when a concrete hint is known, and rejects incompatible typed local lookups with a diagnostic
   - `Variables` now defaults to case-insensitive storage/lookup with a compatibility switch for case-sensitive operation
   - `Variables.withLocalVariables(...)` now follows upstream copy-back semantics for nested section-event execution instead of restoring the previous target snapshot
   - `Variable` no longer recommends preserving source keys for list-to-list `set`, so keyed list sources are reindexed into numeric target slots instead of leaking source keys
   - prefix/list iteration now uses natural variable-name ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set` reindexing
+  - raw list-variable reads through `Variables.getVariable("name::*", ...)` now reconstruct upstream-style nested maps, including `null` sentinel parent values when a direct parent and descendants coexist
   - list variables now expose the legacy loop aliases `index`, `var`, `variable`, and `value`, and their predicate checks again use upstream-style all-values `getAnd()` semantics
   - `EffChange` now forwards keyed deltas only when the source expression explicitly recommends keyed preservation
   - quoted string literals now remain string literals in generic `%object%` contexts instead of being consumed by registry-backed parsers during live script loading
@@ -216,6 +218,9 @@ Landed slices so far:
   - real base `.sk` coverage now includes a comment-aware loader fixture with commented section headers, commented option entries, quoted hashes, and block-commented invalid syntax
 - GameTest isolation closure:
   - locked runtime GameTests now clear Skript variables before and after each body through `Variables.clearAll()`, which prevents real `.sk` runs from leaking globals across suite order while leaving production variable semantics unchanged
+- statement-fallback diagnostic closure:
+  - `Statement.selectRetainedFailure(...)` now keeps an earlier higher-quality effect or condition parse error when a later plain statement fails with a lower-quality specific diagnostic on the same syntax line
+  - real base `.sk` coverage now includes `higher_quality_parse_error_prefers_effect_test_block.sk`, which proves the retained loader diagnostic stays on the earlier higher-quality effect failure
 - real `.sk` coverage added in the base GameTest slice:
   - options replacement path
   - comment-aware loader parsing path
@@ -260,8 +265,9 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging parse-log-aware `Classes.parse(...)`, ordered duplicate parser tags, and statement fallback after failed effect/condition init
 - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed after routing message-mode runtime placeholders through Patbox `TextPlaceholderAPI`
 - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after revalidating the variable runtime around the GameTest isolation harness change
-- `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `203 / 203` scheduled Fabric GameTests
+- `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics
+- `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `205 / 205` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -273,7 +279,7 @@ The following foundations were already built before this priority shift:
 - function compatibility scaffolding, including signatures, registries, dynamic references, expression/effect call wrappers, and namespace fallback behavior
 - variable and literal compatibility primitives, including `Variable`, `Variables`, `LiteralString`, `UnparsedLiteral`, `InputSource`, and section-expression helpers
 - foundational utility scaffolding in `classes`, `config`, `log`, `patterns`, `registrations`, `util`, and `variables`
-- active Fabric runtime harness and Fabric GameTest suite with `203 / 203` passing tests on the last code-verification run
+- active Fabric runtime harness and Fabric GameTest suite with `205 / 205` passing tests on the last code-verification run
 - Stage 8 parity-audited package-local Bukkit slice for `breeding`, `input`, and `interactions`
 
 ## Current Gaps

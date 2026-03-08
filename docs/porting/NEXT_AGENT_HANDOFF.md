@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `203 / 203` scheduled Fabric GameTests completed without build failure
+  - `205 / 205` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -52,20 +52,21 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged a coordinator-owned cross-cutting slice for runtime placeholder parity, then reran full coordinator verification
-- Patbox placeholder runtime bridge landed:
-  - `build.gradle` now includes Patbox `TextPlaceholderAPI`, and `VariableString` now routes `StringMode.MESSAGE` through it so exact `%namespace:path%` placeholders resolve on live message/name paths
-  - `TriggerItem.walk(...)` now scopes the active event through `CurrentSkriptEvent`, which gives placeholder resolution access to the current server, world, player, entity, or command source without changing non-message string behavior
-  - added regression coverage in [src/test/java/ch/njol/skript/lang/VariableStringCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableStringCompatibilityTest.java) for exact placeholder preservation when no live Patbox context exists
-- real `.sk` verification for the Patbox bridge landed:
-  - added [src/gametest/resources/skript/gametest/base/patbox_placeholder_entity_name_test_block.sk](../../src/gametest/resources/skript/gametest/base/patbox_placeholder_entity_name_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that uses `%player:name%` to set a live entity custom name through the existing Skript syntax path
-- locked runtime GameTest isolation landed:
-  - [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/AbstractSkriptFabricGameTestSupport.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/AbstractSkriptFabricGameTestSupport.java) now clears Skript variables before and after each locked GameTest body, which prevents cross-test global-variable leakage while leaving production variable semantics unchanged
+- merged the next three-lane coordinator slice for raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics
+- raw list-variable compatibility landed:
+  - [src/main/java/ch/njol/skript/variables/Variables.java](../../src/main/java/ch/njol/skript/variables/Variables.java) now reconstructs upstream-style nested `TreeMap` values for `Variables.getVariable("name::*", ...)`, including `null` sentinel parent entries when a direct parent value and descendants coexist
+  - added focused coverage in [src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java) for descendant-only and direct-parent-plus-descendant raw list reads, while keeping shallow prefix reads unchanged
+- prefixed variable parser compatibility landed:
+  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now accepts upstream-prefixed variable expressions such as `var {x}`, `variable {x}`, and `the variable {x}`
+  - [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) now proves both direct parser recognition and effect-driven runtime storage through those exact forms
+  - added [src/gametest/resources/skript/gametest/base/prefixed_variable_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/prefixed_variable_set_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that executes a real `.sk` file using `set var {MiXeDBlock} ...`
+- statement-fallback quality retention landed:
+  - [src/main/java/ch/njol/skript/lang/Statement.java](../../src/main/java/ch/njol/skript/lang/Statement.java) now keeps an earlier higher-quality effect or condition parse error when a later plain statement fails with a lower-quality specific diagnostic on the same syntax line
+  - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) and [src/gametest/resources/skript/gametest/base/higher_quality_parse_error_prefers_effect_test_block.sk](../../src/gametest/resources/skript/gametest/base/higher_quality_parse_error_prefers_effect_test_block.sk) now lock both the loader-only and real `.sk` paths
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed
-  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `203 / 203`
+  - `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `205 / 205`
 
 ## What Landed In This Slice
 
@@ -83,10 +84,13 @@ New immediate priority:
 - landed the current `Part 1A` / `Part 1B` slices:
   - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, and `TriggerItem.walk(...)` now exposes the current event through `CurrentSkriptEvent` so live `%namespace:path%` placeholders resolve on active message/name paths
   - locked runtime GameTests now clear Skript variables before and after each body, preventing suite-order leakage while leaving production variable semantics unchanged
+  - `Variables.getVariable("name::*", ...)` now reconstructs upstream-style nested list maps, including `null` parent sentinels when a direct parent value and descendants coexist, while `getVariablesWithPrefix(...)` keeps the current shallow direct-child view
+  - `SkriptParser` now recognizes upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}`
+  - `Statement.selectRetainedFailure(...)` now keeps earlier higher-quality effect/condition parse errors over later lower-quality plain-statement failures on the same syntax line
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk` plus `patbox_placeholder_entity_name_test_block.sk`, increasing the current Fabric GameTest suite to `203 / 203`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, and `higher_quality_parse_error_prefers_effect_test_block.sk`, increasing the current Fabric GameTest suite to `205 / 205`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup
@@ -146,7 +150,7 @@ New immediate priority:
   - function-call wrapper `init(...)` methods matching upstream are not current blockers
 - reran verification after the code slices:
   - targeted unit slices passed
-  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
@@ -154,7 +158,7 @@ New immediate priority:
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing section-level execution-intent propagation
   - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing explicit literal-pattern ordering parity
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging the latest parse-log-aware class parsing, ordered duplicate parser tags, and statement fallback slice
-  - `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
+  - `./gradlew runGameTest --rerun-tasks` passed with `205 / 205`
   - `./gradlew build --rerun-tasks` passed
 
 ## Files Changed In This Slice

@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `203 / 203`
+- Verified Fabric GameTests: `205 / 205`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -103,14 +103,17 @@ None in the current Fabric registration set.
 - the active runtime script parser now strips inline comments, preserves quoted `#`, unescapes doubled `##`, and skips `###` block comments through `Node.splitLine(...)`
 - live `.sk` coverage now includes comment-aware loader parsing for commented section headers, commented option entries, quoted hashes, and block-commented invalid syntax
 - `{...}` variable expressions are parsed directly by `SkriptParser`
+- upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}` are also parsed as variable expressions
 - `ParserInstance` now owns a `HintManager`, and parse-time local variable type hints can narrow simple local variables away from generic `%object%` requests while rejecting incompatible typed lookups
 - variables default to case-insensitive storage and lookup
 - list-variable `set` copies keyed list sources into reindexed numeric target slots instead of preserving source keys
 - prefix/list iteration now uses natural numeric ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set`
+- raw list-variable reads through `Variables.getVariable("name::*", ...)` now reconstruct nested maps, including upstream-style `null` sentinel parent entries when a direct parent value and descendants coexist
 - list variables now expose the legacy loop aliases `index`, `var`, `variable`, and `value`
 - list-variable predicate checks now use upstream-style all-values `getAnd()` semantics instead of collapsing back to a single-value/default-expression path
 - quoted string literals remain strings in generic `%object%` contexts during live script loading
 - exact Patbox-style placeholders such as `%player:name%` now resolve through Patbox `TextPlaceholderAPI` on active message/name string paths when live event context exists
+- statement fallback now keeps earlier higher-quality parse diagnostics instead of replacing them with lower-quality later plain-statement failures on the same syntax line
 - `SkriptParser` now supports minimal raw regex captures for registered syntax patterns like `if <.+>`, plus the minimal leading `implicit:` tag needed by registered conditional sections
 - `SkriptParser` now routes matching through the shared `patterns` package and receives general parse tags plus XOR marks through `ParseResult.mark` on the current compatibility surface, including the current bare leading `:` auto-tag derivation path
 - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order instead of collapsing them into a unique set
