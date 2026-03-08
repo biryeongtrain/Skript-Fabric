@@ -46,7 +46,7 @@ It is not:
   - local `ch/njol/skript`: `140`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored legacy log handlers, `patterns.Keyword`, `variables.TypeHints`, and parser/converter wrapper surfaces
+  - latest shortfall-focused closure restored dynamic-function validation cache discrimination, recursive `Classes.clone(...)` array isolation, and `SkriptParser.ParseResult.source`
 
 Primary registration sources:
 

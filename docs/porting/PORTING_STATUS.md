@@ -127,6 +127,12 @@ Landed slices so far:
   - `ch/njol/skript/patterns/Keyword` now exists locally and `SkriptPattern` again applies the upstream-style keyword prefilter before the heavier matcher path
   - `ch/njol/skript/variables/TypeHints` now restores the legacy add/get/enter-scope/exit-scope/clear bridge on top of the active hint manager
   - `ch/njol/skript/classes/Parser`, `PatternedParser`, `Converter`, and `ch/njol/skript/registrations/Converters` now restore the missing wrapper and adapter surface expected by older parser/converter paths
+- latest `lang` core closure batch:
+  - `DynamicFunctionReference.Input` now keys validation-cache entries by both parameter types and concrete parameter expressions, so same-return-type but different expression shapes no longer reuse the wrong cached validation result
+  - `Classes.clone(...)` now recursively clones arrays before falling through to `Cloneable`, and keyed function arguments no longer let callee-side array mutation leak back into caller-owned inputs
+  - `SkriptParser.ParseResult` now again exposes `source`, and both `parseModern(...)` and `parseStatic(...)` populate it with the matched compiled `SkriptPattern` before syntax-element init runs
+  - focused regression coverage now locks all three paths in `FunctionCallCompatibilityTest`, `ClassesCompatibilityTest`, and `SkriptParserRegistryTest`
+  - one adjacent loader slice was explored in parallel but intentionally not merged in this batch: successful section-line statement fallback still needs a clean retained-section-log regression that does not trip `SectionExpression` ownership conflicts
 - input-source parser/runtime closure:
   - `ch/njol/skript/expressions/ExprInput` is no longer only a minimal compatibility stub
   - `ch/njol/skript/lang/SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` directly when an `InputSource` context is active
