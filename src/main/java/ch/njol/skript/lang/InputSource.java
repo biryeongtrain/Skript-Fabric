@@ -38,29 +38,10 @@ public interface InputSource {
                     return null;
                 }
             }
-            if (isBareStringLiteral(expr, mappingExpr)) {
-                return null;
-            }
             return mappingExpr;
         } finally {
             inputData.setSource(originalSource);
         }
-    }
-
-    private static boolean isBareStringLiteral(String expr, @Nullable Expression<?> mappingExpr) {
-        if (!(mappingExpr instanceof Literal<?> literal) || expr == null) {
-            return false;
-        }
-        String trimmed = expr.trim();
-        if (trimmed.isEmpty()) {
-            return false;
-        }
-        if ((trimmed.startsWith("\"") && trimmed.endsWith("\""))
-                || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-            return false;
-        }
-        Object value = literal.getSingle(null);
-        return value instanceof String string && trimmed.equals(string);
     }
 
     class InputData extends ParserInstance.Data {

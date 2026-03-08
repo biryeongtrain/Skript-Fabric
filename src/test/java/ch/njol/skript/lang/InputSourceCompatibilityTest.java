@@ -3,7 +3,6 @@ package ch.njol.skript.lang;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import ch.njol.skript.classes.ClassInfo;
@@ -33,7 +32,8 @@ class InputSourceCompatibilityTest {
         inputData.setSource(previous);
 
         Expression<?> parsed = current.parseExpression("anything", parser, SkriptParser.ALL_FLAGS);
-        assertNull(parsed);
+        assertNotNull(parsed);
+        assertEquals("anything", parsed.getSingle(SkriptEvent.EMPTY));
         assertSame(previous, inputData.getSource());
     }
 
@@ -60,6 +60,17 @@ class InputSourceCompatibilityTest {
     }
 
     @Test
+    void parseExpressionAcceptsBareStringLiteralMappings() {
+        ParserInstance parser = ParserInstance.get();
+        DummyInputSource source = new DummyInputSource("alpha");
+
+        Expression<?> parsed = source.parseExpression("plain text", parser, SkriptParser.ALL_FLAGS);
+
+        assertNotNull(parsed);
+        assertEquals("plain text", parsed.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
     void parseExpressionResolvesInputIndexWhenSourceHasIndices() {
         ParserInstance parser = ParserInstance.get();
         DummyIndexedInputSource source = new DummyIndexedInputSource("value", "slot-3");
@@ -73,13 +84,14 @@ class InputSourceCompatibilityTest {
     }
 
     @Test
-    void parseExpressionRejectsInputIndexWithoutIndices() {
+    void parseExpressionFallsBackToLiteralWhenInputIndexIsUnavailable() {
         ParserInstance parser = ParserInstance.get();
         DummyInputSource source = new DummyInputSource("alpha");
 
         Expression<?> parsed = source.parseExpression("input index", parser, SkriptParser.ALL_FLAGS);
 
-        assertNull(parsed);
+        assertNotNull(parsed);
+        assertEquals("input index", parsed.getSingle(SkriptEvent.EMPTY));
     }
 
     @Test
@@ -112,14 +124,15 @@ class InputSourceCompatibilityTest {
     }
 
     @Test
-    void parseExpressionRejectsPluralTypedInput() {
+    void parseExpressionFallsBackToLiteralWhenTypedInputFormIsPlural() {
         ParserInstance parser = ParserInstance.get();
         DummyInputSource source = new DummyInputSource(new FooValue());
         Classes.registerClassInfo(new ClassInfo<>(FooValue.class, "foo"));
 
         Expression<?> parsed = source.parseExpression("foos input", parser, SkriptParser.ALL_FLAGS);
 
-        assertNull(parsed);
+        assertNotNull(parsed);
+        assertEquals("foos input", parsed.getSingle(SkriptEvent.EMPTY));
     }
 
     private static class DummyInputSource implements InputSource {

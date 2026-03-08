@@ -4,70 +4,67 @@ Last updated: 2026-03-08
 
 ## Scope
 
-- Part 1B class-registry compatibility only
-- exact upstream-backed closure slice: restore upstream-style recursive array cloning in `ch/njol/skript/registrations/Classes.clone(...)` so keyed function argument consigning does not leak array mutations back to caller-owned values
+- stay inside the `lang-core` parser/input-source closure
+- compare local `InputSource.parseExpression(...)` behavior against `/tmp/skript-upstream-e6ec744-2`
+- restore one contained upstream-visible input-source/runtime gap without widening into syntax imports or non-owned files
 
 ## Owned Files
 
-- `src/main/java/ch/njol/skript/registrations/Classes.java`
-- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/InputSource.java`
+- `src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Goal For This Session
 
-- compare the local `Classes.clone(...)` behavior against upstream snapshot `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/registrations/Classes.java`
-- restore the upstream recursive array-clone branch without widening into out-of-scope `ClassInfo` cloner work
-- verify the restored behavior both directly through `ClassesCompatibilityTest` and through the live keyed-function argument path that already calls `Classes.clone(...)`
+- verify whether the local `InputSource.parseExpression(...)` still diverges from upstream after the recent parser-source/default-value work
+- if so, land the smallest fix and focused regression coverage inside the owned input-source surface
 
 ## Work Log
 
-- compared local `src/main/java/ch/njol/skript/registrations/Classes.java` against upstream snapshot `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/registrations/Classes.java`
-- confirmed the local `Classes.clone(...)` shim only attempted reflective `clone()` calls and therefore missed the upstream explicit array branch
-- confirmed the active runtime already applies `Classes.clone(...)` inside `src/main/java/ch/njol/skript/lang/function/FunctionReference.java` when consigning keyed plural arguments
-- restored the upstream recursive array-clone behavior in `Classes.clone(...)`:
-  - arrays now allocate a same-component clone
-  - each array slot is cloned recursively before assignment
-  - non-array behavior stays on the existing reflective `Cloneable` fallback
-- added focused direct coverage in `ClassesCompatibilityTest` for nested array cloning
-- added applied runtime coverage in `FunctionCallCompatibilityTest` proving keyed function parameters now receive cloned array values and can mutate them without mutating the caller-owned source array
-- did not broaden into `variables`, `config`, `structures`, `ClassInfo`, or parser-owned files
-- did not add GameTests because this slice changes runtime object isolation inside the existing Java compatibility path, not live `.sk` parsing or structure loading
+- compared local `src/main/java/ch/njol/skript/lang/InputSource.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/InputSource.java`
+- confirmed the local file had an extra `isBareStringLiteral(...)` rejection branch that does not exist upstream
+- traced the upstream behavior through `SkriptParser.parseExpression(Class<? extends T>... types)` in `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/SkriptParser.java`
+- confirmed upstream input-source parsing falls back to plain literal parsing when an input-shaped form does not produce a usable `ExprInput`
+- added focused coverage in `InputSourceCompatibilityTest` for:
+  - bare string literal mappings such as `plain text`
+  - source restoration while parsing a plain literal such as `anything`
+  - literal fallback for `input index` when the source has no indices
+  - literal fallback for plural typed-input text such as `foos input`
+- removed the local-only bare-string veto from `InputSource.parseExpression(...)`
+- kept the existing `LiteralUtils` defense path and `InputData` restoration behavior unchanged
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/registrations/Classes.java`
-- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/InputSource.java`
+- `src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
 
 - Stage 8 package-local audit counts changed: `0`
 - canonical porting doc counts changed: `0`
-- Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
-- Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
-- Java test file count changed in `src/test/java/ch/njol/skript/lang/function`: `0` added, `1` modified
+- Java source file count changed in `src/main/java/ch/njol/skript/lang`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript/lang`: `0` added, `1` modified
 - real `.sk` fixture count changed: `0`
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
-  - passed
-  - verified both the direct `Classes.clone(...)` array behavior and the keyed function-argument application path
-- `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
-  - passed
-  - satisfied the lane minimum verification command unchanged
+- `./gradlew test --tests ch.njol.skript.lang.InputSourceCompatibilityTest --rerun-tasks`
+  - first run failed before the runtime fix
+  - failing assertion was the new bare-literal regression in `InputSourceCompatibilityTest`
+- `./gradlew test --tests ch.njol.skript.lang.InputSourceCompatibilityTest --rerun-tasks`
+  - passed after removing the local-only `isBareStringLiteral(...)` rejection
+  - verified bare literal fallback, invalid input-form literal fallback, typed input resolution, indexed input resolution, and source restoration
 
 ## Unresolved Risks
 
-- this slice restores only the upstream recursive array branch in `Classes.clone(...)`; the broader upstream `ClassInfo`-level cloner surface is still absent locally and remains outside this lane slice
-- keyed argument isolation is now correct for array values, but non-array mutable objects without a dedicated clone path still follow the existing shallow behavior
+- this slice only restores the upstream literal-fallback path in `InputSource.parseExpression(...)`
+- broader upstream input-source syntax packages and downstream consumers of `getDependentInputs()` remain outside this lane
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/registrations/Classes.java`
-  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-  - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
-- no overlap expected with the active parser or statement lanes under the current ownership matrix
+  - `src/main/java/ch/njol/skript/lang/InputSource.java`
+  - `src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_C_STATUS.md`
+- no overlap expected with parser-data or default-value work unless another lane is editing the same input-source compatibility file
