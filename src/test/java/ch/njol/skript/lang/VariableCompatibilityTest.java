@@ -210,6 +210,22 @@ class VariableCompatibilityTest {
     }
 
     @Test
+    void parserRecognizesPrefixedVariableExpressions() {
+        Expression<?> shortPrefixed = new SkriptParser("var {MiXeD}", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{String.class});
+        Expression<?> longPrefixed = new SkriptParser("the variable {MiXeD}", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{String.class});
+
+        assertNotNull(shortPrefixed);
+        assertInstanceOf(Variable.class, shortPrefixed);
+        assertEquals("{MiXeD}", shortPrefixed.toString(SkriptEvent.EMPTY, false));
+
+        assertNotNull(longPrefixed);
+        assertInstanceOf(Variable.class, longPrefixed);
+        assertEquals("{MiXeD}", longPrefixed.toString(SkriptEvent.EMPTY, false));
+    }
+
+    @Test
     void variablesAreCaseInsensitiveByDefault() {
         Variable<String> mixed = Variable.newInstance("MiXeD", new Class[]{String.class});
         Variable<String> lower = Variable.newInstance("mixed", new Class[]{String.class});
@@ -249,6 +265,29 @@ class VariableCompatibilityTest {
 
         Statement setVariable = Statement.parse("set {MiXeDBlock} to \"gold_block\"", "failed");
         Expression<?> lookup = new SkriptParser("{mixedblock}", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{String.class});
+
+        assertNotNull(setVariable);
+        assertNotNull(lookup);
+
+        TriggerItem.walk(setVariable, SkriptEvent.EMPTY);
+
+        assertEquals("gold_block", lookup.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void parsedChangeEffectStoresPrefixedVariableValue() {
+        Skript.registerEffect(
+                EffChange.class,
+                "set %object% to %object%",
+                "add %object% to %object%",
+                "remove %object% from %object%",
+                "reset %object%",
+                "delete %object%"
+        );
+
+        Statement setVariable = Statement.parse("set var {MiXeDBlock} to \"gold_block\"", "failed");
+        Expression<?> lookup = new SkriptParser("the variable {mixedblock}", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
                 .parseExpression(new Class[]{String.class});
 
         assertNotNull(setVariable);
