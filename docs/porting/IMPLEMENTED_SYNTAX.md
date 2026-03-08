@@ -119,9 +119,11 @@ None in the current Fabric registration set.
 - registered pure `Section` nodes now load through `ScriptLoader.loadItems(...)` instead of being dropped into statement-only fallback
 - `ScriptLoader` section-node fallback now restores the more specific retained section-versus-statement diagnostic when both parse paths fail
 - stopping statements now make `ScriptLoader` emit the upstream-style unreachable-code warning behind `ScriptWarning.UNREACHABLE_CODE` suppression, and real `.sk` coverage verifies that the later line never executes
+- nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results now propagate through `TriggerItem.walk(...)`, and registered sections now surface stop-trigger intent back to `ScriptLoader` for unreachable-code warnings
 - plain conditions used as section headers now report a specific ownership error instead of silently returning a body-less condition item
 - plain effects with section-managing expressions now receive their `SectionNode` through `Effect.parse(...)`, so real lines like `set {_component} to a blank equippable component:` execute their section body and propagate local-variable mutations back to the outer event scope
 - section-managed custom damage source, potion effect, and loot-context expressions now tolerate object-backed locals instead of assuming typed runtime arrays
+- shared literal-pattern class lookups now honor the same stable class-info ordering used by superclass resolution when multiple class infos register the same alias
 - when a section expression swaps the current event type, outer event payloads should be captured into locals before entering the section body; the currently verified real `.sk` paths do this for custom damage source, potion effect, loot context, and blank equippable component sections
 - `Statement.parse(...)` now retains specific parse errors across nested parser scopes, so valid effects or function calls used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
 

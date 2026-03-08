@@ -171,10 +171,12 @@ Landed slices so far:
 - loader unreachable-code warning closure:
   - `ScriptLoader.loadItems(...)` now emits `Unreachable code. The previous statement stops further execution.` when a previously loaded `Statement` advertises a stopping `ExecutionIntent`
   - that warning now respects `ScriptWarning.UNREACHABLE_CODE` suppression on the active script
+  - nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results now propagate through `TriggerItem.walk(...)`, and registered sections now surface stop-trigger intent back to `ScriptLoader` for unreachable-code warnings
   - real base `.sk` coverage now verifies both warning emission and runtime short-circuiting through `unreachable_code_warning_stop_test_block.sk`
 - class/type registry closure:
   - `ClassInfo` and `Classes` now close the missing codename, literal-pattern, and supertype resolution behavior that the parser/runtime depends on
   - `Classes` now also computes stable class-info ordering that prefers narrower assignable types and honors `before(...)` / `after(...)` dependencies instead of using raw registration order
+  - shared literal-pattern matches returned by `Classes.getPatternInfos(...)` now follow that same stable ordering when multiple class infos register the same alias
 - variable/runtime closure:
   - `SkriptParser` now recognizes `{...}` variable expressions directly
   - `Variables` now defaults to case-insensitive storage/lookup with a compatibility switch for case-sensitive operation
@@ -221,6 +223,8 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after closing bare leading `:` auto-tag derivation
 - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing class-info ordering semantics
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing loader unreachable-code warnings
+- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing explicit literal-pattern ordering parity
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing section-level execution-intent propagation
 - `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
 - `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `197 / 197` scheduled Fabric GameTests
 
@@ -246,10 +250,10 @@ The following foundations were already built before this priority shift:
   - `EffFunctionCall.init(...)` and `ExprFunctionCall.init(...)` returning `false` on direct wrapper instances also match upstream behavior
 - current Stage 8 package-local audit for `org/skriptlang/skript/bukkit` remains valid, but it is no longer the only gating audit track
 - `Part 1A` and `Part 1B` are both active, but most parser, statement, loader, variable, and type-system closure work remains open
-- generic registered section loading is now closed in `ScriptLoader`, `ScriptLoader` now also restores the more specific section-versus-statement fallback diagnostic and warns about unreachable code behind script-level warning suppression, and plain conditions no longer masquerade as section headers; broader loader/config hint flow is still incomplete
+- generic registered section loading is now closed in `ScriptLoader`, `ScriptLoader` now also restores the more specific section-versus-statement fallback diagnostic, propagates nested section-contained stop-trigger intent through loader/runtime, warns about unreachable code behind script-level warning suppression, and plain conditions no longer masquerade as section headers; broader loader/config hint flow is still incomplete
 - validator-backed recursive `options:` loading for runtime `EntryNode` trees and raw simple-entry trees is now closed, but broader structure/config validation behavior is still much thinner than upstream
 - the parser no longer regresses the currently verified natural-script inline optional/alternation forms, now forwards general tags/XOR marks through the shared matcher, and now derives the current bare leading `:` auto-tags again; broader upstream pattern element-graph parity is still incomplete
-- natural numeric ordering for list/prefix iteration is now closed, but broader `Variables` runtime semantics are still incomplete
+- natural numeric ordering for list/prefix iteration is now closed, and shared literal-pattern matches now follow stable class-info ordering too, but broader `Variables` and class-registry runtime semantics are still incomplete
 
 ## Active Workstreams
 
