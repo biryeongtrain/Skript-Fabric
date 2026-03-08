@@ -496,6 +496,33 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileUsingShallowListVariableCopy(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/list_variable_shallow_copy_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(1, 1, 0)).getBlock() == Blocks.AIR,
+                    Component.literal("Expected nested descendant-only source entries to stay out of shallow list copies.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void executesRealSkriptFileUsingUnreachableCodeWarnings(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             ensureUnreachableTestStatementRegistered();

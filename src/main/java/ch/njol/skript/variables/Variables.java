@@ -149,7 +149,12 @@ public final class Variables {
         Map<String, Object> map = local ? localMap(event, false) : GLOBAL_VARIABLES;
         Map<String, Object> matches = new TreeMap<>(VARIABLE_NAME_COMPARATOR);
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (entry.getKey().startsWith(normalized)) {
+            if (!entry.getKey().startsWith(normalized)) {
+                continue;
+            }
+
+            String suffix = entry.getKey().substring(normalized.length());
+            if (!suffix.isEmpty() && !suffix.contains("::")) {
                 matches.put(entry.getKey(), entry.getValue());
             }
         }
