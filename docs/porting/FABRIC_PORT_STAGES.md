@@ -56,6 +56,9 @@ Current measured baseline for that workstream:
   - `PatternCompiler` now also builds a lightweight `PatternElement` graph, and `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)`
   - `ParserInstance` now owns an upstream-style `HintManager`, and `Variable.newInstance(...)` now narrows simple local variables from known hints during parse-time local variable resolution
   - `ScriptLoader.loadItems(...)` and `parseSectionTriggerItem(...)` now manage section and temporary non-section hint scopes, so failed section parses roll back temporary hints while successful section loads can propagate, freeze, or merge hints through the active stop-flow path
+  - `Classes.parse(...)` now falls back through registered converters after direct parser lookup, so converter-backed source types can satisfy requested class infos and unparsed-literal conversion paths
+  - `PatternCompiler` now preserves placeholder-local `*` / `~`, leading optional markers, plural metadata, and `@time`, `TypePatternElement` now exposes that metadata, and `SkriptPattern` now applies placeholder-local parse flags plus `@time` through the shared matcher while leaving plurality metadata non-enforcing on the current green corpus
+  - `Statement.parse(...)` now clears inherited outer section ownership on plain statement parses, so nested function/effect/condition arguments do not accidentally inherit an enclosing expression section; the GameTest suite now covers the equivalent outer-expression-section plain-effect path
   - `Variables` now uses natural numeric ordering for prefix/list iteration, and the base GameTest suite now verifies that `{source::2}` sorts ahead of `{source::10}`
   - list variables now also expose the legacy loop aliases `var`, `variable`, and `value`, and restore upstream all-values predicate-check semantics through `Variable.getAnd()` / `check(...)`
   - `ClassInfo` / `Classes` now close codename, literal-pattern, supertype-lookup, class-info ordering, and shared literal-match ordering behavior used by parser/runtime compatibility paths
@@ -69,7 +72,7 @@ Current measured baseline for that workstream:
   - `SkriptRuntime.parseScript(...)` now uses that split logic, so trailing comments on section headers, option entries, conditions, and effects no longer break live `.sk` loading
   - `ParseLogHandler`, `SkriptLogger`, and `Statement.parse(...)` now retain specific parse errors across nested parser scopes, so valid effects used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
   - targeted unit verification passed on 2026-03-08
-  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `197 / 197`
+  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `198 / 198`
   - `./gradlew build --rerun-tasks` passed on 2026-03-08, including the full Fabric GameTest task
 
 This workstream runs in parallel with the Stage 5 and Stage 8 records below.
@@ -261,7 +264,7 @@ Status: `in_progress`
 Current completed slices:
 
 - `fabric-gametest` runtime harness is active
-- current real-script Fabric GameTest suite is green at `197 / 197`
+- current real-script Fabric GameTest suite is green at `198 / 198`
 
 ## Stage 8: Parity audit
 
@@ -386,6 +389,7 @@ Still remaining before Stage 8 can be called complete:
 - 2026-03-08: `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the next parallel class-info ordering, empty auto-tag derivation, and loader unreachable-code warning slices; the active suite increased to `197 / 197`.
 - 2026-03-08: `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the explicit literal-pattern ordering follow-up and section execution-intent propagation follow-up; the active suite remained `197 / 197`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the local-variable type-hint, lightweight pattern-element graph API, and loader hint-scope slices; the build path again executed the full Fabric GameTest suite successfully and the active suite remained `197 / 197`.
+- 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the converter-backed class parsing, placeholder flag/time metadata, and plain-statement section-context slices; the active suite increased to `198 / 198`.
 - 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
 - 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 

@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `197 / 197` scheduled Fabric GameTests completed without build failure
+  - `198 / 198` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -144,6 +144,8 @@ Landed slices so far:
   - `PatternCompiler` now also builds a lightweight `PatternElement` graph, and `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)` for the current upstream-introspection compatibility surface
   - bare leading `:` metadata now auto-derives from following literal and choice branches on the current compatibility surface, so forms such as `:future`, `:non(-| )`, and `:(min|max)[imum]` reach `ParseResult` again
   - unmatched optional and alternation-scoped raw-regex captures now stay matchable through the shared matcher path instead of failing `ParseResult` construction
+  - `PatternCompiler` now also preserves placeholder-local parse flags (`*` / `~`), leading optional markers, plural metadata, and `@time` metadata through `TypePatternElement`
+  - `SkriptPattern` now applies placeholder-local parse flags plus `@time` when turning captured text into expressions through the shared matcher, while leaving placeholder plurality metadata exposed but non-enforcing on the current green corpus
   - `PatternCompilerCompatibilityTest` and `SkriptParserRegistryTest` now cover branch tags, parse marks, and the already-green inline optional whitespace natural form through the shared matcher
 - script-loading options closure:
   - `options:` entries are now represented by `EntryNode`
@@ -165,6 +167,7 @@ Landed slices so far:
   - `Skript.error(...)`, `Skript.warning(...)`, and `Skript.debug(...)` now flow through a parse-log-aware `SkriptLogger`
   - `ParseLogHandler` now retains specific parse errors across nested parser scopes instead of acting as an empty shim
   - `Statement.parse(...)` now stops on captured function/effect/condition parse errors and prints the retained diagnostic instead of falling through to a generic section fallback
+  - `Statement.parse(...)` now also clears any inherited outer `Section.SectionContext` owner when parsing plain statements (`node == null`), so nested function/effect/condition arguments do not accidentally inherit an enclosing expression section
   - `ScriptLoaderCompatibilityTest` now proves that a valid effect used as a section keeps its specific ownership error without also logging `Can't understand this section`
 - loader fallback diagnostic closure:
   - `ParseLogHandler` now exposes snapshot/restore helpers and retained-error accessors so loader-owned section fallback can compare section and statement diagnostics without printing both
@@ -184,6 +187,7 @@ Landed slices so far:
   - `ClassInfo` and `Classes` now close the missing codename, literal-pattern, and supertype resolution behavior that the parser/runtime depends on
   - `Classes` now also computes stable class-info ordering that prefers narrower assignable types and honors `before(...)` / `after(...)` dependencies instead of using raw registration order
   - shared literal-pattern matches returned by `Classes.getPatternInfos(...)` now follow that same stable ordering when multiple class infos register the same alias
+  - `Classes.parse(...)` now falls back through registered converters after direct parser lookup, so converter-backed source types can still satisfy requested class infos on the current compatibility surface
 - variable/runtime closure:
   - `SkriptParser` now recognizes `{...}` variable expressions directly
   - `Variable.newInstance(...)` now consumes parse-time local variable type hints through `ParserInstance` / `HintManager`, narrows generic `%object%` locals when a concrete hint is known, and rejects incompatible typed local lookups with a diagnostic
@@ -215,6 +219,7 @@ Landed slices so far:
   - natural numeric list ordering path for `{source::2}` before `{source::10}`
   - unreachable-code warning plus stop-trigger short-circuit path
   - plain-effect section ownership plus local-variable copy-back through `set {_component} to a blank equippable component:`
+  - plain-effect argument parsing inside an outer expression section path
 
 Targeted verification completed on 2026-03-08:
 
@@ -237,8 +242,11 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing parse-time local variable type hints
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after adding lightweight pattern element graph APIs
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing loader hint-scope lifecycle
-- `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `197 / 197` scheduled Fabric GameTests
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks` passed after closing converter-backed class parsing fallback
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing placeholder flag/time metadata flow
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing plain-statement section-context ownership
+- `./gradlew runGameTest --rerun-tasks` passed with `198 / 198`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `198 / 198` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -250,7 +258,7 @@ The following foundations were already built before this priority shift:
 - function compatibility scaffolding, including signatures, registries, dynamic references, expression/effect call wrappers, and namespace fallback behavior
 - variable and literal compatibility primitives, including `Variable`, `Variables`, `LiteralString`, `UnparsedLiteral`, `InputSource`, and section-expression helpers
 - foundational utility scaffolding in `classes`, `config`, `log`, `patterns`, `registrations`, `util`, and `variables`
-- active Fabric runtime harness and Fabric GameTest suite with `197 / 197` passing tests on the last code-verification run
+- active Fabric runtime harness and Fabric GameTest suite with `198 / 198` passing tests on the last code-verification run
 - Stage 8 parity-audited package-local Bukkit slice for `breeding`, `input`, and `interactions`
 
 ## Current Gaps

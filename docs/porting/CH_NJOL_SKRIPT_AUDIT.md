@@ -126,13 +126,13 @@ That means the real gap is behavior, not class presence.
 
 | Cluster | Current local signals | Why it matters | First closure target |
 | --- | --- | --- | --- |
-| Parser flow | `SkriptParser` now uses a shared compiled matcher, forwards general parse tags plus XOR marks, keeps the current natural forms green, derives the current bare leading `:` auto-tags again, no longer fails on omitted optional/alternation raw-regex captures, and now exposes a lightweight `PatternElement` graph through `SkriptPattern`; broader upstream pattern element-graph/runtime parity is still open | parser behavior controls every syntax import after this | `Part 1A` |
-| Statement loading | `Statement.parse(...)` now retains specific function/effect/condition parse errors, rejects plain conditions used as section headers, and now benefits from the first local hint-scope lifecycle, but broader orchestration and built-in hint flow are still thin | statement ordering and section ownership determine real script semantics | `Part 1A` |
+| Parser flow | `SkriptParser` now uses a shared compiled matcher, forwards general parse tags plus XOR marks, keeps the current natural forms green, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails on omitted optional/alternation raw-regex captures, and now exposes a lightweight `PatternElement` graph through `SkriptPattern`; broader upstream pattern element-graph/runtime parity plus omitted-default-expression parity are still open | parser behavior controls every syntax import after this | `Part 1A` |
+| Statement loading | `Statement.parse(...)` now retains specific function/effect/condition parse errors, rejects plain conditions used as section headers, clears inherited outer section ownership for plain statements, and now benefits from the first local hint-scope lifecycle, but broader orchestration and built-in hint flow are still thin | statement ordering and section ownership determine real script semantics | `Part 1A` |
 | Script loading | `ScriptLoader.replaceOptions(...)` is real now, `loadItems(...)` now handles registered section nodes before falling back to statements, plain effects can own section-managing expressions through `Effect.parse(...)`, section-versus-statement fallback now restores the better retained diagnostic, stopping statements now emit unreachable-code warnings behind script-level warning suppression, nested section-contained stop-trigger intent now propagates through loader/runtime while `stopSection` stays local, section and temporary non-section hint scopes now open/freeze/merge through the active loader path, and the active Fabric runtime parser strips inline comments plus `###` block comments through `Node.splitLine(...)`; the broader upstream parse/log/hint flow is still much thinner than upstream | script preprocessing and trigger-item construction parity are still incomplete | `Part 1A` |
 | If-section support | `SecIf` now executes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, and implicit conditional sections through a registered section path, and `Condition.parse(...)` now unwraps grouped outer parentheses | basic conditional-section behavior is now much closer to upstream; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity beyond the minimal `implicit:` support | `Part 1A` |
 | Input-source compatibility | `ExprInput` now supports `input`, typed `%classinfo% input`, and `input index`; broader source usage paths are still not closed | input expressions depend on this bridge | `Part 1A` |
 | Variable runtime | `Variables` now covers case-insensitive storage, copy-back semantics, list-to-list reindexing, natural numeric ordering for prefix/list iteration, legacy list-variable loop/check semantics, and a first parse-time local-variable hint path through `HintManager`, but it is still an in-memory bridge only | variable semantics affect function calls, sections, and expressions | `Part 1B` |
-| Type/parse registry | `Classes` now covers codename/literal/supertype lookup, stable class-info ordering, and shared literal-match ordering, but remains a small compatibility layer relative to upstream | typed literal and parser behavior depend on it | `Part 1B` |
+| Type/parse registry | `Classes` now covers codename/literal/supertype lookup, stable class-info ordering, shared literal-match ordering, and converter-backed parse fallback, but remains a small compatibility layer relative to upstream | typed literal and parser behavior depend on it | `Part 1B` |
 
 ## Part Tracker
 
@@ -153,11 +153,11 @@ That means the real gap is behavior, not class presence.
 - kept root-level filenames as entrypoint pointers for prompt compatibility
 - froze and recorded the current Stage 8 verified baseline:
   - `23 / 214` package-local audited
-  - `197 / 197` Fabric GameTests on the last runtime verification
+  - `198 / 198` Fabric GameTests on the last runtime verification
   - `./gradlew build --rerun-tasks` passed on the last runtime verification
 - measured the upstream/local `ch/njol/skript` source gap:
   - upstream `1189`
-  - local `119`
+  - local `128`
 - wrote the first top-level package matrix and selected `lang` as the first closure slice
 - landed the current concrete `Part 1A` and `Part 1B` code slices:
   - `ExprInput` now resolves current input values instead of acting as a pure stub
@@ -226,6 +226,10 @@ That means the real gap is behavior, not class presence.
   - `ScriptLoaderCompatibilityTest` now covers failed-section hint rollback, successful sibling propagation, stop-trigger scope freezing, and stop-section hint merging
   - `TriggerItem.walk(...)` now honors nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results, while `TriggerSection` now surfaces nested stop-trigger intent back to `ScriptLoader` for unreachable-code warnings
   - `ScriptLoaderCompatibilityTest` now covers registered sections that stop the outer trigger versus sections that only stop their own body
+  - `Classes.parse(...)` now falls back through registered converters after direct parser lookup, so converter-backed source types can satisfy requested class infos and `UnparsedLiteral` conversion paths on the current compatibility surface
+  - `PatternCompiler` now preserves placeholder-local `*` / `~`, leading `-`, plural metadata, and `@time`, `TypePatternElement` now exposes that metadata, and `SkriptPattern` now applies placeholder-local parse flags plus time through the shared matcher while leaving plurality metadata non-enforcing on the current green corpus
+  - `Statement.parse(...)` now clears inherited outer expression-section ownership on plain statement parses, so nested function/effect/condition arguments no longer accidentally inherit an enclosing section owner
+  - real expression `.sk` GameTests now also cover plain-effect argument parsing inside an outer expression section
 - reran verification after the code slice:
   - `./gradlew test --tests ch.njol.skript.config.NodeCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.structures.StructureEntryValidatorCompatibilityTest --tests ch.njol.skript.config.SectionNodeCompatibilityTest --rerun-tasks` passed
@@ -242,9 +246,12 @@ That means the real gap is behavior, not class presence.
   - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `198 / 198`
   - `./gradlew build --rerun-tasks` passed
-  - build path executed the full Fabric GameTest task successfully with `197` scheduled tests
+  - build path executed the full Fabric GameTest task successfully with `198` scheduled tests
 - upstream cross-check corrected two false blockers:
   - `TriggerSection.run(...)` throwing `UnsupportedOperationException` matches upstream intent
   - function-call wrapper `init(...)` stubs match upstream direct-wrapper behavior and are not current blockers

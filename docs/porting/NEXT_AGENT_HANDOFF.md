@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `197 / 197` scheduled Fabric GameTests completed without build failure
+  - `198 / 198` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -53,22 +53,24 @@ New immediate priority:
 ## Latest Closure Slice
 
 - merged the next coordinator batch in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
-- Lane C closed the next local-variable type-hint slice:
-  - added [src/main/java/ch/njol/skript/variables/HintManager.java](../../src/main/java/ch/njol/skript/variables/HintManager.java) plus [src/main/java/ch/njol/skript/lang/parser/ParserInstance.java](../../src/main/java/ch/njol/skript/lang/parser/ParserInstance.java) hint-manager plumbing
-  - `Variable.newInstance(...)` now narrows simple local variables from known hints, keeps compatible typed lookups narrow, and rejects incompatible hinted types with a diagnostic
-  - added regressions in [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) for hinted generic-object narrowing and incompatible typed locals
-- Lane B closed the next upstream pattern-element surface slice:
-  - `PatternCompiler` now builds a lightweight `PatternElement` graph alongside the existing shared matcher path
-  - `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)` for the current compatibility surface
-  - added regressions in [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) and [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) that prove the lightweight graph stays visible through both direct compilation and parser-registry paths
-- Lane A closed the next loader hint-flow slice:
-  - `ScriptLoader` now opens/closes section hint scopes, clears temporary section-parse hints on fallback, freezes scopes behind stopping statements, and merges `stopSection` hints into the resumed sibling scope
-  - added regressions in [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) for failed-section rollback, successful sibling propagation, stop-trigger freeze, and stop-section merge
+- Lane C closed converter-backed class parsing fallback:
+  - `Classes.parse(...)` now retries through registered converter source types after direct parser lookup
+  - added regressions in [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java) and [src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/UnparsedLiteralCompatibilityTest.java) for converter-backed class parsing and unparsed-literal conversion
+- Lane B closed placeholder flag/time metadata parity:
+  - `PatternCompiler` now preserves placeholder-local `*` / `~`, leading `-`, plural metadata, and `@time`
+  - `TypePatternElement` now exposes `flagMask()`, `time()`, `isOptional()`, and `pluralities()`
+  - `SkriptPattern` now applies placeholder-local parse flags and `@time` through the shared matcher while keeping plurality metadata non-enforcing on the current green corpus
+  - added regressions in [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) and [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) for literal-only / expression-only placeholders, time propagation, and metadata exposure
+- Lane A closed the plain-statement section-context regression:
+  - `Statement.parse(...)` now temporarily clears any outer `Section.SectionContext` owner when parsing plain statements (`node == null`)
+  - added regression coverage in [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) proving nested function-call arguments no longer inherit outer expression-section ownership
+  - added real `.sk` coverage in [src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk](../../src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk) plus the matching [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java) harness
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
-  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `197 / 197`
+  - `./gradlew runGameTest --rerun-tasks` passed with `198 / 198`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `198 / 198`
 
 ## What Landed In This Slice
 
@@ -278,12 +280,12 @@ New immediate priority:
 - After that upstream closure track, the repo still has to continue the broader Bukkit-behavior parity push toward 100% verified-equivalent behavior.
 - Entire upstream top-level packages are still absent locally, including `effects`, `events`, `entity`, `command`, `aliases`, and others listed in the audit doc.
 - `ch/njol/skript/lang` is close in file count but not in behavioral completeness.
-- `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, loader/config hint flow, input-source usage, variable semantics, and type-system closure are still pending.
-- pure registered section loading is now closed in `ScriptLoader`, loader fallback now restores the better retained section-versus-statement diagnostic, nested section-contained stop-trigger intent now propagates through loader/runtime, local hint scopes now open/freeze/merge through the current stop-flow path, plain conditions no longer masquerade as section headers, and `SecIf` now also runs through that registered path with `parse if` / `else parse if`, multiline `if any` / `if all`, `then`, and implicit condition sections; the remaining gap is broader loader/config hint flow and richer built-in hint producers.
+- `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, remaining input-source usage, placeholder default-expression/default-value parity, and deeper variable/class runtime semantics are still pending.
+- pure registered section loading is now closed in `ScriptLoader`, loader fallback now restores the better retained section-versus-statement diagnostic, nested section-contained stop-trigger intent now propagates through loader/runtime, local hint scopes now open/freeze/merge through the current stop-flow path, plain conditions no longer masquerade as section headers, and plain statement parsing no longer leaks outer expression-section ownership into nested argument parsing; the remaining gap is broader statement orchestration and richer built-in hint producers.
 - do not reopen the just-closed inline optional-whitespace and inline alternation parser gap unless a new failing unit reproducer or real `.sk` path appears; the current verified closure covers `on[to]`, `when injured`, and `not breedable`
-- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, derives the current bare leading `:` auto-tags again, no longer fails when optional or alternation-scoped raw-regex captures are omitted, and now exposes a lightweight `PatternElement` graph API; broader upstream pattern element-graph/runtime parity is still open
+- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails when optional or alternation-scoped raw-regex captures are omitted, and now exposes a lightweight `PatternElement` graph API; broader upstream pattern element-graph/runtime parity plus omitted-default-expression parity are still open
 - validator-backed recursive `options:` loading for both runtime `EntryNode` trees and manual raw simple-entry trees is now closed, but broader structure/config validation and diagnostics are still pending.
-- the specific list-variable `set {target::*} to {source::*}` reindexing path, natural numeric ordering for prefix/list iteration, legacy list-variable loop aliases, all-values list-check semantics, and parse-time local variable type hints are now closed, and shared literal-pattern matches now follow stable class-info ordering; remaining variable and class-registry gaps are deeper runtime semantics beyond these ordering and hint-consumption paths.
+- the specific list-variable `set {target::*} to {source::*}` reindexing path, natural numeric ordering for prefix/list iteration, legacy list-variable loop aliases, all-values list-check semantics, parse-time local variable type hints, converter-backed class parsing fallback, and shared literal-pattern ordering are now closed; remaining variable and class-registry gaps are deeper runtime semantics beyond these ordering, hint-consumption, and conversion-bridge paths.
 - grouped-parenthesis condition parsing is now closed for the current real-script `if` path, but general statement/orchestration parity is still open.
 - do not reopen the just-closed comment-aware loader parsing unless a new failing unit reproducer or real `.sk` path appears
 
@@ -302,9 +304,9 @@ Recommended order:
    - `ch/njol/skript/registrations/Classes`
    - `ch/njol/skript/variables/Variables`
 2. prioritize the still-open parser/runtime gaps that were not closed in this slice:
-   - `Statement` orchestration and diagnostics beyond the now-closed specific parse-error retention path
-   - remaining `ScriptLoader` execution-flow gaps beyond options replacement and comment-aware line splitting
-   - remaining `Classes` and `Variables` behavior that still diverges from upstream
+   - `Statement` orchestration and diagnostics beyond the now-closed plain-statement section-context regression
+   - remaining `SkriptParser` placeholder/default-expression parity beyond the now-landed `*` / `~` / `@time` handling
+   - remaining `Classes` and `Variables` behavior that still diverges from upstream beyond ordering, hint-consumption, and converter fallback
    - broader `InputSource` usage paths beyond the now-landed typed `input` forms
 3. land real behavior, not just placeholders, and add regression coverage
 4. when the change affects user-visible script behavior, add real `.sk` plus Fabric GameTest coverage
@@ -324,14 +326,15 @@ Recommended order:
 - Latest targeted non-runtime verification already completed in this slice:
 
 ```bash
-./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks
-./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks
 ./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
 ```
 
 - Latest full verification already completed in this slice:
 
 ```bash
+./gradlew runGameTest --rerun-tasks
 ./gradlew build --rerun-tasks
 ```
 
