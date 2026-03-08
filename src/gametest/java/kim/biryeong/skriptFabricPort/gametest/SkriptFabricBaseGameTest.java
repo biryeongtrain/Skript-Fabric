@@ -173,6 +173,7 @@ import org.joml.Vector3f;
 public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean FAILED_EFFECT_FALLBACK_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
+    private static final AtomicBoolean TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
 
     @GameTest
@@ -571,6 +572,35 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileKeepingEarlierEqualQualityParseError(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureTiedParseErrorTestSyntaxRegistered();
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/equal_quality_parse_error_prefers_effect_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().anyMatch(message ->
+                                message.contains("ambiguous gametest effect rejected")
+                        ),
+                        Component.literal("Expected the real .sk load path to retain the earlier effect parse error.")
+                );
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message ->
+                                message.contains("ambiguous gametest condition rejected")
+                        ),
+                        Component.literal("Expected the later equal-quality condition error to stay suppressed.")
+                );
+            }
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void coreMappingsExposeMojangBackedTypes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState());
 
@@ -789,6 +819,13 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
     }
 
+    private static void ensureTiedParseErrorTestSyntaxRegistered() {
+        if (TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerEffect(RejectingGameTestEffect.class, "ambiguous loader tie syntax");
+            Skript.registerCondition(RejectingGameTestCondition.class, "ambiguous loader tie syntax");
+        }
+    }
+
     private static void ensureUnreachableTestStatementRegistered() {
         if (UNREACHABLE_TEST_STATEMENT_REGISTERED.compareAndSet(false, true)) {
             Skript.registerStatement(StopGameTestTriggerStatement.class, "stop gametest trigger");
@@ -815,6 +852,30 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         @Override
         public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "ambiguous gametest effect";
+        }
+    }
+
+    public static final class RejectingGameTestCondition extends Condition {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("ambiguous gametest condition rejected");
+            return false;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "ambiguous gametest condition";
         }
     }
 

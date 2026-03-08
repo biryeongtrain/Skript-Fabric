@@ -405,6 +405,31 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsKeepsEarlierEffectErrorWhenEffectAndConditionFailuresTie() {
+        Skript.registerEffect(RejectingAmbiguousEffect.class, "ambiguous tied syntax");
+        Skript.registerCondition(RejectingAmbiguousCondition.class, "ambiguous tied syntax");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("ambiguous tied syntax")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message -> message.contains("ambiguous effect rejected"))
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message -> message.contains("ambiguous condition rejected"))
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition/effect: ambiguous tied syntax")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsWarnsWhenLaterLineIsUnreachable() {
         registerExecutionIntentStatements();
         ParserInstance parser = ParserInstance.get();

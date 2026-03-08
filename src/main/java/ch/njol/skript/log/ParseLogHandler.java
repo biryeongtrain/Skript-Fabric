@@ -105,7 +105,7 @@ public class ParseLogHandler implements AutoCloseable {
         }
         logEntries.add(entry);
         if (entry.getLevel().intValue() >= Level.SEVERE.intValue()
-                && (error == null || entry.getQuality().priority() >= error.getQuality().priority())) {
+                && (error == null || entry.getQuality().priority() > error.getQuality().priority())) {
             error = entry;
         }
     }

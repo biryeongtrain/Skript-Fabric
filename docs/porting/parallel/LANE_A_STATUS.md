@@ -21,6 +21,15 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+- compared the current lane-owned `Statement` / parse-log surface against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and selected one thinner upstream-backed slice that stays inside Lane A ownership:
+  - when effect and condition parse failures tie on error quality, the earlier specific effect diagnostic should still win instead of being replaced by the later condition diagnostic
+- `ParseLogHandler` now keeps the first retained severe parse error when later errors only tie its quality, matching the upstream parse-log preference more closely
+- `Statement.moreRelevantFailure(...)` now also breaks equal-quality effect-versus-condition ties in favor of the earlier retained failure, while preserving the just-closed same-pattern plain-statement fallback after failed effect/condition `init(...)`
+- added `ScriptLoaderCompatibilityTest` regression coverage proving:
+  - a same-pattern effect and condition pair that both reject initialization with equal-quality specific errors still logs the earlier effect diagnostic
+  - the later condition diagnostic and the generic `Can't understand this condition/effect: ...` fallback both stay suppressed on that path
+- added real `.sk` coverage in `src/gametest/resources/skript/gametest/base/equal_quality_parse_error_prefers_effect_test_block.sk` plus a matching `SkriptFabricBaseGameTest` harness that verifies `runtime.loadFromResource(...)` keeps the earlier effect parse diagnostic on the live loader path
+- preserved the previously closed same-pattern statement fallback after failed effect/condition init and did not claim parity complete: broader equal-quality ordering beyond this effect-versus-condition tie is still thinner than upstream
 - compared the lane-owned surface against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and selected one contained closure slice that is still thinner than upstream:
   - `Statement.parse(...)` should not treat a failed effect or condition parse as terminal when a later plain `Statement` registration can still load the exact same line
 - `Statement.parse(...)` now retains effect and condition failure logs, clears those failures, and only restores the best retained parse error if the plain statement path also fails
@@ -81,12 +90,19 @@ Last updated: 2026-03-08
 - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java`
+- `src/gametest/resources/skript/gametest/base/equal_quality_parse_error_prefers_effect_test_block.sk`
 - `src/gametest/resources/skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk`
 - `src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk`
 - `src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk`
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsEarlierEffectErrorWhenEffectAndConditionFailuresTie --rerun-tasks`
+  - passed
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - waited for the Fabric Loom cache lock to be released because a concurrent `runGameTest` invocation was already starting, then passed on the finished tree
+- `./gradlew runGameTest --rerun-tasks`
+  - passed with `200 / 200` required tests completed after adding the new real `.sk` loader regression
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsLetsRegisteredStatementWinAfterFailedEffectParse --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsLetsRegisteredStatementWinAfterFailedConditionParse --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificEffectParseErrorWhenNoStatementMatches --rerun-tasks`
   - first run failed in the expected pre-fix state because the new effect and condition fallback regressions still stopped inside `Statement.parse(...)`
   - reran after the `Statement.parse(...)` retained-failure fix; command passed
@@ -121,13 +137,14 @@ Last updated: 2026-03-08
 ## Unresolved Risks
 
 - coverage proves the fallback ordering for same-pattern effect/condition candidates that reject during `init(...)`, but it does not yet cover more complex multi-pattern ambiguity where multiple later statement candidates also log distinct specific errors
-- the retained-failure chooser now prefers the later condition failure over an earlier effect failure when their error quality ties; that is a reasonable local compatibility rule, but broader upstream parser/error-priority parity is still open outside this lane slice
+- this slice closes the equal-quality effect-versus-condition tie, but broader upstream parser/error-priority parity is still open when later plain-statement failures, nested parse errors, or non-owned parser flows introduce competing specific diagnostics
 - coverage is intentionally narrow: it proves retained ownership diagnostics for `set {_var} to true:` through the `EffChange` pattern `set %object% to %object%`, but it does not broaden assertion coverage across other `EffChange` patterns
 - top-level script `function ...` structure loading is still not available in the current GameTest runtime, so the live `.sk` coverage for this slice uses the equivalent nested plain-effect argument path instead of a direct function-argument script
 - the new unit regression covers the upstream function-argument ownership bug directly, but broader runtime parity for script-defined functions remains outside this lane slice
 
 ## Merge Notes
 
+- current-cycle conflict surface now also includes `ParseLogHandler.java` plus `Statement.java` around the new earlier-equal-quality parse-error retention rule
 - likely conflicts for this slice are limited to `Statement.java`, `ScriptLoaderCompatibilityTest.java`, and `SkriptFabricBaseGameTest.java` if another branch changed statement parse ordering, loader-facing diagnostics, or base GameTest registration helpers after lane split
 - preserve the new retained-failure ordering in `Statement.parse(...)`:
   - same-pattern plain statements must still load after earlier effect/condition init failures

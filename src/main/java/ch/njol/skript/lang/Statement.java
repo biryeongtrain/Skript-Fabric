@@ -246,7 +246,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
         if (fallback.getError() == null) {
             return primary;
         }
-        return primary.getError().getQuality().priority() >= fallback.getError().getQuality().priority()
+        return primary.getError().getQuality().priority() > fallback.getError().getQuality().priority()
                 ? primary
                 : fallback;
     }
