@@ -13,7 +13,7 @@ public final class WorldClassInfo {
     }
 
     public static void register() {
-        ClassInfo<ServerLevel> info = new ClassInfo<>(ServerLevel.class);
+        ClassInfo<ServerLevel> info = new ClassInfo<>(ServerLevel.class, "world");
         info.setPropertyInfo(Property.NAME, new WorldNameHandler());
         Classes.registerClassInfo(info);
     }

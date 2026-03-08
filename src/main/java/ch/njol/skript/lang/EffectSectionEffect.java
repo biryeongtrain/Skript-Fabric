@@ -13,6 +13,10 @@ public class EffectSectionEffect extends Effect {
         this.effectSection = effectSection;
     }
 
+    public EffectSection effectSection() {
+        return effectSection;
+    }
+
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         return effectSection.init(expressions, matchedPattern, isDelayed, parseResult);

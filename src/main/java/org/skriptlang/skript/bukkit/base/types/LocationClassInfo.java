@@ -22,7 +22,7 @@ public final class LocationClassInfo {
     }
 
     public static void register() {
-        ClassInfo<FabricLocation> info = new ClassInfo<>(FabricLocation.class);
+        ClassInfo<FabricLocation> info = new ClassInfo<>(FabricLocation.class, "location");
         info.setParser(new LocationParser());
         info.setPropertyInfo(Property.WXYZ, new LocationWXYZHandler());
         Classes.registerClassInfo(info);

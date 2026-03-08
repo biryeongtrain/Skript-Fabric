@@ -4,7 +4,6 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.function.EffFunctionCall;
 import ch.njol.skript.lang.parser.ParserInstance;
-import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
 import java.util.Iterator;
@@ -40,26 +39,20 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
                 log.printLog();
                 return functionCall;
             }
-            log.clear();
-
-            EffectSection section = EffectSection.parse(expression, null, node, false, items);
-            if (section != null) {
-                log.printLog();
-                return new EffectSectionEffect(section);
+            if (log.hasError()) {
+                log.printError();
+                return null;
             }
             log.clear();
 
-            Effect effect = parsePlainEffect(expression);
+            Effect effect = Effect.parse(expression, null, node, items);
             if (effect != null) {
                 log.printLog();
                 return effect;
             }
-            log.clear();
-
-            EffectSection ifSection = SecIf.parse(expression, node, items);
-            if (ifSection != null) {
-                log.printLog();
-                return new EffectSectionEffect(ifSection);
+            if (log.hasError()) {
+                log.printError();
+                return null;
             }
             log.clear();
 
@@ -68,6 +61,10 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
                 log.printLog();
                 return condition;
             }
+            if (log.hasError()) {
+                log.printError();
+                return null;
+            }
             log.clear();
 
             Statement statement = parseRegisteredStatement(expression, defaultError, node, items, sectionContext);
@@ -75,11 +72,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
                 log.printLog();
                 return statement;
             }
-
-            if (defaultError != null && !defaultError.isBlank()) {
-                Skript.error(defaultError);
-            }
-            log.printError();
+            log.printError(defaultError);
             return null;
         }
     }
@@ -102,18 +95,6 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             }
             return parsed;
         });
-    }
-
-    private static @Nullable Effect parsePlainEffect(String expression) {
-        var iterator = Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EFFECT).iterator();
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        Effect effect = (Effect) SkriptParser.parseModern(
-                expression,
-                (Iterator) iterator,
-                ParseContext.DEFAULT,
-                null
-        );
-        return effect;
     }
 
     private static @Nullable Statement parseRegisteredStatement(

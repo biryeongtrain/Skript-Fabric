@@ -41,7 +41,14 @@ public final class EffSetTestBlock extends Effect {
         Integer zValue = z.getSingle(event);
         String blockKey = blockId.getSingle(event);
         if (xValue == null || yValue == null || zValue == null || blockKey == null || blockKey.isBlank()) {
-            throw new IllegalStateException("set test block effect received incomplete coordinates or block id.");
+            throw new IllegalStateException(
+                    "set test block effect received incomplete coordinates or block id: x=" + xValue
+                            + ", y=" + yValue
+                            + ", z=" + zValue
+                            + ", blockId=" + blockKey
+                            + ", blockExpr=" + (blockId == null ? "null" : blockId.getClass().getName())
+                            + ", blockReturnType=" + (blockId == null ? "null" : blockId.getReturnType().getName())
+            );
         }
 
         var resourceLocation = MinecraftResourceParser.parse(blockKey);

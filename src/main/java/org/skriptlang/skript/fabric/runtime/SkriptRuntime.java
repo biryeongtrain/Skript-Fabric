@@ -3,6 +3,7 @@ package org.skriptlang.skript.fabric.runtime;
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Config;
+import ch.njol.skript.config.EntryNode;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
@@ -162,9 +164,14 @@ public final class SkriptRuntime {
             throw new IllegalArgumentException("Stage 2 runtime currently supports section-backed top-level structures only: " + expression);
         }
 
+        Structure structure = Structure.parse(expression, sectionNode, null);
+        if (structure != null) {
+            return structure;
+        }
+
         ch.njol.skript.lang.SkriptEvent event = ch.njol.skript.lang.SkriptEvent.parse(expression, sectionNode, null);
         if (event == null) {
-            throw new IllegalArgumentException("Failed to parse top-level event: " + expression);
+            throw new IllegalArgumentException("Failed to parse top-level structure or event: " + expression);
         }
         return event;
     }
@@ -179,6 +186,7 @@ public final class SkriptRuntime {
         SectionNode root = new SectionNode(scriptName);
         Deque<Frame> stack = new ArrayDeque<>();
         stack.push(new Frame(0, root));
+        AtomicBoolean inBlockComment = new AtomicBoolean(false);
 
         Node previousNode = root;
         int previousIndent = 0;
@@ -186,12 +194,14 @@ public final class SkriptRuntime {
 
         for (int index = 0; index < lines.length; index++) {
             String rawLine = lines[index];
-            String trimmed = rawLine.strip();
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+            Node.LineSplit split = Node.splitLine(rawLine, inBlockComment);
+            String value = split.value();
+            String trimmed = value.trim();
+            if (trimmed.isEmpty()) {
                 continue;
             }
 
-            int indent = indentation(rawLine);
+            int indent = indentation(value);
             if (indent > previousIndent) {
                 if (!(previousNode instanceof SectionNode sectionNode)) {
                     throw new IllegalArgumentException("Indented line without owning section at line " + (index + 1));
@@ -210,6 +220,11 @@ public final class SkriptRuntime {
             if (trimmed.endsWith(":")) {
                 SectionNode sectionNode = new SectionNode(trimmed.substring(0, trimmed.length() - 1).trim());
                 node = sectionNode;
+            } else if (isOptionEntry(trimmed, stack)) {
+                int separator = trimmed.indexOf(':');
+                String key = trimmed.substring(0, separator).trim();
+                String entryValue = trimmed.substring(separator + 1).trim();
+                node = new EntryNode(key, entryValue);
             } else {
                 node = new SimpleNode(trimmed);
             }
@@ -238,6 +253,18 @@ public final class SkriptRuntime {
             break;
         }
         return indent;
+    }
+
+    private boolean isOptionEntry(String trimmed, Deque<Frame> stack) {
+        if (!trimmed.contains(":")) {
+            return false;
+        }
+        for (Frame frame : stack) {
+            if ("options".equalsIgnoreCase(frame.section().getKey())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String stripExtension(String scriptName) {

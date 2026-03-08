@@ -13,7 +13,7 @@ public final class BlockClassInfo {
     }
 
     public static void register() {
-        ClassInfo<FabricBlock> info = new ClassInfo<>(FabricBlock.class);
+        ClassInfo<FabricBlock> info = new ClassInfo<>(FabricBlock.class, "block");
         info.setPropertyInfo(Property.NAME, new BlockNameHandler());
         Classes.registerClassInfo(info);
     }

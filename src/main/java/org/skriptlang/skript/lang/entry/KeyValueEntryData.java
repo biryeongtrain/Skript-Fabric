@@ -1,13 +1,14 @@
 package org.skriptlang.skript.lang.entry;
 
 import ch.njol.skript.ScriptLoader;
+import ch.njol.skript.config.EntryNode;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SimpleNode;
 import org.skriptlang.skript.lang.entry.EntryValidator.EntryValidatorBuilder;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * An entry based on {@link SimpleNode}s containing a key and a value.
+ * An entry based on {@link SimpleNode}s or {@link EntryNode}s containing a key and a value.
  * Unlike a traditional {@link ch.njol.skript.config.EntryNode}, this entry data
  *  may have a value that is <i>not</i> a String.
  * @param <T> The type of the value.
@@ -31,6 +32,14 @@ public abstract class KeyValueEntryData<T> extends EntryData<T> {
 	 */
 	@Override
 	public @Nullable T getValue(Node node) {
+		if (node instanceof EntryNode entryNode) {
+			String key = entryNode.getKey();
+			String value = entryNode.getValue();
+			if (key == null || value == null)
+				throw new IllegalArgumentException("EntryData#getValue() called with invalid node.");
+			return getValue(ScriptLoader.replaceOptions(value));
+		}
+
 		assert node instanceof SimpleNode;
 		String key = node.getKey();
 		if (key == null)
@@ -62,6 +71,10 @@ public abstract class KeyValueEntryData<T> extends EntryData<T> {
 	 */
 	@Override
 	public boolean canCreateWith(Node node) {
+		if (node instanceof EntryNode entryNode) {
+			String key = entryNode.getKey();
+			return key != null && getKey().equalsIgnoreCase(ScriptLoader.replaceOptions(key));
+		}
 		if (!(node instanceof SimpleNode))
 			return false;
 		String key = node.getKey();

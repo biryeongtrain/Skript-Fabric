@@ -2,6 +2,7 @@ package ch.njol.skript.lang;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.lang.parser.ParserInstance;
 import java.util.Iterator;
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +39,23 @@ public abstract class Effect extends Statement {
             return new EffectSectionEffect(section);
         }
 
+        Section.SectionContext sectionContext = ParserInstance.get().getData(Section.SectionContext.class);
+        if (sectionNode != null) {
+            return sectionContext.modify(sectionNode, triggerItems, () -> {
+                Effect parsed = parseRegisteredEffect(expression, defaultError);
+                if (parsed != null && !sectionContext.claimed()) {
+                    Skript.error("The line '" + expression
+                            + "' is a valid effect but cannot function as a section (:) because there is no syntax in the line to manage it.");
+                    return null;
+                }
+                return parsed;
+            });
+        }
+
+        return parseRegisteredEffect(expression, defaultError);
+    }
+
+    private static @Nullable Effect parseRegisteredEffect(String expression, @Nullable String defaultError) {
         var iterator = Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EFFECT).iterator();
         @SuppressWarnings({"rawtypes", "unchecked"})
         Effect effect = (Effect) SkriptParser.parseModern(

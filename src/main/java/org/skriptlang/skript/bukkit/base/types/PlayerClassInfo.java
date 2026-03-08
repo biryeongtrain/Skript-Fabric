@@ -13,7 +13,7 @@ public final class PlayerClassInfo {
     }
 
     public static void register() {
-        ClassInfo<ServerPlayer> info = new ClassInfo<>(ServerPlayer.class);
+        ClassInfo<ServerPlayer> info = new ClassInfo<>(ServerPlayer.class, "player");
         info.setPropertyInfo(Property.NAME, new PlayerNameHandler());
         info.setPropertyInfo(Property.DISPLAY_NAME, new PlayerDisplayNameHandler());
         Classes.registerClassInfo(info);

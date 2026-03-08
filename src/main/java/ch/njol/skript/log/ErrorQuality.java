@@ -1,6 +1,16 @@
 package ch.njol.skript.log;
 
 public enum ErrorQuality {
-    NOT_AN_EXPRESSION,
-    GENERIC
+    GENERIC(0),
+    NOT_AN_EXPRESSION(1);
+
+    private final int priority;
+
+    ErrorQuality(int priority) {
+        this.priority = priority;
+    }
+
+    public int priority() {
+        return priority;
+    }
 }

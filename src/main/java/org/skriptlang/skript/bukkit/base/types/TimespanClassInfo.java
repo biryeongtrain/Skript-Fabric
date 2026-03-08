@@ -17,7 +17,7 @@ public final class TimespanClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Timespan> info = new ClassInfo<>(Timespan.class);
+        ClassInfo<Timespan> info = new ClassInfo<>(Timespan.class, "timespan");
         info.setParser(new Parser());
         Classes.registerClassInfo(info);
     }

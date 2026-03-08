@@ -12,7 +12,7 @@ public final class ItemDisplayTransformClassInfo {
     }
 
     public static void register() {
-        ClassInfo<ItemDisplayContext> info = new ClassInfo<>(ItemDisplayContext.class);
+        ClassInfo<ItemDisplayContext> info = new ClassInfo<>(ItemDisplayContext.class, "itemdisplaytransform");
         info.setParser(new Parser());
         Classes.registerClassInfo(info);
     }

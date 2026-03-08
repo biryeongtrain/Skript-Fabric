@@ -1,0 +1,8 @@
+on use entity:
+    set {_state} to "outside"
+    set {_target} to event-entity
+    set {_context} to a loot context at 1, 2, 3:
+        set {_state} to "inside"
+        set looted entity to {_target}
+    if {_state} is "inside":
+        set test name of entity looted entity of {_context} to "loot context locals"

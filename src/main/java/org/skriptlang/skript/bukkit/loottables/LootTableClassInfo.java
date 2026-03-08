@@ -14,7 +14,7 @@ public final class LootTableClassInfo {
     }
 
     public static void register() {
-        ClassInfo<LootTable> info = new ClassInfo<>(LootTable.class);
+        ClassInfo<LootTable> info = new ClassInfo<>(LootTable.class, "loottable");
         info.setParser(new Parser());
         info.setPropertyInfo(Property.NAME, new NameHandler());
         Classes.registerClassInfo(info);

@@ -12,7 +12,7 @@ public final class TextDisplayAlignClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Display.TextDisplay.Align> info = new ClassInfo<>(Display.TextDisplay.Align.class);
+        ClassInfo<Display.TextDisplay.Align> info = new ClassInfo<>(Display.TextDisplay.Align.class, "textdisplayalign");
         info.setParser(new Parser());
         Classes.registerClassInfo(info);
     }

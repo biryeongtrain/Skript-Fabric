@@ -1,6 +1,8 @@
 package ch.njol.skript.lang;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.expressions.ExprInput;
 import ch.njol.skript.lang.function.ExprFunctionCall;
 import ch.njol.skript.lang.function.FunctionReference;
 import ch.njol.skript.lang.parser.ParseStackOverflowException;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +41,12 @@ public class SkriptParser {
     public static class ParseResult {
         public String expr = "";
         public Expression<?>[] exprs = new Expression<?>[0];
+        public List<Matcher> regexes = List.of();
+        public Set<String> tags = Set.of();
+
+        public boolean hasTag(String tag) {
+            return tags.contains(tag);
+        }
     }
 
     public static class ExprInfo {
@@ -57,6 +66,44 @@ public class SkriptParser {
         return builder.toString();
     }
 
+    public static boolean validateLine(String line) {
+        if (line == null) {
+            return false;
+        }
+        boolean inQuotes = false;
+        List<Character> brackets = new ArrayList<>();
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            if (ch == '"' && (i == 0 || line.charAt(i - 1) != '\\')) {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (inQuotes) {
+                continue;
+            }
+            if (ch == '(' || ch == '[' || ch == '{') {
+                brackets.add(ch);
+                continue;
+            }
+            if (ch != ')' && ch != ']' && ch != '}') {
+                continue;
+            }
+            if (brackets.isEmpty() || !bracketsMatch(brackets.remove(brackets.size() - 1), ch)) {
+                Skript.error("Unmatched brackets in line: " + line);
+                return false;
+            }
+        }
+        if (inQuotes) {
+            Skript.error("Unmatched double quotes in line: " + line);
+            return false;
+        }
+        if (!brackets.isEmpty()) {
+            Skript.error("Unmatched brackets in line: " + line);
+            return false;
+        }
+        return true;
+    }
+
     @SuppressWarnings("unchecked")
     public <T> @Nullable Expression<? extends T> parseExpression(Class<? extends T>[] returnTypes) {
         String expression = input == null ? "" : input.trim();
@@ -64,6 +111,14 @@ public class SkriptParser {
             return null;
         }
         if ((flags & PARSE_EXPRESSIONS) != 0) {
+            Expression<? extends T> inputExpression = parseInputExpression(expression, returnTypes);
+            if (inputExpression != null) {
+                return inputExpression;
+            }
+            Expression<? extends T> variableExpression = parseVariableExpression(expression, returnTypes);
+            if (variableExpression != null) {
+                return variableExpression;
+            }
             FunctionReference<? extends T> reference = parseFunctionReference(returnTypes);
             if (reference != null && reference.validateFunction(true)) {
                 return new ExprFunctionCall<>(reference, returnTypes);
@@ -78,6 +133,13 @@ public class SkriptParser {
             }
         }
         if ((flags & PARSE_LITERALS) != 0) {
+            String quotedString = parseQuotedStringLiteral(expression);
+            if (quotedString != null) {
+                if (canReturnQuotedString(returnTypes)) {
+                    return (Expression<? extends T>) LiteralString.of(quotedString);
+                }
+                return null;
+            }
             Literal<? extends T> literal = new UnparsedLiteral(expression).getConvertedExpression(context, returnTypes);
             if (literal != null) {
                 return literal;
@@ -88,6 +150,65 @@ public class SkriptParser {
             }
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> @Nullable Expression<? extends T> parseVariableExpression(String expression, Class<? extends T>[] returnTypes) {
+        if (expression == null || expression.length() < 3 || expression.charAt(0) != '{'
+                || expression.charAt(expression.length() - 1) != '}') {
+            return null;
+        }
+        String variableName = expression.substring(1, expression.length() - 1).trim();
+        if (variableName.isEmpty()) {
+            return null;
+        }
+        return (Expression<? extends T>) Variable.newInstance(variableName, returnTypes);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private <T> @Nullable Expression<? extends T> parseInputExpression(String expression, Class<? extends T>[] returnTypes) {
+        InputSource inputSource = ParserInstance.get().getData(InputSource.InputData.class).getSource();
+        if (inputSource == null || expression == null) {
+            return null;
+        }
+        String normalized = normalizeWhitespace(expression);
+        String lowerCase = normalized.toLowerCase(Locale.ENGLISH);
+        ExprInput<?> parsed;
+        if ("input".equals(lowerCase)) {
+            parsed = new ExprInput<>();
+        } else if ("input index".equals(lowerCase)) {
+            if (!inputSource.hasIndices()) {
+                return null;
+            }
+            parsed = ExprInput.inputIndex();
+        } else {
+            parsed = parseTypedInputExpression(normalized, lowerCase);
+            if (parsed == null) {
+                return null;
+            }
+        }
+        return (Expression<? extends T>) parsed.getConvertedExpression((Class[]) returnTypes);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private @Nullable ExprInput<?> parseTypedInputExpression(String normalizedExpression, String lowerCaseExpression) {
+        if (!lowerCaseExpression.endsWith(" input") || lowerCaseExpression.length() <= " input".length()) {
+            return null;
+        }
+        String typeText = normalizedExpression.substring(0, normalizedExpression.length() - " input".length()).trim();
+        if (typeText.isEmpty()) {
+            return null;
+        }
+
+        ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(typeText);
+        if (classInfo == null) {
+            return null;
+        }
+        if (Classes.isPluralClassInfoUserInput(typeText, classInfo)) {
+            Skript.error("An input can only be a single value! Please use a singular type.");
+            return null;
+        }
+        return ExprInput.typed(classInfo.getCodeName(), (Class) classInfo.getC());
     }
 
     private <T> @Nullable Expression<? extends T> parseTimedExpression(String expression, Class<? extends T>[] returnTypes) {
@@ -199,6 +320,8 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.exprs = matched.expressions();
+                parseResult.regexes = List.of(matched.regexes());
+                parseResult.tags = matched.tags();
                 try {
                     if (element.init(matched.expressions(), matchedPattern, Kleenean.FALSE, parseResult)) {
                         return element;
@@ -249,6 +372,8 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.exprs = matched.expressions();
+                parseResult.regexes = List.of(matched.regexes());
+                parseResult.tags = matched.tags();
                 try {
                     if (element.init(matched.expressions(), matchedPattern, Kleenean.FALSE, parseResult)) {
                         return element;
@@ -288,13 +413,25 @@ public class SkriptParser {
         }
     }
 
-    private record Placeholder(Class<?>[] returnTypes) {
+    private record Capture(CaptureType type, @Nullable Class<?>[] returnTypes, @Nullable String regex) {
+        private static Capture expression(Class<?>[] returnTypes) {
+            return new Capture(CaptureType.EXPRESSION, returnTypes, null);
+        }
+
+        private static Capture regex(String pattern) {
+            return new Capture(CaptureType.REGEX, null, pattern);
+        }
     }
 
-    private record CompiledPattern(String regex, Placeholder[] placeholders) {
+    private enum CaptureType {
+        EXPRESSION,
+        REGEX
     }
 
-    private record PatternMatch(Expression<?>[] expressions) {
+    private record CompiledPattern(String regex, Capture[] captures, Set<String> tags) {
+    }
+
+    private record PatternMatch(Expression<?>[] expressions, Matcher[] regexes, Set<String> tags) {
     }
 
     private static @Nullable PatternMatch match(String expr, String pattern, ParseContext context, int flags) {
@@ -310,82 +447,68 @@ public class SkriptParser {
         if (!matcher.matches()) {
             return null;
         }
-        Placeholder[] placeholders = compiled.placeholders();
-        Expression<?>[] expressions = new Expression<?>[placeholders.length];
-        for (int i = 0; i < placeholders.length; i++) {
+        List<Expression<?>> expressions = new ArrayList<>();
+        List<Matcher> regexes = new ArrayList<>();
+        Capture[] captures = compiled.captures();
+        for (int i = 0; i < captures.length; i++) {
             String captured = matcher.group(i + 1);
+            Capture capture = captures[i];
+            if (capture.type() == CaptureType.EXPRESSION) {
+                if (captured == null) {
+                    expressions.add(null);
+                    continue;
+                }
+                @SuppressWarnings("unchecked")
+                Expression<?> parsed = new SkriptParser(captured.trim(), flags, context)
+                        .parseExpression((Class<? extends Object>[]) capture.returnTypes());
+                if (parsed == null) {
+                    return null;
+                }
+                expressions.add(parsed);
+                continue;
+            }
+
             if (captured == null) {
                 return null;
             }
-            @SuppressWarnings("unchecked")
-            Expression<?> parsed = new SkriptParser(captured.trim(), flags, context)
-                    .parseExpression((Class<? extends Object>[]) placeholders[i].returnTypes());
-            if (parsed == null) {
+            String regex = capture.regex();
+            if (regex == null) {
                 return null;
             }
-            expressions[i] = parsed;
+            Matcher rawMatcher = Pattern.compile("^" + regex + "$", Pattern.CASE_INSENSITIVE)
+                    .matcher(captured.trim());
+            if (!rawMatcher.matches()) {
+                return null;
+            }
+            regexes.add(rawMatcher);
         }
-        return new PatternMatch(expressions);
+        return new PatternMatch(
+                expressions.toArray(Expression<?>[]::new),
+                regexes.toArray(Matcher[]::new),
+                compiled.tags()
+        );
     }
 
     private static @Nullable CompiledPattern compilePattern(String pattern) {
+        Set<String> tags = Set.of();
         String normalizedPattern = normalizePattern(pattern);
-        StringBuilder regex = new StringBuilder();
-        List<Placeholder> placeholders = new ArrayList<>();
-
-        int optionalDepth = 0;
-        for (int i = 0; i < normalizedPattern.length(); i++) {
-            char ch = normalizedPattern.charAt(i);
-            if (ch == '%') {
-                int end = normalizedPattern.indexOf('%', i + 1);
-                if (end < 0) {
-                    return null;
-                }
-                String placeholder = normalizedPattern.substring(i + 1, end).trim();
-                regex.append("(.+?)");
-                placeholders.add(new Placeholder(resolvePlaceholderTypes(placeholder)));
-                i = end;
-                continue;
-            }
-            if (Character.isWhitespace(ch)) {
-                regex.append("\\s+");
-                while (i + 1 < normalizedPattern.length() && Character.isWhitespace(normalizedPattern.charAt(i + 1))) {
-                    i++;
-                }
-                continue;
-            }
-            if (ch == '[') {
-                regex.append("(?:");
-                optionalDepth++;
-                continue;
-            }
-            if (ch == ']') {
-                if (optionalDepth > 0) {
-                    regex.append(")?");
-                    optionalDepth--;
-                }
-                continue;
-            }
-            if (ch == '(') {
-                regex.append("(?:");
-                continue;
-            }
-            if (ch == ')' || ch == '|') {
-                regex.append(ch);
-                continue;
-            }
-            regex.append(Pattern.quote(String.valueOf(ch)));
+        if (normalizedPattern.startsWith("implicit:")) {
+            tags = Set.of("implicit");
+            normalizedPattern = normalizedPattern.substring("implicit:".length()).trim();
         }
-        while (optionalDepth-- > 0) {
-            regex.append(")?");
+        List<Capture> captures = new ArrayList<>();
+        String regex;
+        try {
+            regex = compileSequence(normalizedPattern, captures);
+        } catch (IllegalArgumentException exception) {
+            return null;
         }
-        return new CompiledPattern(regex.toString(), placeholders.toArray(Placeholder[]::new));
+        return new CompiledPattern(regex, captures.toArray(Capture[]::new), tags);
     }
 
     private static String normalizePattern(String pattern) {
         String normalized = normalizeWhitespace(pattern.trim());
         normalized = normalized.replaceAll("\\d+¦", "");
-        normalized = normalized.replaceAll("\\[([^\\]]+)]\\s+", "[$1 ]");
         normalized = normalized.replaceAll("([\\p{L}]+)/(\\p{L}+)", "($1|$2)");
         return normalized;
     }
@@ -459,6 +582,22 @@ public class SkriptParser {
         return Classes.parse(expression, returnType, ParseContext.DEFAULT);
     }
 
+    private static @Nullable String parseQuotedStringLiteral(String expression) {
+        if (expression.length() >= 2 && expression.startsWith("\"") && expression.endsWith("\"")) {
+            return expression.substring(1, expression.length() - 1);
+        }
+        return null;
+    }
+
+    private static boolean canReturnQuotedString(Class<?>[] returnTypes) {
+        for (Class<?> returnType : returnTypes) {
+            if (returnType == Object.class || returnType.isAssignableFrom(String.class)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean containsOnlyObject(Class<?>[] returnTypes) {
         if (returnTypes.length == 0) {
             return false;
@@ -478,5 +617,291 @@ public class SkriptParser {
             }
         }
         return false;
+    }
+
+    private static String compileSequence(String pattern, List<Capture> captures) {
+        if (pattern.isEmpty()) {
+            return "";
+        }
+        if (pattern.isBlank()) {
+            return "\\s+";
+        }
+        List<String> tokens = splitTopLevelTokens(pattern);
+        StringBuilder regex = new StringBuilder();
+        if (Character.isWhitespace(pattern.charAt(0))) {
+            regex.append("\\s+");
+        }
+        boolean hasRequiredBefore = false;
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            boolean optionalRoot = isWrappedBy(token, '[', ']');
+            if (!optionalRoot) {
+                if (hasRequiredBefore) {
+                    regex.append("\\s+");
+                }
+                regex.append(compileToken(token, captures));
+                hasRequiredBefore = true;
+                continue;
+            }
+
+            String inner = token.substring(1, token.length() - 1);
+            String body = compileGroupContent(inner, captures);
+            boolean hasRequiredAfter = hasRequiredTokenAfter(tokens, i + 1);
+            if (!hasRequiredBefore) {
+                regex.append("(?:").append(body);
+                if (hasRequiredAfter) {
+                    regex.append("\\s+");
+                }
+                regex.append(")?");
+                continue;
+            }
+            regex.append("(?:\\s+").append(body).append(")?");
+        }
+        if (Character.isWhitespace(pattern.charAt(pattern.length() - 1))) {
+            regex.append("\\s+");
+        }
+        return regex.toString();
+    }
+
+    private static String compileToken(String token, List<Capture> captures) {
+        if (token.isBlank()) {
+            return "\\s+";
+        }
+        if (isWrappedBy(token, '(', ')')) {
+            return "(?:" + compileAlternatives(token.substring(1, token.length() - 1), captures) + ")";
+        }
+
+        StringBuilder regex = new StringBuilder();
+        for (int i = 0; i < token.length(); i++) {
+            char ch = token.charAt(i);
+            if (ch == '%') {
+                int end = token.indexOf('%', i + 1);
+                if (end < 0) {
+                    throw new IllegalArgumentException("Unclosed placeholder in token: " + token);
+                }
+                String placeholder = token.substring(i + 1, end).trim();
+                regex.append("(.+?)");
+                captures.add(Capture.expression(resolvePlaceholderTypes(placeholder)));
+                i = end;
+                continue;
+            }
+            if (ch == '<') {
+                int end = token.indexOf('>', i + 1);
+                if (end < 0) {
+                    throw new IllegalArgumentException("Unclosed regex capture in token: " + token);
+                }
+                String rawRegex = token.substring(i + 1, end).trim();
+                if (rawRegex.isEmpty()) {
+                    throw new IllegalArgumentException("Empty regex capture in token: " + token);
+                }
+                regex.append('(').append(rawRegex).append(')');
+                captures.add(Capture.regex(rawRegex));
+                i = end;
+                continue;
+            }
+            if (ch == '[') {
+                int end = findMatching(token, i, '[', ']');
+                regex.append("(?:")
+                        .append(compileGroupContent(token.substring(i + 1, end), captures))
+                        .append(")?");
+                i = end;
+                continue;
+            }
+            if (ch == '(') {
+                int end = findMatching(token, i, '(', ')');
+                regex.append("(?:")
+                        .append(compileAlternatives(token.substring(i + 1, end), captures))
+                        .append(')');
+                i = end;
+                continue;
+            }
+            regex.append(Pattern.quote(String.valueOf(ch)));
+        }
+        return regex.toString();
+    }
+
+    private static String compileAlternatives(String pattern, List<Capture> captures) {
+        List<String> branches = splitTopLevel(pattern, '|');
+        StringBuilder regex = new StringBuilder();
+        for (int i = 0; i < branches.size(); i++) {
+            if (i > 0) {
+                regex.append('|');
+            }
+            regex.append(compileSequence(branches.get(i), captures));
+        }
+        return regex.toString();
+    }
+
+    private static String compileGroupContent(String pattern, List<Capture> captures) {
+        List<String> branches = splitTopLevel(pattern, '|');
+        if (branches.size() > 1) {
+            StringBuilder regex = new StringBuilder();
+            for (int i = 0; i < branches.size(); i++) {
+                if (i > 0) {
+                    regex.append('|');
+                }
+                regex.append(compileSequence(branches.get(i), captures));
+            }
+            return "(?:" + regex + ")";
+        }
+        return compileSequence(pattern, captures);
+    }
+
+    private static List<String> splitTopLevelTokens(String pattern) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int squareDepth = 0;
+        int parenDepth = 0;
+        boolean inPlaceholder = false;
+        boolean inRegex = false;
+        for (int i = 0; i < pattern.length(); i++) {
+            char ch = pattern.charAt(i);
+            if (!inPlaceholder && !inRegex && squareDepth == 0 && parenDepth == 0 && Character.isWhitespace(ch)) {
+                if (!current.isEmpty()) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+                continue;
+            }
+            current.append(ch);
+            if (ch == '%' && !inRegex) {
+                inPlaceholder = !inPlaceholder;
+                continue;
+            }
+            if (inPlaceholder) {
+                continue;
+            }
+            if (ch == '<' && !inRegex) {
+                inRegex = true;
+                continue;
+            }
+            if (ch == '>' && inRegex) {
+                inRegex = false;
+                continue;
+            }
+            if (inRegex) {
+                continue;
+            }
+            if (ch == '[') {
+                squareDepth++;
+            } else if (ch == ']') {
+                squareDepth--;
+            } else if (ch == '(') {
+                parenDepth++;
+            } else if (ch == ')') {
+                parenDepth--;
+            }
+        }
+        if (!current.isEmpty()) {
+            tokens.add(current.toString());
+        }
+        return tokens;
+    }
+
+    private static List<String> splitTopLevel(String pattern, char delimiter) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int squareDepth = 0;
+        int parenDepth = 0;
+        boolean inPlaceholder = false;
+        boolean inRegex = false;
+        for (int i = 0; i < pattern.length(); i++) {
+            char ch = pattern.charAt(i);
+            if (!inPlaceholder && !inRegex && squareDepth == 0 && parenDepth == 0 && ch == delimiter) {
+                parts.add(current.toString());
+                current.setLength(0);
+                continue;
+            }
+            current.append(ch);
+            if (ch == '%' && !inRegex) {
+                inPlaceholder = !inPlaceholder;
+                continue;
+            }
+            if (inPlaceholder) {
+                continue;
+            }
+            if (ch == '<' && !inRegex) {
+                inRegex = true;
+                continue;
+            }
+            if (ch == '>' && inRegex) {
+                inRegex = false;
+                continue;
+            }
+            if (inRegex) {
+                continue;
+            }
+            if (ch == '[') {
+                squareDepth++;
+            } else if (ch == ']') {
+                squareDepth--;
+            } else if (ch == '(') {
+                parenDepth++;
+            } else if (ch == ')') {
+                parenDepth--;
+            }
+        }
+        parts.add(current.toString());
+        return parts;
+    }
+
+    private static boolean isWrappedBy(String value, char open, char close) {
+        if (value.length() < 2 || value.charAt(0) != open) {
+            return false;
+        }
+        return findMatching(value, 0, open, close) == value.length() - 1;
+    }
+
+    private static boolean hasRequiredTokenAfter(List<String> tokens, int startIndex) {
+        for (int i = startIndex; i < tokens.size(); i++) {
+            if (!isWrappedBy(tokens.get(i), '[', ']')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int findMatching(String value, int openIndex, char open, char close) {
+        int depth = 0;
+        boolean inPlaceholder = false;
+        boolean inRegex = false;
+        for (int i = openIndex; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (ch == '%' && !inRegex) {
+                inPlaceholder = !inPlaceholder;
+                continue;
+            }
+            if (inPlaceholder) {
+                continue;
+            }
+            if (ch == '<' && !inRegex) {
+                inRegex = true;
+                continue;
+            }
+            if (ch == '>' && inRegex) {
+                inRegex = false;
+                continue;
+            }
+            if (inRegex) {
+                continue;
+            }
+            if (ch == open) {
+                depth++;
+                continue;
+            }
+            if (ch == close) {
+                depth--;
+                if (depth == 0) {
+                    return i;
+                }
+            }
+        }
+        throw new IllegalArgumentException("Unmatched delimiter in value: " + value);
+    }
+
+    private static boolean bracketsMatch(char open, char close) {
+        return (open == '(' && close == ')')
+                || (open == '[' && close == ']')
+                || (open == '{' && close == '}');
     }
 }

@@ -29,7 +29,7 @@ public abstract class Condition extends Statement {
         if (input == null || input.isBlank()) {
             return null;
         }
-        String expression = input.trim();
+        String expression = unwrapGroupedCondition(input.trim());
         var iterator = Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.CONDITION).iterator();
         @SuppressWarnings({"rawtypes", "unchecked"})
         Condition condition = (Condition) SkriptParser.parseModern(
@@ -44,5 +44,57 @@ public abstract class Condition extends Statement {
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         return getClass().getSimpleName();
+    }
+
+    private static String unwrapGroupedCondition(String expression) {
+        String unwrapped = expression;
+        while (hasWrappingParentheses(unwrapped)) {
+            unwrapped = unwrapped.substring(1, unwrapped.length() - 1).trim();
+        }
+        return unwrapped;
+    }
+
+    private static boolean hasWrappingParentheses(String expression) {
+        if (expression.length() < 2 || expression.charAt(0) != '(' || expression.charAt(expression.length() - 1) != ')') {
+            return false;
+        }
+
+        int depth = 0;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        for (int i = 0; i < expression.length(); i++) {
+            char character = expression.charAt(i);
+            if (character == '\'' && !inDoubleQuote && !isEscaped(expression, i)) {
+                inSingleQuote = !inSingleQuote;
+                continue;
+            }
+            if (character == '"' && !inSingleQuote && !isEscaped(expression, i)) {
+                inDoubleQuote = !inDoubleQuote;
+                continue;
+            }
+            if (inSingleQuote || inDoubleQuote) {
+                continue;
+            }
+            if (character == '(') {
+                depth++;
+            } else if (character == ')') {
+                depth--;
+                if (depth == 0 && i < expression.length() - 1) {
+                    return false;
+                }
+                if (depth < 0) {
+                    return false;
+                }
+            }
+        }
+        return depth == 0 && !inSingleQuote && !inDoubleQuote;
+    }
+
+    private static boolean isEscaped(String expression, int index) {
+        int backslashes = 0;
+        for (int i = index - 1; i >= 0 && expression.charAt(i) == '\\'; i--) {
+            backslashes++;
+        }
+        return (backslashes & 1) == 1;
     }
 }

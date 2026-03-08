@@ -15,7 +15,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class ExprPotionEffects extends SimpleExpression<SkriptPotionEffect> {
 
-    private Expression<Entity> entities;
+    private Expression<?> entities;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -23,14 +23,17 @@ public final class ExprPotionEffects extends SimpleExpression<SkriptPotionEffect
         if (expressions.length != 1 || !expressions[0].canReturn(Entity.class)) {
             return false;
         }
-        entities = (Expression<Entity>) expressions[0];
+        entities = expressions[0];
         return true;
     }
 
     @Override
     protected SkriptPotionEffect @Nullable [] get(SkriptEvent event) {
         List<SkriptPotionEffect> values = new ArrayList<>();
-        for (Entity entity : entities.getAll(event)) {
+        for (Object rawEntity : entities.getAll(event)) {
+            if (!(rawEntity instanceof Entity entity)) {
+                continue;
+            }
             if (!(entity instanceof LivingEntity livingEntity)) {
                 continue;
             }

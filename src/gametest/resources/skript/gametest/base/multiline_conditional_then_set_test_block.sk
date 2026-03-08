@@ -1,0 +1,26 @@
+on gametest:
+    if any:
+        1 is 2
+        1 is 1
+    then:
+        set test block at 0 1 0 to diamond_block
+    else:
+        set test block at 0 1 0 to emerald_block
+
+    if all:
+        1 is 1
+        1 is 2
+    then:
+        set test block at 1 1 0 to diamond_block
+    else:
+        set test block at 1 1 0 to gold_block
+
+    if 1 is 2:
+        set test block at 2 1 0 to diamond_block
+    else if any:
+        1 is 2
+        1 is 1
+    then:
+        set test block at 2 1 0 to iron_block
+    else:
+        set test block at 2 1 0 to emerald_block

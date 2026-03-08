@@ -14,10 +14,9 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class ExprLootContextLocation extends SimpleExpression<FabricLocation> {
 
-    private Expression<LootContextWrapper> contexts;
+    private @Nullable Expression<?> contexts;
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         if (expressions.length == 0) {
             return getParser().isCurrentEvent(LootContextWrapper.class);
@@ -25,7 +24,7 @@ public final class ExprLootContextLocation extends SimpleExpression<FabricLocati
         if (expressions.length != 1 || !expressions[0].canReturn(LootContextWrapper.class)) {
             return false;
         }
-        contexts = (Expression<LootContextWrapper>) expressions[0];
+        contexts = expressions[0];
         return true;
     }
 
@@ -65,7 +64,13 @@ public final class ExprLootContextLocation extends SimpleExpression<FabricLocati
 
     private LootContextWrapper[] resolve(SkriptEvent event) {
         if (contexts != null) {
-            return contexts.getAll(event);
+            List<LootContextWrapper> resolved = new ArrayList<>();
+            for (Object value : contexts.getAll(event)) {
+                if (value instanceof LootContextWrapper context) {
+                    resolved.add(context);
+                }
+            }
+            return resolved.toArray(LootContextWrapper[]::new);
         }
         return event.handle() instanceof LootContextWrapper wrapper ? new LootContextWrapper[]{wrapper} : new LootContextWrapper[0];
     }

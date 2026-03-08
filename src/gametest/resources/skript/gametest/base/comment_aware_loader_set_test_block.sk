@@ -1,0 +1,13 @@
+options:
+    blocks:
+        marker: emerald_block # trailing option comment must not become part of the value
+
+###
+this invalid section must stay inside the block comment:
+    definitely invalid syntax
+###
+
+on gametest: # trailing section comment must not break section parsing
+    set {_marker} to "emerald#block" # quoted # must stay in the string
+    if {_marker} is "emerald#block": # trailing condition comment must be ignored
+        set test block at 0 1 0 to {@blocks.marker} # trailing effect comment must be ignored

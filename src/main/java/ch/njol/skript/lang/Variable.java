@@ -287,7 +287,7 @@ public class Variable<T> implements Expression<T>, KeyReceiverExpression<T>, Key
 
     @Override
     public boolean areKeysRecommended() {
-        return list;
+        return false;
     }
 
     @Override

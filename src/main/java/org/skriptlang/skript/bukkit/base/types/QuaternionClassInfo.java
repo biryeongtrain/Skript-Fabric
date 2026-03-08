@@ -22,7 +22,7 @@ public final class QuaternionClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Quaternionf> info = new ClassInfo<>(Quaternionf.class);
+        ClassInfo<Quaternionf> info = new ClassInfo<>(Quaternionf.class, "quaternion");
         info.setParser(new Parser());
         info.setPropertyInfo(Property.WXYZ, new QuaternionWXYZHandler());
         Classes.registerClassInfo(info);

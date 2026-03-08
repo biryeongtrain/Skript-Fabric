@@ -210,6 +210,256 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileUsingOptionsReplacement(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/options_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingCommentAwareLoaderParsing(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/comment_aware_loader_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingCaseInsensitiveVariables(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/mixed_case_variable_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(0, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingConditionalChains(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/conditional_chain_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(1, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingParenthesizedConditionalChains(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/parenthesized_conditional_chain_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(0, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingParseIfConditionalChains(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/parse_if_conditional_chain_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(1, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingParseIfToSkipInvalidBodies(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/parse_if_skips_invalid_body_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(1, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingMultilineConditionalThenSections(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/multiline_conditional_then_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(1, 1, 0));
+            helper.assertBlockPresent(Blocks.IRON_BLOCK, new BlockPos(2, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingImplicitConditionalSections(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/implicit_conditional_chain_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(1, 1, 0));
+            helper.assertBlockPresent(Blocks.IRON_BLOCK, new BlockPos(2, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingListVariableReindexingOnSet(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/list_variable_reindex_set_test_block.sk");
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            net.minecraft.world.level.block.Block firstBlock = helper.getBlockState(new BlockPos(0, 1, 0)).getBlock();
+            net.minecraft.world.level.block.Block secondBlock = helper.getBlockState(new BlockPos(1, 1, 0)).getBlock();
+            helper.assertTrue(
+                    firstBlock != secondBlock,
+                    Component.literal("Expected reindexed list values to populate two distinct numeric slots.")
+            );
+            helper.assertTrue(
+                    java.util.Set.of(Blocks.GOLD_BLOCK, Blocks.EMERALD_BLOCK).contains(firstBlock),
+                    Component.literal("Expected the first numeric slot to resolve to a copied block id.")
+            );
+            helper.assertTrue(
+                    java.util.Set.of(Blocks.GOLD_BLOCK, Blocks.EMERALD_BLOCK).contains(secondBlock),
+                    Component.literal("Expected the second numeric slot to resolve to a copied block id.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void coreMappingsExposeMojangBackedTypes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState());
 

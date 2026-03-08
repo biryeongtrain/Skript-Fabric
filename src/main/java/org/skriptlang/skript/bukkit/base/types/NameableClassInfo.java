@@ -16,7 +16,7 @@ public final class NameableClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Nameable> info = new ClassInfo<>(Nameable.class);
+        ClassInfo<Nameable> info = new ClassInfo<>(Nameable.class, "nameable");
         info.setPropertyInfo(Property.NAME, new NameableNameHandler());
         info.setPropertyInfo(Property.DISPLAY_NAME, new NameableDisplayNameHandler());
         Classes.registerClassInfo(info);

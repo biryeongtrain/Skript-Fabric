@@ -18,7 +18,7 @@ public final class SlotClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Slot> info = new ClassInfo<>(Slot.class);
+        ClassInfo<Slot> info = new ClassInfo<>(Slot.class, "slot");
         info.setPropertyInfo(Property.NAME, new SlotNameHandler());
         info.setPropertyInfo(Property.DISPLAY_NAME, new SlotNameHandler());
         info.setPropertyInfo(Property.AMOUNT, new SlotAmountHandler());

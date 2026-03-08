@@ -2,7 +2,9 @@ package ch.njol.skript.lang;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,12 +61,35 @@ class UnparsedLiteralCompatibilityTest {
         registerNumericParsers();
 
         UnparsedLiteral warningLiteral = new UnparsedLiteral("55");
+        assertEquals("numerica and numericb", Classes.toString(warningLiteral.getPossibleInfos().toArray(), true));
         assertTrue(warningLiteral.multipleWarning());
 
         UnparsedLiteral convertedLiteral = new UnparsedLiteral("55");
         Literal<? extends Integer> converted = convertedLiteral.getConvertedExpression(Integer.class);
         assertNotNull(converted);
         assertFalse(convertedLiteral.multipleWarning());
+    }
+
+    @Test
+    void quotedStringsStayStringsInObjectContext() {
+        registerQuotedFooParser();
+
+        Expression<?> parsed = new SkriptParser("\"foo-12\"", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{Object.class});
+
+        assertNotNull(parsed);
+        assertInstanceOf(LiteralString.class, parsed);
+        assertEquals("foo-12", parsed.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void quotedStringsDoNotParseAsCustomTypes() {
+        registerQuotedFooParser();
+
+        Expression<?> parsed = new SkriptParser("\"foo-12\"", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{FooType.class});
+
+        assertNull(parsed);
     }
 
     private static void registerFooParser() {
@@ -91,13 +116,40 @@ class UnparsedLiteralCompatibilityTest {
     }
 
     private static void registerNumericParsers() {
-        ClassInfo<NumericA> a = new ClassInfo<>(NumericA.class);
+        ClassInfo<NumericA> a = new ClassInfo<>(NumericA.class, "numerica");
         a.setParser(new NumericParserA());
         Classes.registerClassInfo(a);
 
-        ClassInfo<NumericB> b = new ClassInfo<>(NumericB.class);
+        ClassInfo<NumericB> b = new ClassInfo<>(NumericB.class, "numericb");
         b.setParser(new NumericParserB());
         Classes.registerClassInfo(b);
+    }
+
+    private static void registerQuotedFooParser() {
+        ClassInfo<FooType> info = new ClassInfo<>(FooType.class, "quotedfoo");
+        info.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public FooType parse(String input, ParseContext context) {
+                String normalized = input == null ? "" : input.trim();
+                if (normalized.startsWith("\"") && normalized.endsWith("\"") && normalized.length() >= 2) {
+                    normalized = normalized.substring(1, normalized.length() - 1);
+                }
+                if (!normalized.startsWith("foo-")) {
+                    return null;
+                }
+                try {
+                    return new FooType(Integer.parseInt(normalized.substring(4)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(info);
     }
 
     private record FooType(int value) {

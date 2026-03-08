@@ -25,7 +25,7 @@ public final class ItemTypeClassInfo {
     }
 
     public static void register() {
-        ClassInfo<FabricItemType> info = new ClassInfo<>(FabricItemType.class);
+        ClassInfo<FabricItemType> info = new ClassInfo<>(FabricItemType.class, "itemtype");
         info.setParser(new ItemTypeParser());
         info.setPropertyInfo(Property.NAME, new ItemTypeNameHandler());
         info.setPropertyInfo(Property.DISPLAY_NAME, new ItemTypeNameHandler());

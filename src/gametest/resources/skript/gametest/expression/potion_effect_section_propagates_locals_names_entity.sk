@@ -1,0 +1,9 @@
+on use entity:
+    set {_state} to "outside"
+    set {_target} to event-entity
+    set {_effect} to a potion effect of poison:
+        set {_state} to "inside"
+        apply created potion effect to {_target} for 5 seconds
+    if {_state} is "inside":
+        if {_target} is poisoned:
+            set test name of entity {_target} to "potion effect locals"

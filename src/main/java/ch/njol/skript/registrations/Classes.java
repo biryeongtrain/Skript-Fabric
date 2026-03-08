@@ -1,51 +1,132 @@
 package ch.njol.skript.registrations;
 
+import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.util.StringMode;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.properties.Property;
 
 public final class Classes {
 
-    private static final Map<Class<?>, ClassInfo<?>> INFOS = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, ClassInfo<?>> REGISTERED_INFOS = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, ClassInfo<?>> SUPER_CLASS_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, ClassInfo<?>> INFOS_BY_CODE_NAME = new ConcurrentHashMap<>();
+    private static final Map<String, List<ClassInfo<?>>> REGISTERED_LITERAL_PATTERNS = new ConcurrentHashMap<>();
+    private static final CopyOnWriteArrayList<ClassInfo<?>> REGISTRATION_ORDER = new CopyOnWriteArrayList<>();
 
     private Classes() {
     }
 
     @SuppressWarnings("unchecked")
     public static <T> ClassInfo<T> getSuperClassInfo(Class<T> type) {
-        ClassInfo<?> exact = INFOS.get(type);
+        ClassInfo<?> exact = REGISTERED_INFOS.get(type);
         if (exact != null) {
             return (ClassInfo<T>) exact;
         }
-        for (Map.Entry<Class<?>, ClassInfo<?>> entry : INFOS.entrySet()) {
-            if (entry.getKey().isAssignableFrom(type)) {
-                return (ClassInfo<T>) entry.getValue();
+        ClassInfo<?> cached = SUPER_CLASS_CACHE.get(type);
+        if (cached != null) {
+            return (ClassInfo<T>) cached;
+        }
+        for (ClassInfo<?> info : REGISTRATION_ORDER) {
+            if (info.getC().isAssignableFrom(type)) {
+                SUPER_CLASS_CACHE.put(type, info);
+                return (ClassInfo<T>) info;
             }
         }
         ClassInfo<T> info = new ClassInfo<>(type);
-        INFOS.put(type, info);
+        SUPER_CLASS_CACHE.put(type, info);
         return info;
     }
 
     public static void registerClassInfo(ClassInfo<?> info) {
-        INFOS.put(info.getC(), info);
+        ClassInfo<?> existingByClass = REGISTERED_INFOS.putIfAbsent(info.getC(), info);
+        if (existingByClass != null) {
+            throw new IllegalArgumentException("Class info already registered for " + info.getC().getName());
+        }
+        ClassInfo<?> existingByCodeName = INFOS_BY_CODE_NAME.putIfAbsent(info.getCodeName(), info);
+        if (existingByCodeName != null) {
+            REGISTERED_INFOS.remove(info.getC(), info);
+            throw new IllegalArgumentException(
+                    "Code name '" + info.getCodeName() + "' is already used by " + existingByCodeName.getC().getName()
+            );
+        }
+        REGISTRATION_ORDER.add(info);
+        for (String pattern : info.getLiteralPatterns()) {
+            REGISTERED_LITERAL_PATTERNS
+                    .computeIfAbsent(pattern, ignored -> new CopyOnWriteArrayList<>())
+                    .add(info);
+        }
     }
 
     public static void clearClassInfos() {
-        INFOS.clear();
+        REGISTERED_INFOS.clear();
+        SUPER_CLASS_CACHE.clear();
+        INFOS_BY_CODE_NAME.clear();
+        REGISTERED_LITERAL_PATTERNS.clear();
+        REGISTRATION_ORDER.clear();
+    }
+
+    public static List<ClassInfo<?>> getClassInfos() {
+        return List.copyOf(REGISTRATION_ORDER);
+    }
+
+    public static ClassInfo<?> getClassInfo(String codeName) {
+        ClassInfo<?> info = getClassInfoNoError(codeName);
+        if (info == null) {
+            throw new SkriptAPIException("No class info found for " + codeName);
+        }
+        return info;
+    }
+
+    public static @Nullable ClassInfo<?> getClassInfoNoError(@Nullable String codeName) {
+        if (codeName == null || codeName.isBlank()) {
+            return null;
+        }
+        return INFOS_BY_CODE_NAME.get(codeName.toLowerCase(Locale.ENGLISH));
+    }
+
+    public static @Nullable ClassInfo<?> getClassInfoFromUserInput(@Nullable String userInput) {
+        if (userInput == null || userInput.isBlank()) {
+            return null;
+        }
+        String normalized = normalizeUserInput(userInput);
+        ClassInfo<?> exact = INFOS_BY_CODE_NAME.get(normalized);
+        if (exact != null) {
+            return exact;
+        }
+        if (normalized.length() > 1 && normalized.endsWith("s")) {
+            return INFOS_BY_CODE_NAME.get(normalized.substring(0, normalized.length() - 1));
+        }
+        return null;
+    }
+
+    public static boolean isPluralClassInfoUserInput(@Nullable String userInput, @Nullable ClassInfo<?> classInfo) {
+        if (userInput == null || userInput.isBlank() || classInfo == null) {
+            return false;
+        }
+        String normalized = normalizeUserInput(userInput);
+        return normalized.length() > 1
+                && normalized.endsWith("s")
+                && normalizeUserInput(classInfo.getCodeName()).equals(normalized.substring(0, normalized.length() - 1));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> @Nullable ClassInfo<T> getExactClassInfo(@Nullable Class<T> type) {
+        return type == null ? null : (ClassInfo<T>) REGISTERED_INFOS.get(type);
     }
 
     public static Set<ClassInfo<?>> getClassInfosByProperty(Property<?> property) {
-        return INFOS.values().stream()
+        return REGISTERED_INFOS.values().stream()
                 .filter(info -> info.hasProperty(property))
                 .collect(Collectors.toSet());
     }
@@ -82,15 +163,20 @@ public final class Classes {
         if (text == null || text.isBlank()) {
             return null;
         }
-        List<ClassInfo<?>> matches = INFOS.values().stream()
-                .filter(info -> {
-                    ClassInfo.Parser<?> parser = info.getParser();
-                    return parser != null
-                            && parser.canParse(ParseContext.DEFAULT)
-                            && parser.parse(text, ParseContext.DEFAULT) != null;
-                })
-                .toList();
-        return matches.isEmpty() ? null : matches;
+        String normalized = text.trim().toLowerCase(Locale.ENGLISH);
+        List<ClassInfo<?>> explicitMatches = REGISTERED_LITERAL_PATTERNS.get(normalized);
+        if (explicitMatches != null && !explicitMatches.isEmpty()) {
+            return List.copyOf(explicitMatches);
+        }
+        List<ClassInfo<?>> matches = new ArrayList<>();
+        for (ClassInfo<?> info : REGISTRATION_ORDER) {
+            ClassInfo.Parser<?> parser = info.getParser();
+            if (parser == null || !parser.canParse(ParseContext.DEFAULT) || parser.parse(text, ParseContext.DEFAULT) == null) {
+                continue;
+            }
+            matches.add(info);
+        }
+        return matches.isEmpty() ? null : List.copyOf(matches);
     }
 
     @SuppressWarnings("unchecked")
@@ -119,7 +205,7 @@ public final class Classes {
             return null;
         }
 
-        ClassInfo<?> exactInfo = INFOS.get(type);
+        ClassInfo<?> exactInfo = REGISTERED_INFOS.get(type);
         if (exactInfo != null) {
             ClassInfo.Parser<?> parser = exactInfo.getParser();
             if (parser != null && parser.canParse(context)) {
@@ -130,7 +216,7 @@ public final class Classes {
             }
         }
 
-        for (ClassInfo<?> info : INFOS.values()) {
+        for (ClassInfo<?> info : REGISTRATION_ORDER) {
             if (!type.isAssignableFrom(info.getC())) {
                 continue;
             }
@@ -158,5 +244,17 @@ public final class Classes {
             }
         }
         return value;
+    }
+
+    private static String normalizeUserInput(String input) {
+        StringBuilder normalized = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char character = input.charAt(i);
+            if (Character.isWhitespace(character) || character == '-' || character == '_') {
+                continue;
+            }
+            normalized.append(Character.toLowerCase(character));
+        }
+        return normalized.toString();
     }
 }

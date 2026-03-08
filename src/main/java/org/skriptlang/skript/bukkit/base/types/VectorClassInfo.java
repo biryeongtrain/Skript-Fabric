@@ -22,7 +22,7 @@ public final class VectorClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Vec3> info = new ClassInfo<>(Vec3.class);
+        ClassInfo<Vec3> info = new ClassInfo<>(Vec3.class, "vector");
         info.setParser(new Parser());
         info.setPropertyInfo(Property.WXYZ, new VectorWXYZHandler());
         Classes.registerClassInfo(info);

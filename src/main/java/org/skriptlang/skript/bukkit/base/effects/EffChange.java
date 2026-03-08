@@ -3,6 +3,8 @@ package org.skriptlang.skript.bukkit.base.effects;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.KeyProviderExpression;
+import ch.njol.skript.lang.KeyReceiverExpression;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -54,9 +56,21 @@ public final class EffChange extends Effect {
 
     @Override
     protected void execute(SkriptEvent event) {
-        Object[] delta = changeWith == null ? null : resolveDelta(event);
-        if (changeWith != null && delta == null) {
-            return;
+        Object[] delta = null;
+        if (changeWith != null) {
+            delta = resolveDelta(event);
+            if (delta == null || delta.length == 0) {
+                if (mode == ChangeMode.SET && changed.acceptChange(ChangeMode.DELETE) != null) {
+                    changed.change(event, null, ChangeMode.DELETE);
+                }
+                return;
+            }
+            if (supportsKeyedChange(mode)
+                    && changed instanceof KeyReceiverExpression<?> receiver
+                    && KeyProviderExpression.areKeysRecommended(changeWith)) {
+                receiver.change(event, delta, mode, ((KeyProviderExpression<?>) changeWith).getArrayKeys(event));
+                return;
+            }
         }
         changed.change(event, delta, mode);
     }
@@ -72,8 +86,12 @@ public final class EffChange extends Effect {
                 effectiveChange = reparsed;
             }
         }
-        Object[] delta = effectiveChange.getAll(event);
+        Object[] delta = effectiveChange.getArray(event);
         return effectiveChange.beforeChange(changed, delta);
+    }
+
+    private static boolean supportsKeyedChange(ChangeMode mode) {
+        return mode == ChangeMode.SET || mode == ChangeMode.ADD || mode == ChangeMode.REMOVE;
     }
 
     @Override

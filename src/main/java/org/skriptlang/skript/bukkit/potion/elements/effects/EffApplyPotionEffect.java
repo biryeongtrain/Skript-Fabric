@@ -18,7 +18,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public final class EffApplyPotionEffect extends Effect {
 
     private Expression<?> potions;
-    private Expression<Entity> entities;
+    private Expression<?> entities;
     private @Nullable Expression<Timespan> duration;
 
     @Override
@@ -32,7 +32,7 @@ public final class EffApplyPotionEffect extends Effect {
         if (!expressions[first ? 1 : 0].canReturn(Entity.class)) {
             return false;
         }
-        entities = (Expression<Entity>) expressions[first ? 1 : 0];
+        entities = expressions[first ? 1 : 0];
         duration = expressions.length == 3 ? (Expression<Timespan>) expressions[2] : null;
         return true;
     }
@@ -55,7 +55,10 @@ public final class EffApplyPotionEffect extends Effect {
             if (customDuration >= 0) {
                 applied.duration(customDuration);
             }
-            for (Entity entity : entities.getAll(event)) {
+            for (Object rawEntity : entities.getAll(event)) {
+                if (!(rawEntity instanceof Entity entity)) {
+                    continue;
+                }
                 if (entity instanceof LivingEntity livingEntity) {
                     FabricPotionEffectCauseContext.run(FabricPotionEffectCause.PLUGIN,
                             () -> livingEntity.addEffect(applied.asMobEffectInstance()));

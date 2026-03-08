@@ -9,6 +9,6 @@ public final class EquippableComponentClassInfo {
     }
 
     public static void register() {
-        Classes.registerClassInfo(new ClassInfo<>(EquippableWrapper.class));
+        Classes.registerClassInfo(new ClassInfo<>(EquippableWrapper.class, "equippablecomponent"));
     }
 }

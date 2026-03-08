@@ -161,7 +161,7 @@ public class UnparsedLiteral implements Literal<Object> {
         if (reparsed || converted || possibleInfos == null || possibleInfos.size() <= 1) {
             return false;
         }
-        String infoCodeName = possibleInfos.get(0).getC().getSimpleName().toLowerCase();
+        String infoCodeName = possibleInfos.get(0).getCodeName();
         String combinedInfos = Classes.toString(possibleInfos.toArray(), true);
         Skript.warning("'" + data + "' has multiple types (" + combinedInfos + "). Consider specifying which type to use: '"
                 + data + " (" + infoCodeName + ")'");

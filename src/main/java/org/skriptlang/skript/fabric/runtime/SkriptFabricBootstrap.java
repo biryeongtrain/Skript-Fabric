@@ -1,6 +1,8 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.sections.SecIf;
+import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
 import org.skriptlang.skript.bukkit.base.conditions.CondCompare;
@@ -148,6 +150,8 @@ public final class SkriptFabricBootstrap {
 
             Skript.setAcceptRegistrations(true);
             try {
+                StructOptions.register();
+                SecIf.register();
                 Property.registerDefaultProperties();
                 PlayerClassInfo.register();
                 InventoryClassInfo.register();

@@ -56,9 +56,8 @@ public final class ExprSecDamageSource extends SectionExpression<DamageSource> {
             }
         }
         if (trigger != null) {
-            Variables.withLocalVariables(event, new SkriptEvent(context, event.server(), event.level(), event.player()), () ->
-                    TriggerItem.walk(trigger, new SkriptEvent(context, event.server(), event.level(), event.player()))
-            );
+            SkriptEvent sectionEvent = new SkriptEvent(context, event.server(), event.level(), event.player());
+            Variables.withLocalVariables(event, sectionEvent, () -> TriggerItem.walk(trigger, sectionEvent));
             if (context.causingEntity() != null && context.directEntity() == null) {
                 Skript.error("You must set a direct entity when setting a causing entity.");
                 return new DamageSource[0];

@@ -13,7 +13,7 @@ public final class DamageSourceClassInfo {
     }
 
     public static void register() {
-        ClassInfo<DamageSource> info = new ClassInfo<>(DamageSource.class);
+        ClassInfo<DamageSource> info = new ClassInfo<>(DamageSource.class, "damagesource");
         info.setPropertyInfo(Property.NAME, new DamageSourceNameHandler());
         Classes.registerClassInfo(info);
     }

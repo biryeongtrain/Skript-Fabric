@@ -12,7 +12,7 @@ public final class DisplayBillboardConstraintsClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Display.BillboardConstraints> info = new ClassInfo<>(Display.BillboardConstraints.class);
+        ClassInfo<Display.BillboardConstraints> info = new ClassInfo<>(Display.BillboardConstraints.class, "billboardconstraints");
         info.setParser(new Parser());
         Classes.registerClassInfo(info);
     }

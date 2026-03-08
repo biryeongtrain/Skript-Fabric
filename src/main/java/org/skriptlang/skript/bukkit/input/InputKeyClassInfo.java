@@ -11,7 +11,7 @@ public final class InputKeyClassInfo {
     }
 
     public static void register() {
-        ClassInfo<InputKey> info = new ClassInfo<>(InputKey.class);
+        ClassInfo<InputKey> info = new ClassInfo<>(InputKey.class, "inputkey");
         info.setParser(new Parser());
         Classes.registerClassInfo(info);
     }

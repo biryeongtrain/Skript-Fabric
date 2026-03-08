@@ -2,6 +2,7 @@ package ch.njol.skript.variables;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
@@ -15,6 +16,8 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
  */
 public final class Variables {
 
+    public static boolean caseInsensitiveVariables = true;
+
     private static final Map<String, Object> GLOBAL_VARIABLES = new ConcurrentHashMap<>();
     private static final Map<Object, Map<String, Object>> LOCAL_VARIABLES =
             Collections.synchronizedMap(new WeakHashMap<>());
@@ -26,18 +29,20 @@ public final class Variables {
         if (name == null || name.isBlank()) {
             return null;
         }
-        return local ? localMap(event, false).get(name) : GLOBAL_VARIABLES.get(name);
+        String normalized = normalizeName(name);
+        return local ? localMap(event, false).get(normalized) : GLOBAL_VARIABLES.get(normalized);
     }
 
     public static void setVariable(String name, @Nullable Object value, @Nullable SkriptEvent event, boolean local) {
         if (name == null || name.isBlank()) {
             return;
         }
+        String normalized = normalizeName(name);
         Map<String, Object> map = local ? localMap(event, true) : GLOBAL_VARIABLES;
         if (value == null) {
-            map.remove(name);
+            map.remove(normalized);
         } else {
-            map.put(name, value);
+            map.put(normalized, value);
         }
     }
 
@@ -45,21 +50,23 @@ public final class Variables {
         if (prefix == null || prefix.isBlank()) {
             return;
         }
+        String normalized = normalizeName(prefix);
         Map<String, Object> map = local ? localMap(event, false) : GLOBAL_VARIABLES;
         if (map.isEmpty()) {
             return;
         }
-        map.keySet().removeIf(key -> key.startsWith(prefix));
+        map.keySet().removeIf(key -> key.startsWith(normalized));
     }
 
     public static Map<String, Object> getVariablesWithPrefix(String prefix, @Nullable SkriptEvent event, boolean local) {
         if (prefix == null || prefix.isBlank()) {
             return Map.of();
         }
+        String normalized = normalizeName(prefix);
         Map<String, Object> map = local ? localMap(event, false) : GLOBAL_VARIABLES;
         Map<String, Object> matches = new TreeMap<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (entry.getKey().startsWith(prefix)) {
+            if (entry.getKey().startsWith(normalized)) {
                 matches.put(entry.getKey(), entry.getValue());
             }
         }
@@ -78,21 +85,26 @@ public final class Variables {
     ) {
         Object sourceKey = eventScopeKey(source);
         Object targetKey = eventScopeKey(target);
+        if (sourceKey.equals(targetKey)) {
+            action.run();
+            return;
+        }
         Map<String, Object> sourceLocals = LOCAL_VARIABLES.get(sourceKey);
-        Map<String, Object> backup = LOCAL_VARIABLES.get(targetKey);
-        if (sourceLocals != null && !sourceLocals.isEmpty()) {
-            LOCAL_VARIABLES.put(targetKey, new ConcurrentHashMap<>(sourceLocals));
-        } else {
+        if (sourceLocals == null || sourceLocals.isEmpty()) {
             LOCAL_VARIABLES.remove(targetKey);
+        } else {
+            LOCAL_VARIABLES.put(targetKey, new ConcurrentHashMap<>(sourceLocals));
         }
         try {
             action.run();
         } finally {
-            if (backup == null || backup.isEmpty()) {
-                LOCAL_VARIABLES.remove(targetKey);
+            Map<String, Object> targetLocals = LOCAL_VARIABLES.get(targetKey);
+            if (targetLocals == null || targetLocals.isEmpty()) {
+                LOCAL_VARIABLES.remove(sourceKey);
             } else {
-                LOCAL_VARIABLES.put(targetKey, backup);
+                LOCAL_VARIABLES.put(sourceKey, new ConcurrentHashMap<>(targetLocals));
             }
+            LOCAL_VARIABLES.remove(targetKey);
         }
     }
 
@@ -109,5 +121,12 @@ public final class Variables {
             return Variables.class;
         }
         return event.handle() != null ? event.handle() : event;
+    }
+
+    private static String normalizeName(String name) {
+        if (!caseInsensitiveVariables) {
+            return name;
+        }
+        return name.toLowerCase(Locale.ENGLISH);
     }
 }

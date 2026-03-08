@@ -18,7 +18,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class EffPoison extends Effect {
 
-    private Expression<Entity> entities;
+    private Expression<?> entities;
     private @Nullable Expression<Timespan> duration;
     private boolean cure;
 
@@ -28,7 +28,7 @@ public final class EffPoison extends Effect {
         if (expressions.length < 1 || expressions.length > 2 || !expressions[0].canReturn(Entity.class)) {
             return false;
         }
-        entities = (Expression<Entity>) expressions[0];
+        entities = expressions[0];
         if (matchedPattern == 1) {
             duration = (Expression<Timespan>) expressions[1];
         }
@@ -39,7 +39,10 @@ public final class EffPoison extends Effect {
     @Override
     protected void execute(SkriptEvent event) {
         if (cure) {
-            for (Entity entity : entities.getAll(event)) {
+            for (Object rawEntity : entities.getAll(event)) {
+                if (!(rawEntity instanceof Entity entity)) {
+                    continue;
+                }
                 if (entity instanceof LivingEntity livingEntity) {
                     FabricPotionEffectCauseContext.run(FabricPotionEffectCause.PLUGIN,
                             () -> livingEntity.removeEffect(MobEffects.POISON));
@@ -55,7 +58,10 @@ public final class EffPoison extends Effect {
                 ticks = Math.max(0, (int) timespan.getAs(TimePeriod.TICK));
             }
         }
-        for (Entity entity : entities.getAll(event)) {
+        for (Object rawEntity : entities.getAll(event)) {
+            if (!(rawEntity instanceof Entity entity)) {
+                continue;
+            }
             if (!(entity instanceof LivingEntity livingEntity)) {
                 continue;
             }

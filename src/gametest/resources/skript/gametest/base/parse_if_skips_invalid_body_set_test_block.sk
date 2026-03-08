@@ -1,0 +1,12 @@
+on gametest:
+    parse if 1 is 2:
+        this line is intentionally invalid
+    else:
+        set test block at 0 1 0 to emerald_block
+
+    if 1 is 2:
+        set test block at 1 1 0 to diamond_block
+    else parse if 1 is 2:
+        this line is intentionally invalid too
+    else:
+        set test block at 1 1 0 to gold_block

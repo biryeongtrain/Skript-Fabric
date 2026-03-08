@@ -1,0 +1,6 @@
+options:
+    blocks:
+        marker: emerald_block
+
+on gametest:
+    set test block at 0 1 0 to {@blocks.marker}

@@ -1196,6 +1196,50 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
     }
 
     @GameTest
+    public void blankEquippableComponentSectionPropagatesLocalVariables(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/blank_equippable_component_section_propagates_locals_names_entity.sk",
+                cow,
+                "blank equippable locals"
+        );
+    }
+
+    @GameTest
+    public void customDamageSourceSectionPropagatesLocalVariables(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/custom_damage_source_section_propagates_locals_names_entity.sk",
+                cow,
+                "custom damage source locals"
+        );
+    }
+
+    @GameTest
+    public void potionEffectSectionPropagatesLocalVariables(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/potion_effect_section_propagates_locals_names_entity.sk",
+                cow,
+                "potion effect locals"
+        );
+    }
+
+    @GameTest
+    public void lootContextSectionPropagatesLocalVariables(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/loot_context_section_propagates_locals_names_entity.sk",
+                cow,
+                "loot context locals"
+        );
+    }
+
+    @GameTest
     public void eventPayloadExpressionsParseAndResolve(GameTestHelper helper) {
         BlockPos pos = helper.absolutePos(new BlockPos(3, 1, 0));
         helper.getLevel().setBlockAndUpdate(pos, Blocks.STONE.defaultBlockState());

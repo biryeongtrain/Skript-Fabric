@@ -14,7 +14,7 @@ public final class ItemStackClassInfo {
     }
 
     public static void register() {
-        ClassInfo<ItemStack> info = new ClassInfo<>(ItemStack.class);
+        ClassInfo<ItemStack> info = new ClassInfo<>(ItemStack.class, "itemstack");
         info.setPropertyInfo(Property.AMOUNT, new ItemStackAmountHandler());
         Classes.registerClassInfo(info);
     }

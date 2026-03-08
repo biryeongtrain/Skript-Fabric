@@ -1,6 +1,9 @@
 package ch.njol.skript.classes;
 
 import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.properties.Property;
@@ -15,15 +18,31 @@ public class ClassInfo<T> {
     }
 
     private final Class<T> type;
+    private final String codeName;
     private final Map<Property<?>, Property.PropertyInfo<?>> properties = new ConcurrentHashMap<>();
+    private final Set<String> literalPatterns = new LinkedHashSet<>();
+    private final Set<String> after = new LinkedHashSet<>();
+    private @Nullable Set<String> before;
     private @Nullable Parser<T> parser;
 
     public ClassInfo(Class<T> type) {
+        this(type, deriveCodeName(type));
+    }
+
+    public ClassInfo(Class<T> type, String codeName) {
         this.type = type;
+        if (!isValidCodeName(codeName)) {
+            throw new IllegalArgumentException("Code names for classes must be lowercase latin letters and numbers only");
+        }
+        this.codeName = codeName;
     }
 
     public Class<T> getC() {
         return type;
+    }
+
+    public String getCodeName() {
+        return codeName;
     }
 
     public boolean hasProperty(Property<?> property) {
@@ -47,8 +66,69 @@ public class ClassInfo<T> {
         this.parser = parser;
     }
 
+    public ClassInfo<T> literalPatterns(String... patterns) {
+        for (String pattern : patterns) {
+            if (pattern == null || pattern.isBlank()) {
+                continue;
+            }
+            literalPatterns.add(normalizeLiteralPattern(pattern));
+        }
+        return this;
+    }
+
+    public Set<String> getLiteralPatterns() {
+        return Set.copyOf(literalPatterns);
+    }
+
+    public ClassInfo<T> before(String... before) {
+        if (this.before == null) {
+            this.before = new LinkedHashSet<>();
+        }
+        for (String codeName : before) {
+            if (codeName == null || codeName.isBlank()) {
+                continue;
+            }
+            this.before.add(codeName);
+        }
+        return this;
+    }
+
+    public ClassInfo<T> after(String... after) {
+        for (String codeName : after) {
+            if (codeName == null || codeName.isBlank()) {
+                continue;
+            }
+            this.after.add(codeName);
+        }
+        return this;
+    }
+
+    public @Nullable Set<String> before() {
+        return before;
+    }
+
+    public Set<String> after() {
+        return after;
+    }
+
     @Override
     public String toString() {
-        return type.getSimpleName();
+        return codeName;
+    }
+
+    public static boolean isValidCodeName(String codeName) {
+        return codeName != null && codeName.matches("(?:any-)?[a-z0-9]+");
+    }
+
+    private static String deriveCodeName(Class<?> type) {
+        String normalized = type.getSimpleName().replaceAll("[^A-Za-z0-9]", "").toLowerCase(Locale.ENGLISH);
+        if (!isValidCodeName(normalized)) {
+            throw new IllegalArgumentException("Cannot derive a valid code name from " + type.getName());
+        }
+        return normalized;
+    }
+
+    private static String normalizeLiteralPattern(String pattern) {
+        return pattern.trim().toLowerCase(Locale.ENGLISH);
     }
 }

@@ -13,7 +13,7 @@ public final class EntityClassInfo {
     }
 
     public static void register() {
-        ClassInfo<Entity> info = new ClassInfo<>(Entity.class);
+        ClassInfo<Entity> info = new ClassInfo<>(Entity.class, "entity");
         info.setPropertyInfo(Property.NAME, new EntityNameHandler());
         Classes.registerClassInfo(info);
     }

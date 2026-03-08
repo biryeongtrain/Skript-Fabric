@@ -33,7 +33,8 @@ public final class CondCompare extends Condition {
         if (expressions.length != 2) {
             return false;
         }
-        if (expressions[0].canReturn(Entity.class)) {
+        Class<?> leftReturnType = expressions[0].getReturnType();
+        if (leftReturnType != Object.class && Entity.class.isAssignableFrom(leftReturnType)) {
             return false;
         }
         left = expressions[0];

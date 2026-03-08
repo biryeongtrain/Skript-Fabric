@@ -13,7 +13,7 @@ public final class InventoryClassInfo {
     }
 
     public static void register() {
-        ClassInfo<FabricInventory> info = new ClassInfo<>(FabricInventory.class);
+        ClassInfo<FabricInventory> info = new ClassInfo<>(FabricInventory.class, "inventory");
         info.setPropertyInfo(Property.CONTAINS, new InventoryContainsHandler());
         Classes.registerClassInfo(info);
     }

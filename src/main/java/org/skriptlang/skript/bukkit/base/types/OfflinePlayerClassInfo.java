@@ -20,7 +20,7 @@ public final class OfflinePlayerClassInfo {
     }
 
     public static void register() {
-        ClassInfo<GameProfile> info = new ClassInfo<>(GameProfile.class);
+        ClassInfo<GameProfile> info = new ClassInfo<>(GameProfile.class, "offlineplayer");
         info.setParser(new OfflinePlayerParser());
         info.setPropertyInfo(Property.NAME, new OfflinePlayerNameHandler());
         Classes.registerClassInfo(info);

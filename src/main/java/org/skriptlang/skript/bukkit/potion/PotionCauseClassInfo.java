@@ -12,7 +12,7 @@ public final class PotionCauseClassInfo {
     }
 
     public static void register() {
-        ClassInfo<FabricPotionEffectCause> info = new ClassInfo<>(FabricPotionEffectCause.class);
+        ClassInfo<FabricPotionEffectCause> info = new ClassInfo<>(FabricPotionEffectCause.class, "potioneffectcause");
         info.setParser(new Parser());
         Classes.registerClassInfo(info);
     }

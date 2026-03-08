@@ -6,12 +6,16 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Section;
 import ch.njol.skript.lang.SkriptEvent;
 import ch.njol.skript.lang.Statement;
+import ch.njol.skript.log.LogEntry;
+import ch.njol.skript.log.SkriptLogger;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.skriptlang.skript.lang.experiment.ExperimentRegistry;
+import org.skriptlang.skript.lang.entry.EntryValidator;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 import org.skriptlang.skript.registration.SyntaxRegistryService;
@@ -48,15 +52,15 @@ public class Skript implements SkriptAddon {
     }
 
     public static void warning(String message) {
-        LOGGER.warn(message);
+        SkriptLogger.log(new LogEntry(Level.WARNING, message));
     }
 
     public static void error(String message) {
-        LOGGER.error(message);
+        SkriptLogger.log(new LogEntry(Level.SEVERE, message));
     }
 
     public static void debug(String message) {
-        LOGGER.debug(message);
+        SkriptLogger.log(new LogEntry(Level.INFO, message));
     }
 
     public static boolean debug() {
@@ -100,7 +104,16 @@ public class Skript implements SkriptAddon {
             SyntaxInfo.Structure.NodeType nodeType,
             String... patterns
     ) {
-        instance().syntaxRegistry().registerStructure(structureClass, nodeType, null, patterns);
+        registerStructure(structureClass, nodeType, null, patterns);
+    }
+
+    public static <E extends org.skriptlang.skript.lang.structure.Structure> void registerStructure(
+            Class<E> structureClass,
+            SyntaxInfo.Structure.NodeType nodeType,
+            EntryValidator entryValidator,
+            String... patterns
+    ) {
+        instance().syntaxRegistry().registerStructure(structureClass, nodeType, entryValidator, patterns);
     }
 
     public static <E extends SkriptEvent> void registerEvent(Class<E> eventClass, String... patterns) {

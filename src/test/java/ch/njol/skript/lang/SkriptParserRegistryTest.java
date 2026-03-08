@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
@@ -17,13 +18,21 @@ import ch.njol.skript.lang.function.Functions;
 import ch.njol.skript.lang.function.Parameter;
 import ch.njol.skript.lang.function.Signature;
 import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
 import java.util.List;
+import net.minecraft.world.damagesource.DamageSource;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.bukkit.base.types.LocationClassInfo;
 import org.skriptlang.skript.lang.entry.EntryContainer;
 import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.bukkit.damagesource.elements.ExprSecDamageSource;
+import org.skriptlang.skript.bukkit.loottables.LootContextWrapper;
+import org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprSecCreateLootContext;
+import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprSecPotionEffect;
+import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
 
 class SkriptParserRegistryTest {
 
@@ -123,6 +132,120 @@ class SkriptParserRegistryTest {
     }
 
     @Test
+    void sectionPatternProvidesRawRegexCapturesInParseResult() {
+        RegexCaptureSection.lastCapturedText = null;
+        Skript.registerSection(RegexCaptureSection.class, "capture <.+>");
+
+        SectionNode node = new SectionNode("capture hello world");
+        Section parsed = Section.parse("capture hello world", null, node, List.of());
+
+        assertNotNull(parsed);
+        assertInstanceOf(RegexCaptureSection.class, parsed);
+        assertEquals("hello world", RegexCaptureSection.lastCapturedText);
+    }
+
+    @Test
+    void sectionPatternProvidesImplicitTagInParseResult() {
+        TagAwareSection.lastImplicit = false;
+        Skript.registerSection(TagAwareSection.class, "implicit:<.+>");
+
+        SectionNode node = new SectionNode("always true");
+        Section parsed = Section.parse("always true", null, node, List.of());
+
+        assertNotNull(parsed);
+        assertInstanceOf(TagAwareSection.class, parsed);
+        assertTrue(TagAwareSection.lastImplicit);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void customDamageSourceExpressionClaimsSectionWhenParsedAsObject() {
+        Skript.registerExpression(
+                ExprSecDamageSource.class,
+                DamageSource.class,
+                "[a] [custom] damage source [of [damage] type %-objects%]"
+        );
+
+        ParserInstance parser = ParserInstance.get();
+        Section.SectionContext sectionContext = parser.getData(Section.SectionContext.class);
+        SectionNode node = new SectionNode("set {_source} to a custom damage source:");
+        node.add(new SimpleNode("set {_state} to \"inside\""));
+
+        sectionContext.modify(node, List.of(), () -> {
+            Expression<?> parsed = new SkriptParser(
+                    "a custom damage source",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Object.class});
+
+            assertNotNull(parsed);
+            assertInstanceOf(ExprSecDamageSource.class, parsed);
+            assertTrue(sectionContext.claimed());
+            return null;
+        });
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void potionEffectExpressionClaimsSectionWhenOptionalPartsAreOmitted() {
+        Skript.registerExpression(
+                ExprSecPotionEffect.class,
+                (Class) SkriptPotionEffect.class,
+                "[a[n]] [ambient] potion effect of %objects% [[of tier] %-number%] [for %-timespan%]",
+                "[an] (infinite|permanent) [ambient] potion effect of %objects% [[of tier] %-number%]",
+                "[an] (infinite|permanent) [ambient] %objects% [[of tier] %-number%] [potion [effect]]",
+                "[a] potion effect [of %-objects%] (from|using|based on) %objects%"
+        );
+
+        ParserInstance parser = ParserInstance.get();
+        Section.SectionContext sectionContext = parser.getData(Section.SectionContext.class);
+        SectionNode node = new SectionNode("set {_effect} to a potion effect of poison:");
+        node.add(new SimpleNode("set {_state} to \"inside\""));
+
+        sectionContext.modify(node, List.of(), () -> {
+            Expression<?> parsed = new SkriptParser(
+                    "a potion effect of poison",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Object.class});
+
+            assertNotNull(parsed);
+            assertInstanceOf(ExprSecPotionEffect.class, parsed);
+            assertTrue(sectionContext.claimed());
+            return null;
+        });
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void lootContextExpressionClaimsSectionWhenParsedAsObject() {
+        LocationClassInfo.register();
+        Skript.registerExpression(
+                ExprSecCreateLootContext.class,
+                (Class) LootContextWrapper.class,
+                "[a] loot[ ]context at %locations%"
+        );
+
+        ParserInstance parser = ParserInstance.get();
+        Section.SectionContext sectionContext = parser.getData(Section.SectionContext.class);
+        SectionNode node = new SectionNode("set {_context} to a loot context at 1, 2, 3:");
+        node.add(new SimpleNode("set {_state} to \"inside\""));
+
+        sectionContext.modify(node, List.of(), () -> {
+            Expression<?> parsed = new SkriptParser(
+                    "a loot context at 1, 2, 3",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Object.class});
+
+            assertNotNull(parsed);
+            assertInstanceOf(ExprSecCreateLootContext.class, parsed);
+            assertTrue(sectionContext.claimed());
+            return null;
+        });
+    }
+
+    @Test
     void scriptLoaderChainsLoadedItemsInOrder() {
         Skript.registerEffect(TestEffect.class, "ping");
         Skript.registerEffect(SecondEffect.class, "pong");
@@ -155,6 +278,70 @@ class SkriptParserRegistryTest {
         assertEquals(sentinel, parser.getNode());
     }
 
+    @Test
+    void statementParseMatchesConditionWhenTerminalOptionalWordsAreOmitted() {
+        Skript.registerExpression(DummyEventExpression.class, Object.class, "event-thing");
+        Skript.registerCondition(DummyCondition.class, "%objects% is in lov(e|ing) [state|mode]");
+
+        Statement parsed = Statement.parse("event-thing is in love", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(DummyCondition.class, parsed);
+    }
+
+    @Test
+    void statementParseMatchesConditionWhenOptionalWhitespaceGroupIsOmitted() {
+        Skript.registerExpression(DummyEventExpression.class, Object.class, "event-thing");
+        Skript.registerCondition(
+                DummyCondition.class,
+                "[[the] text of] %objects% (has|have) [a] (drop|text) shadow"
+        );
+
+        Statement parsed = Statement.parse("event-thing has drop shadow", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(DummyCondition.class, parsed);
+    }
+
+    @Test
+    void statementParseMatchesConditionWhenInlineOptionalSuffixIsOmitted() {
+        Skript.registerExpression(DummyEventExpression.class, Object.class, "event-item");
+        Skript.registerCondition(
+                DummyCondition.class,
+                "%objects% can be (equipped|put) on[to] entities"
+        );
+
+        Statement parsed = Statement.parse("event-item can be equipped on entities", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(DummyCondition.class, parsed);
+    }
+
+    @Test
+    void statementParseMatchesConditionWhenOptionalMiddlePhraseIsOmitted() {
+        Skript.registerExpression(DummyEventExpression.class, Object.class, "event-item");
+        Skript.registerCondition(
+                DummyCondition.class,
+                "%objects% will (lose durability|be damaged) (on [wearer['s]] injury|when [[the] wearer [is]] (hurt|injured|damaged))"
+        );
+
+        Statement parsed = Statement.parse("event-item will lose durability when injured", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(DummyCondition.class, parsed);
+    }
+
+    @Test
+    void statementParseMatchesEffectWhenInlineAlternativeNeedsTrailingWhitespace() {
+        Skript.registerExpression(DummyEventExpression.class, Object.class, "event-entity");
+        Skript.registerEffect(TestEffect.class, "make %objects% (not |non(-| )|un)breedable");
+
+        Statement parsed = Statement.parse("make event-entity not breedable", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(TestEffect.class, parsed);
+    }
+
     public static class TestEffect extends Effect {
 
         static int initCalls;
@@ -175,6 +362,34 @@ class SkriptParserRegistryTest {
         }
     }
 
+    public static class TagAwareSection extends Section {
+
+        static boolean lastImplicit;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            lastImplicit = parseResult.hasTag("implicit");
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return null;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "tag aware section";
+        }
+    }
+
     public static class TypedArgsEffect extends Effect {
 
         static @Nullable Expression<?>[] lastExpressions;
@@ -192,6 +407,62 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "typed args effect";
+        }
+    }
+
+    public static class DummyEventExpression extends SimpleExpression<Object> {
+
+        @Override
+        protected Object @Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return new Object[]{"event-thing"};
+        }
+
+        @Override
+        public Class<?> getReturnType() {
+            return Object.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            return expressions.length == 0;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "event-thing";
+        }
+    }
+
+    public static class DummyCondition extends Condition {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            return expressions.length == 1;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "dummy condition";
         }
     }
 
@@ -239,6 +510,37 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "test event";
+        }
+    }
+
+    public static class RegexCaptureSection extends Section {
+
+        static @Nullable String lastCapturedText;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            if (parseResult.regexes.isEmpty()) {
+                return false;
+            }
+            lastCapturedText = parseResult.regexes.getFirst().group();
+            return sectionNode != null;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return getNext();
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "regex capture section";
         }
     }
 

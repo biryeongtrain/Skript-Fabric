@@ -1,0 +1,6 @@
+on use entity:
+    set {_state} to "outside"
+    set {_source} to a custom damage source:
+        set {_state} to "inside"
+    {_state} is "inside"
+    set test name of entity event-entity to "custom damage source locals"
