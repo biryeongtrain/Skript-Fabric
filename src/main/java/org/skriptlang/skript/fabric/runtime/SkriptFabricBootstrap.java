@@ -102,6 +102,7 @@ import org.skriptlang.skript.bukkit.base.types.WorldClassInfo;
 import org.skriptlang.skript.fabric.SkriptFabric;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
+import org.skriptlang.skript.bukkit.base.effects.EffInvisible;
 import org.skriptlang.skript.bukkit.base.effects.EffInvulnerability;
 import org.skriptlang.skript.bukkit.base.effects.EffKill;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAtLocation;
@@ -691,6 +692,13 @@ public final class SkriptFabricBootstrap {
                         "unsilence %entities%",
                         "make %entities% silent",
                         "make %entities% not silent"
+                );
+                Skript.registerEffect(
+                        EffInvisible.class,
+                        "make %livingentities% not visible",
+                        "make %livingentities% not invisible",
+                        "make %livingentities% invisible",
+                        "make %livingentities% visible"
                 );
                 Skript.registerEffect(
                         EffInvulnerability.class,
