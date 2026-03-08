@@ -1,7 +1,9 @@
 package ch.njol.skript.registrations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -163,6 +165,42 @@ class ClassesCompatibilityTest {
         assertEquals(new ConvertedType(42), parsedValue);
     }
 
+    @Test
+    void getParserFallsBackThroughRegisteredConverters() {
+        ClassInfo<ParserSourceType> parsed = new ClassInfo<>(ParserSourceType.class, "parsersource");
+        parsed.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public ParserSourceType parse(String input, ParseContext context) {
+                if (!input.startsWith("parsed-")) {
+                    return null;
+                }
+                try {
+                    return new ParserSourceType(Integer.parseInt(input.substring(7)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(parsed);
+        Converters.registerConverter(
+                ParserSourceType.class,
+                ParserTargetType.class,
+                value -> new ParserTargetType(value.value())
+        );
+
+        ClassInfo.Parser<? extends ParserTargetType> parser = Classes.getParser(ParserTargetType.class);
+
+        assertNotNull(parser);
+        assertTrue(parser.canParse(ParseContext.DEFAULT));
+        assertEquals(new ParserTargetType(73), parser.parse("parsed-73", ParseContext.DEFAULT));
+        assertNull(parser.parse("invalid", ParseContext.DEFAULT));
+    }
+
     private static final class FooType {
     }
 
@@ -203,5 +241,11 @@ class ClassesCompatibilityTest {
     }
 
     private record ConvertedType(int value) {
+    }
+
+    private record ParserSourceType(int value) {
+    }
+
+    private record ParserTargetType(int value) {
     }
 }

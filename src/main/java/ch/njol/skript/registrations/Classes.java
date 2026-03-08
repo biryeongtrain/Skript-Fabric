@@ -187,6 +187,36 @@ public final class Classes {
     }
 
     @SuppressWarnings("unchecked")
+    public static <T> @Nullable ClassInfo.Parser<? extends T> getParser(Class<T> type) {
+        List<ClassInfo<?>> infos = getSortedClassInfos();
+        for (int index = infos.size() - 1; index >= 0; index--) {
+            ClassInfo<?> info = infos.get(index);
+            ClassInfo.Parser<?> parser = info.getParser();
+            if (parser != null && type.isAssignableFrom(info.getC())) {
+                return (ClassInfo.Parser<? extends T>) parser;
+            }
+        }
+        for (ConverterInfo<?, ?> converterInfo : Converters.getConverterInfos()) {
+            if (!type.isAssignableFrom(converterInfo.getTo())) {
+                continue;
+            }
+            for (int index = infos.size() - 1; index >= 0; index--) {
+                ClassInfo<?> info = infos.get(index);
+                ClassInfo.Parser<?> parser = info.getParser();
+                if (parser == null || !converterInfo.getFrom().isAssignableFrom(info.getC())) {
+                    continue;
+                }
+                return createConvertedParser(
+                        (ClassInfo.Parser<Object>) parser,
+                        (ConverterInfo<Object, ?>) converterInfo,
+                        type
+                );
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> @Nullable T parse(String text, Class<T> type, ParseContext context) {
         T parsed = parseDirect(text, type, context);
         if (parsed != null) {
@@ -276,6 +306,30 @@ public final class Classes {
             }
         }
         return value;
+    }
+
+    private static <F, T> ClassInfo.Parser<T> createConvertedParser(
+            ClassInfo.Parser<? extends F> parser,
+            ConverterInfo<F, ?> converterInfo,
+            Class<T> type
+    ) {
+        return new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return parser.canParse(context);
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public @Nullable T parse(String input, ParseContext context) {
+                F parsed = parser.parse(input, context);
+                if (parsed == null) {
+                    return null;
+                }
+                Object converted = ((ConverterInfo<F, Object>) converterInfo).getConverter().convert(parsed);
+                return type.isInstance(converted) ? (T) converted : null;
+            }
+        };
     }
 
     private static String normalizeUserInput(String input) {
