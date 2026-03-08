@@ -1,10 +1,13 @@
 package kim.biryeong.skriptFabricPort.gametest;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Condition;
+import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
@@ -85,6 +88,12 @@ import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.skriptlang.skript.bukkit.base.types.InventoryClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ItemStackClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ItemTypeClassInfo;
@@ -162,6 +171,8 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTestSupport {
+
+    private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
 
     @GameTest
     public void executesRealSkriptFile(GameTestHelper helper) {
@@ -484,6 +495,47 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileUsingUnreachableCodeWarnings(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureUnreachableTestStatementRegistered();
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            helper.setBlock(new BlockPos(0, 1, 0), Blocks.AIR.defaultBlockState());
+            helper.setBlock(new BlockPos(1, 1, 0), Blocks.AIR.defaultBlockState());
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/unreachable_code_warning_stop_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().anyMatch(message ->
+                                message.contains("Unreachable code. The previous statement stops further execution.")
+                        ),
+                        Component.literal("Expected the real .sk load path to emit an unreachable-code warning.")
+                );
+            }
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(0, 1, 0));
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(1, 1, 0)).is(Blocks.AIR),
+                    Component.literal("Expected the unreachable line to never execute after the stopping statement.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void coreMappingsExposeMojangBackedTypes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState());
 
@@ -693,5 +745,73 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         );
 
         helper.succeed();
+    }
+
+    private static void ensureUnreachableTestStatementRegistered() {
+        if (UNREACHABLE_TEST_STATEMENT_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerStatement(StopGameTestTriggerStatement.class, "stop gametest trigger");
+        }
+    }
+
+    public static final class StopGameTestTriggerStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected boolean run(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return false;
+        }
+
+        @Override
+        protected ExecutionIntent executionIntent() {
+            return ExecutionIntent.stopTrigger();
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "stop gametest trigger";
+        }
+    }
+
+    private static final class TestLogAppender extends AbstractAppender implements AutoCloseable {
+
+        private final List<String> messages = new ArrayList<>();
+        private final Logger logger;
+
+        private TestLogAppender(Logger logger) {
+            super("base-gametest-loader-warning", null, PatternLayout.createDefaultLayout(), false, null);
+            this.logger = logger;
+        }
+
+        static TestLogAppender attach() {
+            Logger logger = (Logger) LogManager.getLogger("skript-fabric");
+            TestLogAppender appender = new TestLogAppender(logger);
+            appender.start();
+            logger.addAppender(appender);
+            return appender;
+        }
+
+        List<String> messages() {
+            return messages;
+        }
+
+        @Override
+        public void append(LogEvent event) {
+            messages.add(event.getMessage().getFormattedMessage());
+        }
+
+        @Override
+        public void close() {
+            logger.removeAppender((Appender) this);
+            stop();
+        }
     }
 }

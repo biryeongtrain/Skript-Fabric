@@ -17,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.ScriptData;
+import org.skriptlang.skript.lang.script.ScriptWarning;
 
 public final class ScriptLoader {
 
@@ -43,16 +44,22 @@ public final class ScriptLoader {
         ParserInstance parser = ParserInstance.get();
         Node previousNode = parser.getNode();
         TriggerItem previousItem = null;
+        boolean executionStops = false;
         try {
             for (Node child : node) {
                 parser.setNode(child);
                 TriggerItem item = parseTriggerItem(child, items);
                 if (item != null) {
+                    if (executionStops && shouldWarnAboutUnreachableCode(parser)) {
+                        Skript.warning("Unreachable code. The previous statement stops further execution.");
+                    }
                     if (previousItem != null) {
                         previousItem.setNext(item);
                     }
                     items.add(item);
                     previousItem = item;
+                    executionStops = item instanceof Statement statement
+                            && statement.loaderExecutionIntent() != null;
                 }
             }
         } finally {
@@ -152,6 +159,14 @@ public final class ScriptLoader {
             }
         }
         return false;
+    }
+
+    private static boolean shouldWarnAboutUnreachableCode(ParserInstance parser) {
+        if (!parser.isActive()) {
+            return false;
+        }
+        var currentScript = parser.getCurrentScript();
+        return currentScript != null && !currentScript.suppressesWarning(ScriptWarning.UNREACHABLE_CODE);
     }
 
     public static final class OptionsData implements ScriptData {

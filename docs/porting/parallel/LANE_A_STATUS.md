@@ -17,35 +17,39 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on broader statement orchestration and loader hint flow.
+- Continue `Part 1A` on broader statement orchestration and the remaining loader hint flow after the unreachable-code warning slice.
 
 ## Work Log
 
-- added `ParseLogHandler` snapshot/restore helpers plus retained-error accessors so loader-owned section fallback can choose between section and statement diagnostics without printing both
-- updated `ScriptLoader.loadItems(...)` section-node flow to:
-  - try `Section.parse(...)` with `Can't understand this section: ...`
-  - retry `Statement.parse(...)` with `Can't understand this condition/effect: ...`
-  - restore the section-side diagnostic when statement fallback only produced the generic condition/effect failure or no retained statement error
-- updated `Statement.parse(...)` so plain conditions cannot silently parse as section headers; section lines like `always true:` now fail with a specific ownership error instead of returning a body-less condition item
-- extended `ScriptLoaderCompatibilityTest` with a condition-as-section regression and kept the existing unknown-section and effect-as-section diagnostics green
-- real `.sk` verification stayed on the existing GameTest coverage for section-managed loader paths; `runGameTest` remained green with `195 / 195`
+- preserved the recently closed section-vs-statement fallback diagnostics and plain-condition section-header rejection without reopening comment-aware loader parsing
+- updated `ScriptLoader.loadItems(...)` to emit the upstream-style `Unreachable code. The previous statement stops further execution.` warning when a previously loaded `Statement` advertises a stopping `ExecutionIntent`
+- gated that warning behind active script context plus `ScriptWarning.UNREACHABLE_CODE` suppression so loader diagnostics stay aligned with script-level warning controls
+- added `Statement.loaderExecutionIntent()` so loader-owned warning flow can inspect stop intent without changing the current statement parse ordering
+- extended `ScriptLoaderCompatibilityTest` with stopping-statement regressions that cover:
+  - warning emission for a later unreachable line
+  - suppression via `ScriptWarning.UNREACHABLE_CODE`
+  - runtime short-circuit so the later line never executes after the stopping statement
+- added real `.sk` coverage in `src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk` plus a matching `SkriptFabricBaseGameTest` harness that proves the warning is logged during resource load and the unreachable line never runs
+- the new real `.sk` coverage increased the full GameTest total from `196` to `197`
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/ScriptLoader.java`
 - `src/main/java/ch/njol/skript/lang/Statement.java`
-- `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
 - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
+- `src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk`
 
 ## Verification
 
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
   - passed
 - `./gradlew runGameTest --rerun-tasks`
-  - passed with `195 / 195` required tests completed
+  - passed with `197 / 197` required tests completed
 
 ## Merge Notes
 
-- likely conflicts are limited to `ScriptLoader.java` and `Statement.java` if another branch changed section fallback or statement parse ordering after lane split
-- `ParseLogHandler.java` now exposes backup/restore and retained-error helpers consumed by loader fallback
+- likely conflicts are limited to `ScriptLoader.java` and `Statement.java` if another branch changed loader warning flow or statement parse ordering after lane split
+- `SkriptFabricBaseGameTest.java` now contains one lane-local loader-warning harness and test-only stopping statement for real `.sk` coverage
+- preserve the already-closed section fallback diagnostics and plain-condition section-header rejection while merging this slice
 - no canonical `docs/porting/*.md` files were touched
