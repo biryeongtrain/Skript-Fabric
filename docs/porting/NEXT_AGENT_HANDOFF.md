@@ -57,23 +57,26 @@ New immediate priority:
 ## Latest Closure Slice
 
 - merged the next focused `lang` core closure batch:
-  - [src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java](../../src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java) now prefers script-local signature/function matches before global fallback, so compatible global overloads no longer make valid local calls ambiguous
-  - [src/main/java/ch/njol/skript/variables/HintManager.java](../../src/main/java/ch/njol/skript/variables/HintManager.java) now removes the targeted section scope frame on `clearScope(level, true)` instead of only clearing its hint map, so removed section hints no longer leak into later local-variable parsing
-  - [src/main/java/ch/njol/skript/lang/Effect.java](../../src/main/java/ch/njol/skript/lang/Effect.java) now resets `Section.SectionContext` ownership between registered effect candidates on section lines, so an earlier failed section-claiming candidate cannot let a later literal effect parse the line incorrectly
-  - [src/main/java/ch/njol/skript/ScriptLoader.java](../../src/main/java/ch/njol/skript/ScriptLoader.java) now preserves retained non-default section diagnostics when `Section.parse(...)` fails but `Statement.parse(...)` fallback succeeds, and [src/main/java/ch/njol/skript/log/ParseLogHandler.java](../../src/main/java/ch/njol/skript/log/ParseLogHandler.java) now exposes raw retained entries for that comparison
+  - [src/main/java/ch/njol/skript/lang/InputSource.java](../../src/main/java/ch/njol/skript/lang/InputSource.java) now allows upstream-style bare string literal fallback mappings instead of vetoing them locally
+  - [src/main/java/ch/njol/skript/lang/Condition.java](../../src/main/java/ch/njol/skript/lang/Condition.java) now resets section ownership between condition candidates on section lines while restoring the outer claimed owner snapshot, so failed candidates no longer leak ownership and nested section candidates no longer crash real `.sk` loads
+  - [src/main/java/ch/njol/skript/lang/Effect.java](../../src/main/java/ch/njol/skript/lang/Effect.java) now restores the same owner-snapshot behavior between effect candidates, keeping the earlier ownership reset fix safe for nested section parses
+  - [src/main/java/ch/njol/skript/lang/function/Parameter.java](../../src/main/java/ch/njol/skript/lang/function/Parameter.java) now parses legacy function defaults through `SkriptParser` instead of only literal `Classes.parse(...)` values
+  - [src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java](../../src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java) now resolves the most specific compatible parser default when an omitted placeholder has no exact-type entry, and [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now falls back to compatible superclass `ClassInfo` defaults too
 - parser/runtime verification landed:
+  - [src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
+  - [src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java](../../src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java)
   - [src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
-  - [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
   - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `230 / 230`
 - next likely `lang` follow-ups:
-  - broader `InputSource` bare-string mapping parity
-  - any corresponding condition-side section-ownership reset gap if a real mismatch remains
-  - broader parser default-value and pattern-runtime parity beyond the current green corpus
+  - broader parser default-value and pattern-runtime parity beyond compatible omitted-placeholder fallback
+  - broader function signature/default-parameter parity beyond parsed default expressions
+  - broader statement orchestration and built-in hint flow once new upstream mismatches are reproduced
 
 ## What Landed In This Slice
 

@@ -63,6 +63,8 @@ public abstract class Effect extends Statement {
         var iterator = Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EFFECT).iterator();
         Iterator<?> parseIterator = iterator;
         if (sectionContext != null) {
+            Debuggable baselineOwner = sectionContext.owner;
+            String baselineOwnerErrorRepresentation = sectionContext.ownerErrorRepresentation;
             parseIterator = new Iterator<>() {
                 @Override
                 public boolean hasNext() {
@@ -71,8 +73,8 @@ public abstract class Effect extends Statement {
 
                 @Override
                 public Object next() {
-                    sectionContext.owner = null;
-                    sectionContext.ownerErrorRepresentation = null;
+                    sectionContext.owner = baselineOwner;
+                    sectionContext.ownerErrorRepresentation = baselineOwnerErrorRepresentation;
                     return iterator.next();
                 }
             };

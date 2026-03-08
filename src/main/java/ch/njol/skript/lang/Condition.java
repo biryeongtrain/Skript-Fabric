@@ -35,6 +35,8 @@ public abstract class Condition extends Statement {
         Iterator<?> parseIterator = iterator;
         Section.SectionContext sectionContext = ParserInstance.get().getData(Section.SectionContext.class);
         if (sectionContext.sectionNode != null) {
+            Debuggable baselineOwner = sectionContext.owner;
+            String baselineOwnerErrorRepresentation = sectionContext.ownerErrorRepresentation;
             parseIterator = new Iterator<>() {
                 @Override
                 public boolean hasNext() {
@@ -43,8 +45,8 @@ public abstract class Condition extends Statement {
 
                 @Override
                 public Object next() {
-                    sectionContext.owner = null;
-                    sectionContext.ownerErrorRepresentation = null;
+                    sectionContext.owner = baselineOwner;
+                    sectionContext.ownerErrorRepresentation = baselineOwnerErrorRepresentation;
                     return iterator.next();
                 }
             };

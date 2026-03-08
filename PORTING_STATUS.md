@@ -8,5 +8,5 @@ Current headline:
 - Stage 8 package-local audit: `23 / 214`
 - latest verified runtime baseline: `230 / 230` scheduled Fabric GameTests and `./gradlew build --rerun-tasks` passed on 2026-03-08
 - new immediate priority: upstream `ch/njol/skript` closure first (`140 / 1189` local versus upstream snapshot `e6ec744`), then exact missing user-visible syntax import on top of that closure
-- latest closed core slice: local function-first registry fallback, section-scope hint clearing, effect-candidate section ownership reset, and retained section diagnostics on statement fallback success
+- latest closed core slice: InputSource bare literal fallback, condition/effect candidate owner-snapshot resets, parsed function defaults, and compatible omitted-placeholder defaults
 - Codex parallel-session runbook: `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
