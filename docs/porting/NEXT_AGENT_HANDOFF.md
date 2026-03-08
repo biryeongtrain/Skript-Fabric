@@ -57,26 +57,27 @@ New immediate priority:
 ## Latest Closure Slice
 
 - merged the next focused `lang` core closure batch:
-  - [src/main/java/ch/njol/skript/lang/InputSource.java](../../src/main/java/ch/njol/skript/lang/InputSource.java) now allows upstream-style bare string literal fallback mappings instead of vetoing them locally
-  - [src/main/java/ch/njol/skript/lang/Condition.java](../../src/main/java/ch/njol/skript/lang/Condition.java) now resets section ownership between condition candidates on section lines while restoring the outer claimed owner snapshot, so failed candidates no longer leak ownership and nested section candidates no longer crash real `.sk` loads
-  - [src/main/java/ch/njol/skript/lang/Effect.java](../../src/main/java/ch/njol/skript/lang/Effect.java) now restores the same owner-snapshot behavior between effect candidates, keeping the earlier ownership reset fix safe for nested section parses
-  - [src/main/java/ch/njol/skript/lang/function/Parameter.java](../../src/main/java/ch/njol/skript/lang/function/Parameter.java) now parses legacy function defaults through `SkriptParser` instead of only literal `Classes.parse(...)` values
-  - [src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java](../../src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java) now resolves the most specific compatible parser default when an omitted placeholder has no exact-type entry, and [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now falls back to compatible superclass `ClassInfo` defaults too
+  - [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now keeps `getClassInfo(...)` and `getClassInfoNoError(...)` case-sensitive again, so mixed-case probes no longer resolve lowercase-only registered codenames
+  - [src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java](../../src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java) now prefers exact non-`Object` parameter matches over broader assignable overloads, so calls like `over(1)` no longer collapse to `AMBIGUOUS` when an exact `Integer` branch exists
+  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now fails the full pattern when a required placeholder is omitted through an optional branch and neither parser-owned nor classinfo defaults exist, instead of carrying a `null` expression farther than upstream would allow
+  - a fresh lane audit reran the current `Statement` / `ScriptLoader` / `Section` corpus and found no remaining mergeable mismatch in the green corpus, so that lane stayed docs-only for this cycle
 - parser/runtime verification landed:
-  - [src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
-  - [src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java](../../src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java)
+  - [src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java)
   - [src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
   - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
+  - [src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java](../../src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java)
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
   - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `230 / 230`
 - next likely `lang` follow-ups:
-  - broader parser default-value and pattern-runtime parity beyond compatible omitted-placeholder fallback
-  - broader function signature/default-parameter parity beyond parsed default expressions
-  - broader statement orchestration and built-in hint flow once new upstream mismatches are reproduced
+  - broader parser default-value and placeholder-omission parity beyond the current fail-fast path
+  - broader function namespace/default-parameter/runtime parity beyond exact-type overload disambiguation
+  - broader statement/loading orchestration only once a new concrete mismatch is reproduced, because the latest audit did not find another mergeable `Statement` / `ScriptLoader` / `Section` gap in the current green corpus
 
 ## What Landed In This Slice
 
