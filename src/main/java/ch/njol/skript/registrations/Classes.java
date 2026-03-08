@@ -103,7 +103,7 @@ public final class Classes {
         if (codeName == null || codeName.isBlank()) {
             return null;
         }
-        return INFOS_BY_CODE_NAME.get(codeName.toLowerCase(Locale.ENGLISH));
+        return INFOS_BY_CODE_NAME.get(codeName);
     }
 
     public static @Nullable ClassInfo<?> getClassInfoFromUserInput(@Nullable String userInput) {

@@ -86,6 +86,16 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void classInfoLookupIsCaseSensitive() {
+        ClassInfo<FooType> info = new ClassInfo<>(FooType.class, "foo");
+        Classes.registerClassInfo(info);
+
+        assertSame(info, Classes.getClassInfo("foo"));
+        assertNull(Classes.getClassInfoNoError("FoO"));
+        assertThrows(SkriptAPIException.class, () -> Classes.getClassInfo("FoO"));
+    }
+
+    @Test
     void classInfoProvidesDerivedAndExplicitCodeNames() {
         assertEquals("explicitname", new ClassInfo<>(FooType.class, "explicitname").getCodeName());
         assertEquals("autoderivedtype", new ClassInfo<>(AutoDerivedType.class).getCodeName());
