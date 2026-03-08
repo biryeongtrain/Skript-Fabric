@@ -21,6 +21,18 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+- compared the lane-owned surface against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and selected one contained closure slice that is still thinner than upstream:
+  - `Statement.parse(...)` should not treat a failed effect or condition parse as terminal when a later plain `Statement` registration can still load the exact same line
+- `Statement.parse(...)` now retains effect and condition failure logs, clears those failures, and only restores the best retained parse error if the plain statement path also fails
+- preserved the existing function-call short-circuit and the exact existing diagnostic text:
+  - successful later plain statements now win over earlier failed effect/condition candidates
+  - when nothing matches, the prior specific effect/condition error still beats the generic `Can't understand this condition/effect: ...` fallback
+- added `ScriptLoaderCompatibilityTest` regressions proving:
+  - a valid plain statement still loads after a same-pattern effect candidate logs an error and rejects initialization
+  - a valid plain statement still loads after a same-pattern condition candidate logs an error and rejects initialization
+  - a failed same-pattern effect candidate still keeps its specific parse error when no later statement matches
+- added real `.sk` coverage in `src/gametest/resources/skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk` plus a matching `SkriptFabricBaseGameTest` harness that verifies `runtime.loadFromResource(...)` keeps parsing after the failed effect candidate and the later fallback statement still executes
+- the new real `.sk` coverage increased the full GameTest total from `198` to `199`
 - added a narrow loader regression for the exact section header syntax `set {_var} to true:` using the existing `EffChange` registration pattern `set %object% to %object%`
 - verified that the current loader/log path already retains the specific effect ownership diagnostic for the exact line `set {_var} to true`
 - no production code changes were needed for this slice; the new regression passed with the existing `Statement` / `ScriptLoader` behavior
@@ -69,11 +81,20 @@ Last updated: 2026-03-08
 - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java`
+- `src/gametest/resources/skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk`
 - `src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk`
 - `src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk`
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsLetsRegisteredStatementWinAfterFailedEffectParse --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsLetsRegisteredStatementWinAfterFailedConditionParse --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificEffectParseErrorWhenNoStatementMatches --rerun-tasks`
+  - first run failed in the expected pre-fix state because the new effect and condition fallback regressions still stopped inside `Statement.parse(...)`
+  - reran after the `Statement.parse(...)` retained-failure fix; command passed
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - passed on the finished tree
+- `./gradlew runGameTest --rerun-tasks`
+  - first run failed with `199` tests complete and `1` required test failed because the new GameTest helper statement wrote to absolute coordinates instead of the GameTest-relative structure
+  - reran after fixing the harness to set the block through `GameTestHelper`; passed with `199 / 199` required tests completed
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax --rerun-tasks`
   - passed
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
@@ -99,12 +120,18 @@ Last updated: 2026-03-08
 
 ## Unresolved Risks
 
+- coverage proves the fallback ordering for same-pattern effect/condition candidates that reject during `init(...)`, but it does not yet cover more complex multi-pattern ambiguity where multiple later statement candidates also log distinct specific errors
+- the retained-failure chooser now prefers the later condition failure over an earlier effect failure when their error quality ties; that is a reasonable local compatibility rule, but broader upstream parser/error-priority parity is still open outside this lane slice
 - coverage is intentionally narrow: it proves retained ownership diagnostics for `set {_var} to true:` through the `EffChange` pattern `set %object% to %object%`, but it does not broaden assertion coverage across other `EffChange` patterns
 - top-level script `function ...` structure loading is still not available in the current GameTest runtime, so the live `.sk` coverage for this slice uses the equivalent nested plain-effect argument path instead of a direct function-argument script
 - the new unit regression covers the upstream function-argument ownership bug directly, but broader runtime parity for script-defined functions remains outside this lane slice
 
 ## Merge Notes
 
+- likely conflicts for this slice are limited to `Statement.java`, `ScriptLoaderCompatibilityTest.java`, and `SkriptFabricBaseGameTest.java` if another branch changed statement parse ordering, loader-facing diagnostics, or base GameTest registration helpers after lane split
+- preserve the new retained-failure ordering in `Statement.parse(...)`:
+  - same-pattern plain statements must still load after earlier effect/condition init failures
+  - exact specific effect/condition error text must still win when no later statement matches
 - likely conflicts are limited to `ScriptLoader.java`, `TriggerItem.java`, `TriggerSection.java`, and `Statement.java` if another branch changed loader warning flow or statement/trigger orchestration after lane split
 - current-cycle conflict surface also includes `ScriptLoader.java` plus `ScriptLoaderCompatibilityTest.java` around the new hint-scope lifecycle regressions
 - `SkriptFabricBaseGameTest.java` now contains one lane-local loader-warning harness and test-only stopping statement for real `.sk` coverage

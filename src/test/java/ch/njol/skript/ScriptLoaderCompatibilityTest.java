@@ -340,6 +340,71 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsLetsRegisteredStatementWinAfterFailedEffectParse() {
+        Skript.registerEffect(RejectingAmbiguousEffect.class, "ambiguous loader syntax");
+        Skript.registerStatement(AmbiguousStatement.class, "ambiguous loader syntax");
+
+        List<TriggerItem> items;
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            items = ScriptLoader.loadItems(root(
+                    line("ambiguous loader syntax")
+            ));
+
+            assertEquals(1, items.size());
+            assertTrue(items.getFirst() instanceof AmbiguousStatement);
+            assertFalse(
+                    logs.messages().stream().anyMatch(message -> message.contains("ambiguous effect rejected"))
+            );
+        }
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals(List.of("ambiguous-statement"), statementExecution);
+    }
+
+    @Test
+    void loadItemsLetsRegisteredStatementWinAfterFailedConditionParse() {
+        Skript.registerCondition(RejectingAmbiguousCondition.class, "ambiguous condition syntax");
+        Skript.registerStatement(AmbiguousStatement.class, "ambiguous condition syntax");
+
+        List<TriggerItem> items;
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            items = ScriptLoader.loadItems(root(
+                    line("ambiguous condition syntax")
+            ));
+
+            assertEquals(1, items.size());
+            assertTrue(items.getFirst() instanceof AmbiguousStatement);
+            assertFalse(
+                    logs.messages().stream().anyMatch(message -> message.contains("ambiguous condition rejected"))
+            );
+        }
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals(List.of("ambiguous-statement"), statementExecution);
+    }
+
+    @Test
+    void loadItemsKeepsSpecificEffectParseErrorWhenNoStatementMatches() {
+        Skript.registerEffect(RejectingAmbiguousEffect.class, "ambiguous loader syntax");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("ambiguous loader syntax")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message -> message.contains("ambiguous effect rejected"))
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition/effect: ambiguous loader syntax")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsWarnsWhenLaterLineIsUnreachable() {
         registerExecutionIntentStatements();
         ParserInstance parser = ParserInstance.get();
@@ -747,6 +812,77 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public boolean check(SkriptEvent event) {
             return true;
+        }
+    }
+
+    public static final class RejectingAmbiguousEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("ambiguous effect rejected");
+            return false;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "ambiguous effect";
+        }
+    }
+
+    public static final class RejectingAmbiguousCondition extends Condition {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("ambiguous condition rejected");
+            return false;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "ambiguous condition";
+        }
+    }
+
+    public static final class AmbiguousStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            statementExecution.add("ambiguous-statement");
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "ambiguous statement";
         }
     }
 
