@@ -39,6 +39,15 @@ class VariableCompatibilityTest {
     }
 
     @Test
+    void ignoresAsterisksInsideVariableNameExpressions() {
+        assertTrue(Variable.isValidVariableName("result::%{source::*}%", true, false));
+        assertTrue(Variable.isValidVariableName("result::%{source::*}%::*", true, false));
+        assertFalse(Variable.isValidVariableName("result::%{source::*}%*", true, false));
+        assertFalse(Variable.isValidVariableName("result::*::tail", true, false));
+        assertNull(Variable.newInstance("result::%{source::*}%*", new Class[]{String.class}));
+    }
+
+    @Test
     void newInstanceResolvesLocalAndListFlags() {
         Variable<Integer> variable = Variable.newInstance("_stats::*", new Class[]{Integer.class});
 
@@ -207,6 +216,22 @@ class VariableCompatibilityTest {
         assertNotNull(parsed);
         assertInstanceOf(Variable.class, parsed);
         assertEquals("{MiXeD}", parsed.toString(SkriptEvent.EMPTY, false));
+    }
+
+    @Test
+    void parserAcceptsVariableExpressionsWithListMarkersInsideNestedExpressions() {
+        Expression<?> accepted = new SkriptParser("{result::%{source::*}%}", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{String.class});
+        Expression<?> acceptedList = new SkriptParser("{result::%{source::*}%::*}", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{String.class});
+
+        assertNotNull(accepted);
+        assertInstanceOf(Variable.class, accepted);
+        assertEquals("{result::%{source::*}%}", accepted.toString(SkriptEvent.EMPTY, false));
+
+        assertNotNull(acceptedList);
+        assertInstanceOf(Variable.class, acceptedList);
+        assertEquals("{result::%{source::*}%::*}", acceptedList.toString(SkriptEvent.EMPTY, false));
     }
 
     @Test

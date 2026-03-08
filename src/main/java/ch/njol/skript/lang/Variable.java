@@ -111,13 +111,12 @@ public class Variable<T> implements Expression<T>, KeyReceiverExpression<T>, Key
             }
             return false;
         }
-        int asteriskIndex = strippedName.indexOf('*');
-        if (asteriskIndex >= 0) {
+        if (strippedName.contains("*")) {
+            int visibleAsteriskCount = countAsterisksOutsideExpressions(strippedName);
             boolean validListAsterisk = allowListVariable
-                    && asteriskIndex == strippedName.length() - 1
-                    && strippedName.endsWith(SEPARATOR + "*")
-                    && strippedName.indexOf('*', asteriskIndex + 1) < 0;
-            if (!validListAsterisk) {
+                    && visibleAsteriskCount == 1
+                    && strippedName.endsWith(SEPARATOR + "*");
+            if (!(visibleAsteriskCount == 0 || validListAsterisk)) {
                 if (printErrors) {
                     Skript.error("A variable's name must not contain asterisks except as '"
                             + SEPARATOR + "*' at the end (error in variable {" + strippedName + "})");
@@ -136,6 +135,36 @@ public class Variable<T> implements Expression<T>, KeyReceiverExpression<T>, Key
             Skript.warning("If you meant to create a list variable, use '" + SEPARATOR + "' instead of a single ':'.");
         }
         return true;
+    }
+
+    private static int countAsterisksOutsideExpressions(String name) {
+        List<Integer> asterisks = new ArrayList<>();
+        List<Integer> percents = new ArrayList<>();
+        for (int index = 0; index < name.length(); index++) {
+            char character = name.charAt(index);
+            if (character == '*') {
+                asterisks.add(index);
+            } else if (character == '%') {
+                percents.add(index);
+            }
+        }
+
+        int visibleAsteriskCount = asterisks.size();
+        int asteriskIndex = 0;
+        for (int percentIndex = 0; percentIndex < percents.size(); percentIndex += 2) {
+            if (asteriskIndex == asterisks.size() || percentIndex + 1 == percents.size()) {
+                break;
+            }
+            int lowerBound = percents.get(percentIndex);
+            int upperBound = percents.get(percentIndex + 1);
+            while (asteriskIndex < asterisks.size()
+                    && lowerBound < asterisks.get(asteriskIndex)
+                    && asterisks.get(asteriskIndex) < upperBound) {
+                visibleAsteriskCount--;
+                asteriskIndex++;
+            }
+        }
+        return visibleAsteriskCount;
     }
 
     /**
