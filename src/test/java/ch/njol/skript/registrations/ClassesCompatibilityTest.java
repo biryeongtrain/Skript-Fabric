@@ -13,6 +13,7 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
+import ch.njol.skript.lang.util.SimpleLiteral;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -86,6 +87,16 @@ class ClassesCompatibilityTest {
     void classInfoProvidesDerivedAndExplicitCodeNames() {
         assertEquals("explicitname", new ClassInfo<>(FooType.class, "explicitname").getCodeName());
         assertEquals("autoderivedtype", new ClassInfo<>(AutoDerivedType.class).getCodeName());
+    }
+
+    @Test
+    void defaultExpressionLookupUsesRegisteredClassInfos() {
+        SimpleLiteral<Integer> defaultNumber = new SimpleLiteral<>(11, true);
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number").defaultExpression(defaultNumber));
+
+        assertSame(defaultNumber, Classes.getDefaultExpression("number"));
+        assertSame(defaultNumber, Classes.getDefaultExpression(Integer.class));
+        assertNull(Classes.getDefaultExpression(Long.class));
     }
 
     @Test
