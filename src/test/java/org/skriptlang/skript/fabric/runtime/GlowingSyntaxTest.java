@@ -26,9 +26,23 @@ final class GlowingSyntaxTest {
         Statement statement = parseStatementInEvent("set glowing of event-entity to true", FabricUseEntityHandle.class);
         assertNotNull(statement);
         assertInstanceOf(EffChange.class, statement);
-        // EffChange#toString should reflect the property expression text
-        String text = statement.toString(null, false);
-        assertEquals("set glowing of event-entity to true", text);
+        // Inspect the change target and value directly for exact property text
+        EffChange eff = (EffChange) statement;
+        try {
+            java.lang.reflect.Field changed = eff.getClass().getDeclaredField("changed");
+            changed.setAccessible(true);
+            Object expr = changed.get(eff);
+            assertNotNull(expr);
+            assertEquals("glowing of event-entity", ((ch.njol.skript.lang.Expression<?>) expr).toString(null, false));
+
+            java.lang.reflect.Field changeWith = eff.getClass().getDeclaredField("changeWith");
+            changeWith.setAccessible(true);
+            Object value = changeWith.get(eff);
+            assertNotNull(value);
+            assertEquals("true", ((ch.njol.skript.lang.Expression<?>) value).toString(null, false));
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private Statement parseStatementInEvent(String statement, Class<?>... eventClasses) {
@@ -47,4 +61,3 @@ final class GlowingSyntaxTest {
         }
     }
 }
-
