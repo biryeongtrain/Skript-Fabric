@@ -1,0 +1,3 @@
+on use entity:
+    event-entity is on fire
+    set test name of entity event-entity to "on fire entity"
