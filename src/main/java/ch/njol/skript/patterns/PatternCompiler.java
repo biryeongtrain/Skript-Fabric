@@ -139,6 +139,10 @@ public final class PatternCompiler {
         if (token.isBlank()) {
             return "\\s+";
         }
+        String autoTagged = compileLeadingAutoTag(token, captures);
+        if (autoTagged != null) {
+            return autoTagged;
+        }
         if (isWrappedBy(token, '(', ')')) {
             return "(?:" + compileAlternatives(token.substring(1, token.length() - 1), captures) + ")";
         }
@@ -211,6 +215,94 @@ public final class PatternCompiler {
         return regex.toString();
     }
 
+    private static @Nullable String compileLeadingAutoTag(String token, List<CaptureSpec> captures) {
+        if (token.length() < 2 || token.charAt(0) != ':') {
+            return null;
+        }
+        char next = token.charAt(1);
+        if (next == '(' || next == '[') {
+            return compileLeadingAutoTaggedGroup(token, captures);
+        }
+        String tag = deriveLeadingLiteralTag(token.substring(1));
+        if (tag == null) {
+            return null;
+        }
+        StringBuilder regex = new StringBuilder("()");
+        captures.add(metadataSpec(tag));
+        regex.append(compileToken(token.substring(1), captures));
+        return regex.toString();
+    }
+
+    private static @Nullable String compileLeadingAutoTaggedGroup(String token, List<CaptureSpec> captures) {
+        char open = token.charAt(1);
+        char close = open == '(' ? ')' : ']';
+        int end = findMatching(token, 1, open, close);
+        String inner = token.substring(2, end);
+        List<String> branches = splitTopLevel(inner, '|');
+        if (branches.size() <= 1) {
+            return null;
+        }
+
+        String suffix = token.substring(end + 1);
+        StringBuilder regex = new StringBuilder();
+        if (open == '[') {
+            regex.append("(?:");
+        }
+        regex.append("(?:");
+        for (int i = 0; i < branches.size(); i++) {
+            if (i > 0) {
+                regex.append('|');
+            }
+            String branch = branches.get(i);
+            String tag = deriveLeadingLiteralTag(branch);
+            if (tag != null) {
+                regex.append("()");
+                captures.add(metadataSpec(tag));
+            }
+            regex.append(compileSequence(branch, captures));
+        }
+        regex.append(")");
+        if (open == '[') {
+            regex.append(")?");
+        }
+        if (!suffix.isEmpty()) {
+            regex.append(compileToken(suffix, captures));
+        }
+        return regex.toString();
+    }
+
+    private static @Nullable String deriveLeadingLiteralTag(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        StringBuilder literal = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (ch == '\\') {
+                if (i + 1 >= value.length()) {
+                    break;
+                }
+                literal.append(value.charAt(i + 1));
+                i++;
+                continue;
+            }
+            if (Character.isWhitespace(ch)
+                    || ch == '['
+                    || ch == '('
+                    || ch == '%'
+                    || ch == '<'
+                    || ch == ':'
+                    || ch == '¦') {
+                break;
+            }
+            literal.append(ch);
+        }
+        if (literal.isEmpty()) {
+            return null;
+        }
+        return literal.toString().trim().toLowerCase(Locale.ENGLISH);
+    }
+
     private static void flushLiteral(StringBuilder regex, StringBuilder literal) {
         if (literal.isEmpty()) {
             return;
@@ -243,13 +335,17 @@ public final class PatternCompiler {
         if (metadata.isEmpty()) {
             return;
         }
+        regex.append("()");
+        captures.add(metadataSpec(metadata));
+    }
+
+    private static CaptureSpec metadataSpec(String metadata) {
         int mark = 0;
         try {
             mark = Integer.parseInt(metadata);
         } catch (NumberFormatException ignored) {
         }
-        regex.append("()");
-        captures.add(CaptureSpec.metadata(metadata, mark));
+        return CaptureSpec.metadata(metadata, mark);
     }
 
     private static String compileAlternatives(String pattern, List<CaptureSpec> captures) {
