@@ -4,101 +4,97 @@ Last updated: 2026-03-08
 
 ## Scope
 
-- `ch/njol/skript/lang/function` runtime compatibility only
-- no parser, loader, variables, or user-visible syntax import work
-- no changes outside the lane-owned status doc and function compatibility files
+- `ch/njol/skript/lang/function` compatibility only
+- kept strictly inside the allowed lang/function closure
+- no syntax-import or non-lane doc changes
 
 ## Owned Files
 
-- `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
+- `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Goal For This Slice
 
-- restore the upstream-backed `DynamicFunctionReference` validation-cache behavior so different expression inputs with the same return types do not share an incorrect cached validation result
-- keep the slice contained to function runtime behavior and focused unit coverage
-- avoid overlap with parser, loader, variable, or new syntax import work
+- compare local function lookup behavior against `/tmp/skript-upstream-e6ec744-2`
+- restore one contained observable gap in local-vs-global function resolution
+- prove the gap with focused compatibility regressions
 
 ## What Landed
 
-- tightened `DynamicFunctionReference.Input` equality and hash behavior so the validation cache distinguishes different expression arrays instead of collapsing everything to return-type-only keys
-- restored the missing behavior where a later plural expression no longer reuses an earlier single-expression validation result for the same function signature
-- added a focused regression test proving `DynamicFunctionReference.validate(...)` rejects a plural string expression after a prior successful single-string validation against the same single-parameter function
+- restored upstream lookup precedence where local function/signature matches win before considering global candidates
+- fixed `FunctionRegistry.getSignature(...)` and `FunctionRegistry.getFunction(...)` so globals are fallback-only when a script namespace already has a matching result
+- added a registry-level regression proving a local compatible overload no longer becomes ambiguous because of a broader global candidate
+- added a call-binding regression proving `FunctionReference.validateFunction(true)` now binds to the local signature instead of failing on mixed local/global ambiguity
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
+- `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Counts Changed
 
-- Stage 8 package-local audit counts changed: `0`
-- Fabric GameTest counts changed: `0`
-- source files added: `0`
-- test files added: `0`
-- test methods added: `1`
+- source files changed: `1`
+- test files changed: `2`
+- test methods added: `2`
 - canonical docs changed: `0`
 
 ## Exact Commands And Results
 
-- `sed -n '1,220p' docs/porting/README.md`
-  - read successfully
-- `sed -n '1,220p' docs/porting/NEXT_AGENT_HANDOFF.md`
-  - read successfully
-- `sed -n '1,260p' docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
-  - read successfully
-- `sed -n '1,240p' docs/porting/CODEX_PARALLEL_WORKFLOW.md`
-  - read successfully
-- `if [ -f docs/porting/parallel/LANE_D_STATUS.md ]; then sed -n '1,240p' docs/porting/parallel/LANE_D_STATUS.md; else echo '__MISSING__'; fi`
-  - confirmed a stale prior `LANE_D_STATUS.md` existed and needed replacement for this batch
-- `git status --short`
-  - working tree was clean before edits
-- `rg --files src/main/java/ch/njol/skript/lang src/main/java/ch/njol/skript/expressions src/test/java/ch/njol/skript/lang src/test/java/ch/njol/skript/expressions | rg 'InputSource|TriggerSection|ExprInput|lang/function|InputSourceCompatibilityTest|Function.*CompatibilityTest'`
-  - confirmed the in-scope source and test files
-- `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/InputSource.java src/main/java/ch/njol/skript/lang/InputSource.java || true`
-  - reviewed local-vs-upstream `InputSource` delta
-- `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/TriggerSection.java src/main/java/ch/njol/skript/lang/TriggerSection.java || true`
-  - reviewed local-vs-upstream `TriggerSection` delta
-- `diff -ru /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function src/main/java/ch/njol/skript/lang/function || true`
-  - reviewed local-vs-upstream function-surface delta and selected a contained runtime cache gap
-- `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/expressions/ExprInput.java src/main/java/ch/njol/skript/expressions/ExprInput.java || true`
-  - reviewed local-vs-upstream `ExprInput` delta
-- `sed -n '1,260p' src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java`
-  - reviewed existing input-source coverage
-- `sed -n '1,320p' src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
-  - reviewed existing function core coverage
-- `sed -n '1,360p' src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java`
-  - reviewed existing function implementation coverage
-- `sed -n '1,360p' src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
-  - reviewed current function-call coverage and found room for a dynamic-reference cache regression test
-- `sed -n '1,280p' src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-  - reviewed the local cache-key implementation
-- `sed -n '1,240p' /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-  - confirmed upstream differentiates cached validation inputs more precisely than the local implementation
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
-  - first run failed in `:compileTestJava` because the new test used `assertNull(...)` without importing it
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
-  - passed after adding the missing import
-- `git diff --stat`
-  - confirmed the slice is limited to two code files plus this lane status file
-- `git diff -- src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
-  - reviewed the final patch before commit
-
-## Verification
-
+- `git status --short --branch`
+  - confirmed branch `codex/lane-d-20260308m`
+- `git rev-parse HEAD`
+  - confirmed start point `7b27f6bc3572e37d29756fb2d99507fa8c2e979a`
+- `rg --files src/main/java/ch/njol/skript/lang/function src/test/java/ch/njol/skript/lang/function docs/porting/parallel | sort`
+  - enumerated the in-scope function files and lane docs
+- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Functions.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Functions.java`
+  - reviewed upstream delta for function facade behavior
+- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
+  - identified the local/global fallback-order mismatch as a contained target
+- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/FunctionReference.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
+  - confirmed the mismatch was observable through call binding
+- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
+  - reviewed current registry lookup implementation
+- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
+  - reviewed call-site validation flow
+- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/Parameter.java`
+  - reviewed optional/default parameter behavior for nearby context
+- `sed -n '1,320p' src/main/java/ch/njol/skript/lang/function/Signature.java`
+  - reviewed min/max parameter behavior for nearby context
+- `sed -n '1,260p' src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
+  - reviewed existing core compatibility coverage
+- `sed -n '1,320p' src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java`
+  - reviewed implementation compatibility coverage
+- `sed -n '1,320p' src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+  - reviewed call compatibility coverage
+- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/Function.java`
+  - reviewed runtime parameter/default handling for context
+- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Parameter.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Parameter.java`
+  - compared adjacent default-argument behavior
+- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Signature.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Signature.java`
+  - compared adjacent signature/min-arity behavior
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.functionRegistryPrefersLocalMatchBeforeGlobalCandidates --rerun-tasks`
+  - failed before the fix; the new regression reproduced the ambiguity bug
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest.functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate --rerun-tasks`
+  - failed before the fix; local call binding was blocked by the same ambiguity
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.functionRegistryPrefersLocalMatchBeforeGlobalCandidates --rerun-tasks`
+  - passed after the registry fix
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest.functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate --rerun-tasks`
+  - passed after the registry fix
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 
+## Verification
+
+- required compatibility suite passed:
+  - `FunctionCoreCompatibilityTest`
+  - `FunctionImplementationCompatibilityTest`
+  - `FunctionCallCompatibilityTest`
+
 ## Unresolved Risks
 
-- this slice restores only the dynamic-reference validation-cache discrimination path; broader local-vs-upstream differences in `DynamicFunctionReference` remain, including script-source retention and contract-aware return typing
-- verification is unit-only because the behavior changed is internal function validation/runtime plumbing, not live `.sk` syntax execution
-
-## Merge Notes
-
-- likely conflict surface:
-  - `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-  - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
-- `InputSource.java`, `ExprInput.java`, and `TriggerSection.java` were reviewed but intentionally left untouched in this slice
+- this slice only restores local-first fallback behavior in the legacy registry APIs; broader upstream deltas in the function package remain
+- verification is limited to the targeted compatibility tests above

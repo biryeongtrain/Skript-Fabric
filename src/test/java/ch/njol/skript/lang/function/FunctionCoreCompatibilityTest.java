@@ -135,6 +135,44 @@ class FunctionCoreCompatibilityTest {
     }
 
     @Test
+    void functionRegistryPrefersLocalMatchBeforeGlobalCandidates() {
+        FunctionRegistry registry = FunctionRegistry.getRegistry();
+        registry.clear();
+
+        Signature<Integer> localSignature = new Signature<>(
+                "script.sk",
+                "preferLocal",
+                new Parameter[]{new Parameter<>("x", Classes.getSuperClassInfo(Integer.class), true, null)},
+                true,
+                Classes.getSuperClassInfo(Integer.class),
+                true
+        );
+        RecordingFunction localFunction = new RecordingFunction(localSignature);
+        registry.register("script.sk", localSignature);
+        registry.register("script.sk", localFunction);
+
+        Signature<Integer> globalSignature = new Signature<>(
+                null,
+                "preferLocal",
+                new Parameter[]{new Parameter<>("x", Classes.getSuperClassInfo(Number.class), true, null)},
+                false,
+                Classes.getSuperClassInfo(Integer.class),
+                true
+        );
+        RecordingFunction globalFunction = new RecordingFunction(globalSignature);
+        registry.register(null, globalSignature);
+        registry.register(null, globalFunction);
+
+        FunctionRegistry.Retrieval<Signature<?>> signatureRetrieval = registry.getSignature("script.sk", "preferLocal", Integer.class);
+        assertEquals(FunctionRegistry.RetrievalResult.EXACT, signatureRetrieval.result());
+        assertSame(localSignature, signatureRetrieval.retrieved());
+
+        FunctionRegistry.Retrieval<Function<?>> functionRetrieval = registry.getFunction("script.sk", "preferLocal", Integer.class);
+        assertEquals(FunctionRegistry.RetrievalResult.EXACT, functionRetrieval.result());
+        assertSame(localFunction, functionRetrieval.retrieved());
+    }
+
+    @Test
     void functionsFacadeRegistersGlobalAndLocalSignature() {
         Functions.clear();
 

@@ -139,12 +139,13 @@ public final class FunctionRegistry implements Registry<Function<?>> {
     }
 
     public Retrieval<Signature<?>> getSignature(@Nullable String namespace, String name, Class<?>... args) {
-        List<Signature<?>> candidates = new ArrayList<>();
-        collectMatchingSignatures(candidates, namespaceId(namespace), name, args);
         if (namespace != null) {
-            collectMatchingSignatures(candidates, globalNamespace, name, args);
+            Retrieval<Signature<?>> local = getSignatures(namespaceId(namespace), name, args);
+            if (local.result() != RetrievalResult.NOT_REGISTERED) {
+                return local;
+            }
         }
-        return resolveRetrieval(candidates);
+        return getSignatures(globalNamespace, name, args);
     }
 
     public Retrieval<Function<?>> getExactFunction(@Nullable String namespace, String name, Class<?>... args) {
@@ -165,11 +166,24 @@ public final class FunctionRegistry implements Registry<Function<?>> {
     }
 
     public Retrieval<Function<?>> getFunction(@Nullable String namespace, String name, Class<?>... args) {
-        List<Function<?>> candidates = new ArrayList<>();
-        collectMatchingFunctions(candidates, namespaceId(namespace), name, args);
         if (namespace != null) {
-            collectMatchingFunctions(candidates, globalNamespace, name, args);
+            Retrieval<Function<?>> local = getFunctions(namespaceId(namespace), name, args);
+            if (local.result() != RetrievalResult.NOT_REGISTERED) {
+                return local;
+            }
         }
+        return getFunctions(globalNamespace, name, args);
+    }
+
+    private Retrieval<Signature<?>> getSignatures(NamespaceIdentifier namespace, String name, Class<?>[] args) {
+        List<Signature<?>> candidates = new ArrayList<>();
+        collectMatchingSignatures(candidates, namespace, name, args);
+        return resolveRetrieval(candidates);
+    }
+
+    private Retrieval<Function<?>> getFunctions(NamespaceIdentifier namespace, String name, Class<?>[] args) {
+        List<Function<?>> candidates = new ArrayList<>();
+        collectMatchingFunctions(candidates, namespace, name, args);
         return resolveRetrieval(candidates);
     }
 

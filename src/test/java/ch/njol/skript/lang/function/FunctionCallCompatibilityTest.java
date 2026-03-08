@@ -112,6 +112,48 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate() {
+        ClassInfo<String> stringInfo = Classes.getSuperClassInfo(String.class);
+
+        Signature<String> globalSignature = new Signature<>(
+                null,
+                "shadowedEcho",
+                new Parameter[]{new Parameter<>("value", Classes.getSuperClassInfo(Object.class), true, null)},
+                false,
+                stringInfo,
+                true
+        );
+        EchoFunction globalFunction = new EchoFunction(globalSignature);
+        Functions.register(globalFunction);
+
+        Signature<String> localSignature = new Signature<>(
+                "local.sk",
+                "shadowedEcho",
+                new Parameter[]{new Parameter<>("value", stringInfo, true, null)},
+                true,
+                stringInfo,
+                true
+        );
+        EchoFunction localFunction = new EchoFunction(localSignature);
+        assertNotNull(Functions.registerSignature(localSignature));
+        Namespace namespace = Functions.getScriptNamespace("local.sk");
+        assertNotNull(namespace);
+        namespace.addFunction(localFunction);
+        FunctionRegistry.getRegistry().register("local.sk", localFunction);
+
+        FunctionReference<String> reference = new FunctionReference<>(
+                "shadowedEcho",
+                "local.sk",
+                new Class[]{String.class},
+                new Expression[]{new SimpleLiteral<>("local", false)}
+        );
+
+        assertTrue(reference.validateFunction(true));
+        assertSame(localSignature, reference.getRegisteredSignature());
+        assertSame(localFunction, reference.function());
+    }
+
+    @Test
     void parseFunctionResolvesStringifiedLocalReference() {
         registerLocalEchoFunction("local.sk", "stringifiedLocal");
 
