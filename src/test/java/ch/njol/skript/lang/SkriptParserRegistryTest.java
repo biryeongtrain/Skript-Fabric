@@ -223,6 +223,53 @@ class SkriptParserRegistryTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void expressionPatternUsesCompatibleParserAndClassInfoDefaultsForOmittedPlaceholderForm() {
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Number.class, "numeric").defaultExpression(new SimpleLiteral<>(11, true)));
+        Skript.registerExpression(DefaultIntegerValueExpression.class, Number.class, "default integer value [%integer%]");
+
+        DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
+        data.addDefaultValue(Number.class, new SimpleLiteral<>(7, true));
+        try {
+            Expression<? extends Number> parserDefault = new SkriptParser(
+                    "default integer value",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Number.class});
+
+            assertNotNull(parserDefault);
+            assertInstanceOf(DefaultIntegerValueExpression.class, parserDefault);
+            assertEquals(7, parserDefault.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
+        } finally {
+            data.removeDefaultValue(Number.class);
+        }
+
+        try {
+            Expression<? extends Number> classInfoDefault = new SkriptParser(
+                    "default integer value",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Number.class});
+            Expression<? extends Number> explicit = new SkriptParser(
+                    "default integer value 5",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Number.class});
+
+            assertNotNull(classInfoDefault);
+            assertInstanceOf(DefaultIntegerValueExpression.class, classInfoDefault);
+            assertEquals(11, classInfoDefault.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
+
+            assertNotNull(explicit);
+            assertInstanceOf(DefaultIntegerValueExpression.class, explicit);
+            assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
+        } finally {
+            Classes.clearClassInfos();
+        }
+    }
+
+    @Test
     void statementParseRecognisesFunctionCalls() {
         registerEchoFunction();
 
@@ -1051,6 +1098,50 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "default number";
+        }
+    }
+
+    public static class DefaultIntegerValueExpression extends SimpleExpression<Number> {
+
+        private @Nullable Expression<? extends Number> value;
+
+        @Override
+        protected Number @Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            if (value == null) {
+                return null;
+            }
+            Number single = value.getSingle(event);
+            return single == null ? null : new Number[]{single};
+        }
+
+        @Override
+        public Class<? extends Number> getReturnType() {
+            return Number.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            if (expressions.length != 1 || expressions[0] == null) {
+                return false;
+            }
+            value = (Expression<? extends Number>) expressions[0];
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "default integer value";
         }
     }
 

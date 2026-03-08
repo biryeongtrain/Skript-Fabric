@@ -10,6 +10,7 @@ import ch.njol.skript.lang.DefaultExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SyntaxElement;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.util.Kleenean;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -40,6 +41,26 @@ class ParserCompatibilityDataAndStackTest {
         data.removeDefaultValue(Integer.class);
         assertNull(data.getDefaultValue(Integer.class));
         assertThrows(IllegalStateException.class, () -> data.removeDefaultValue(Integer.class));
+    }
+
+    @Test
+    void defaultValueDataUsesMostSpecificCompatibleTypeWhenExactMissing() {
+        ParserInstance parser = new ParserInstance();
+        DefaultValueData data = new DefaultValueData(parser);
+
+        DefaultExpression<Object> objectDefault = new SimpleLiteral<>(new Object[]{1}, Object.class, true, true, null);
+        DefaultExpression<Number> numberDefault = new SimpleLiteral<>(new Number[]{2}, Number.class, true, true, null);
+        DefaultExpression<Integer> integerDefault = new SimpleLiteral<>(3, true);
+
+        data.addDefaultValue(Object.class, objectDefault);
+        data.addDefaultValue(Number.class, numberDefault);
+        assertEquals(numberDefault, data.getDefaultValue(Integer.class));
+
+        data.addDefaultValue(Integer.class, integerDefault);
+        assertEquals(integerDefault, data.getDefaultValue(Integer.class));
+
+        data.removeDefaultValue(Integer.class);
+        assertEquals(numberDefault, data.getDefaultValue(Integer.class));
     }
 
     @Test

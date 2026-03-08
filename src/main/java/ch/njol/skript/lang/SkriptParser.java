@@ -544,8 +544,7 @@ public class SkriptParser {
             return defaultExpression;
         }
 
-        ClassInfo<?> classInfo = Classes.getExactClassInfo(returnType);
-        return classInfo == null ? null : classInfo.getDefaultExpression();
+        return Classes.getSuperClassInfo(returnType).getDefaultExpression();
     }
 
     private static String normalizeWhitespace(String value) {

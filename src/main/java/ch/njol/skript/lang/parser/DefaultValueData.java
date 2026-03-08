@@ -3,7 +3,7 @@ package ch.njol.skript.lang.parser;
 import ch.njol.skript.lang.DefaultExpression;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class DefaultValueData extends ParserInstance.Data {
 
-    private final Map<Class<?>, Deque<DefaultExpression<?>>> defaults = new HashMap<>();
+    private final Map<Class<?>, Deque<DefaultExpression<?>>> defaults = new LinkedHashMap<>();
 
     public DefaultValueData(ParserInstance parserInstance) {
         super(parserInstance);
@@ -25,7 +25,24 @@ public class DefaultValueData extends ParserInstance.Data {
     public <T> @Nullable DefaultExpression<T> getDefaultValue(Class<T> type) {
         Deque<DefaultExpression<?>> stack = defaults.get(type);
         if (stack == null || stack.isEmpty()) {
-            return null;
+            Class<?> bestMatch = null;
+            for (Map.Entry<Class<?>, Deque<DefaultExpression<?>>> entry : defaults.entrySet()) {
+                Deque<DefaultExpression<?>> candidateStack = entry.getValue();
+                if (candidateStack.isEmpty()) {
+                    continue;
+                }
+                Class<?> candidateType = entry.getKey();
+                if (!candidateType.isAssignableFrom(type)) {
+                    continue;
+                }
+                if (bestMatch == null || bestMatch.isAssignableFrom(candidateType)) {
+                    bestMatch = candidateType;
+                    stack = candidateStack;
+                }
+            }
+            if (stack == null || stack.isEmpty()) {
+                return null;
+            }
         }
         @SuppressWarnings("unchecked")
         DefaultExpression<T> value = (DefaultExpression<T>) stack.peek();
