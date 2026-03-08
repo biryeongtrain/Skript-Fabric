@@ -3,6 +3,7 @@ package ch.njol.skript.lang.function;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -80,6 +81,20 @@ class FunctionCallCompatibilityTest {
 
         Expression<?> validated = reference.validate(new Expression[]{new SimpleLiteral<>("value", false)});
         assertNotNull(validated);
+    }
+
+    @Test
+    void dynamicFunctionReferenceValidationCacheDistinguishesExpressionShape() {
+        registerEchoFunction();
+
+        DynamicFunctionReference<?> reference = new DynamicFunctionReference<>("echo");
+        Expression<?> single = new SimpleLiteral<>("value", false);
+        Expression<?> plural = new PluralStringExpression("value");
+
+        assertNotNull(reference.validate(new Expression[]{single}));
+        assertSame(single.getReturnType(), plural.getReturnType());
+        assertTrue(!plural.isSingle());
+        assertNull(reference.validate(new Expression[]{plural}));
     }
 
     @Test
@@ -314,6 +329,30 @@ class FunctionCallCompatibilityTest {
         @Override
         public boolean areKeysRecommended() {
             return true;
+        }
+
+        @Override
+        public Class<? extends String> getReturnType() {
+            return String.class;
+        }
+    }
+
+    private static final class PluralStringExpression extends SimpleExpression<String> {
+
+        private final String[] values;
+
+        private PluralStringExpression(String... values) {
+            this.values = values;
+        }
+
+        @Override
+        protected String[] get(SkriptEvent event) {
+            return values.clone();
+        }
+
+        @Override
+        public boolean isSingle() {
+            return false;
         }
 
         @Override

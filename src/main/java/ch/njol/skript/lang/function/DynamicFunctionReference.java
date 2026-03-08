@@ -205,12 +205,12 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
             if (!(object instanceof Input input)) {
                 return false;
             }
-            return Arrays.equals(types, input.types);
+            return Arrays.equals(parameters, input.parameters) && Arrays.equals(types, input.types);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(Arrays.hashCode(types));
+            return Objects.hash(Arrays.hashCode(types), Arrays.hashCode(parameters));
         }
     }
 }
