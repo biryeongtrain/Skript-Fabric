@@ -171,7 +171,7 @@ public final class Classes {
         String normalized = text.trim().toLowerCase(Locale.ENGLISH);
         List<ClassInfo<?>> explicitMatches = REGISTERED_LITERAL_PATTERNS.get(normalized);
         if (explicitMatches != null && !explicitMatches.isEmpty()) {
-            return List.copyOf(explicitMatches);
+            return orderBySortedClassInfos(explicitMatches);
         }
         List<ClassInfo<?>> matches = new ArrayList<>();
         for (ClassInfo<?> info : getSortedClassInfos()) {
@@ -261,6 +261,20 @@ public final class Classes {
             normalized.append(Character.toLowerCase(character));
         }
         return normalized.toString();
+    }
+
+    private static List<ClassInfo<?>> orderBySortedClassInfos(List<ClassInfo<?>> matches) {
+        Set<ClassInfo<?>> remaining = new LinkedHashSet<>(matches);
+        List<ClassInfo<?>> ordered = new ArrayList<>(remaining.size());
+        for (ClassInfo<?> info : getSortedClassInfos()) {
+            if (remaining.remove(info)) {
+                ordered.add(info);
+            }
+        }
+        if (!remaining.isEmpty()) {
+            ordered.addAll(remaining);
+        }
+        return List.copyOf(ordered);
     }
 
     private static List<ClassInfo<?>> getSortedClassInfos() {

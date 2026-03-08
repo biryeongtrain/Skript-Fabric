@@ -19,7 +19,7 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1B` after the natural variable-ordering closure.
+- Continue `Part 1B` after the class-registry ordering follow-up slice.
 
 ## Work Log
 
@@ -29,6 +29,8 @@ Last updated: 2026-03-08
 - added unit coverage for:
   - choosing the most specific registered assignable class info for subclass lookups
   - honoring explicit `before(...)` / `after(...)` ordering constraints
+- explicit literal-pattern matches now also follow that same stable class-info ordering, so shared aliases respect `before(...)` / `after(...)` dependencies instead of falling back to raw registration order
+- added a regression proving `getPatternInfos(...)` returns shared literal matches in the same stable order exposed by `getClassInfos()`
 - kept this slice inside lane ownership and did not touch canonical docs or parser/statement-owned files
 - did not run GameTest because this slice tightened registry-internal compatibility behavior only; no direct user-visible `.sk` runtime path changed in isolation
 - did not claim parity complete
@@ -50,6 +52,8 @@ Last updated: 2026-03-08
   - passed
 - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`
   - passed
+- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`
+  - passed after closing explicit literal-pattern ordering parity
 
 ## Merge Notes
 
