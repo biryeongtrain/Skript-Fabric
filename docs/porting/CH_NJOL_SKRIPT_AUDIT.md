@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `118`
-- local shortfall versus the captured upstream snapshot: `1071`
+- local `ch/njol/skript`: `119`
+- local shortfall versus the captured upstream snapshot: `1070`
 
 Local top-level packages currently present:
 
@@ -84,7 +84,7 @@ Upstream top-level packages currently absent locally:
 | `literals` | `16` | `0` | absent | `P2` | depends on parser/type behavior |
 | `localization` | `11` | `2` | partial shim | `P2` | not blocking initial parser closure, but still largely absent |
 | `log` | `17` | `4` | partial shim | `P1` | parse/runtime diagnostics still thin |
-| `patterns` | `14` | `2` | partial shim | `P1` | foundational parsing dependency |
+| `patterns` | `14` | `3` | partial shim | `P1` | foundational parsing dependency |
 | `registrations` | `10` | `2` | partial shim | `P1` | foundational registration dependency |
 | `sections` | `10` | `1` | partial shim | `P1` | section behavior now includes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, implicit condition sections, generic section nodes through `ScriptLoader`, and `SecIf` through the section registry path; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity |
 | `structures` | `10` | `1` | partial shim | `P1` | now active because `options:` support has started; keep in the dependency-closure track |
@@ -126,12 +126,12 @@ That means the real gap is behavior, not class presence.
 
 | Cluster | Current local signals | Why it matters | First closure target |
 | --- | --- | --- | --- |
-| Parser flow | `SkriptParser` still has many narrow parse branches and null-fallback paths | parser behavior controls every syntax import after this | `Part 1A` |
-| Statement loading | `Statement.parse(...)` now retains specific function/effect/condition parse errors, but broader orchestration and hint flow are still thin | statement ordering and section ownership determine real script semantics | `Part 1A` |
-| Script loading | `ScriptLoader.replaceOptions(...)` is real now, `loadItems(...)` now handles registered section nodes before falling back to statements, plain effects can now own section-managing expressions through `Effect.parse(...)`, valid effects used as sections now keep their specific ownership diagnostic, `StructOptions` now uses a recursive validator-backed entry path, `SectionNode` now exposes the map-like semantics those paths need, and the active Fabric runtime parser now strips inline comments and `###` block comments through `Node.splitLine(...)`; the broader upstream parse/log/hint flow is still much thinner than upstream | script preprocessing and trigger-item construction parity are still incomplete | `Part 1A` |
+| Parser flow | `SkriptParser` now uses a shared compiled matcher, forwards general parse tags plus XOR marks, and keeps the current natural forms green; fuller upstream pattern element-graph parity and empty auto-tag derivation are still open | parser behavior controls every syntax import after this | `Part 1A` |
+| Statement loading | `Statement.parse(...)` now retains specific function/effect/condition parse errors and rejects plain conditions used as section headers, but broader orchestration and hint flow are still thin | statement ordering and section ownership determine real script semantics | `Part 1A` |
+| Script loading | `ScriptLoader.replaceOptions(...)` is real now, `loadItems(...)` now handles registered section nodes before falling back to statements, plain effects can own section-managing expressions through `Effect.parse(...)`, section-versus-statement fallback now restores the better retained diagnostic, and the active Fabric runtime parser strips inline comments plus `###` block comments through `Node.splitLine(...)`; the broader upstream parse/log/hint flow is still much thinner than upstream | script preprocessing and trigger-item construction parity are still incomplete | `Part 1A` |
 | If-section support | `SecIf` now executes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, and implicit conditional sections through a registered section path, and `Condition.parse(...)` now unwraps grouped outer parentheses | basic conditional-section behavior is now much closer to upstream; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity beyond the minimal `implicit:` support | `Part 1A` |
 | Input-source compatibility | `ExprInput` now supports `input`, typed `%classinfo% input`, and `input index`; broader source usage paths are still not closed | input expressions depend on this bridge | `Part 1A` |
-| Variable runtime | `Variables` is an in-memory bridge only | variable semantics affect function calls, sections, and expressions | `Part 1B` |
+| Variable runtime | `Variables` now covers case-insensitive storage, copy-back semantics, list-to-list reindexing, and natural numeric ordering for prefix/list iteration, but it is still an in-memory bridge only | variable semantics affect function calls, sections, and expressions | `Part 1B` |
 | Type/parse registry | `Classes` remains a small compatibility layer | typed literal and parser behavior depend on it | `Part 1B` |
 
 ## Part Tracker
@@ -139,7 +139,7 @@ That means the real gap is behavior, not class presence.
 | Part | Scope | Status | Notes |
 | --- | --- | --- | --- |
 | `Part 0` | inventory, documentation move, canonical doc layout | `completed` | completed on 2026-03-08 |
-| `Part 1A` | `lang` parser/runtime closure | `in_progress` | active implementation slices now include parser flow, script loading, and variable-expression parsing |
+| `Part 1A` | `lang` parser/runtime closure | `in_progress` | active implementation slices now include shared pattern matching, parser metadata flow, script loading, and variable-expression parsing |
 | `Part 1B` | `variables` / `classes` / `config` / `patterns` / `registrations` / `log` dependency closure | `in_progress` | already started because options, class-registry, and variable-storage behavior is now being tightened |
 | `Part 2` | import or replace missing user-visible `ch/njol/skript` syntax packages in priority order | `pending` | start with packages that directly depend on the now-closed parser/runtime core |
 | `Part 3` | low-priority support packages (`doc`, `test`, `timings`, `update`, selected hooks/utilities) | `pending` | only after runtime-relevant surfaces are settled |
@@ -153,11 +153,11 @@ That means the real gap is behavior, not class presence.
 - kept root-level filenames as entrypoint pointers for prompt compatibility
 - froze and recorded the current Stage 8 verified baseline:
   - `23 / 214` package-local audited
-  - `195 / 195` Fabric GameTests on the last runtime verification
+  - `196 / 196` Fabric GameTests on the last runtime verification
   - `./gradlew build --rerun-tasks` passed on the last runtime verification
 - measured the upstream/local `ch/njol/skript` source gap:
   - upstream `1189`
-  - local `117`
+  - local `119`
 - wrote the first top-level package matrix and selected `lang` as the first closure slice
 - landed the current concrete `Part 1A` and `Part 1B` code slices:
   - `ExprInput` now resolves current input values instead of acting as a pure stub
@@ -203,6 +203,15 @@ That means the real gap is behavior, not class presence.
   - `StructureEntryValidatorCompatibilityTest` now proves that validator-backed structures receive runtime-shaped `EntryNode` values and defaulted optional entries through the compatibility registration surface
   - `ScriptLoaderCompatibilityTest` now also proves that `StructOptions` accepts runtime-style `EntryNode` trees and still logs invalid nested option lines without rejecting valid sibling entries
   - real base `.sk` GameTests now also cover comment-aware loader parsing through commented section headers, commented option entries, quoted hashes, and block-commented invalid syntax
+  - `PatternCompiler` / `SkriptPattern` now provide the shared matcher path used by both direct pattern compilation and `SkriptParser`, including placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦`
+  - `SkriptParser.ParseResult` now carries `mark` and receives general parse tags from matched branches instead of only the prior hardcoded leading `implicit:` case
+  - `PatternCompilerCompatibilityTest` and new parser regressions now cover parse marks, branch-specific parse tags, and preserved natural-form optional whitespace
+  - `ParseLogHandler` now exposes backup/restore helpers and retained-error accessors so `ScriptLoader` can compare section and statement fallback diagnostics without printing both
+  - `ScriptLoader.loadItems(...)` now restores the more specific retained diagnostic when section-node fallback tries both `Section.parse(...)` and `Statement.parse(...)`
+  - `Statement.parse(...)` now rejects plain conditions used as section headers instead of silently returning body-less condition items
+  - `Variables` now uses upstream-style natural variable-name ordering for prefix/list iteration, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set` reindexing
+  - `VariableCompatibilityTest` now covers both direct key exposure and parsed `set {target::*} to {source::*}` under that natural numeric ordering
+  - real base `.sk` GameTests now also cover numeric list ordering through a dedicated fixture where `{source::2}` lands in `{target::1}` ahead of `{source::10}`
 - reran verification after the code slice:
   - `./gradlew test --tests ch.njol.skript.config.NodeCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.structures.StructureEntryValidatorCompatibilityTest --tests ch.njol.skript.config.SectionNodeCompatibilityTest --rerun-tasks` passed
@@ -210,9 +219,12 @@ That means the real gap is behavior, not class presence.
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests org.skriptlang.skript.bukkit.potion.elements.PotionEntityObjectCompatibilityTest --tests org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootContextLocationCompatibilityTest --tests org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprSecCreateLootContextCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `195 / 195`
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `196 / 196`
   - `./gradlew build --rerun-tasks` passed
-  - build path executed the full Fabric GameTest task successfully with `195` scheduled tests
+  - build path executed the full Fabric GameTest task successfully with `196` scheduled tests
 - upstream cross-check corrected two false blockers:
   - `TriggerSection.run(...)` throwing `UnsupportedOperationException` matches upstream intent
   - function-call wrapper `init(...)` stubs match upstream direct-wrapper behavior and are not current blockers
@@ -246,12 +258,12 @@ Exit criteria:
 
 Current local observations after the landed slices above:
 
-- `SecIf` now uses the registered section path with minimal raw regex captures, minimal leading `implicit:` tag forwarding, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, and implicit conditional sections; the remaining gap is broader statement/log orchestration and richer parser tag/mark parity.
+- `SecIf` now uses the registered section path with minimal raw regex captures, minimal leading `implicit:` tag forwarding, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, and implicit conditional sections; the remaining gap is broader statement/log orchestration plus fuller upstream pattern element-graph parity.
 - `ExprInput` is now a working compatibility expression for `input`, typed `%classinfo% input`, and `input index`.
-- `SkriptParser` now keeps the currently verified inline optional/alternation natural-script forms green, including `on[to]`, `when injured`, and `not breedable`; broader upstream pattern/tag/mark parity is still open.
-- `options:` support is now real, the local config layer now has the `SectionNode` map semantics and validator-backed entry handling this path needs, and the active runtime parser now strips inline comments and `###` block comments through `Node.splitLine(...)`; broader config diagnostics and hint/unreachable-code flow are still not upstream-close.
-- variable expressions, case-insensitive storage, and list-variable reindexing on plain list-to-list `set` now work, but broader `Variables` and `Statement` behavior is still incomplete.
-- plain effects with section-managing expressions now own their section node through `Effect.parse(...)`, nested local-variable updates now copy back through `Variables.withLocalVariables(...)`, and valid effects used as sections now keep their specific ownership diagnostic; broader statement/log hint flow is still incomplete.
+- `SkriptParser` now keeps the currently verified inline optional/alternation natural-script forms green, routes matching through the shared `patterns` package, and forwards general parse tags plus XOR marks; broader upstream pattern element-graph parity and empty auto-tag derivation are still open.
+- `options:` support is now real, the local config layer now has the `SectionNode` map semantics and validator-backed entry handling this path needs, the active runtime parser strips inline comments and `###` block comments through `Node.splitLine(...)`, and section-node fallback now restores the better section-versus-statement diagnostic; broader config diagnostics and hint/unreachable-code flow are still not upstream-close.
+- variable expressions, case-insensitive storage, list-variable reindexing on plain list-to-list `set`, and natural numeric ordering for prefix/list iteration now work, but broader `Variables` and `Statement` behavior is still incomplete.
+- plain effects with section-managing expressions now own their section node through `Effect.parse(...)`, nested local-variable updates now copy back through `Variables.withLocalVariables(...)`, valid effects used as sections now keep their specific ownership diagnostic, and plain conditions no longer silently masquerade as section headers; broader statement/log hint flow is still incomplete.
 - quoted string literals in generic `%object%` contexts are now protected from registry-backed parser capture.
 - `SkriptParser` now has the minimal raw-regex capture and leading `implicit:` tag support needed for registered conditional sections, but it still lacks upstream tag/mark/pattern features required by richer modern patterns.
 - section-managed custom damage source, potion effect, and loot-context expressions now tolerate object-backed locals, but when a section expression swaps the current event type the outer event payload still needs to be captured into locals before entering the section body.
@@ -264,7 +276,10 @@ Targeted verification already completed in this slice:
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --rerun-tasks` passed
 - `./gradlew test --tests org.skriptlang.skript.bukkit.potion.elements.PotionEntityObjectCompatibilityTest --tests org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootContextLocationCompatibilityTest --tests org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprSecCreateLootContextCompatibilityTest --rerun-tasks` passed
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks` passed
-- `./gradlew runGameTest --rerun-tasks` passed with `195 / 195`
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
+- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+- `./gradlew runGameTest --rerun-tasks` passed with `196 / 196`
 - `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path
 
 Do not reopen these as blockers without a new upstream mismatch:

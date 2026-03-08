@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `195 / 195` scheduled Fabric GameTests completed without build failure
+  - `196 / 196` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -56,8 +56,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `118` Java files
-- net missing local surface relative to that snapshot: `1071` Java files
+- local `src/main/java/ch/njol/skript`: `119` Java files
+- net missing local surface relative to that snapshot: `1070` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -84,7 +84,7 @@ Key local package counts versus upstream:
 - `variables`: local `1`, upstream `11`
 - `config`: local `6`, upstream `20`
 - `registrations`: local `2`, upstream `10`
-- `patterns`: local `2`, upstream `14`
+- `patterns`: local `3`, upstream `14`
 - `log`: local `4`, upstream `17`
 - `sections`: local `1`, upstream `10`
 - `structures`: local `1`, upstream `10`
@@ -137,6 +137,11 @@ Landed slices so far:
   - inline alternation branches with trailing whitespace now stay valid in registered patterns such as `make %entities% (not |non(-| )|un)breedable`
   - nested grouped optional and alternation content now stays valid in the current natural-script compatibility surface, including `%objects% will (lose durability|be damaged) ... when [[the] wearer [is]] injured`
   - `SkriptParserRegistryTest` now rechecks the exact parser paths that recovered those live real-script forms
+- parser tag / mark closure:
+  - the shared compiled matcher now lives under `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation use the same compatibility path
+  - `SkriptParser.ParseResult` now carries `mark`, and init paths now receive general parse tags from matched branches instead of only the earlier hardcoded leading `implicit:` case
+  - `PatternCompiler` / `SkriptPattern` now support placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦` on the current compatibility surface
+  - `PatternCompilerCompatibilityTest` and `SkriptParserRegistryTest` now cover branch tags, parse marks, and the already-green inline optional whitespace natural form through the shared matcher
 - script-loading options closure:
   - `options:` entries are now represented by `EntryNode`
   - `StructOptions` is now present locally
@@ -158,6 +163,10 @@ Landed slices so far:
   - `ParseLogHandler` now retains specific parse errors across nested parser scopes instead of acting as an empty shim
   - `Statement.parse(...)` now stops on captured function/effect/condition parse errors and prints the retained diagnostic instead of falling through to a generic section fallback
   - `ScriptLoaderCompatibilityTest` now proves that a valid effect used as a section keeps its specific ownership error without also logging `Can't understand this section`
+- loader fallback diagnostic closure:
+  - `ParseLogHandler` now exposes snapshot/restore helpers and retained-error accessors so loader-owned section fallback can compare section and statement diagnostics without printing both
+  - `ScriptLoader.loadItems(...)` now retries section-node parsing through both `Section.parse(...)` and `Statement.parse(...)`, then restores the more specific retained diagnostic instead of defaulting to the generic fallback
+  - plain conditions used as section headers now fail with a specific ownership error instead of silently returning a body-less condition item
 - class/type registry closure:
   - `ClassInfo` and `Classes` now close the missing codename, literal-pattern, and supertype resolution behavior that the parser/runtime depends on
 - variable/runtime closure:
@@ -165,6 +174,7 @@ Landed slices so far:
   - `Variables` now defaults to case-insensitive storage/lookup with a compatibility switch for case-sensitive operation
   - `Variables.withLocalVariables(...)` now follows upstream copy-back semantics for nested section-event execution instead of restoring the previous target snapshot
   - `Variable` no longer recommends preserving source keys for list-to-list `set`, so keyed list sources are reindexed into numeric target slots instead of leaking source keys
+  - prefix/list iteration now uses natural variable-name ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set` reindexing
   - `EffChange` now forwards keyed deltas only when the source expression explicitly recommends keyed preservation
   - quoted string literals now remain string literals in generic `%object%` contexts instead of being consumed by registry-backed parsers during live script loading
 - section-expression object-safe closure:
@@ -185,6 +195,7 @@ Landed slices so far:
   - implicit conditional section path
   - `parse if` skipped-invalid-body path
   - list variable reindexing path for `set {target::*} to {source::*}`
+  - natural numeric list ordering path for `{source::2}` before `{source::10}`
   - plain-effect section ownership plus local-variable copy-back through `set {_component} to a blank equippable component:`
 
 Targeted verification completed on 2026-03-08:
@@ -197,8 +208,11 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing plain-effect section ownership and section-local copy-back
 - `./gradlew test --tests org.skriptlang.skript.bukkit.potion.elements.PotionEntityObjectCompatibilityTest --tests org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprLootContextLocationCompatibilityTest --tests org.skriptlang.skript.bukkit.loottables.elements.expressions.ExprSecCreateLootContextCompatibilityTest --rerun-tasks` passed after closing object-backed section-expression locals for custom damage source / potion effect / loot context paths
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks` passed after closing parse-log retention and statement diagnostic fallback behavior
-- `./gradlew runGameTest --rerun-tasks` passed with `195 / 195`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing section-vs-statement loader fallback diagnostics and plain-condition section-header rejection
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after moving the shared matcher into `patterns` and forwarding general parse tags plus XOR marks
+- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing natural numeric variable-name ordering for list/prefix iteration
+- `./gradlew runGameTest --rerun-tasks` passed with `196 / 196`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `196 / 196` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -210,7 +224,7 @@ The following foundations were already built before this priority shift:
 - function compatibility scaffolding, including signatures, registries, dynamic references, expression/effect call wrappers, and namespace fallback behavior
 - variable and literal compatibility primitives, including `Variable`, `Variables`, `LiteralString`, `UnparsedLiteral`, `InputSource`, and section-expression helpers
 - foundational utility scaffolding in `classes`, `config`, `log`, `patterns`, `registrations`, `util`, and `variables`
-- active Fabric runtime harness and Fabric GameTest suite with `195 / 195` passing tests on the last code-verification run
+- active Fabric runtime harness and Fabric GameTest suite with `196 / 196` passing tests on the last code-verification run
 - Stage 8 parity-audited package-local Bukkit slice for `breeding`, `input`, and `interactions`
 
 ## Current Gaps
@@ -222,9 +236,10 @@ The following foundations were already built before this priority shift:
   - `EffFunctionCall.init(...)` and `ExprFunctionCall.init(...)` returning `false` on direct wrapper instances also match upstream behavior
 - current Stage 8 package-local audit for `org/skriptlang/skript/bukkit` remains valid, but it is no longer the only gating audit track
 - `Part 1A` and `Part 1B` are both active, but most parser, statement, loader, variable, and type-system closure work remains open
-- generic registered section loading is now closed in `ScriptLoader`, and `SecIf` now uses the section registry path with `parse if` / `else parse if`, multiline `if any` / `if all`, `then`, and implicit condition sections too; specific statement parse-error retention is now real, but broader loader/config hint flow and richer parser tag/mark parity are still incomplete
+- generic registered section loading is now closed in `ScriptLoader`, `ScriptLoader` now also restores the more specific section-versus-statement fallback diagnostic, and plain conditions no longer masquerade as section headers; broader loader/config hint flow is still incomplete
 - validator-backed recursive `options:` loading for runtime `EntryNode` trees and raw simple-entry trees is now closed, but broader structure/config validation behavior is still much thinner than upstream
-- the parser no longer regresses the currently verified natural-script inline optional/alternation forms, but broader upstream tag/mark/pattern parity is still incomplete
+- the parser no longer regresses the currently verified natural-script inline optional/alternation forms and now forwards general tags/XOR marks through the shared matcher, but broader upstream pattern element-graph parity and empty auto-tag derivation are still incomplete
+- natural numeric ordering for list/prefix iteration is now closed, but broader `Variables` runtime semantics are still incomplete
 
 ## Active Workstreams
 

@@ -9,8 +9,8 @@ Current headline:
 - keep Stage 8 package-local audit state frozen at `23 / 214`
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`, continuing `Part 1A`, and the already-started `Part 1B` dependency closure
-- latest verified runtime baseline is `195 / 195`
-- latest closed slice is the `config` / `structures` compatibility closure around `SectionNode`, validator-backed structures, and recursive `options:` loading
+- latest verified runtime baseline is `196 / 196`
+- latest closed slice is the merged loader-diagnostics, shared parser/pattern matcher, and natural variable-ordering closure
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

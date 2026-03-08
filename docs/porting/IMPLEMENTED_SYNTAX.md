@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `195 / 195`
+- Verified Fabric GameTests: `196 / 196`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -37,7 +37,7 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `118`
+  - local `ch/njol/skript`: `119`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
 
@@ -105,8 +105,11 @@ None in the current Fabric registration set.
 - `{...}` variable expressions are parsed directly by `SkriptParser`
 - variables default to case-insensitive storage and lookup
 - list-variable `set` copies keyed list sources into reindexed numeric target slots instead of preserving source keys
+- prefix/list iteration now uses natural numeric ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set`
 - quoted string literals remain strings in generic `%object%` contexts during live script loading
 - `SkriptParser` now supports minimal raw regex captures for registered syntax patterns like `if <.+>`, plus the minimal leading `implicit:` tag needed by registered conditional sections
+- `SkriptParser` now routes matching through the shared `patterns` package and receives general parse tags plus XOR marks through `ParseResult.mark` on the current compatibility surface
+- `PatternCompiler` / `SkriptPattern` now support placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦`
 - `SkriptParser` now preserves required whitespace around omitted inline optional groups and inline alternation branches for the currently verified natural-script surface, which keeps live forms like `%objects% can be equipped on[to] entities`, `%objects% will lose durability when injured`, and `make %entities% not breedable` green again
 - chained `if / else if / else` sections execute in real `.sk` files, including grouped outer parentheses around conditions, and now load through the normal registered `Section` path instead of a dedicated `Statement` fallback
 - `parse if` and `else parse if` now evaluate at parse time, skip child loading when false, and are live-verified both for normal chain execution and for skipped invalid bodies
@@ -114,6 +117,8 @@ None in the current Fabric registration set.
 - implicit conditional sections such as `%condition%:` execute in real `.sk` files through the same registered `SecIf` path
 - `input`, typed `%classinfo% input`, and `input index` resolve directly in active `InputSource` context
 - registered pure `Section` nodes now load through `ScriptLoader.loadItems(...)` instead of being dropped into statement-only fallback
+- `ScriptLoader` section-node fallback now restores the more specific retained section-versus-statement diagnostic when both parse paths fail
+- plain conditions used as section headers now report a specific ownership error instead of silently returning a body-less condition item
 - plain effects with section-managing expressions now receive their `SectionNode` through `Effect.parse(...)`, so real lines like `set {_component} to a blank equippable component:` execute their section body and propagate local-variable mutations back to the outer event scope
 - section-managed custom damage source, potion effect, and loot-context expressions now tolerate object-backed locals instead of assuming typed runtime arrays
 - when a section expression swaps the current event type, outer event payloads should be captured into locals before entering the section body; the currently verified real `.sk` paths do this for custom damage source, potion effect, loot context, and blank equippable component sections
