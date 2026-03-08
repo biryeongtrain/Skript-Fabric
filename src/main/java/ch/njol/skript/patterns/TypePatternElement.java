@@ -1,6 +1,7 @@
 package ch.njol.skript.patterns;
 
 import java.util.Arrays;
+import java.util.Set;
 
 public final class TypePatternElement extends PatternElement {
 
@@ -61,5 +62,10 @@ public final class TypePatternElement extends PatternElement {
     @Override
     public String toString() {
         return "%" + placeholder + "%";
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        return Set.of(toString());
     }
 }

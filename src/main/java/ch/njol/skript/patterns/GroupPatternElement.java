@@ -1,5 +1,6 @@
 package ch.njol.skript.patterns;
 
+import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 
 public final class GroupPatternElement extends PatternElement {
@@ -16,6 +17,14 @@ public final class GroupPatternElement extends PatternElement {
 
     @Override
     public String toString() {
-        return "(" + (patternElement == null ? "" : patternElement) + ")";
+        return "(" + (patternElement == null ? "" : patternElement.toFullString()) + ")";
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        if (patternElement == null) {
+            return Set.of("");
+        }
+        return patternElement.getAllCombinations(clean);
     }
 }

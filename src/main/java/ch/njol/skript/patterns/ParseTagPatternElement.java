@@ -1,5 +1,6 @@
 package ch.njol.skript.patterns;
 
+import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 
 public final class ParseTagPatternElement extends PatternElement {
@@ -22,9 +23,20 @@ public final class ParseTagPatternElement extends PatternElement {
 
     @Override
     public String toString() {
-        if (tag != null && !tag.isBlank()) {
+        if (tag != null) {
+            if (tag.isEmpty()) {
+                return "";
+            }
             return tag + ":";
         }
         return mark + "¦";
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        if (clean) {
+            return Set.of();
+        }
+        return Set.of(toString());
     }
 }

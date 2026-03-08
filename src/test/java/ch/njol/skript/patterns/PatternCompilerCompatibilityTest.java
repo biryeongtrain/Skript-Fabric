@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.lang.SkriptParser;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PatternCompilerCompatibilityTest {
@@ -178,6 +180,40 @@ class PatternCompilerCompatibilityTest {
         assertEquals(1, pattern.getElements(ChoicePatternElement.class).size());
         assertEquals(0, pattern.getElements(TypePatternElement.class).getFirst().expressionIndex());
         assertEquals(3, pattern.getElements(TypePatternElement.class).getLast().expressionIndex());
+    }
+
+    @Test
+    void compiledPatternReconstructsNestedPatternElementStrings() {
+        SkriptPattern pattern = PatternCompiler.compile("root [maybe (first|second)] tail");
+
+        OptionalPatternElement optional = pattern.getElements(OptionalPatternElement.class).getFirst();
+        ChoicePatternElement choice = pattern.getElements(ChoicePatternElement.class).getFirst();
+
+        assertEquals("root [maybe (first|second)] tail", pattern.toString());
+        assertEquals("[maybe (first|second)]", optional.toString());
+        assertEquals("first|second", choice.toString());
+    }
+
+    @Test
+    void compiledPatternExposesUpstreamStyleCombinationExpansion() {
+        SkriptPattern pattern = PatternCompiler.compile("root [left|right] tag:value");
+
+        OptionalPatternElement optional = pattern.getElements(OptionalPatternElement.class).getFirst();
+        ParseTagPatternElement tag = pattern.getElements(ParseTagPatternElement.class).getFirst();
+
+        assertEquals(Set.of("", "left", "right"), optional.getCombinations(true));
+        assertEquals(Set.of(), tag.getCombinations(true));
+        assertEquals(Set.of("tag:"), tag.getCombinations(false));
+    }
+
+    @Test
+    void compiledPatternWrapsMalformedPatternsInUpstreamExceptionType() {
+        MalformedPatternException exception = assertThrows(
+                MalformedPatternException.class,
+                () -> PatternCompiler.compile("broken <[>")
+        );
+
+        assertTrue(exception.getMessage().contains("[pattern: broken <[>]"));
     }
 
     @Test

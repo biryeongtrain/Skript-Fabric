@@ -105,7 +105,7 @@ public final class SkriptPattern {
 
     @Override
     public String toString() {
-        return source;
+        return first == null ? source : first.toFullString();
     }
 
     private static int countNonNullTypes(@Nullable PatternElement element) {

@@ -1,6 +1,9 @@
 package ch.njol.skript.patterns;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.HashSet;
 
 public final class ChoicePatternElement extends PatternElement {
 
@@ -16,6 +19,17 @@ public final class ChoicePatternElement extends PatternElement {
 
     @Override
     public String toString() {
-        return patternElements.toString();
+        return patternElements.stream()
+                .map(PatternElement::toFullString)
+                .collect(Collectors.joining("|"));
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        Set<String> combinations = new HashSet<>();
+        for (PatternElement patternElement : patternElements) {
+            combinations.addAll(patternElement.getAllCombinations(clean));
+        }
+        return combinations;
     }
 }

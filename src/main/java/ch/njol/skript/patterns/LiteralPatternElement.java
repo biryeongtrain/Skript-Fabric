@@ -1,5 +1,7 @@
 package ch.njol.skript.patterns;
 
+import java.util.Set;
+
 public final class LiteralPatternElement extends PatternElement {
 
     private final String literal;
@@ -15,5 +17,10 @@ public final class LiteralPatternElement extends PatternElement {
     @Override
     public String toString() {
         return literal;
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        return Set.of(literal);
     }
 }

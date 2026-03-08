@@ -1,5 +1,7 @@
 package ch.njol.skript.patterns;
 
+import java.util.Set;
+
 public final class RegexPatternElement extends PatternElement {
 
     private final String pattern;
@@ -15,5 +17,10 @@ public final class RegexPatternElement extends PatternElement {
     @Override
     public String toString() {
         return "<" + pattern + ">";
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        return Set.of(toString());
     }
 }

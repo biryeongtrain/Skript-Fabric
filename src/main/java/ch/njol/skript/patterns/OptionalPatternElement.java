@@ -1,5 +1,7 @@
 package ch.njol.skript.patterns;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 
 public final class OptionalPatternElement extends PatternElement {
@@ -16,6 +18,16 @@ public final class OptionalPatternElement extends PatternElement {
 
     @Override
     public String toString() {
-        return "[" + (patternElement == null ? "" : patternElement) + "]";
+        return "[" + (patternElement == null ? "" : patternElement.toFullString()) + "]";
+    }
+
+    @Override
+    public Set<String> getCombinations(boolean clean) {
+        Set<String> combinations = new HashSet<>();
+        if (patternElement != null) {
+            combinations.addAll(patternElement.getAllCombinations(clean));
+        }
+        combinations.add("");
+        return combinations;
     }
 }
