@@ -2,6 +2,7 @@ package ch.njol.skript.lang;
 
 import ch.njol.skript.util.StringMode;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class VariableString {
@@ -42,11 +43,11 @@ public final class VariableString {
     }
 
     public String toString(@Nullable SkriptEvent event, boolean debug) {
-        return value;
+        return mode == StringMode.MESSAGE ? SkriptTextPlaceholders.resolveString(value, event) : value;
     }
 
     public String toString(@Nullable SkriptEvent event) {
-        return value;
+        return mode == StringMode.MESSAGE ? SkriptTextPlaceholders.resolveString(value, event) : value;
     }
 
     @Override

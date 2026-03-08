@@ -9,8 +9,8 @@ Current headline:
 - keep Stage 8 package-local audit state frozen at `23 / 214`
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`, continuing `Part 1A`, and the already-started `Part 1B` dependency closure
-- latest verified runtime baseline is `199 / 199`
-- latest closed slice is the merged parse-log-aware `Classes.parse(...)`, ordered duplicate parser-tag accumulation, and statement fallback after failed effect/condition init batch
+- latest verified runtime baseline is `203 / 203`
+- latest closed slice is the Patbox `TextPlaceholderAPI` runtime placeholder bridge plus the locked-GameTest variable-isolation harness fix
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

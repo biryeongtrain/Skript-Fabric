@@ -8,6 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.Equippable;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import java.util.Objects;
 
 public final class FabricItemType {
@@ -58,7 +59,7 @@ public final class FabricItemType {
     public ItemStack toStack() {
         ItemStack stack = new ItemStack(item, amount);
         if (customName != null && !customName.isBlank()) {
-            stack.set(DataComponents.CUSTOM_NAME, Component.literal(customName));
+            stack.set(DataComponents.CUSTOM_NAME, SkriptTextPlaceholders.resolveComponent(customName, null));
         }
         if (equippable != null) {
             stack.set(DataComponents.EQUIPPABLE, equippable);

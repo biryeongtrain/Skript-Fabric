@@ -524,6 +524,38 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileUsingPatboxPlaceholdersForEntityNames(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/base/patbox_placeholder_entity_name_test_block.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    player
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected Patbox placeholder script to execute exactly one trigger but got " + executed)
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null,
+                    Component.literal("Expected Patbox placeholder script to set a custom name on the event-player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null
+                            && player.getGameProfile().getName().equals(player.getCustomName().getString()),
+                    Component.literal("Expected %player:name% to resolve through TextPlaceholderAPI for the event-player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void executesRealSkriptFileUsingUnreachableCodeWarnings(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             ensureUnreachableTestStatementRegistered();

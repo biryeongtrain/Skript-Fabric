@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ConditionPropertyHandler;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
@@ -68,7 +69,7 @@ public final class SlotClassInfo {
                 if (value == null || value.isBlank()) {
                     updated.remove(DataComponents.CUSTOM_NAME);
                 } else {
-                    updated.set(DataComponents.CUSTOM_NAME, Component.literal(value));
+                    updated.set(DataComponents.CUSTOM_NAME, SkriptTextPlaceholders.resolveComponent(value, null));
                 }
             }
             propertyHolder.set(updated);

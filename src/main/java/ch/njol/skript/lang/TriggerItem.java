@@ -2,6 +2,7 @@ package ch.njol.skript.lang;
 
 import ch.njol.skript.Skript;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.CurrentSkriptEvent;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public abstract class TriggerItem implements Debuggable {
@@ -34,11 +35,13 @@ public abstract class TriggerItem implements Debuggable {
     protected abstract boolean run(SkriptEvent event);
 
     public static boolean walk(TriggerItem start, SkriptEvent event) {
-        TriggerItem current = start;
-        while (current != null) {
-            current = current.walk(event);
-        }
-        return true;
+        return CurrentSkriptEvent.with(event, () -> {
+            TriggerItem current = start;
+            while (current != null) {
+                current = current.walk(event);
+            }
+            return true;
+        });
     }
 
     protected @Nullable ExecutionIntent executionIntent() {

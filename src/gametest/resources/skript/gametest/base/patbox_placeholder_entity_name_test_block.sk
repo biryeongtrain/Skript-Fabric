@@ -1,0 +1,2 @@
+on gametest:
+    set test name of entity event-player to "%player:name%"

@@ -7,6 +7,7 @@ import ch.njol.util.Kleenean;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class EffSetTestItemName extends Effect {
@@ -38,7 +39,7 @@ public final class EffSetTestItemName extends Effect {
             item.remove(DataComponents.CUSTOM_NAME);
             return;
         }
-        item.set(DataComponents.CUSTOM_NAME, Component.literal(normalized));
+        item.set(DataComponents.CUSTOM_NAME, SkriptTextPlaceholders.resolveComponent(normalized, event));
     }
 
     private String normalizeName(String name) {

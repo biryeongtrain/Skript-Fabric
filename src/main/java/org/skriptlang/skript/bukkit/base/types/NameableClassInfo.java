@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -63,7 +64,7 @@ public final class NameableClassInfo {
             }
 
             String value = delta != null && delta.length > 0 ? String.valueOf(delta[0]) : null;
-            entity.setCustomName(value == null ? null : Component.literal(value));
+            entity.setCustomName(value == null ? null : SkriptTextPlaceholders.resolveComponent(value, null));
         }
 
         @Override

@@ -13,6 +13,7 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
+import ch.njol.skript.variables.Variables;
 import com.mojang.authlib.GameProfile;
 import com.mojang.math.Transformation;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -172,8 +173,10 @@ public abstract class AbstractSkriptFabricGameTestSupport {
                     Component.literal("Waiting for exclusive Skript runtime access.")
             );
             try {
+                Variables.clearAll();
                 body.run();
             } finally {
+                Variables.clearAll();
                 RUNTIME_LOCK.set(false);
             }
         });

@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `199 / 199` scheduled Fabric GameTests completed without build failure
+  - `203 / 203` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -52,21 +52,20 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next coordinator batch in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
-- Lane C closed parse-log-aware class parsing fallback:
-  - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success, so successful fallback no longer leaks earlier parse errors
-  - added regressions in [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java) for both later-parser and converter-success paths
-- Lane B closed ordered duplicate parser-tag accumulation:
-  - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate tags in encounter order instead of collapsing them into a set
-  - added regressions in [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) and [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) for exact repeated-tag ordering
-- Lane A closed same-pattern statement fallback after failed effect/condition init:
-  - `Statement.parse(...)` now lets a later registered plain statement win after earlier same-pattern effect or condition init failures, while restoring the best prior specific error if no statement ultimately matches
-  - added regressions in [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) for failed-effect fallback, failed-condition fallback, and retained specific effect diagnostics
-  - added real `.sk` coverage in [src/gametest/resources/skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java)
+- merged a coordinator-owned cross-cutting slice for runtime placeholder parity, then reran full coordinator verification
+- Patbox placeholder runtime bridge landed:
+  - `build.gradle` now includes Patbox `TextPlaceholderAPI`, and `VariableString` now routes `StringMode.MESSAGE` through it so exact `%namespace:path%` placeholders resolve on live message/name paths
+  - `TriggerItem.walk(...)` now scopes the active event through `CurrentSkriptEvent`, which gives placeholder resolution access to the current server, world, player, entity, or command source without changing non-message string behavior
+  - added regression coverage in [src/test/java/ch/njol/skript/lang/VariableStringCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableStringCompatibilityTest.java) for exact placeholder preservation when no live Patbox context exists
+- real `.sk` verification for the Patbox bridge landed:
+  - added [src/gametest/resources/skript/gametest/base/patbox_placeholder_entity_name_test_block.sk](../../src/gametest/resources/skript/gametest/base/patbox_placeholder_entity_name_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that uses `%player:name%` to set a live entity custom name through the existing Skript syntax path
+- locked runtime GameTest isolation landed:
+  - [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/AbstractSkriptFabricGameTestSupport.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/AbstractSkriptFabricGameTestSupport.java) now clears Skript variables before and after each locked GameTest body, which prevents cross-test global-variable leakage while leaving production variable semantics unchanged
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `199 / 199`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `199 / 199`
+  - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `203 / 203`
 
 ## What Landed In This Slice
 
@@ -82,10 +81,12 @@ New immediate priority:
 - kept the first concrete closure target as `Part 1A: lang parser/runtime closure`
 - started `Part 1B` in parallel because `Classes`, `Variables`, `config`, and `structures` behavior is already being tightened in the same dependency cluster
 - landed the current `Part 1A` / `Part 1B` slices:
+  - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, and `TriggerItem.walk(...)` now exposes the current event through `CurrentSkriptEvent` so live `%namespace:path%` placeholders resolve on active message/name paths
+  - locked runtime GameTests now clear Skript variables before and after each body, preventing suite-order leakage while leaving production variable semantics unchanged
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, increasing the current Fabric GameTest suite to `199 / 199`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk` plus `patbox_placeholder_entity_name_test_block.sk`, increasing the current Fabric GameTest suite to `203 / 203`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup
@@ -146,13 +147,14 @@ New immediate priority:
 - reran verification after the code slices:
   - targeted unit slices passed
   - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing section-level execution-intent propagation
   - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing explicit literal-pattern ordering parity
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging the latest parse-log-aware class parsing, ordered duplicate parser tags, and statement fallback slice
-  - `./gradlew runGameTest --rerun-tasks` passed with `199 / 199`
+  - `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
   - `./gradlew build --rerun-tasks` passed
 
 ## Files Changed In This Slice

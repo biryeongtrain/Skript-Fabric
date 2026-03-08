@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `199 / 199`
+- Verified Fabric GameTests: `203 / 203`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -110,6 +110,7 @@ None in the current Fabric registration set.
 - list variables now expose the legacy loop aliases `index`, `var`, `variable`, and `value`
 - list-variable predicate checks now use upstream-style all-values `getAnd()` semantics instead of collapsing back to a single-value/default-expression path
 - quoted string literals remain strings in generic `%object%` contexts during live script loading
+- exact Patbox-style placeholders such as `%player:name%` now resolve through Patbox `TextPlaceholderAPI` on active message/name string paths when live event context exists
 - `SkriptParser` now supports minimal raw regex captures for registered syntax patterns like `if <.+>`, plus the minimal leading `implicit:` tag needed by registered conditional sections
 - `SkriptParser` now routes matching through the shared `patterns` package and receives general parse tags plus XOR marks through `ParseResult.mark` on the current compatibility surface, including the current bare leading `:` auto-tag derivation path
 - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order instead of collapsing them into a unique set
@@ -140,6 +141,7 @@ None in the current Fabric registration set.
 - when a section expression swaps the current event type, outer event payloads should be captured into locals before entering the section body; the currently verified real `.sk` paths do this for custom damage source, potion effect, loot context, and blank equippable component sections
 - `Statement.parse(...)` now retains specific parse errors across nested parser scopes, so valid effects or function calls used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
 - real `.sk` coverage now also includes statement fallback after failed effect parse through `ambiguous loader syntax`
+- locked runtime GameTests now clear Skript variables before and after each body so real `.sk` verification stays isolated across suite order without changing production variable semantics
 
 ### Base
 

@@ -10,6 +10,7 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.PrivateEntityAccess;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class ExprTextOf extends SimpleExpression<String> {
@@ -58,7 +59,7 @@ public final class ExprTextOf extends SimpleExpression<String> {
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         Component text = mode == ChangeMode.SET && delta != null && delta.length > 0 && delta[0] != null
-                ? Component.literal(String.valueOf(delta[0]))
+                ? SkriptTextPlaceholders.resolveComponent(String.valueOf(delta[0]), event)
                 : Component.empty();
         for (Entity entity : entities.getAll(event)) {
             if (entity instanceof Display.TextDisplay textDisplay) {

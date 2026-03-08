@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `199 / 199` scheduled Fabric GameTests completed without build failure
+  - `203 / 203` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -204,6 +204,9 @@ Landed slices so far:
   - list variables now expose the legacy loop aliases `index`, `var`, `variable`, and `value`, and their predicate checks again use upstream-style all-values `getAnd()` semantics
   - `EffChange` now forwards keyed deltas only when the source expression explicitly recommends keyed preservation
   - quoted string literals now remain string literals in generic `%object%` contexts instead of being consumed by registry-backed parsers during live script loading
+- Patbox placeholder runtime closure:
+  - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, so exact `%namespace:path%` runtime placeholders resolve on live message/name paths when a Skript event context is active
+  - `TriggerItem.walk(...)` now scopes the active event through `CurrentSkriptEvent`, which gives Patbox placeholder resolution access to the current server, world, player, entity, or command source without changing non-message string semantics
 - section-expression object-safe closure:
   - custom damage source, potion effect, and loot-context section expressions now tolerate object-backed local values instead of assuming typed runtime arrays
   - real expression `.sk` coverage now includes section-local propagation for custom damage source, potion effect, and loot context creation sections
@@ -211,6 +214,8 @@ Landed slices so far:
   - `Node.splitLine(...)` now strips inline comments, preserves quoted `#`, unescapes doubled `##`, and tracks `###` block comments
   - `SkriptRuntime.parseScript(...)` now uses that split logic, so trailing comments on section headers, option entries, conditions, and effects no longer break live `.sk` loading
   - real base `.sk` coverage now includes a comment-aware loader fixture with commented section headers, commented option entries, quoted hashes, and block-commented invalid syntax
+- GameTest isolation closure:
+  - locked runtime GameTests now clear Skript variables before and after each body through `Variables.clearAll()`, which prevents real `.sk` runs from leaking globals across suite order while leaving production variable semantics unchanged
 - real `.sk` coverage added in the base GameTest slice:
   - options replacement path
   - comment-aware loader parsing path
@@ -227,6 +232,7 @@ Landed slices so far:
   - plain-effect section ownership plus local-variable copy-back through `set {_component} to a blank equippable component:`
   - plain-effect argument parsing inside an outer expression section path
   - statement fallback after failed effect parse through `ambiguous loader syntax`
+  - Patbox placeholder resolution through `%player:name%` in a live entity-name mutation fixture
 
 Targeted verification completed on 2026-03-08:
 
@@ -252,8 +258,10 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after closing converter-backed parser helper fallback plus parser-owned default-value backfill
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax --rerun-tasks` passed after locking the exact `set {_var} to true:` ownership regression
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging parse-log-aware `Classes.parse(...)`, ordered duplicate parser tags, and statement fallback after failed effect/condition init
-- `./gradlew runGameTest --rerun-tasks` passed with `199 / 199`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `199 / 199` scheduled Fabric GameTests
+- `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed after routing message-mode runtime placeholders through Patbox `TextPlaceholderAPI`
+- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after revalidating the variable runtime around the GameTest isolation harness change
+- `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `203 / 203` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -265,7 +273,7 @@ The following foundations were already built before this priority shift:
 - function compatibility scaffolding, including signatures, registries, dynamic references, expression/effect call wrappers, and namespace fallback behavior
 - variable and literal compatibility primitives, including `Variable`, `Variables`, `LiteralString`, `UnparsedLiteral`, `InputSource`, and section-expression helpers
 - foundational utility scaffolding in `classes`, `config`, `log`, `patterns`, `registrations`, `util`, and `variables`
-- active Fabric runtime harness and Fabric GameTest suite with `199 / 199` passing tests on the last code-verification run
+- active Fabric runtime harness and Fabric GameTest suite with `203 / 203` passing tests on the last code-verification run
 - Stage 8 parity-audited package-local Bukkit slice for `breeding`, `input`, and `interactions`
 
 ## Current Gaps

@@ -6,6 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
+import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class EffSetTestEntityName extends Effect {
@@ -31,7 +32,7 @@ public final class EffSetTestEntityName extends Effect {
         if (entity == null || name == null) {
             throw new IllegalStateException("set test entity name effect received incomplete entity or name.");
         }
-        entity.setCustomName(Component.literal(normalizeName(name)));
+        entity.setCustomName(SkriptTextPlaceholders.resolveComponent(normalizeName(name), event));
     }
 
     private String normalizeName(String name) {

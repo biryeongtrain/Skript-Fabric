@@ -153,7 +153,7 @@ That means the real gap is behavior, not class presence.
 - kept root-level filenames as entrypoint pointers for prompt compatibility
 - froze and recorded the current Stage 8 verified baseline:
   - `23 / 214` package-local audited
-  - `199 / 199` Fabric GameTests on the last runtime verification
+  - `203 / 203` Fabric GameTests on the last runtime verification
   - `./gradlew build --rerun-tasks` passed on the last runtime verification
 - measured the upstream/local `ch/njol/skript` source gap:
   - upstream `1189`
@@ -237,6 +237,9 @@ That means the real gap is behavior, not class presence.
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order instead of collapsing them into a set
   - `Statement.parse(...)` now lets a later same-pattern plain statement win after earlier effect/condition init failures while restoring the best prior specific error if no statement matches
   - real base `.sk` GameTests now also cover statement fallback after failed effect parse through `runtime.loadFromResource(...)`
+  - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, and `TriggerItem.walk(...)` now scopes the current event through `CurrentSkriptEvent`, so exact `%namespace:path%` placeholders resolve on active message/name paths
+  - locked runtime GameTests now clear Skript variables before and after each body through `Variables.clearAll()`, keeping real `.sk` verification isolated from suite-order leakage without changing production variable semantics
+  - real base `.sk` GameTests now also cover Patbox placeholder resolution through `%player:name%` on a live entity-name mutation path
 - reran verification after the code slice:
   - `./gradlew test --tests ch.njol.skript.config.NodeCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.structures.StructureEntryValidatorCompatibilityTest --tests ch.njol.skript.config.SectionNodeCompatibilityTest --rerun-tasks` passed
@@ -256,9 +259,11 @@ That means the real gap is behavior, not class presence.
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSpecificSectionOwnershipErrorForSetTrueSyntax --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `199 / 199`
+  - `./gradlew test --tests ch.njol.skript.lang.VariableStringCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `203 / 203`
   - `./gradlew build --rerun-tasks` passed
-  - build path executed the full Fabric GameTest task successfully with `199` scheduled tests
+  - build path executed the full Fabric GameTest task successfully with `203` scheduled tests
 - upstream cross-check corrected two false blockers:
   - `TriggerSection.run(...)` throwing `UnsupportedOperationException` matches upstream intent
   - function-call wrapper `init(...)` stubs match upstream direct-wrapper behavior and are not current blockers
