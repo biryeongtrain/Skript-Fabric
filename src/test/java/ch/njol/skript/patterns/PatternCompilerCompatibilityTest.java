@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.lang.SkriptParser;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class PatternCompilerCompatibilityTest {
@@ -32,6 +33,16 @@ class PatternCompilerCompatibilityTest {
 
         assertNotNull(result);
         assertEquals(2, result.mark());
+    }
+
+    @Test
+    void compiledPatternPreservesRepeatedTagOrder() {
+        SkriptPattern pattern = PatternCompiler.compile("repeat:alpha unique:beta repeat:gamma");
+
+        MatchResult result = pattern.match("alpha beta gamma");
+
+        assertNotNull(result);
+        assertEquals(List.of("repeat", "unique", "repeat"), result.tags());
     }
 
     @Test
