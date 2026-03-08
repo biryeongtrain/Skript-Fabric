@@ -581,6 +581,52 @@ public final class SkriptFabricConditionGameTest extends AbstractSkriptFabricGam
     }
 
     @GameTest
+    public void lootableBlockConditionExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/condition/lootable_block_marks_block.sk");
+
+            BlockPos chestRelative = new BlockPos(16, 1, 0);
+            BlockPos chestAbsolute = helper.absolutePos(chestRelative);
+            helper.getLevel().setBlockAndUpdate(chestAbsolute, Blocks.CHEST.defaultBlockState());
+
+            ChestBlockEntity chest = (ChestBlockEntity) helper.getLevel().getBlockEntity(chestAbsolute);
+            helper.assertTrue(
+                    chest != null,
+                    Component.literal("Expected chest block entity to exist for the lootable block condition test.")
+            );
+            if (chest == null) {
+                throw new IllegalStateException("Chest block entity was not created.");
+            }
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(16, 2, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(chestAbsolute.getX() + 0.5D, chestAbsolute.getY() + 1.0D, chestAbsolute.getZ() + 0.5D);
+
+            BlockHitResult hitResult = new BlockHitResult(Vec3.atCenterOf(chestAbsolute), Direction.UP, chestAbsolute, false);
+            InteractionResult result = UseBlockCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    hitResult
+            );
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected lootable block condition test to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected lootable block condition script to mark the block above the clicked container.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void lootTableConditionExecutesRealScript(GameTestHelper helper) {
         MinecartChest chestMinecart = createChestMinecart(helper, true);
         assertUseEntityScriptNamesEntity(

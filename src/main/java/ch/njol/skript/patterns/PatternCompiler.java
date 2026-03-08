@@ -45,7 +45,76 @@ public final class PatternCompiler {
 
     private static String normalizePattern(String pattern) {
         String normalized = normalizeInput(pattern == null ? "" : pattern.trim());
-        return normalized.replaceAll("([\\p{L}]+)/(\\p{L}+)", "($1|$2)");
+        return normalizeLiteralAlternatives(normalized);
+    }
+
+    private static String normalizeLiteralAlternatives(String pattern) {
+        if (pattern.isEmpty()) {
+            return pattern;
+        }
+
+        StringBuilder normalized = new StringBuilder(pattern.length());
+        StringBuilder literalChunk = new StringBuilder();
+        boolean inPlaceholder = false;
+        boolean inRegex = false;
+        for (int i = 0; i < pattern.length(); i++) {
+            char ch = pattern.charAt(i);
+
+            if (ch == '\\') {
+                if (inPlaceholder || inRegex) {
+                    normalized.append(ch);
+                    if (i + 1 < pattern.length()) {
+                        normalized.append(pattern.charAt(i + 1));
+                        i++;
+                    }
+                } else {
+                    literalChunk.append(ch);
+                    if (i + 1 < pattern.length()) {
+                        literalChunk.append(pattern.charAt(i + 1));
+                        i++;
+                    }
+                }
+                continue;
+            }
+
+            if (ch == '%' && !inRegex) {
+                flushNormalizedLiteralChunk(normalized, literalChunk);
+                normalized.append(ch);
+                inPlaceholder = !inPlaceholder;
+                continue;
+            }
+            if (inPlaceholder) {
+                normalized.append(ch);
+                continue;
+            }
+
+            if (ch == '<' && !inRegex) {
+                flushNormalizedLiteralChunk(normalized, literalChunk);
+                normalized.append(ch);
+                inRegex = true;
+                continue;
+            }
+            if (inRegex) {
+                normalized.append(ch);
+                if (ch == '>') {
+                    inRegex = false;
+                }
+                continue;
+            }
+
+            literalChunk.append(ch);
+        }
+
+        flushNormalizedLiteralChunk(normalized, literalChunk);
+        return normalized.toString();
+    }
+
+    private static void flushNormalizedLiteralChunk(StringBuilder normalized, StringBuilder literalChunk) {
+        if (literalChunk.isEmpty()) {
+            return;
+        }
+        normalized.append(literalChunk.toString().replaceAll("([\\p{L}]+)/(\\p{L}+)", "($1|$2)"));
+        literalChunk.setLength(0);
     }
 
     static Class<?>[] resolvePlaceholderTypes(String placeholder) {
