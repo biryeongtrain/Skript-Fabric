@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `220 / 220` scheduled Fabric GameTests completed without build failure
+  - `229 / 229` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -52,21 +52,20 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next syntax-import slice for exact upstream `%material%`, `feed`, and invisible/visible forms that were still missing versus upstream
-- classinfo alias compatibility landed:
-  - [src/main/java/ch/njol/skript/classes/ClassInfo.java](../../src/main/java/ch/njol/skript/classes/ClassInfo.java) and [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now honor regex-backed `ClassInfo.user(...)` aliases on the compatibility path
-  - [src/main/java/org/skriptlang/skript/bukkit/base/types/ItemTypeClassInfo.java](../../src/main/java/org/skriptlang/skript/bukkit/base/types/ItemTypeClassInfo.java) now restores `%material%` / `%materials%` user aliases
-- exact effect syntax compatibility landed:
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffFeed.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffFeed.java) now covers `feed [the] %players% [by %-number% [beef[s]]]`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvisible.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvisible.java) now covers `make %livingentities% invisible`, `make %livingentities% not visible`, `make %livingentities% visible`, and `make %livingentities% not invisible`
-  - [src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java](../../src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java) now registers those exact upstream-style syntax forms in the active Fabric runtime
+- merged the next exact upstream syntax-import batch for user-visible forms that were still missing versus upstream:
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsBurning.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsBurning.java) now covers `%entities% (is|are) (burning|ignited|on fire)`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvisible.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvisible.java) now covers `%livingentities% (is|are) (invisible|visible)`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondAI.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondAI.java) now covers `%livingentities% (has|have) (ai|artificial intelligence)`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSprinting.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSprinting.java) now covers `%players% (is|are) sprinting`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSprinting.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSprinting.java) now covers exact upstream-style sprinting start/stop effect forms
+  - [src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java](../../src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java) now registers the full merged condition/effect batch in the active Fabric runtime
 - parser/runtime verification landed:
-  - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/FeedSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/FeedSyntaxTest.java), and [src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java) now prove parser/bootstrap registration for the exact new forms
-  - added real `.sk` fixtures and dedicated GameTest classes for `%material%` alias resolution, feeding the event player, and invisible/visible runtime behavior through the live resource-loader path
+  - [src/test/java/org/skriptlang/skript/fabric/runtime/BurningSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/BurningSyntaxTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java), and [src/test/java/org/skriptlang/skript/fabric/runtime/SprintingSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/SprintingSyntaxTest.java) now prove parser/bootstrap registration for the exact new forms
+  - added dedicated real `.sk` fixtures and GameTest coverage through [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBurningGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBurningGameTest.java), [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java), [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java), and [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricSprintingGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricSprintingGameTest.java)
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `220 / 220`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `220 / 220`
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --tests org.skriptlang.skript.fabric.runtime.BurningSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `229 / 229`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `229 / 229`
 
 ## What Landed In This Slice
 
@@ -84,7 +83,7 @@ New immediate priority:
   - `EffKill`, `EffSilence`, and `EffInvulnerability`
   - bootstrap registration now covers exact forms such as `%entities% are alive/dead`, `%entities% are silent`, `%entities% are invulnerable/invincible`, `kill %entities%`, `silence %entities%`, `unsilence %entities%`, and `make %entities% silent`
   - dedicated parser/bootstrap unit tests plus real `.sk` GameTests now verify those forms end-to-end
-  - follow-up syntax-import closure now also covers `%material%`, `feed [the] %players% [by %-number% [beef[s]]]`, and `make %livingentities% invisible/visible`
+  - follow-up syntax-import closure now also covers `%material%`, `feed [the] %players% [by %-number% [beef[s]]]`, invisible/visible condition plus effect forms, `%entities% (is|are) (burning|ignited|on fire)`, `%livingentities% (has|have) (ai|artificial intelligence)`, `%players% (is|are) sprinting`, and exact sprinting start/stop effect forms
 - kept the first concrete closure target as `Part 1A: lang parser/runtime closure`
 - started `Part 1B` in parallel because `Classes`, `Variables`, `config`, and `structures` behavior is already being tightened in the same dependency cluster
 - landed the current `Part 1A` / `Part 1B` slices:
@@ -99,7 +98,7 @@ New immediate priority:
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, `make_invulnerable_names_entity.sk`, `material_alias_placeholder_set_test_block.sk`, `feed_event_player_by_beefs_marks_block.sk`, `make_invisible_names_entity.sk`, and `make_visible_names_entity.sk`, increasing the current Fabric GameTest suite to `220 / 220`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, `make_invulnerable_names_entity.sk`, `material_alias_placeholder_set_test_block.sk`, `feed_event_player_by_beefs_marks_block.sk`, `make_invisible_names_entity.sk`, `make_visible_names_entity.sk`, `burning_entity_names_entity.sk`, `ignited_entity_names_entity.sk`, `on_fire_entity_names_entity.sk`, `invisible_entity_names_entity.sk`, `visible_entity_names_entity.sk`, `has_ai_entity_names_entity.sk`, `no_ai_entity_names_entity.sk`, `sprinting_player_names_player.sk`, `make_player_start_sprinting_names_player.sk`, and `make_player_stop_sprinting_names_player.sk`, increasing the current Fabric GameTest suite to `229 / 229`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup

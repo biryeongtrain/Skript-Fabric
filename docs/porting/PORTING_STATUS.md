@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `220 / 220` scheduled Fabric GameTests completed without build failure
+  - `229 / 229` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -120,8 +120,8 @@ Landed slices so far:
   - base entity-control effects now cover `kill %entities%`, `silence %entities%`, `unsilence %entities%`, `make %entities% silent`, and `make %entities% (invulnerable|invincible|vulnerable)`
   - dedicated parser/bootstrap unit tests plus real `.sk` Fabric GameTests now verify both exact syntax registration and live runtime mutation paths for those forms
   - user-pattern class infos now honor regex-backed aliases again, so `%material%` and `%materials%` resolve through registered class info aliases instead of only codenames
-  - exact upstream effect forms now also cover `feed [the] %players% [by %-number% [beef[s]]]`, `make %livingentities% invisible`, `make %livingentities% not visible`, `make %livingentities% visible`, and `make %livingentities% not invisible`
-  - dedicated parser/bootstrap unit tests plus real `.sk` Fabric GameTests now verify the new feed and invisible/visible forms through the live resource-loader path
+  - exact upstream condition/effect forms now also cover `feed [the] %players% [by %-number% [beef[s]]]`, `%entities% (is|are) (burning|ignited|on fire)`, `%livingentities% (is|are) (invisible|visible)`, `%livingentities% (has|have) (ai|artificial intelligence)`, `%players% (is|are) sprinting`, `make %livingentities% invisible`, `make %livingentities% not visible`, `make %livingentities% visible`, `make %livingentities% not invisible`, and exact sprinting start/stop effect forms
+  - dedicated parser/bootstrap unit tests plus real `.sk` Fabric GameTests now verify the newer feed, invisible/visible, burning, AI, and sprinting forms through the live resource-loader path
 - input-source parser/runtime closure:
   - `ch/njol/skript/expressions/ExprInput` is no longer only a minimal compatibility stub
   - `ch/njol/skript/lang/SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` directly when an `InputSource` context is active
@@ -287,8 +287,9 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging classinfo-backed omitted defaults, inner-expression variable-name list-marker validation, and built-in `EffChange` local hints
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks` passed after restoring `%material%` alias lookup plus exact upstream `feed` and invisible/visible effect forms
-- `./gradlew runGameTest --rerun-tasks` passed with `220 / 220`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `220 / 220` scheduled Fabric GameTests
+- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --tests org.skriptlang.skript.fabric.runtime.BurningSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks` passed after merging exact upstream invisible/visible condition, burning, AI, and sprinting condition/effect syntax
+- `./gradlew runGameTest --rerun-tasks` passed with `229 / 229`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `229 / 229` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -311,7 +312,7 @@ The following foundations were already built before this priority shift:
   - `TriggerSection.run(...)` throwing `UnsupportedOperationException` matches upstream behavior
   - `EffFunctionCall.init(...)` and `ExprFunctionCall.init(...)` returning `false` on direct wrapper instances also match upstream behavior
 - current Stage 8 package-local audit for `org/skriptlang/skript/bukkit` remains valid, but it is no longer the only gating audit track
-- missing-user-visible syntax import is now active, and a first follow-up slice for `%material%`, `feed`, and invisible/visible effect forms is landed; most upstream condition/effect/expression families are still absent from the active Fabric registration set
+- missing-user-visible syntax import is now active, and follow-up slices for `%material%`, `feed`, invisible/visible condition plus effect forms, burning/on-fire forms, AI forms, and sprinting condition/effect forms are landed; most upstream condition/effect/expression families are still absent from the active Fabric registration set
 - `Part 1A` and `Part 1B` remain active as enabling workstreams, and `Part 2` syntax import is now active too, but most parser, statement, loader, variable, type-system, and user-visible syntax closure work remains open
 - generic registered section loading is now closed in `ScriptLoader`, `ScriptLoader` now also restores the more specific section-versus-statement fallback diagnostic, propagates nested section-contained stop-trigger intent through loader/runtime, warns about unreachable code behind script-level warning suppression, plain conditions no longer masquerade as section headers, and now carries a first upstream-style hint-scope lifecycle; broader loader/config hint flow and built-in hint producers are still incomplete
 - validator-backed recursive `options:` loading for runtime `EntryNode` trees and raw simple-entry trees is now closed, but broader structure/config validation behavior is still much thinner than upstream

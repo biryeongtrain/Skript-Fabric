@@ -21,10 +21,16 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `220 / 220`
+- Verified Fabric GameTests: `229 / 229`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
+- Recent exact upstream imports:
+  - `%entities% (is|are) (burning|ignited|on fire)`
+  - `%livingentities% (is|are) (invisible|visible)`
+  - `%livingentities% (has|have) (ai|artificial intelligence)`
+  - `%players% (is|are) sprinting`
+  - exact sprinting start/stop effect forms
 
 ## Stage 8 Audit Snapshot
 
