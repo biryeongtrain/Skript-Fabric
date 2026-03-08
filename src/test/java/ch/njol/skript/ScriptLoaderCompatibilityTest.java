@@ -710,6 +710,19 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsDoesNotLeakSectionOwnershipAcrossConditionCandidates() {
+        Skript.registerExpression(LeakyOwnershipExpression.class, Object.class, "ownership token");
+        Skript.registerCondition(RejectingClaimingCondition.class, "ownership leak %object%");
+        Skript.registerCondition(LiteralFallbackCondition.class, "ownership leak ownership token");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("ownership leak ownership token", line("mark inside"))
+        ));
+
+        assertTrue(items.isEmpty());
+    }
+
+    @Test
     void loadItemsKeepsSpecificConditionSectionOwnershipError() {
         Skript.registerCondition(AlwaysTrueCondition.class, "always true");
 
@@ -1124,6 +1137,53 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "literal fallback effect";
+        }
+    }
+
+    public static final class RejectingClaimingCondition extends Condition {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("rejecting claiming condition");
+            return false;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return false;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "rejecting claiming condition";
+        }
+    }
+
+    public static final class LiteralFallbackCondition extends Condition {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "literal fallback condition";
         }
     }
 

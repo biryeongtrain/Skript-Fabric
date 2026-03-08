@@ -21,6 +21,30 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+### 2026-03-08 Condition Candidate Section-Ownership Reset Slice
+
+- compared the lane-local section-line parsing path after the already-landed `Effect.parse(...)` candidate-reset fix and found one matching remaining gap on the condition side:
+  - when a section line is parsed through `Statement.parse(..., sectionNode, ...)`
+  - and an earlier `Condition.parse(...)` candidate claims the current section through a nested `SectionExpression` but then rejects initialization
+  - a later condition candidate was still seeing the stale claimed owner, so the section line could be accepted even though the winning condition syntax never owned the section
+- added a focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `loadItemsDoesNotLeakSectionOwnershipAcrossConditionCandidates`
+  - it mirrors the existing effect-side ownership harness with `RejectingClaimingCondition` and `LiteralFallbackCondition`
+  - the first run failed, proving the real gap before the fix
+- implemented the smallest upstream-compatible fix in `src/main/java/ch/njol/skript/lang/Condition.java`:
+  - during active section-line condition parsing only, the condition candidate iterator now clears `SectionContext.owner` and `ownerErrorRepresentation` before each candidate, matching the already-landed effect-side behavior
+  - plain non-section `Condition.parse(...)` calls stay unchanged
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsDoesNotLeakSectionOwnershipAcrossConditionCandidates --rerun-tasks`
+    - failed before the fix
+    - passed after the `Condition.java` change
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - passed
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/lang/Condition.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+
 ### 2026-03-08 Section-Fallback Parse-Log Retention Slice
 
 - compared the local `ScriptLoader.parseSectionTriggerItem(...)` section-fallback path against upstream `ScriptLoader.loadItems(...)` from snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` in `/tmp/skript-upstream-e6ec744-2`

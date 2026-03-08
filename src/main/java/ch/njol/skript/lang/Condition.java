@@ -1,6 +1,7 @@
 package ch.njol.skript.lang;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.lang.parser.ParserInstance;
 import java.util.Iterator;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -31,10 +32,27 @@ public abstract class Condition extends Statement {
         }
         String expression = unwrapGroupedCondition(input.trim());
         var iterator = Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.CONDITION).iterator();
+        Iterator<?> parseIterator = iterator;
+        Section.SectionContext sectionContext = ParserInstance.get().getData(Section.SectionContext.class);
+        if (sectionContext.sectionNode != null) {
+            parseIterator = new Iterator<>() {
+                @Override
+                public boolean hasNext() {
+                    return iterator.hasNext();
+                }
+
+                @Override
+                public Object next() {
+                    sectionContext.owner = null;
+                    sectionContext.ownerErrorRepresentation = null;
+                    return iterator.next();
+                }
+            };
+        }
         @SuppressWarnings({"rawtypes", "unchecked"})
         Condition condition = (Condition) SkriptParser.parseModern(
                 expression,
-                (Iterator) iterator,
+                (Iterator) parseIterator,
                 ParseContext.DEFAULT,
                 defaultError
         );
