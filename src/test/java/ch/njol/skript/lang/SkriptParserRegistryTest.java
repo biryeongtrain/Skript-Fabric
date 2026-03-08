@@ -50,6 +50,7 @@ class SkriptParserRegistryTest {
         TestEvent.initCalls = 0;
         NodeAwareEffect.lastNodeKey = null;
         MarkAwareEffect.lastMark = 0;
+        OrderedTagAwareEffect.lastTags = List.of();
         BranchTagAwareSection.lastFirst = false;
         BranchTagAwareSection.lastSecond = false;
         AutoTagAwareSection.lastMin = false;
@@ -249,6 +250,17 @@ class SkriptParserRegistryTest {
         assertNotNull(parsed);
         assertInstanceOf(MarkAwareEffect.class, parsed);
         assertEquals(2, MarkAwareEffect.lastMark);
+    }
+
+    @Test
+    void effectPatternPreservesRepeatedTagOrderInParseResult() {
+        Skript.registerEffect(OrderedTagAwareEffect.class, "repeat:alpha unique:beta repeat:gamma");
+
+        Statement parsed = Statement.parse("alpha beta gamma", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(OrderedTagAwareEffect.class, parsed);
+        assertEquals(List.of("repeat", "unique", "repeat"), OrderedTagAwareEffect.lastTags);
     }
 
     @Test
@@ -577,6 +589,26 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "mark aware effect";
+        }
+    }
+
+    public static class OrderedTagAwareEffect extends Effect {
+
+        static List<String> lastTags = List.of();
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, ch.njol.util.Kleenean isDelayed, ParseResult parseResult) {
+            lastTags = List.copyOf(parseResult.tags);
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "ordered tag aware effect";
         }
     }
 

@@ -20,6 +20,17 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+- closed the next parser-owned tag parity slice around ordered duplicate-preserving parse tags
+- upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` still keeps parse tags as ordered lists through `patterns.MatchResult` and `SkriptParser.ParseResult`, while the local shim had collapsed them into a set
+- `SkriptPattern.match(...)` now accumulates parse tags in encounter order without deduplicating repeated tags
+- `patterns.MatchResult` and `SkriptParser.ParseResult` now expose those tags as ordered `List<String>` values again while keeping `hasTag(...)` behavior unchanged for existing callers
+- added regressions proving:
+  - direct shared-matcher patterns preserve repeated tags in order for exact syntax `repeat:alpha unique:beta repeat:gamma`
+  - parser-initialized syntax elements receive the same ordered duplicate-preserving tag list through `ParseResult.tags`
+- live parser behavior changed in a parser-core path, so the existing real `.sk` GameTest corpus was rerun instead of adding a new dedicated `.sk` fixture:
+  - no currently shipped runtime syntax consumes duplicate ordered tags yet
+  - the rerun confirms this parity closure stays inert for the active natural-script corpus
+- did not mark parity complete: broader upstream parser tag/mark behavior is still richer than the current compatibility surface even after restoring ordered duplicate-preserving tag accumulation
 - closed the safe parser-owned subset of omitted-placeholder default-value parity in `SkriptParser`
 - `SkriptParser.parseModern(...)` and `parseStatic(...)` now backfill omitted non-optional placeholder captures from `DefaultValueData` when a valid parser default value exists for the placeholder return type
 - intentionally kept the fallback additive instead of fully enforcing upstream failure semantics when no default exists:
@@ -97,12 +108,19 @@ Last updated: 2026-03-08
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/lang/SkriptParser.java`
+- `src/main/java/ch/njol/skript/patterns/MatchResult.java`
+- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+  - passed after restoring ordered duplicate-preserving parse-tag accumulation
+- `./gradlew runGameTest --rerun-tasks`
+  - passed after the ordered parse-tag slice
+  - `198 / 198` required GameTests completed successfully
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - passed after landing explicit parser default-value backfill for omitted placeholders
 - `./gradlew runGameTest --rerun-tasks`
@@ -147,19 +165,22 @@ Last updated: 2026-03-08
 
 ## Exact Syntax Exercised
 
+- pattern text: `repeat:alpha unique:beta repeat:gamma`
 - pattern text: `default number [%number%]`
 - omitted form: `default number`
 - explicit form: `default number 5`
 
 ## Unresolved Risks
 
+- ordered duplicate-preserving tags now match upstream more closely, but broader parser tag/mark parity is still incomplete outside this slice; the local compatibility layer still lacks the full upstream matcher/runtime behavior around the richer pattern element graph
 - placeholder plurality metadata is now preserved and exposed through `TypePatternElement`, but it is not enforced during live matching on the current compatibility surface; the real `.sk` corpus still depends on several production expressions that report `isSingle()` more strictly than their effective parser use
 - omitted-placeholder fallback is now closed only for explicit parser-scoped `DefaultValueData` values; full upstream classinfo-backed `defaultExpression(...)` parity is still open because the local `ClassInfo` surface is thinner than upstream and sits outside this lane’s owned files
 - full upstream failure semantics for omitted non-optional placeholders without any valid default remain intentionally deferred so the current live syntax corpus does not regress on patterns that still expect `null` when optional groups are omitted
 
 ## Merge Notes
 
-- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/lang/SkriptParser.java`; any concurrent parser-flow work will need manual reconciliation around the omitted-placeholder default-value backfill and the restored private matcher bridge
+- current-cycle highest conflict risk is `src/main/java/ch/njol/skript/lang/SkriptParser.java`; any concurrent parser-flow work will need manual reconciliation around the ordered parse-tag list restore, the omitted-placeholder default-value backfill, and the restored private matcher bridge
+- `src/main/java/ch/njol/skript/patterns/MatchResult.java` and `src/main/java/ch/njol/skript/patterns/SkriptPattern.java` now carry the ordered-tag behavior and may conflict with any concurrent matcher/parity slice
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java` may conflict with any concurrent parser-regression additions
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` remains a likely conflict point for any concurrent parser-pattern compatibility additions
-- current-cycle conflict surface is now `src/main/java/ch/njol/skript/lang/SkriptParser.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- current-cycle conflict surface is now `src/main/java/ch/njol/skript/lang/SkriptParser.java`, `src/main/java/ch/njol/skript/patterns/MatchResult.java`, `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`

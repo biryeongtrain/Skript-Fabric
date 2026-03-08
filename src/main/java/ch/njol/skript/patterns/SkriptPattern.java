@@ -5,9 +5,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +31,7 @@ public final class SkriptPattern {
 
         List<Expression<?>> expressions = new ArrayList<>();
         List<Matcher> regexes = new ArrayList<>();
-        Set<String> tags = new LinkedHashSet<>();
+        List<String> tags = new ArrayList<>();
         int mark = 0;
 
         List<PatternCompiler.CaptureSpec> captures = compiled.captures();

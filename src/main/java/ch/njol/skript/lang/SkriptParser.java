@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +47,7 @@ public class SkriptParser {
         public String expr = "";
         public Expression<?>[] exprs = new Expression<?>[0];
         public List<Matcher> regexes = List.of();
-        public Set<String> tags = Set.of();
+        public List<String> tags = new ArrayList<>();
         public int mark = 0;
 
         public boolean hasTag(String tag) {
