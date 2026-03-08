@@ -158,7 +158,7 @@ class ClassesCompatibilityTest {
     }
 
     @Test
-    void explicitLiteralPatternMatchesUseStableClassInfoOrdering() {
+    void explicitLiteralPatternMatchesUseRegistrationOrderForLiterals() {
         ClassInfo<BetaType> beta = new ClassInfo<>(BetaType.class, "beta").after("gamma");
         beta.literalPatterns("shared");
         ClassInfo<AlphaType> alpha = new ClassInfo<>(AlphaType.class, "alpha").before("beta");
@@ -170,7 +170,8 @@ class ClassesCompatibilityTest {
         Classes.registerClassInfo(alpha);
         Classes.registerClassInfo(gamma);
 
-        assertEquals(List.of(alpha, gamma, beta), Classes.getPatternInfos("shared"));
+        // Upstream getPatternInfos keeps registration order for literal-pattern matches.
+        assertEquals(List.of(beta, alpha, gamma), Classes.getPatternInfos("shared"));
     }
 
     @Test

@@ -204,7 +204,9 @@ public final class Classes {
         String normalized = text.trim().toLowerCase(Locale.ENGLISH);
         List<ClassInfo<?>> explicitMatches = REGISTERED_LITERAL_PATTERNS.get(normalized);
         if (explicitMatches != null && !explicitMatches.isEmpty()) {
-            return orderBySortedClassInfos(explicitMatches);
+            // Upstream returns literal-pattern matches in registration order.
+            // Do not reorder by class-info specificity/dependencies here.
+            return List.copyOf(explicitMatches);
         }
         // Upstream behavior only considers explicitly registered literal patterns here.
         // Parser-based fallback belongs in Classes.parse(...) and getParser(...), not in pattern info lookup.

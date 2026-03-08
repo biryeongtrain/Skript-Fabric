@@ -1,12 +1,12 @@
 # Lane C Status
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 
 ## Scope
 
-- stay inside the `lang-core` function runtime/signature/default-parameter parity only
-- compare local function resolution behavior against `/tmp/skript-upstream-e6ec744-2`
-- find and fix one upstream-visible mismatch in overload resolution within `FunctionRegistry`
+- Variables/Classes/config/structures only
+- prioritize classinfo/parser registry parity or deeper variable semantics
+- find exactly one upstream-backed mismatch after literal-only `getPatternInfos` closure
 
 ## Owned Files
 
@@ -16,46 +16,43 @@ Last updated: 2026-03-08
 
 ## Goal For This Session
 
-- verify remaining mismatch in function overload resolution against upstream
-- reproduce with a focused regression and land the smallest fix inside `FunctionRegistry`
+- locate one concrete upstream-backed mismatch in `Classes`/`Variables`/`config`/`structures`
+- land a narrow fix with a focused regression and verification commands
 
 ## Work Log
 
-- diffed `FunctionRegistry` parity against upstream at `/tmp/skript-upstream-e6ec744-2`
-- identified a remaining mismatch: upstream prunes ambiguous overloads by preferring candidates whose parameter types exactly equal provided, non-Object argument types; local registry returned AMBIGUOUS in such cases
-- reproduced with a focused regression `FunctionOverloadDisambiguationTest` using two overloads `over(Integer)` and `over(Number)` and a call with an `Integer` literal
-- implemented the smallest fix: add a tie-breaker in `FunctionRegistry` resolution to filter candidates by exact type equality at positions where the provided type is not `Object`
-- kept scope tight (no syntax-import changes; no broader refactors)
+- compared local `Classes.getPatternInfos(...)` with upstream `ch/njol/skript/registrations/Classes#getPatternInfos`
+- mismatch found: local implementation re-ordered explicit literal-pattern matches by sorted class-info specificity/dependencies; upstream returns matches in registration order
+- reproduced via `ClassesCompatibilityTest`: expected order should reflect registration order when the same literal pattern is declared on multiple `ClassInfo`s
+- applied minimal fix: return `List.copyOf(explicitMatches)` without reordering; keep literal-only behavior (no parser fallback) intact
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java`
+- `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
 
-- Java source file count changed in `src/main/java/ch/njol/skript/lang/function`: `0` added, `1` modified
-- Java test file count changed in `src/test/java/ch/njol/skript/lang/function`: `1` added, `0` modified
+- Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
 - real `.sk` fixture count changed: `0`
 
 ## Verification
 
-- Repro (failed prior to fix):
-  - `./gradlew -q test --no-daemon --console plain --tests "*FunctionOverloadDisambiguationTest"`
-  - failed: AMBIGUOUS resolution caused `validateFunction(true)` to return false
-- After fix (passes):
-  - `./gradlew -q test --no-daemon --console plain --tests "*FunctionOverloadDisambiguationTest"`
-  - `./gradlew -q test --no-daemon --console plain --tests "ch.njol.skript.lang.function.*"`
-  - both passed; overload selection prefers `over(Integer)` when called with an `Integer` literal
+- Repro (before fix): `getPatternInfos("shared")` returned class-infos in sorted order, not in registration order
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+  - expected: `explicitLiteralPatternMatchesUseRegistrationOrderForLiterals` passes, asserting `[beta, alpha, gamma]`
+- After fix: command above passes; no changes to parser fallback behavior (still literal-only)
 
 ## Unresolved Risks
 
-- tie-breaker mirrors upstream behavior but only applied during ambiguity; other nuanced overload behaviors remain governed by existing matching logic
+- none observed within this narrow surface; broader `Classes`/parser registry parity remains ongoing
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-  - `src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java`
+  - `src/main/java/ch/njol/skript/registrations/Classes.java`
+  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
   - `docs/porting/parallel/LANE_C_STATUS.md`
