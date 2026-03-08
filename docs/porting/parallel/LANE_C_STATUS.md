@@ -34,11 +34,20 @@ Last updated: 2026-03-08
 - kept this slice inside lane ownership and did not touch canonical docs or parser/statement-owned files
 - did not run GameTest because this slice tightened registry-internal compatibility behavior only; no direct user-visible `.sk` runtime path changed in isolation
 - did not claim parity complete
+- closed the next `Variable` expression-contract gap around list-variable loop aliases and all-values check semantics
+- list variables now advertise the legacy loop aliases `var`, `variable`, and `value` in addition to `index`
+- `Variable` now restores upstream-style `getAnd()` / `check(...)` behavior so list-variable predicate checks operate on the full value set instead of falling back to single-value/default-expression semantics
+- added unit coverage for:
+  - legacy loop aliases on list variables
+  - list-variable predicate checks requiring all values to satisfy the checker when `getAnd()` semantics apply
+- did not run GameTest for this follow-up because it tightened the compatibility-layer expression contract under existing unit coverage; full runtime verification is left to coordinator integration
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/registrations/Classes.java`
 - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/Variable.java`
+- `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Verification
@@ -54,9 +63,14 @@ Last updated: 2026-03-08
   - passed
 - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`
   - passed after closing explicit literal-pattern ordering parity
+- `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`
+  - passed after closing list-variable loop-alias and `check(...)` parity
 
 ## Merge Notes
 
 - low conflict surface:
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- current-cycle conflict surface:
+  - `src/main/java/ch/njol/skript/lang/Variable.java`
+  - `src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java`
