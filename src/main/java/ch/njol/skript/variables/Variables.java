@@ -1,10 +1,12 @@
 package ch.njol.skript.variables;
 
+import ch.njol.skript.lang.Variable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +20,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public final class Variables {
 
     public static boolean caseInsensitiveVariables = true;
+    private static final Pattern VARIABLE_NAME_SPLIT_PATTERN = Pattern.compile(Pattern.quote(Variable.SEPARATOR));
 
     private static final Comparator<String> VARIABLE_NAME_COMPARATOR = (first, second) -> {
         if (first == null) {
@@ -113,7 +116,8 @@ public final class Variables {
             return null;
         }
         String normalized = normalizeName(name);
-        return local ? localMap(event, false).get(normalized) : GLOBAL_VARIABLES.get(normalized);
+        Map<String, Object> map = local ? localMap(event, false) : GLOBAL_VARIABLES;
+        return getVariableFromMap(normalized, map);
     }
 
     public static void setVariable(String name, @Nullable Object value, @Nullable SkriptEvent event, boolean local) {
@@ -146,16 +150,21 @@ public final class Variables {
             return Map.of();
         }
         String normalized = normalizeName(prefix);
-        Map<String, Object> map = local ? localMap(event, false) : GLOBAL_VARIABLES;
+        Object rawValue = getVariableFromMap(normalized + "*", local ? localMap(event, false) : GLOBAL_VARIABLES);
+        if (!(rawValue instanceof Map<?, ?> rawMap)) {
+            return Map.of();
+        }
         Map<String, Object> matches = new TreeMap<>(VARIABLE_NAME_COMPARATOR);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (!entry.getKey().startsWith(normalized)) {
+        for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+            if (!(entry.getKey() instanceof String childKey)) {
                 continue;
             }
-
-            String suffix = entry.getKey().substring(normalized.length());
-            if (!suffix.isEmpty() && !suffix.contains("::")) {
-                matches.put(entry.getKey(), entry.getValue());
+            Object childValue = entry.getValue();
+            if (childValue instanceof Map<?, ?> sublist) {
+                childValue = sublist.get(null);
+            }
+            if (childValue != null) {
+                matches.put(normalized + childKey, childValue);
             }
         }
         return new LinkedHashMap<>(matches);
@@ -204,6 +213,10 @@ public final class Variables {
         return LOCAL_VARIABLES.computeIfAbsent(key, ignored -> new ConcurrentHashMap<>());
     }
 
+    public static String[] splitVariableName(String name) {
+        return VARIABLE_NAME_SPLIT_PATTERN.split(name);
+    }
+
     private static Object eventScopeKey(@Nullable SkriptEvent event) {
         if (event == null) {
             return Variables.class;
@@ -217,6 +230,62 @@ public final class Variables {
             index++;
         }
         return index;
+    }
+
+    private static @Nullable Object getVariableFromMap(String name, Map<String, Object> map) {
+        if (!name.endsWith("*")) {
+            return map.get(name);
+        }
+
+        String prefix = name.substring(0, name.length() - 1);
+        TreeMap<String, Object> listValue = null;
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (!entry.getKey().startsWith(prefix)) {
+                continue;
+            }
+
+            String suffix = entry.getKey().substring(prefix.length());
+            if (suffix.isEmpty()) {
+                continue;
+            }
+            if (listValue == null) {
+                listValue = new TreeMap<>(VARIABLE_NAME_COMPARATOR);
+            }
+            insertListValue(listValue, suffix, entry.getValue());
+        }
+        return listValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void insertListValue(TreeMap<String, Object> parent, String suffix, Object value) {
+        String[] parts = splitVariableName(suffix);
+        TreeMap<String, Object> current = parent;
+        for (int index = 0; index < parts.length; index++) {
+            String part = parts[index];
+            boolean last = index == parts.length - 1;
+            Object child = current.get(part);
+
+            if (last) {
+                if (child instanceof TreeMap<?, ?> childMap) {
+                    ((TreeMap<String, Object>) childMap).put(null, value);
+                } else {
+                    current.put(part, value);
+                }
+                return;
+            }
+
+            if (child instanceof TreeMap<?, ?> childMap) {
+                current = (TreeMap<String, Object>) childMap;
+                continue;
+            }
+
+            TreeMap<String, Object> next = new TreeMap<>(VARIABLE_NAME_COMPARATOR);
+            if (child != null) {
+                next.put(null, child);
+            }
+            current.put(part, next);
+            current = next;
+        }
     }
 
     private static String normalizeName(String name) {
