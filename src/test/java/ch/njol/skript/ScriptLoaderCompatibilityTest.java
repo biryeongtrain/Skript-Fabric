@@ -25,12 +25,16 @@ import ch.njol.skript.lang.function.Functions;
 import ch.njol.skript.lang.function.Parameter;
 import ch.njol.skript.lang.function.Signature;
 import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.log.ErrorQuality;
+import ch.njol.skript.log.LogEntry;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.structures.StructOptions;
 import ch.njol.skript.variables.Variables;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import org.jetbrains.annotations.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -424,6 +428,35 @@ class ScriptLoaderCompatibilityTest {
             assertFalse(
                     logs.messages().stream().anyMatch(message ->
                             message.contains("Can't understand this condition/effect: ambiguous tied syntax")
+                    )
+            );
+        }
+    }
+
+    @Test
+    void loadItemsKeepsHigherQualityEffectErrorWhenLaterStatementAlsoFails() {
+        Skript.registerEffect(HigherQualityRejectingAmbiguousEffect.class, "ambiguous statement priority syntax");
+        Skript.registerStatement(LowerQualityRejectingAmbiguousStatement.class, "ambiguous statement priority syntax");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("ambiguous statement priority syntax")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("higher-quality ambiguous effect rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("lower-quality ambiguous statement rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition/effect: ambiguous statement priority syntax")
                     )
             );
         }
@@ -884,6 +917,57 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "ambiguous condition";
+        }
+    }
+
+    public static final class HigherQualityRejectingAmbiguousEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.NOT_AN_EXPRESSION,
+                    "higher-quality ambiguous effect rejected"
+            ));
+            return false;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "higher-quality ambiguous effect";
+        }
+    }
+
+    public static final class LowerQualityRejectingAmbiguousStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("lower-quality ambiguous statement rejected");
+            return false;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "lower-quality ambiguous statement";
         }
     }
 

@@ -205,10 +205,14 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             @Nullable ParseLogHandler conditionFailure,
             @Nullable ParseLogHandler effectFailure
     ) {
-        if (hasSpecificError(statementFailure, defaultError)) {
-            return statementFailure;
-        }
         ParseLogHandler previousFailure = moreRelevantFailure(conditionFailure, effectFailure);
+        ParseLogHandler statementSpecificFailure = hasSpecificError(statementFailure, defaultError)
+                ? statementFailure
+                : null;
+        ParseLogHandler retainedFailure = moreRelevantFailure(statementSpecificFailure, previousFailure);
+        if (retainedFailure != null) {
+            return retainedFailure;
+        }
         if (previousFailure != null) {
             return previousFailure;
         }
