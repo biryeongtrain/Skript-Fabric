@@ -1,6 +1,6 @@
 # Lane D Status
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 
 ## Scope
 
@@ -50,99 +50,60 @@ Merge notes:
 - `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionDefaultKeyedParameterCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Goal For This Slice
 
-- compare local function lookup behavior against `/tmp/skript-upstream-e6ec744-2`
-- restore one contained observable gap in local-vs-global function resolution
-- restore one contained optional/default-parameter parity gap in legacy function defaults
-- prove the gaps with focused compatibility regressions
+- find one remaining upstream-backed mismatch in function default-parameter behavior
+- prioritize keyed/plural default execution semantics
+- land one narrow fix with a focused regression
 
 ## What Landed
 
-- restored upstream lookup precedence where local function/signature matches win before considering global candidates
-- fixed `FunctionRegistry.getSignature(...)` and `FunctionRegistry.getFunction(...)` so globals are fallback-only when a script namespace already has a matching result
-- added a registry-level regression proving a local compatible overload no longer becomes ambiguous because of a broader global candidate
-- added a call-binding regression proving `FunctionReference.validateFunction(true)` now binds to the local signature instead of failing on mixed local/global ambiguity
-- restored `Parameter.newInstance(...)` so legacy function defaults are parsed as expressions instead of literal-only `Classes.parse(...)` values
-- added a regression proving a registered integer expression can be used as a function parameter default
+- upstream-backed keyed default semantics for plural parameters:
+  - Only zip to keyed pairs when the default expression yields exactly one value (key "1").
+  - When the default yields multiple values, they remain un-keyed (raw values), matching upstream `Function.execute(...)` logic.
+- implemented this behavior in `Function.execute(...)` by distinguishing between provided arguments and defaulted ones for keyed parameters.
+- added a focused regression proving the previous implementation incorrectly zipped all defaults for keyed plural parameters.
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/Parameter.java`
-- `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/function/Function.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionDefaultKeyedParameterCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Counts Changed
 
-- source files changed: `2`
-- test files changed: `2`
-- test methods added: `3`
+- source files changed: `1`
+- test files changed: `1`
+- test methods added: `2`
 - canonical docs changed: `0`
 
 ## Exact Commands And Results
 
-- `git status --short --branch`
-  - confirmed branch `codex/lane-d-20260308m`
-- `git rev-parse HEAD`
-  - confirmed start point `7b27f6bc3572e37d29756fb2d99507fa8c2e979a`
+- `git checkout -b codex/lane-d-keyed-defaults`
+  - created lane branch
 - `rg --files src/main/java/ch/njol/skript/lang/function src/test/java/ch/njol/skript/lang/function docs/porting/parallel | sort`
-  - enumerated the in-scope function files and lane docs
-- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Functions.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Functions.java`
-  - reviewed upstream delta for function facade behavior
-- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-  - identified the local/global fallback-order mismatch as a contained target
-- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/FunctionReference.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
-  - confirmed the mismatch was observable through call binding
-- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-  - reviewed current registry lookup implementation
-- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
-  - reviewed call-site validation flow
-- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/Parameter.java`
-  - reviewed optional/default parameter behavior for nearby context
-- `sed -n '1,320p' src/main/java/ch/njol/skript/lang/function/Signature.java`
-  - reviewed min/max parameter behavior for nearby context
-- `sed -n '1,260p' src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
-  - reviewed existing core compatibility coverage
-- `sed -n '1,320p' src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java`
-  - reviewed implementation compatibility coverage
-- `sed -n '1,320p' src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
-  - reviewed call compatibility coverage
-- `sed -n '1,260p' src/main/java/ch/njol/skript/lang/function/Function.java`
-  - reviewed runtime parameter/default handling for context
-- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Parameter.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Parameter.java`
-  - compared adjacent default-argument behavior
-- `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Signature.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Signature.java`
-  - compared adjacent signature/min-arity behavior
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.parameterParsesRegisteredExpressionAsDefaultValue`
-  - failed before the fix; `Parameter.newInstance(...)` rejected a registered integer expression default
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.functionRegistryPrefersLocalMatchBeforeGlobalCandidates --rerun-tasks`
-  - failed before the fix; the new regression reproduced the ambiguity bug
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest.functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate --rerun-tasks`
-  - failed before the fix; local call binding was blocked by the same ambiguity
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.parameterParsesRegisteredExpressionAsDefaultValue`
-  - passed after parsing function defaults through `SkriptParser`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.functionRegistryPrefersLocalMatchBeforeGlobalCandidates --rerun-tasks`
-  - passed after the registry fix
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest.functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate --rerun-tasks`
-  - passed after the registry fix
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
+  - enumerated in-scope files
+- upstream reference for behavior: reviewed `Function.execute(...)` in baseline `master` (comment references PR-8135) and noted keyed-default special-casing
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionDefaultKeyedParameterCompatibilityTest.keyedPluralDefaultWithMultipleValuesRemainsUnkeyed --rerun-tasks`
+  - failed before fix (local code zipped defaults to KeyedValue[])
+- edited `src/main/java/ch/njol/skript/lang/function/Function.java` to mirror upstream keyed-default handling
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionDefaultKeyedParameterCompatibilityTest --rerun-tasks`
   - passed
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest`
-  - passed after the default-expression fix
+- `./gradlew test --tests 'ch.njol.skript.lang.function.*' --rerun-tasks`
+  - passed
 
 ## Verification
 
-- required compatibility suite passed:
+- required function compatibility suite passed:
   - `FunctionCoreCompatibilityTest`
   - `FunctionImplementationCompatibilityTest`
   - `FunctionCallCompatibilityTest`
+  - new: `FunctionDefaultKeyedParameterCompatibilityTest`
 
 ## Unresolved Risks
 
-- this slice only restores local-first fallback behavior in the legacy registry APIs; broader upstream deltas in the function package remain
-- this slice restores parsed default-expression handling for function parameters, but does not yet chase broader signature-parser parity such as duplicate-name validation
-- verification is limited to the targeted compatibility tests above
+- broader upstream function-package deltas remain out of scope
+- keyed/default behavior may interact with other call sites not exercised here; additional upstream-driven reproductions should be added as they surface
