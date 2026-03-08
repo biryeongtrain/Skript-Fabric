@@ -52,8 +52,9 @@ Current measured baseline for that workstream:
   - `ScriptLoader.loadItems(...)` now routes section nodes through registered `Section` parsing before statement fallback
   - `Statement.parse(...)` now routes effect parsing through `Effect.parse(...)`, and `Effect.parse(...)` now allows plain effects with section-managing expressions to own their section body instead of dropping it
   - `ScriptLoader` section-node fallback now restores the better retained section-versus-statement diagnostic, plain conditions no longer silently parse as section headers, stopping statements now emit unreachable-code warnings behind script-level warning suppression, and nested section-contained stop-trigger intent now propagates through loader/runtime while `stopSection` stays local
-  - the shared compiled matcher now lives in `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation now share parse-tag/mark handling, including the current bare leading `:` auto-tag derivation surface
+  - the shared compiled matcher now lives in `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation now share parse-tag/mark handling, including the current bare leading `:` auto-tag derivation surface and omitted optional/alternation raw-regex capture handling
   - `Variables` now uses natural numeric ordering for prefix/list iteration, and the base GameTest suite now verifies that `{source::2}` sorts ahead of `{source::10}`
+  - list variables now also expose the legacy loop aliases `var`, `variable`, and `value`, and restore upstream all-values predicate-check semantics through `Variable.getAnd()` / `check(...)`
   - `ClassInfo` / `Classes` now close codename, literal-pattern, supertype-lookup, class-info ordering, and shared literal-match ordering behavior used by parser/runtime compatibility paths
   - variable expressions and case-insensitive variable storage now work
   - `Variables.withLocalVariables(...)` now copies nested section-event local-variable mutations back to the provider scope

@@ -51,19 +51,20 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next coordinator follow-up slice in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
-- Lane C closed the explicit literal-pattern ordering follow-up:
-  - shared literal-pattern matches returned by `Classes.getPatternInfos(...)` now honor the same stable class-info ordering used by superclass lookup and parser-backed class iteration
-  - added a regression in [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java) proving shared aliases respect `before(...)` / `after(...)` ordering
-- Lane B carried no new code in this follow-up cycle:
-  - the merged empty auto-tag derivation closure remains intact and green
-- Lane A closed section-level execution-intent propagation:
-  - `TriggerItem.walk(...)` now honors nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results instead of always falling through to the current section's next item
-  - `TriggerSection` now exposes loader-visible stop intent derived from its nested trigger items, so `ScriptLoader.loadItems(...)` also warns when a registered section body makes following sibling lines unreachable
-  - added regressions in [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) that cover section-contained stop-trigger short-circuiting, section-local `stopSection`, and the corresponding warning behavior
+- merged the next coordinator batch in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
+- Lane C closed the next variable expression-contract follow-up:
+  - list variables now advertise the legacy loop aliases `var`, `variable`, and `value` in addition to `index`
+  - `Variable` now restores upstream `getAnd()` / `check(...)` behavior for list variables, so predicate checks operate on the full value set instead of falling back to single-value/default-expression semantics
+  - added regressions in [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) that cover loop aliases and all-values list checks
+- Lane B closed the next shared-matcher raw-regex parity gap:
+  - `SkriptPattern.match(...)` now skips unmatched raw-regex capture groups when an optional branch is omitted or another alternation branch wins, instead of failing the whole match
+  - added direct matcher regressions in [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) for omitted optional regex captures and unmatched alternation regex branches
+  - added a parser-registry regression in [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) proving registered section syntax with `[<.+>]` initializes both with and without a live raw-regex capture
+- Lane A carried no new code in this batch:
+  - the merged section-level execution-intent propagation and loader unreachable-warning closures remain intact and green
 - latest verification for this merged slice:
-  - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
   - `./gradlew build --rerun-tasks` passed
 
@@ -261,9 +262,9 @@ New immediate priority:
 - `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, loader/config hint flow, input-source usage, variable semantics, and type-system closure are still pending.
 - pure registered section loading is now closed in `ScriptLoader`, loader fallback now restores the better retained section-versus-statement diagnostic, nested section-contained stop-trigger intent now propagates through loader/runtime, plain conditions no longer masquerade as section headers, and `SecIf` now also runs through that registered path with `parse if` / `else parse if`, multiline `if any` / `if all`, `then`, and implicit condition sections; the remaining gap is broader loader/config hint flow.
 - do not reopen the just-closed inline optional-whitespace and inline alternation parser gap unless a new failing unit reproducer or real `.sk` path appears; the current verified closure covers `on[to]`, `when injured`, and `not breedable`
-- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface and now also derives the current bare leading `:` auto-tags again, but broader upstream pattern element-graph parity is still open
+- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, derives the current bare leading `:` auto-tags again, and no longer fails when optional or alternation-scoped raw-regex captures are omitted; broader upstream pattern element-graph parity is still open
 - validator-backed recursive `options:` loading for both runtime `EntryNode` trees and manual raw simple-entry trees is now closed, but broader structure/config validation and diagnostics are still pending.
-- the specific list-variable `set {target::*} to {source::*}` reindexing path and natural numeric ordering for prefix/list iteration are now closed, and shared literal-pattern matches now follow stable class-info ordering; remaining variable and class-registry gaps are deeper runtime semantics beyond these ordering paths.
+- the specific list-variable `set {target::*} to {source::*}` reindexing path, natural numeric ordering for prefix/list iteration, legacy list-variable loop aliases, and all-values list-check semantics are now closed, and shared literal-pattern matches now follow stable class-info ordering; remaining variable and class-registry gaps are deeper runtime semantics beyond these ordering paths.
 - grouped-parenthesis condition parsing is now closed for the current real-script `if` path, but general statement/orchestration parity is still open.
 - do not reopen the just-closed comment-aware loader parsing unless a new failing unit reproducer or real `.sk` path appears
 
