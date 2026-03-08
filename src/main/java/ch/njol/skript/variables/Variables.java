@@ -238,6 +238,9 @@ public final class Variables {
         }
 
         String prefix = name.substring(0, name.length() - 1);
+        String branchValueKey = prefix.endsWith(Variable.SEPARATOR)
+                ? prefix.substring(0, prefix.length() - Variable.SEPARATOR.length())
+                : prefix;
         TreeMap<String, Object> listValue = null;
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (!entry.getKey().startsWith(prefix)) {
@@ -250,6 +253,9 @@ public final class Variables {
             }
             if (listValue == null) {
                 listValue = new TreeMap<>(VARIABLE_NAME_COMPARATOR);
+                if (!branchValueKey.isEmpty() && map.containsKey(branchValueKey)) {
+                    listValue.put(null, map.get(branchValueKey));
+                }
             }
             insertListValue(listValue, suffix, entry.getValue());
         }
