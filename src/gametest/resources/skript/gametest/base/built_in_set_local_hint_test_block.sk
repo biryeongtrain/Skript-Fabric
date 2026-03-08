@@ -1,0 +1,5 @@
+on gametest:
+    set {_value} to 1
+    capture hinted integer {_value}
+    set {_value} to "gold_block"
+    capture hinted text {_value}

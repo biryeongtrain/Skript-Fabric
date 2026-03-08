@@ -176,10 +176,13 @@ import org.joml.Vector3f;
 
 public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTestSupport {
 
+    private static final AtomicBoolean BUILT_IN_SET_HINT_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean FAILED_EFFECT_FALLBACK_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean QUALITY_PRIORITY_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
+    private static Integer lastBuiltInHintedInteger;
+    private static String lastBuiltInHintedText;
 
     @GameTest
     public void executesRealSkriptFile(GameTestHelper helper) {
@@ -338,6 +341,52 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
                     Component.literal("Expected exactly one Skript trigger execution but got " + executed)
             );
             helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(0, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingBuiltInSetLocalHints(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureBuiltInSetHintTestSyntaxRegistered();
+
+            lastBuiltInHintedInteger = null;
+            lastBuiltInHintedText = null;
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/built_in_set_local_hint_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message ->
+                                message.contains("capture hinted integer {_value}")
+                                        || message.contains("capture hinted text {_value}")
+                        ),
+                        Component.literal("Expected the real .sk load path to accept typed later lines after built-in local-variable sets.")
+                );
+            }
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertTrue(
+                    Integer.valueOf(1).equals(lastBuiltInHintedInteger),
+                    Component.literal("Expected built-in `set {_value} to 1` to hint later %integer% syntax during load.")
+            );
+            helper.assertTrue(
+                    "gold_block".equals(lastBuiltInHintedText),
+                    Component.literal("Expected the later built-in string set to override the local hint for %string% syntax.")
+            );
             runtime.clearScripts();
         });
     }
@@ -964,6 +1013,13 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
     }
 
+    private static void ensureBuiltInSetHintTestSyntaxRegistered() {
+        if (BUILT_IN_SET_HINT_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerEffect(CaptureHintedIntegerGameTestEffect.class, "capture hinted integer %integer%");
+            Skript.registerEffect(CaptureHintedTextGameTestEffect.class, "capture hinted text %string%");
+        }
+    }
+
     private static void ensureTiedParseErrorTestSyntaxRegistered() {
         if (TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
             Skript.registerEffect(RejectingGameTestEffect.class, "ambiguous loader tie syntax");
@@ -1004,6 +1060,60 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         @Override
         public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "ambiguous gametest effect";
+        }
+    }
+
+    public static final class CaptureHintedIntegerGameTestEffect extends ch.njol.skript.lang.Effect {
+
+        private Expression<Integer> value;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            value = (Expression<Integer>) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            lastBuiltInHintedInteger = value.getSingle(event);
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "capture hinted integer";
+        }
+    }
+
+    public static final class CaptureHintedTextGameTestEffect extends ch.njol.skript.lang.Effect {
+
+        private Expression<String> value;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            value = (Expression<String>) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            lastBuiltInHintedText = value.getSingle(event);
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "capture hinted text";
         }
     }
 
