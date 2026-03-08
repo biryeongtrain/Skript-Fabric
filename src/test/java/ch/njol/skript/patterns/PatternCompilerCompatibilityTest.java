@@ -109,4 +109,23 @@ class PatternCompilerCompatibilityTest {
         assertNotNull(regex);
         assertEquals("42", regex.regexes().getFirst().group());
     }
+
+    @Test
+    void compiledPatternExposesTypeCountsAcrossAlternationBranches() {
+        SkriptPattern pattern = PatternCompiler.compile("(first %string%|second %number% %boolean%)");
+
+        assertEquals(3, pattern.countTypes());
+        assertEquals(2, pattern.countNonNullTypes());
+    }
+
+    @Test
+    void compiledPatternExposesPatternElementGraph() {
+        SkriptPattern pattern = PatternCompiler.compile("root [maybe %number%] (first %string%|second %boolean% %string%)");
+
+        assertEquals(4, pattern.getElements(TypePatternElement.class).size());
+        assertEquals(1, pattern.getElements(OptionalPatternElement.class).size());
+        assertEquals(1, pattern.getElements(ChoicePatternElement.class).size());
+        assertEquals(0, pattern.getElements(TypePatternElement.class).getFirst().expressionIndex());
+        assertEquals(3, pattern.getElements(TypePatternElement.class).getLast().expressionIndex());
+    }
 }

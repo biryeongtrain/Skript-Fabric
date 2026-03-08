@@ -5,6 +5,7 @@ import ch.njol.skript.registrations.Classes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
@@ -23,10 +24,14 @@ public final class PatternCompiler {
         String normalizedPattern = normalizePattern(source);
         List<CaptureSpec> captures = new ArrayList<>();
         String regex = compileSequence(normalizedPattern, captures);
+        AtomicInteger expressionAmount = new AtomicInteger();
+        PatternElement first = compileElementSequence(normalizedPattern, expressionAmount);
         return new CompiledPattern(
                 source,
                 Pattern.compile("^" + regex + "$", Pattern.CASE_INSENSITIVE),
-                List.copyOf(captures)
+                List.copyOf(captures),
+                first,
+                expressionAmount.get()
         );
     }
 
@@ -89,6 +94,290 @@ public final class PatternCompiler {
             end--;
         }
         return value.substring(start, end);
+    }
+
+    private static @Nullable PatternElement compileElementSequence(String pattern, AtomicInteger expressionAmount) {
+        if (pattern == null || pattern.isEmpty()) {
+            return null;
+        }
+        List<String> tokens = splitTopLevelTokens(pattern);
+        PatternElement first = null;
+        PatternElement last = null;
+        for (String token : tokens) {
+            PatternElement tokenFirst = compileElementToken(token, expressionAmount);
+            if (tokenFirst == null) {
+                continue;
+            }
+            if (first == null) {
+                first = tokenFirst;
+            } else if (last != null) {
+                last.setOriginalNext(tokenFirst);
+            }
+            last = lastElement(tokenFirst);
+        }
+        return first;
+    }
+
+    private static @Nullable PatternElement compileElementToken(String token, AtomicInteger expressionAmount) {
+        if (token.isBlank()) {
+            return new LiteralPatternElement(token);
+        }
+        PatternElement autoTagged = compileLeadingAutoTagElement(token, expressionAmount);
+        if (autoTagged != null) {
+            return autoTagged;
+        }
+
+        PatternElement first = null;
+        PatternElement last = null;
+        StringBuilder literal = new StringBuilder();
+        for (int i = 0; i < token.length(); i++) {
+            char ch = token.charAt(i);
+            if (ch == '\\') {
+                if (i + 1 >= token.length()) {
+                    throw new IllegalArgumentException("Pattern ends with an escape: " + token);
+                }
+                literal.append(token.charAt(i + 1));
+                i++;
+                continue;
+            }
+            if (ch == ':' || ch == '¦') {
+                String metadataText = literal.toString().trim();
+                literal.setLength(0);
+                PatternElement metadata = metadataElement(metadataText, ch, token);
+                if (metadata != null) {
+                    if (first == null) {
+                        first = metadata;
+                    } else if (last != null) {
+                        last.setOriginalNext(metadata);
+                    }
+                    last = lastElement(metadata);
+                }
+                continue;
+            }
+            if (ch == '%') {
+                first = appendElement(first, last, flushLiteral(literal));
+                last = first == null ? null : lastElement(first);
+                int end = findUnescaped(token, i + 1, '%');
+                if (end < 0) {
+                    throw new IllegalArgumentException("Unclosed placeholder in token: " + token);
+                }
+                String placeholder = token.substring(i + 1, end).trim();
+                PatternElement type = new TypePatternElement(
+                        placeholder,
+                        resolvePlaceholderTypes(placeholder),
+                        expressionAmount.getAndIncrement()
+                );
+                if (first == null) {
+                    first = type;
+                } else if (last != null) {
+                    last.setOriginalNext(type);
+                }
+                last = type;
+                i = end;
+                continue;
+            }
+            if (ch == '<') {
+                first = appendElement(first, last, flushLiteral(literal));
+                last = first == null ? null : lastElement(first);
+                int end = findUnescaped(token, i + 1, '>');
+                if (end < 0) {
+                    throw new IllegalArgumentException("Unclosed regex capture in token: " + token);
+                }
+                String rawRegex = token.substring(i + 1, end).trim();
+                PatternElement regex = new RegexPatternElement(rawRegex);
+                if (first == null) {
+                    first = regex;
+                } else if (last != null) {
+                    last.setOriginalNext(regex);
+                }
+                last = regex;
+                i = end;
+                continue;
+            }
+            if (ch == '[') {
+                first = appendElement(first, last, flushLiteral(literal));
+                last = first == null ? null : lastElement(first);
+                int end = findMatching(token, i, '[', ']');
+                PatternElement optional = new OptionalPatternElement(
+                        compileElementGroupContent(token.substring(i + 1, end), expressionAmount)
+                );
+                if (first == null) {
+                    first = optional;
+                } else if (last != null) {
+                    last.setOriginalNext(optional);
+                }
+                last = optional;
+                i = end;
+                continue;
+            }
+            if (ch == '(') {
+                first = appendElement(first, last, flushLiteral(literal));
+                last = first == null ? null : lastElement(first);
+                int end = findMatching(token, i, '(', ')');
+                PatternElement group = compileParenthesizedElementGroup(token.substring(i + 1, end), expressionAmount);
+                if (first == null) {
+                    first = group;
+                } else if (last != null) {
+                    last.setOriginalNext(group);
+                }
+                last = lastElement(group);
+                i = end;
+                continue;
+            }
+            literal.append(ch);
+        }
+        PatternElement literalElement = flushLiteral(literal);
+        if (literalElement != null) {
+            if (first == null) {
+                first = literalElement;
+            } else if (last != null) {
+                last.setOriginalNext(literalElement);
+            }
+        }
+        return first;
+    }
+
+    private static @Nullable PatternElement compileLeadingAutoTagElement(String token, AtomicInteger expressionAmount) {
+        if (token.length() < 2 || token.charAt(0) != ':') {
+            return null;
+        }
+        char next = token.charAt(1);
+        if (next == '(' || next == '[') {
+            return compileLeadingAutoTaggedGroupElement(token, expressionAmount);
+        }
+        String tag = deriveLeadingLiteralTag(token.substring(1));
+        if (tag == null) {
+            return null;
+        }
+        ParseTagPatternElement metadata = parseTagElement(tag);
+        PatternElement body = compileElementToken(token.substring(1), expressionAmount);
+        metadata.setOriginalNext(body);
+        return metadata;
+    }
+
+    private static @Nullable PatternElement compileLeadingAutoTaggedGroupElement(
+            String token,
+            AtomicInteger expressionAmount
+    ) {
+        char open = token.charAt(1);
+        char close = open == '(' ? ')' : ']';
+        int end = findMatching(token, 1, open, close);
+        List<String> branches = splitTopLevel(token.substring(2, end), '|');
+        if (branches.size() <= 1) {
+            return null;
+        }
+
+        List<PatternElement> compiledBranches = new ArrayList<>();
+        for (String branch : branches) {
+            PatternElement branchElement = compileElementSequence(branch, expressionAmount);
+            String tag = deriveLeadingLiteralTag(branch);
+            if (tag != null) {
+                ParseTagPatternElement metadata = parseTagElement(tag);
+                metadata.setOriginalNext(branchElement);
+                branchElement = metadata;
+            }
+            compiledBranches.add(branchElement == null ? new LiteralPatternElement("") : branchElement);
+        }
+
+        PatternElement grouped = new ChoicePatternElement(compiledBranches);
+        if (open == '[') {
+            grouped = new OptionalPatternElement(grouped);
+        }
+
+        String suffix = token.substring(end + 1);
+        if (suffix.isEmpty()) {
+            return grouped;
+        }
+
+        PatternElement suffixElement = compileElementToken(suffix, expressionAmount);
+        lastElement(grouped).setOriginalNext(suffixElement);
+        return grouped;
+    }
+
+    private static @Nullable PatternElement compileElementGroupContent(String pattern, AtomicInteger expressionAmount) {
+        List<String> branches = splitTopLevel(pattern, '|');
+        if (branches.size() == 1) {
+            return compileElementSequence(pattern, expressionAmount);
+        }
+        List<PatternElement> compiledBranches = new ArrayList<>(branches.size());
+        for (String branch : branches) {
+            PatternElement compiled = compileElementSequence(branch, expressionAmount);
+            compiledBranches.add(compiled == null ? new LiteralPatternElement("") : compiled);
+        }
+        return new ChoicePatternElement(compiledBranches);
+    }
+
+    private static PatternElement compileParenthesizedElementGroup(String pattern, AtomicInteger expressionAmount) {
+        List<String> branches = splitTopLevel(pattern, '|');
+        if (branches.size() == 1) {
+            return new GroupPatternElement(compileElementSequence(pattern, expressionAmount));
+        }
+        List<PatternElement> compiledBranches = new ArrayList<>(branches.size());
+        for (String branch : branches) {
+            PatternElement compiled = compileElementSequence(branch, expressionAmount);
+            compiledBranches.add(compiled == null ? new LiteralPatternElement("") : compiled);
+        }
+        return new ChoicePatternElement(compiledBranches);
+    }
+
+    private static @Nullable PatternElement metadataElement(String metadata, char kind, String token) {
+        if (kind == '¦') {
+            if (metadata.isEmpty()) {
+                throw new IllegalArgumentException("Empty parse mark in token: " + token);
+            }
+            try {
+                return new ParseTagPatternElement(null, Integer.parseInt(metadata));
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException("Invalid parse mark in token: " + token, exception);
+            }
+        }
+        if (metadata.isEmpty()) {
+            return null;
+        }
+        return parseTagElement(metadata);
+    }
+
+    private static ParseTagPatternElement parseTagElement(String metadata) {
+        int mark = 0;
+        try {
+            mark = Integer.parseInt(metadata);
+        } catch (NumberFormatException ignored) {
+        }
+        return new ParseTagPatternElement(metadata, mark);
+    }
+
+    private static @Nullable PatternElement flushLiteral(StringBuilder literal) {
+        if (literal.isEmpty()) {
+            return null;
+        }
+        PatternElement element = new LiteralPatternElement(literal.toString());
+        literal.setLength(0);
+        return element;
+    }
+
+    private static @Nullable PatternElement appendElement(
+            @Nullable PatternElement first,
+            @Nullable PatternElement last,
+            @Nullable PatternElement next
+    ) {
+        if (next == null) {
+            return first;
+        }
+        if (first == null) {
+            return next;
+        }
+        if (last != null) {
+            last.setOriginalNext(next);
+        }
+        return first;
+    }
+
+    private static PatternElement lastElement(PatternElement first) {
+        PatternElement current = first;
+        while (current.getOriginalNext() != null) {
+            current = current.getOriginalNext();
+        }
+        return current;
     }
 
     private static String compileSequence(String pattern, List<CaptureSpec> captures) {
@@ -587,6 +876,12 @@ public final class PatternCompiler {
         }
     }
 
-    record CompiledPattern(String source, Pattern regex, List<CaptureSpec> captures) {
+    record CompiledPattern(
+            String source,
+            Pattern regex,
+            List<CaptureSpec> captures,
+            @Nullable PatternElement first,
+            int expressionAmount
+    ) {
     }
 }

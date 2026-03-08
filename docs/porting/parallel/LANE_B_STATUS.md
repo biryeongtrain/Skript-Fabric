@@ -16,10 +16,30 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on richer parser tag / mark / pattern parity after the just-closed empty auto-tag slice, without claiming parser-pattern parity complete.
+- Continue `Part 1A` on richer parser tag / mark / pattern parity after the `patterns` element-graph/API slice, without claiming parser-pattern parity complete.
 
 ## Work Log
 
+- closed the next upstream `patterns` API gap around pattern-element graph introspection
+- added the missing `PatternElement` hierarchy locally:
+  - `PatternElement`
+  - `LiteralPatternElement`
+  - `OptionalPatternElement`
+  - `GroupPatternElement`
+  - `ChoicePatternElement`
+  - `ParseTagPatternElement`
+  - `TypePatternElement`
+  - `RegexPatternElement`
+- `PatternCompiler` now builds a lightweight pattern-element graph alongside the existing shared regex matcher without changing the currently green direct/parser match path
+- `SkriptPattern` now exposes the upstream-style structural APIs that were still missing locally:
+  - `countTypes()`
+  - `countNonNullTypes()`
+  - `getElements(Class<T>)`
+- added regressions proving:
+  - alternation-heavy patterns report total placeholder count separately from the maximum non-null branch count
+  - optional/choice/type elements are discoverable through the new graph traversal APIs with stable expression indexes
+- did not mark parity complete: the full upstream element-graph matcher/runtime is still richer than this slice, and current live parsing still runs through the existing shared regex matcher
+- did not rerun GameTest because this batch adds parser-structure introspection only; the existing matcher behavior remained under parser-focused unit coverage
 - moved the shared syntax-pattern matcher out of `SkriptParser` and into `ch/njol/skript/patterns`, so parser flow and direct pattern compilation now use the same compiled matcher path
 - `SkriptParser.ParseResult` now carries `mark`, and parser init paths now receive general parse tags from matched branches instead of only the prior hardcoded leading `implicit:` case
 - `PatternCompiler` / `SkriptPattern` now support compiled literals, placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦` on the current compatibility surface
@@ -40,9 +60,17 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/patterns/ChoicePatternElement.java`
+- `src/main/java/ch/njol/skript/patterns/GroupPatternElement.java`
+- `src/main/java/ch/njol/skript/patterns/LiteralPatternElement.java`
 - `src/main/java/ch/njol/skript/lang/SkriptParser.java`
+- `src/main/java/ch/njol/skript/patterns/OptionalPatternElement.java`
+- `src/main/java/ch/njol/skript/patterns/ParseTagPatternElement.java`
+- `src/main/java/ch/njol/skript/patterns/PatternElement.java`
 - `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`
+- `src/main/java/ch/njol/skript/patterns/RegexPatternElement.java`
 - `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
+- `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`
 - `src/main/java/ch/njol/skript/patterns/MatchResult.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
@@ -66,6 +94,9 @@ Last updated: 2026-03-08
   - `196 / 196` required GameTests completed successfully
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - passed after closing optional/alternation raw-regex capture parity
+- `./gradlew test --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks`
+  - first run failed on the new graph traversal assertion because wrapper elements were being unwrapped before type collection
+  - reran after fixing wrapper-element collection in `SkriptPattern.getElements(...)`; command passed
 
 ## Merge Notes
 
@@ -75,3 +106,4 @@ Last updated: 2026-03-08
 - `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` remains a likely conflict point for any concurrent parser-pattern compatibility additions
 - `src/main/java/ch/njol/skript/patterns/MatchResult.java` and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java` are new files from this lane branch
 - current-cycle conflict surface remains `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`, `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`, and `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- new current-cycle conflict surface also includes the added `src/main/java/ch/njol/skript/patterns/*PatternElement.java` files and the expanded `PatternCompiler.java` graph builder
