@@ -518,7 +518,7 @@ public class SkriptParser {
 
         Class<?>[] returnTypes = typePattern.returnTypes();
         for (int i = 0; i < returnTypes.length; i++) {
-            DefaultExpression<?> defaultExpression = defaultValues.getDefaultValue(returnTypes[i]);
+            DefaultExpression<?> defaultExpression = getDefaultValue(defaultValues, returnTypes[i]);
             if (DefaultExpressionUtils.isValid(defaultExpression, exprInfo, i) != null) {
                 continue;
             }
@@ -530,6 +530,19 @@ public class SkriptParser {
             }
         }
         return null;
+    }
+
+    private static @Nullable DefaultExpression<?> getDefaultValue(
+            DefaultValueData defaultValues,
+            Class<?> returnType
+    ) {
+        DefaultExpression<?> defaultExpression = defaultValues.getDefaultValue(returnType);
+        if (defaultExpression != null) {
+            return defaultExpression;
+        }
+
+        ClassInfo<?> classInfo = Classes.getExactClassInfo(returnType);
+        return classInfo == null ? null : classInfo.getDefaultExpression();
     }
 
     private static String normalizeWhitespace(String value) {

@@ -1,5 +1,6 @@
 package ch.njol.skript.classes;
 
+import ch.njol.skript.lang.DefaultExpression;
 import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -23,6 +24,7 @@ public class ClassInfo<T> {
     private final Set<String> literalPatterns = new LinkedHashSet<>();
     private final Set<String> after = new LinkedHashSet<>();
     private @Nullable Set<String> before;
+    private @Nullable DefaultExpression<T> defaultExpression;
     private @Nullable Parser<T> parser;
 
     public ClassInfo(Class<T> type) {
@@ -45,6 +47,16 @@ public class ClassInfo<T> {
         return codeName;
     }
 
+    public ClassInfo<T> defaultExpression(DefaultExpression<T> defaultExpression) {
+        if (!defaultExpression.isDefault()) {
+            throw new IllegalArgumentException(
+                    "defaultExpression.isDefault() must return true for the default expression of a class"
+            );
+        }
+        this.defaultExpression = defaultExpression;
+        return this;
+    }
+
     public boolean hasProperty(Property<?> property) {
         return properties.containsKey(property);
     }
@@ -60,6 +72,10 @@ public class ClassInfo<T> {
 
     public @Nullable Parser<T> getParser() {
         return parser;
+    }
+
+    public @Nullable DefaultExpression<T> getDefaultExpression() {
+        return defaultExpression;
     }
 
     public void setParser(@Nullable Parser<T> parser) {
