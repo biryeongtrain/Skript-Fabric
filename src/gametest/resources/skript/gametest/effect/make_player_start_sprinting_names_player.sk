@@ -1,0 +1,3 @@
+on use entity:
+    force event-player to start sprinting
+    set test name of entity event-player to "made sprinting"

@@ -13,6 +13,7 @@ import org.skriptlang.skript.bukkit.base.conditions.CondIsInvisible;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsInvulnerable;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsNamed;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsSilent;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsSprinting;
 import org.skriptlang.skript.bukkit.base.types.DamageSourceClassInfo;
 import org.skriptlang.skript.bukkit.brewing.elements.CondBrewingConsume;
 import org.skriptlang.skript.bukkit.brewing.elements.ExprBrewingFuelLevel;
@@ -117,6 +118,7 @@ import org.skriptlang.skript.bukkit.base.effects.EffSetTestEntityName;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestItemName;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockUnderPlayer;
 import org.skriptlang.skript.bukkit.base.effects.EffSilence;
+import org.skriptlang.skript.bukkit.base.effects.EffSprinting;
 import org.skriptlang.skript.fabric.syntax.event.EvtAttackEntity;
 import org.skriptlang.skript.fabric.syntax.event.EvtBrewingFuel;
 import org.skriptlang.skript.fabric.syntax.event.EvtDamage;
@@ -232,6 +234,11 @@ public final class SkriptFabricBootstrap {
                         CondAI.class,
                         "%livingentities% (has|have) (ai|artificial intelligence)",
                         "%livingentities% (doesn't|does not|do not|don't) have (ai|artificial intelligence)"
+                );
+                Skript.registerCondition(
+                        CondIsSprinting.class,
+                        "%players% (is|are) sprinting",
+                        "%players% (isn't|is not|aren't|are not) sprinting"
                 );
                 Skript.registerCondition(
                         CondBrewingConsume.class,
@@ -727,6 +734,13 @@ public final class SkriptFabricBootstrap {
                         EffInvulnerability.class,
                         "make %entities% (invulnerable|invincible)",
                         "make %entities% (not (invulnerable|invincible)|vulnerable|vincible)"
+                );
+                Skript.registerEffect(
+                        EffSprinting.class,
+                        "make %players% (start sprinting|sprint)",
+                        "force %players% to (start sprinting|sprint)",
+                        "make %players% (stop sprinting|not sprint)",
+                        "force %players% to (stop sprinting|not sprint)"
                 );
                 Skript.registerEffect(
                         EffSetTestBlock.class,
