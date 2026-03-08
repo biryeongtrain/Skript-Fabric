@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.lang.SkriptParser;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -161,6 +162,35 @@ class PatternCompilerCompatibilityTest {
         assertNotNull(integer);
         assertNotNull(bool);
         assertNull(string);
+    }
+
+    @Test
+    void compiledPatternBuildsKeywordsForRequiredLiteralSurfaceOnly() {
+        Keyword[] keywords = Keyword.buildKeywords(PatternCompiler.compilePattern("[the] (alpha|beta) gamma").first());
+
+        assertEquals(2, keywords.length);
+        assertTrue(Arrays.stream(keywords).allMatch(keyword -> keyword.isPresent("alpha gamma")));
+        assertTrue(Arrays.stream(keywords).allMatch(keyword -> keyword.isPresent("beta gamma")));
+        assertFalse(Arrays.stream(keywords).allMatch(keyword -> keyword.isPresent("the alpha")));
+        assertFalse(Arrays.stream(keywords).allMatch(keyword -> keyword.isPresent("gamma")));
+    }
+
+    @Test
+    void compiledPatternKeywordPrefilterKeepsOptionalNaturalFormMatches() {
+        SkriptPattern pattern = PatternCompiler.compile("[the] name");
+
+        assertNotNull(pattern.match("name"));
+        assertNotNull(pattern.match("the name"));
+        assertNull(pattern.match("the title"));
+    }
+
+    @Test
+    void compiledPatternKeywordPrefilterKeepsGroupedChoiceMatchesWithTrailingLiteral() {
+        SkriptPattern pattern = PatternCompiler.compile("(alpha|beta) gamma");
+
+        assertNotNull(pattern.match("alpha gamma"));
+        assertNotNull(pattern.match("beta gamma"));
+        assertNull(pattern.match("alpha"));
     }
 
     @Test

@@ -6,6 +6,7 @@ import ch.njol.skript.lang.SkriptParser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,16 +16,25 @@ public final class SkriptPattern {
     private final PatternCompiler.CompiledPattern compiled;
     private final @Nullable PatternElement first;
     private final int expressionAmount;
+    private final Keyword[] keywords;
 
     SkriptPattern(String source, PatternCompiler.CompiledPattern compiled) {
         this.source = source == null ? "" : source;
         this.compiled = compiled;
         this.first = compiled.first();
         this.expressionAmount = compiled.expressionAmount();
+        this.keywords = first == null ? new Keyword[0] : Keyword.buildKeywords(first);
     }
 
     public @Nullable MatchResult match(String text, int flags, ParseContext parseContext) {
-        Matcher matcher = compiled.regex().matcher(PatternCompiler.normalizeInput(text));
+        String normalizedText = PatternCompiler.normalizeInput(text);
+        String lowerExpr = normalizedText.toLowerCase(Locale.ENGLISH);
+        for (Keyword keyword : keywords) {
+            if (!keyword.isPresent(lowerExpr)) {
+                return null;
+            }
+        }
+        Matcher matcher = compiled.regex().matcher(normalizedText);
         if (!matcher.matches()) {
             return null;
         }

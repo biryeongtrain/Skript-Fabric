@@ -319,6 +319,19 @@ class SkriptParserRegistryTest {
     }
 
     @Test
+    void effectPatternStillParsesChoiceKeywordSurfaceWithTrailingLiteral() {
+        Skript.registerEffect(TestEffect.class, "(alpha|beta) gamma");
+
+        Statement alpha = Statement.parse("alpha gamma", "failed");
+        Statement beta = Statement.parse("beta gamma", "failed");
+
+        assertNotNull(alpha);
+        assertInstanceOf(TestEffect.class, alpha);
+        assertNotNull(beta);
+        assertInstanceOf(TestEffect.class, beta);
+    }
+
+    @Test
     void sectionPatternProvidesMatchedBranchParseTagInParseResult() {
         Skript.registerSection(BranchTagAwareSection.class, "guard (first:alpha|second:beta|gamma)");
 
