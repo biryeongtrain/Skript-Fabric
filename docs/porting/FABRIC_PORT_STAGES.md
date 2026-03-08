@@ -51,10 +51,10 @@ Current measured baseline for that workstream:
   - `StructOptions` now loads through a recursive validator-backed entry path, so runtime `EntryNode` trees and raw simple `key: value` nodes both work without losing `Invalid line in options` diagnostics
   - `ScriptLoader.loadItems(...)` now routes section nodes through registered `Section` parsing before statement fallback
   - `Statement.parse(...)` now routes effect parsing through `Effect.parse(...)`, and `Effect.parse(...)` now allows plain effects with section-managing expressions to own their section body instead of dropping it
-  - `ScriptLoader` section-node fallback now restores the better retained section-versus-statement diagnostic, and plain conditions no longer silently parse as section headers
-  - the shared compiled matcher now lives in `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation now share parse-tag/mark handling
+  - `ScriptLoader` section-node fallback now restores the better retained section-versus-statement diagnostic, plain conditions no longer silently parse as section headers, and stopping statements now emit unreachable-code warnings behind script-level warning suppression
+  - the shared compiled matcher now lives in `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation now share parse-tag/mark handling, including the current bare leading `:` auto-tag derivation surface
   - `Variables` now uses natural numeric ordering for prefix/list iteration, and the base GameTest suite now verifies that `{source::2}` sorts ahead of `{source::10}`
-  - `ClassInfo` / `Classes` now close codename, literal-pattern, and supertype-lookup behavior used by parser/runtime compatibility paths
+  - `ClassInfo` / `Classes` now close codename, literal-pattern, supertype-lookup, and class-info ordering behavior used by parser/runtime compatibility paths
   - variable expressions and case-insensitive variable storage now work
   - `Variables.withLocalVariables(...)` now copies nested section-event local-variable mutations back to the provider scope
   - keyed list-to-list `set` now reindexes source entries into numeric target slots instead of preserving source keys
@@ -65,7 +65,7 @@ Current measured baseline for that workstream:
   - `SkriptRuntime.parseScript(...)` now uses that split logic, so trailing comments on section headers, option entries, conditions, and effects no longer break live `.sk` loading
   - `ParseLogHandler`, `SkriptLogger`, and `Statement.parse(...)` now retain specific parse errors across nested parser scopes, so valid effects used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
   - targeted unit verification passed on 2026-03-08
-  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `196 / 196`
+  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `197 / 197`
   - `./gradlew build --rerun-tasks` passed on 2026-03-08, including the full Fabric GameTest task
 
 This workstream runs in parallel with the Stage 5 and Stage 8 records below.
@@ -257,7 +257,7 @@ Status: `in_progress`
 Current completed slices:
 
 - `fabric-gametest` runtime harness is active
-- current real-script Fabric GameTest suite is green at `196 / 196`
+- current real-script Fabric GameTest suite is green at `197 / 197`
 
 ## Stage 8: Parity audit
 
@@ -379,6 +379,7 @@ Still remaining before Stage 8 can be called complete:
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after making parse-log retention real through `ParseLogHandler`, `SkriptLogger`, and `Statement.parse(...)`, preserving specific section-ownership diagnostics without adding a generic section fallback; the active suite remained `194 / 194`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.config.NodeCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after porting comment-aware line splitting into `Node.splitLine(...)` and wiring `SkriptRuntime.parseScript(...)` through it, restoring live `.sk` support for commented section headers, commented option entries, quoted hashes, and `###` block comments; the active suite increased to `195 / 195`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the parallel loader-diagnostics, shared pattern-matcher, and natural variable-ordering slices; the active suite increased to `196 / 196`.
+- 2026-03-08: `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the next parallel class-info ordering, empty auto-tag derivation, and loader unreachable-code warning slices; the active suite increased to `197 / 197`.
 - 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
 - 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 

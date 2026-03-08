@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `196 / 196` scheduled Fabric GameTests completed without build failure
+  - `197 / 197` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -51,23 +51,21 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the coordinated parallel `Part 1A` / `Part 1B` slice in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
-- Lane C closed natural variable-name ordering for prefix/list iteration:
-  - `Variables` now sorts numeric-like keys naturally instead of lexically, so `{source::2}` comes before `{source::10}` during list reads and list-to-list `set`
-  - added unit coverage in [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) plus real `.sk` coverage in [src/gametest/resources/skript/gametest/base/list_variable_numeric_order_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/list_variable_numeric_order_set_test_block.sk)
-- Lane B closed the next parser/pattern metadata slice:
-  - the shared compiled matcher now lives in [src/main/java/ch/njol/skript/patterns/PatternCompiler.java](../../src/main/java/ch/njol/skript/patterns/PatternCompiler.java), [src/main/java/ch/njol/skript/patterns/SkriptPattern.java](../../src/main/java/ch/njol/skript/patterns/SkriptPattern.java), and [src/main/java/ch/njol/skript/patterns/MatchResult.java](../../src/main/java/ch/njol/skript/patterns/MatchResult.java)
-  - `SkriptParser.ParseResult` now carries `mark` and receives general parse tags from matched branches instead of only the earlier hardcoded leading `implicit:` path
-  - added parser-facing regression coverage in [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) and [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java)
-- Lane A closed the next loader/statement diagnostic slice:
-  - `ParseLogHandler` now exposes snapshot/restore helpers and retained-error accessors for loader fallback decisions
-  - `ScriptLoader.loadItems(...)` now tries section-node fallback through both section and statement parsing, then restores the more specific retained diagnostic
-  - `Statement.parse(...)` now rejects plain conditions used as section headers instead of silently returning a body-less condition item
+- merged the next coordinated parallel `Part 1A` / `Part 1B` slice in `Lane C -> Lane B -> Lane A` order, then reran full coordinator verification
+- Lane C closed class-info ordering semantics:
+  - `Classes` now sorts registered class infos by assignable-type specificity plus explicit `before(...)` / `after(...)` dependencies instead of using raw registration order
+  - added coverage in [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java) for most-specific superclass lookup and dependency ordering
+- Lane B closed the current empty auto-tag derivation gap:
+  - bare leading `:` metadata now derives from the following literal or choice branch on the current compatibility surface, so forms such as `:future`, `:non(-| )`, and `:(min|max)[imum]` reach `SkriptParser.ParseResult` again
+  - added direct matcher and parser-registry coverage in [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java) and [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
+- Lane A closed loader unreachable-code warnings:
+  - `ScriptLoader.loadItems(...)` now warns `Unreachable code. The previous statement stops further execution.` when a previously loaded `Statement` advertises a stopping `ExecutionIntent`
+  - the warning respects `ScriptWarning.UNREACHABLE_CODE`, and real `.sk` coverage now verifies both warning emission and runtime short-circuiting through [src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk](../../src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk)
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `196 / 196`
+  - `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
   - `./gradlew build --rerun-tasks` passed
 
 ## What Landed In This Slice
@@ -122,10 +120,14 @@ New immediate priority:
   - `ScriptLoaderCompatibilityTest` now proves that a valid effect used as a section keeps its specific ownership error without also logging `Can't understand this section`
   - `PatternCompiler` / `SkriptPattern` now back a shared matcher used by both direct pattern compilation and `SkriptParser`, including placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦`
   - `SkriptParser.ParseResult` now carries `mark`, and parser init paths now receive general parse tags from matched branches instead of only the earlier hardcoded leading `implicit:` case
+  - bare leading `:` metadata now auto-derives from the following literal or choice branch on the current compatibility surface
   - `ScriptLoader.loadItems(...)` now restores the more specific retained section-versus-statement diagnostic when both parse paths fail on a section node
   - `Statement.parse(...)` now rejects plain conditions used as section headers instead of silently returning a body-less condition item
+  - `Classes` now sorts class infos by assignable-type specificity plus `before(...)` / `after(...)` dependencies instead of raw registration order
+  - `ScriptLoader.loadItems(...)` now emits unreachable-code warnings behind `ScriptWarning.UNREACHABLE_CODE` suppression when a previously loaded statement stops further execution
   - `Variables` now uses natural variable-name ordering for prefix/list iteration, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set` reindexing
   - real base `.sk` GameTests now also cover numeric list ordering through [src/gametest/resources/skript/gametest/base/list_variable_numeric_order_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/list_variable_numeric_order_set_test_block.sk)
+  - real base `.sk` GameTests now also cover loader unreachable-code warnings through [src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk](../../src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk)
   - parser-compatible natural forms that were red during this closure are green again under real `.sk` loading, including `%objects% can be equipped on[to] entities`, `%objects% will lose durability when injured`, and `make %entities% not breedable`
   - real base `.sk` GameTests now cover options replacement, mixed-case variable set/lookup, direct conditional chain execution, parenthesized conditional chain execution, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, implicit conditional sections, skipped-invalid-body parse-if paths, and list-variable reindexing on `set {target::*} to {source::*}`
   - real expression `.sk` GameTests now cover plain-effect section ownership and section-local variable copy-back through `set {_component} to a blank equippable component:`
@@ -137,7 +139,9 @@ New immediate priority:
   - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
-- `./gradlew runGameTest --rerun-tasks` passed with `196 / 196`
+- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed
+- `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
 - `./gradlew build --rerun-tasks` passed
 
 ## Files Changed In This Slice
@@ -255,7 +259,7 @@ New immediate priority:
 - `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, loader/config hint flow, input-source usage, variable semantics, and type-system closure are still pending.
 - pure registered section loading is now closed in `ScriptLoader`, loader fallback now restores the better retained section-versus-statement diagnostic, plain conditions no longer masquerade as section headers, and `SecIf` now also runs through that registered path with `parse if` / `else parse if`, multiline `if any` / `if all`, `then`, and implicit condition sections; the remaining gap is broader loader/config hint flow.
 - do not reopen the just-closed inline optional-whitespace and inline alternation parser gap unless a new failing unit reproducer or real `.sk` path appears; the current verified closure covers `on[to]`, `when injured`, and `not breedable`
-- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, but broader upstream pattern element-graph parity and empty auto-tag derivation are still open
+- the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface and now also derives the current bare leading `:` auto-tags again, but broader upstream pattern element-graph parity is still open
 - validator-backed recursive `options:` loading for both runtime `EntryNode` trees and manual raw simple-entry trees is now closed, but broader structure/config validation and diagnostics are still pending.
 - the specific list-variable `set {target::*} to {source::*}` reindexing path and natural numeric ordering for prefix/list iteration are now closed; remaining variable gaps are deeper runtime semantics beyond these list-ordering paths.
 - grouped-parenthesis condition parsing is now closed for the current real-script `if` path, but general statement/orchestration parity is still open.

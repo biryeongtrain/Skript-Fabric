@@ -36,7 +36,7 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `196 / 196` scheduled Fabric GameTests completed without build failure
+  - `197 / 197` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
@@ -141,6 +141,7 @@ Landed slices so far:
   - the shared compiled matcher now lives under `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation use the same compatibility path
   - `SkriptParser.ParseResult` now carries `mark`, and init paths now receive general parse tags from matched branches instead of only the earlier hardcoded leading `implicit:` case
   - `PatternCompiler` / `SkriptPattern` now support placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦` on the current compatibility surface
+  - bare leading `:` metadata now auto-derives from following literal and choice branches on the current compatibility surface, so forms such as `:future`, `:non(-| )`, and `:(min|max)[imum]` reach `ParseResult` again
   - `PatternCompilerCompatibilityTest` and `SkriptParserRegistryTest` now cover branch tags, parse marks, and the already-green inline optional whitespace natural form through the shared matcher
 - script-loading options closure:
   - `options:` entries are now represented by `EntryNode`
@@ -167,8 +168,13 @@ Landed slices so far:
   - `ParseLogHandler` now exposes snapshot/restore helpers and retained-error accessors so loader-owned section fallback can compare section and statement diagnostics without printing both
   - `ScriptLoader.loadItems(...)` now retries section-node parsing through both `Section.parse(...)` and `Statement.parse(...)`, then restores the more specific retained diagnostic instead of defaulting to the generic fallback
   - plain conditions used as section headers now fail with a specific ownership error instead of silently returning a body-less condition item
+- loader unreachable-code warning closure:
+  - `ScriptLoader.loadItems(...)` now emits `Unreachable code. The previous statement stops further execution.` when a previously loaded `Statement` advertises a stopping `ExecutionIntent`
+  - that warning now respects `ScriptWarning.UNREACHABLE_CODE` suppression on the active script
+  - real base `.sk` coverage now verifies both warning emission and runtime short-circuiting through `unreachable_code_warning_stop_test_block.sk`
 - class/type registry closure:
   - `ClassInfo` and `Classes` now close the missing codename, literal-pattern, and supertype resolution behavior that the parser/runtime depends on
+  - `Classes` now also computes stable class-info ordering that prefers narrower assignable types and honors `before(...)` / `after(...)` dependencies instead of using raw registration order
 - variable/runtime closure:
   - `SkriptParser` now recognizes `{...}` variable expressions directly
   - `Variables` now defaults to case-insensitive storage/lookup with a compatibility switch for case-sensitive operation
@@ -196,6 +202,7 @@ Landed slices so far:
   - `parse if` skipped-invalid-body path
   - list variable reindexing path for `set {target::*} to {source::*}`
   - natural numeric list ordering path for `{source::2}` before `{source::10}`
+  - unreachable-code warning plus stop-trigger short-circuit path
   - plain-effect section ownership plus local-variable copy-back through `set {_component} to a blank equippable component:`
 
 Targeted verification completed on 2026-03-08:
@@ -211,8 +218,11 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing section-vs-statement loader fallback diagnostics and plain-condition section-header rejection
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --tests ch.njol.skript.sections.SecIfCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after moving the shared matcher into `patterns` and forwarding general parse tags plus XOR marks
 - `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after closing natural numeric variable-name ordering for list/prefix iteration
-- `./gradlew runGameTest --rerun-tasks` passed with `196 / 196`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `196 / 196` scheduled Fabric GameTests
+- `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks` passed after closing bare leading `:` auto-tag derivation
+- `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing class-info ordering semantics
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after closing loader unreachable-code warnings
+- `./gradlew runGameTest --rerun-tasks` passed with `197 / 197`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `197 / 197` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 
@@ -224,7 +234,7 @@ The following foundations were already built before this priority shift:
 - function compatibility scaffolding, including signatures, registries, dynamic references, expression/effect call wrappers, and namespace fallback behavior
 - variable and literal compatibility primitives, including `Variable`, `Variables`, `LiteralString`, `UnparsedLiteral`, `InputSource`, and section-expression helpers
 - foundational utility scaffolding in `classes`, `config`, `log`, `patterns`, `registrations`, `util`, and `variables`
-- active Fabric runtime harness and Fabric GameTest suite with `196 / 196` passing tests on the last code-verification run
+- active Fabric runtime harness and Fabric GameTest suite with `197 / 197` passing tests on the last code-verification run
 - Stage 8 parity-audited package-local Bukkit slice for `breeding`, `input`, and `interactions`
 
 ## Current Gaps
@@ -236,9 +246,9 @@ The following foundations were already built before this priority shift:
   - `EffFunctionCall.init(...)` and `ExprFunctionCall.init(...)` returning `false` on direct wrapper instances also match upstream behavior
 - current Stage 8 package-local audit for `org/skriptlang/skript/bukkit` remains valid, but it is no longer the only gating audit track
 - `Part 1A` and `Part 1B` are both active, but most parser, statement, loader, variable, and type-system closure work remains open
-- generic registered section loading is now closed in `ScriptLoader`, `ScriptLoader` now also restores the more specific section-versus-statement fallback diagnostic, and plain conditions no longer masquerade as section headers; broader loader/config hint flow is still incomplete
+- generic registered section loading is now closed in `ScriptLoader`, `ScriptLoader` now also restores the more specific section-versus-statement fallback diagnostic and warns about unreachable code behind script-level warning suppression, and plain conditions no longer masquerade as section headers; broader loader/config hint flow is still incomplete
 - validator-backed recursive `options:` loading for runtime `EntryNode` trees and raw simple-entry trees is now closed, but broader structure/config validation behavior is still much thinner than upstream
-- the parser no longer regresses the currently verified natural-script inline optional/alternation forms and now forwards general tags/XOR marks through the shared matcher, but broader upstream pattern element-graph parity and empty auto-tag derivation are still incomplete
+- the parser no longer regresses the currently verified natural-script inline optional/alternation forms, now forwards general tags/XOR marks through the shared matcher, and now derives the current bare leading `:` auto-tags again; broader upstream pattern element-graph parity is still incomplete
 - natural numeric ordering for list/prefix iteration is now closed, but broader `Variables` runtime semantics are still incomplete
 
 ## Active Workstreams
