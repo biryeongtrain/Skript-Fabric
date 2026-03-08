@@ -100,6 +100,16 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void userInputLookupSupportsRegisteredRegexAliases() {
+        ClassInfo<FooBarType> info = new ClassInfo<>(FooBarType.class, "foobar").user("materials?");
+        Classes.registerClassInfo(info);
+
+        assertSame(info, Classes.getClassInfoFromUserInput("material"));
+        assertSame(info, Classes.getClassInfoFromUserInput("materials"));
+        assertTrue(Classes.isPluralClassInfoUserInput("materials", info));
+    }
+
+    @Test
     void superClassLookupPrefersMostSpecificRegisteredAssignableType() {
         ClassInfo<ParentType> parent = new ClassInfo<>(ParentType.class, "parent");
         ClassInfo<ChildType> child = new ClassInfo<>(ChildType.class, "child");

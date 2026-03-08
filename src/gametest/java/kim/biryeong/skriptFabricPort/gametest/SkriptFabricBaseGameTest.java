@@ -178,11 +178,13 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
 
     private static final AtomicBoolean BUILT_IN_SET_HINT_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean FAILED_EFFECT_FALLBACK_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
+    private static final AtomicBoolean MATERIAL_ALIAS_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean QUALITY_PRIORITY_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
     private static Integer lastBuiltInHintedInteger;
     private static String lastBuiltInHintedText;
+    private static String lastCapturedMaterialAlias;
 
     @GameTest
     public void executesRealSkriptFile(GameTestHelper helper) {
@@ -387,6 +389,45 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
                     "gold_block".equals(lastBuiltInHintedText),
                     Component.literal("Expected the later built-in string set to override the local hint for %string% syntax.")
             );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingClassInfoUserAliasPlaceholder(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureMaterialAliasTestSyntaxRegistered();
+
+            lastCapturedMaterialAlias = null;
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/material_alias_placeholder_set_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message -> message.contains("capture material alias stone")),
+                        Component.literal("Expected the real .sk load path to accept %material% through the registered item-type alias.")
+                );
+            }
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertTrue(
+                    "stone".equals(lastCapturedMaterialAlias),
+                    Component.literal("Expected %material% to resolve through the item-type alias and capture stone.")
+            );
+            helper.assertBlockPresent(Blocks.STONE, new BlockPos(0, 1, 0));
             runtime.clearScripts();
         });
     }
@@ -1020,6 +1061,12 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
     }
 
+    private static void ensureMaterialAliasTestSyntaxRegistered() {
+        if (MATERIAL_ALIAS_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerEffect(CaptureMaterialAliasEffect.class, "capture material alias %material%");
+        }
+    }
+
     private static void ensureTiedParseErrorTestSyntaxRegistered() {
         if (TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
             Skript.registerEffect(RejectingGameTestEffect.class, "ambiguous loader tie syntax");
@@ -1114,6 +1161,38 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         @Override
         public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "capture hinted text";
+        }
+    }
+
+    public static final class CaptureMaterialAliasEffect extends ch.njol.skript.lang.Effect {
+
+        private Expression<FabricItemType> value;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            if (!FabricItemType.class.isAssignableFrom(expressions[0].getReturnType())) {
+                Skript.error("Expected %material% to resolve to an item type.");
+                return false;
+            }
+            value = (Expression<FabricItemType>) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            FabricItemType itemType = value.getSingle(event);
+            lastCapturedMaterialAlias = itemType == null ? null : itemType.itemId();
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "capture material alias";
         }
     }
 

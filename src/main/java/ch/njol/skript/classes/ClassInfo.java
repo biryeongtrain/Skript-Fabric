@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.PropertyHandler;
@@ -24,6 +26,7 @@ public class ClassInfo<T> {
     private final Set<String> literalPatterns = new LinkedHashSet<>();
     private final Set<String> after = new LinkedHashSet<>();
     private @Nullable Set<String> before;
+    private @Nullable Pattern[] userInputPatterns;
     private @Nullable DefaultExpression<T> defaultExpression;
     private @Nullable Parser<T> parser;
 
@@ -94,6 +97,31 @@ public class ClassInfo<T> {
 
     public Set<String> getLiteralPatterns() {
         return Set.copyOf(literalPatterns);
+    }
+
+    public ClassInfo<T> user(String... userInputPatterns) throws PatternSyntaxException {
+        Pattern[] compiled = new Pattern[userInputPatterns.length];
+        for (int i = 0; i < userInputPatterns.length; i++) {
+            compiled[i] = Pattern.compile(userInputPatterns[i]);
+        }
+        this.userInputPatterns = compiled;
+        return this;
+    }
+
+    public Pattern @Nullable [] getUserInputPatterns() {
+        return userInputPatterns == null ? null : userInputPatterns.clone();
+    }
+
+    public boolean matchesUserInput(String input) {
+        if (userInputPatterns == null) {
+            return false;
+        }
+        for (Pattern pattern : userInputPatterns) {
+            if (pattern.matcher(input).matches()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public ClassInfo<T> before(String... before) {
