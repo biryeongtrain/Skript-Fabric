@@ -9,14 +9,23 @@ import ch.njol.skript.config.EntryNode;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.ExpressionSection;
 import ch.njol.skript.lang.Section;
 import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.Variable;
+import ch.njol.skript.lang.function.Function;
+import ch.njol.skript.lang.function.FunctionEvent;
+import ch.njol.skript.lang.function.FunctionRegistry;
+import ch.njol.skript.lang.function.Functions;
+import ch.njol.skript.lang.function.Parameter;
+import ch.njol.skript.lang.function.Signature;
 import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.structures.StructOptions;
 import ch.njol.skript.variables.Variables;
 import ch.njol.util.Kleenean;
@@ -51,7 +60,10 @@ class ScriptLoaderCompatibilityTest {
         RecordingEffect.executed.clear();
         statementExecution.clear();
         CaptureHintedObjectEffect.lastReturnType = null;
+        TestNumberSectionExpression.reset();
         Variables.clearAll();
+        FunctionRegistry.getRegistry().clear();
+        Functions.clear();
     }
 
     @Test
@@ -477,6 +489,35 @@ class ScriptLoaderCompatibilityTest {
         }
     }
 
+    @Test
+    void plainStatementParseClearsOuterExpressionSectionOwnershipForFunctionArguments() {
+        Skript.registerExpression(TestNumberSectionExpression.class, Integer.class, "a test number");
+
+        Signature<Object> signature = new Signature<>(
+                null,
+                "consume_number",
+                new Parameter[]{new Parameter<>("value", Classes.getSuperClassInfo(Integer.class), true, null)},
+                false,
+                null,
+                true
+        );
+        Functions.register(new ConsumeNumberFunction(signature));
+
+        ParserInstance parser = ParserInstance.get();
+        Section.SectionContext context = parser.getData(Section.SectionContext.class);
+        ExpressionSection outerOwner = new ExpressionSection(new PassiveOuterSectionExpression());
+
+        Statement parsed = context.modify(section("outer owner"), List.of(), () -> {
+            context.claim(outerOwner, "outer owner");
+            return Statement.parse("consume_number(a test number)", "failed");
+        });
+
+        assertTrue(parsed instanceof ch.njol.skript.lang.function.EffFunctionCall);
+        assertEquals(1, TestNumberSectionExpression.initCalls);
+        assertNull(TestNumberSectionExpression.lastSectionNode);
+        assertNull(TestNumberSectionExpression.lastTriggerItems);
+    }
+
     private static SectionNode root(Node... children) {
         SectionNode root = new SectionNode("root");
         for (Node child : children) {
@@ -844,6 +885,106 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "loading hint section";
+        }
+    }
+
+    private static final class ConsumeNumberFunction extends Function<Object> {
+
+        private ConsumeNumberFunction(Signature<Object> signature) {
+            super(signature);
+        }
+
+        @Override
+        public Object @Nullable [] execute(FunctionEvent<?> event, Object[][] params) {
+            return null;
+        }
+
+        @Override
+        public boolean resetReturnValue() {
+            return true;
+        }
+    }
+
+    private static final class PassiveOuterSectionExpression extends SectionExpression<Integer> {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int pattern,
+                Kleenean delayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode node,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            return true;
+        }
+
+        @Override
+        protected Integer @Nullable [] get(SkriptEvent event) {
+            return new Integer[]{0};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "outer owner";
+        }
+    }
+
+    private static final class TestNumberSectionExpression extends SectionExpression<Integer> {
+
+        private static int initCalls;
+        private static @Nullable SectionNode lastSectionNode;
+        private static @Nullable List<TriggerItem> lastTriggerItems;
+
+        private static void reset() {
+            initCalls = 0;
+            lastSectionNode = null;
+            lastTriggerItems = null;
+        }
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int pattern,
+                Kleenean delayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode node,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            initCalls++;
+            lastSectionNode = node;
+            lastTriggerItems = triggerItems;
+            return true;
+        }
+
+        @Override
+        protected Integer @Nullable [] get(SkriptEvent event) {
+            return new Integer[]{1};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "a test number";
         }
     }
 

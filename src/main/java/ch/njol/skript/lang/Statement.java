@@ -37,48 +37,63 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
         try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
             Section.SectionContext sectionContext = ParserInstance.get().getData(Section.SectionContext.class);
             String expression = input.trim();
+            if (node == null) {
+                return sectionContext.modify(null, null, () ->
+                        parseInternal(expression, defaultError, null, null, sectionContext, log)
+                );
+            }
+            return parseInternal(expression, defaultError, node, items, sectionContext, log);
+        }
+    }
 
-            EffFunctionCall functionCall = parseFunctionCall(expression, node, items, sectionContext);
-            if (functionCall != null) {
-                log.printLog();
-                return functionCall;
-            }
-            if (log.hasError()) {
-                log.printError();
-                return null;
-            }
-            log.clear();
-
-            Effect effect = Effect.parse(expression, null, node, items);
-            if (effect != null) {
-                log.printLog();
-                return effect;
-            }
-            if (log.hasError()) {
-                log.printError();
-                return null;
-            }
-            log.clear();
-
-            Condition condition = parseCondition(expression, node, items, sectionContext);
-            if (condition != null) {
-                log.printLog();
-                return condition;
-            }
-            if (log.hasError()) {
-                log.printError();
-                return null;
-            }
-            log.clear();
-
-            Statement statement = parseRegisteredStatement(expression, defaultError, node, items, sectionContext);
-            if (statement != null) {
-                log.printLog();
-                return statement;
-            }
-            log.printError(defaultError);
+    private static @Nullable Statement parseInternal(
+            String expression,
+            @Nullable String defaultError,
+            @Nullable SectionNode node,
+            @Nullable List<TriggerItem> items,
+            Section.SectionContext sectionContext,
+            ParseLogHandler log
+    ) {
+        EffFunctionCall functionCall = parseFunctionCall(expression, node, items, sectionContext);
+        if (functionCall != null) {
+            log.printLog();
+            return functionCall;
+        }
+        if (log.hasError()) {
+            log.printError();
             return null;
         }
+        log.clear();
+
+        Effect effect = Effect.parse(expression, null, node, items);
+        if (effect != null) {
+            log.printLog();
+            return effect;
+        }
+        if (log.hasError()) {
+            log.printError();
+            return null;
+        }
+        log.clear();
+
+        Condition condition = parseCondition(expression, node, items, sectionContext);
+        if (condition != null) {
+            log.printLog();
+            return condition;
+        }
+        if (log.hasError()) {
+            log.printError();
+            return null;
+        }
+        log.clear();
+
+        Statement statement = parseRegisteredStatement(expression, defaultError, node, items, sectionContext);
+        if (statement != null) {
+            log.printLog();
+            return statement;
+        }
+        log.printError(defaultError);
+        return null;
     }
 
     private static @Nullable EffFunctionCall parseFunctionCall(

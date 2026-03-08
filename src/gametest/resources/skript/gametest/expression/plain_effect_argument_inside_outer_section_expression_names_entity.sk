@@ -1,0 +1,7 @@
+on use entity:
+    set {_state} to "outside"
+    set {_component} to a blank equippable component:
+        set {_inner} to a blank equippable component
+        set {_state} to "inside"
+    {_state} is "inside"
+    set test name of entity event-entity to "nested effect arg"

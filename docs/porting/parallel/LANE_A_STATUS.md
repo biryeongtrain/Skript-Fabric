@@ -17,7 +17,7 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on broader statement orchestration after the loader hint-scope lifecycle slice.
+- Continue `Part 1A` on broader statement orchestration after the plain-statement section-context regression slice.
 
 ## Work Log
 
@@ -49,6 +49,13 @@ Last updated: 2026-03-08
   - warning emission when a registered section body contains a stop-trigger statement
   - no unreachable-code warning when a registered section only stops its own body with `stopSection`
   - runtime short-circuit past later sibling items after a nested stop-trigger statement
+- compared lane-owned files against upstream `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and pulled the next missing closure-track regression from upstream test `8199-parse exprsecs in function args.sk`
+- `Statement.parse(...)` now clears any outer `Section.SectionContext` owner when parsing a plain statement path (`node == null`), so nested function/effect/condition argument parsing cannot inherit an enclosing expression section by mistake
+- kept section-node parsing behavior unchanged: only the plain statement parse path now runs through the temporary cleared section ownership wrapper
+- added `ScriptLoaderCompatibilityTest` regression coverage proving a plain function-call statement parsed under an already-claimed outer `ExpressionSection` still initializes its argument section expression with `node == null` and `triggerItems == null`
+- added real `.sk` coverage in `src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk` plus a matching `SkriptFabricExpressionGameTest` harness that verifies a nested plain effect argument still parses and runs inside an outer expression section body
+- the new real `.sk` coverage increased the full GameTest total from `197` to `198`
+- attempted a more direct runtime function-argument `.sk` regression first, but top-level `function ...` structures still fail to parse in the current GameTest runtime; kept that out-of-slice limitation documented and switched the landed real-script coverage to the equivalent nested plain-effect path instead
 
 ## Files Changed
 
@@ -58,7 +65,9 @@ Last updated: 2026-03-08
 - `src/main/java/ch/njol/skript/lang/TriggerSection.java`
 - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java`
 - `src/gametest/resources/skript/gametest/base/unreachable_code_warning_stop_test_block.sk`
+- `src/gametest/resources/skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk`
 
 ## Verification
 
@@ -71,11 +80,28 @@ Last updated: 2026-03-08
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
   - first run failed in `:compileTestJava` because the new test-only section scaffolding still needed explicit `toString(...)` implementations
   - reran after adding those `toString(...)` methods; command passed
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - first run failed in `:compileTestJava` because the new regression still needed the `Classes` import for the registered function signature
+  - reran after adding the import; command passed
+- `./gradlew runGameTest --rerun-tasks`
+  - first run failed while loading a temporary direct function-structure regression script with `IllegalArgumentException: Failed to parse top-level structure or event: function remember_component(component: equippablecomponent)`
+  - removed that out-of-slice runtime function-structure coverage, replaced it with the nested plain-effect argument resource, and reran
+  - passed with `198 / 198` required tests completed
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - final rerun on the finished tree passed
+- `./gradlew runGameTest --rerun-tasks`
+  - final rerun on the finished tree passed with `198 / 198` required tests completed
+
+## Unresolved Risks
+
+- top-level script `function ...` structure loading is still not available in the current GameTest runtime, so the live `.sk` coverage for this slice uses the equivalent nested plain-effect argument path instead of a direct function-argument script
+- the new unit regression covers the upstream function-argument ownership bug directly, but broader runtime parity for script-defined functions remains outside this lane slice
 
 ## Merge Notes
 
 - likely conflicts are limited to `ScriptLoader.java`, `TriggerItem.java`, `TriggerSection.java`, and `Statement.java` if another branch changed loader warning flow or statement/trigger orchestration after lane split
 - current-cycle conflict surface also includes `ScriptLoader.java` plus `ScriptLoaderCompatibilityTest.java` around the new hint-scope lifecycle regressions
 - `SkriptFabricBaseGameTest.java` now contains one lane-local loader-warning harness and test-only stopping statement for real `.sk` coverage
+- current-cycle conflict surface also includes `Statement.java`, `ScriptLoaderCompatibilityTest.java`, and `SkriptFabricExpressionGameTest.java` around the plain-statement section-context reset regression and its real `.sk` harness
 - preserve the already-closed section fallback diagnostics, plain-condition section-header rejection, and existing unreachable-code warning behavior while merging this slice
 - no canonical `docs/porting/*.md` files were touched
