@@ -175,9 +175,25 @@ Last updated: 2026-03-08
 - `./gradlew runGameTest --rerun-tasks`
   - final rerun on the finished tree passed with `198 / 198` required tests completed
 
+### 2026-03-08 Feed Effect Slice
+
+- imported the upstream exact feed effect syntax `feed [the] %players% [by %-number% [beef[s]]]` onto the active Fabric runtime
+- added [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffFeed.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffFeed.java) with the upstream default-vs-explicit food-level behavior adapted to `ServerPlayer`
+- wired the exact runtime registration in [src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java](../../src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java)
+- added focused parser/resource coverage in [src/test/java/org/skriptlang/skript/fabric/runtime/FeedSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/FeedSyntaxTest.java) and [src/test/java/org/skriptlang/skript/fabric/runtime/EffectSyntaxParsingTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/EffectSyntaxParsingTest.java)
+- added live runtime verification in [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricFeedGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricFeedGameTest.java) backed by [src/gametest/resources/skript/gametest/effect/feed_event_player_by_beefs_marks_block.sk](../../src/gametest/resources/skript/gametest/effect/feed_event_player_by_beefs_marks_block.sk)
+- verification:
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.EffectSyntaxParsingTest --rerun-tasks`
+    - first run failed in `FeedSyntaxTest` because the parsed numeric literal rendered as `[2]`; updated the assertion to read the parsed number value directly and reran
+    - final run passed
+  - `./gradlew runGameTest --rerun-tasks`
+    - passed with `216 / 216` required GameTests completed, including the new live feed-player script coverage
+  - the live script proved `feed the event-player by 2 beefs` executed on a survival mock player and raised the player's food level from `5` to `7`
+
 ## Unresolved Risks
 
 - this slice restores parse-time hints for the exact built-in `set` path only; broader built-in hint producers such as other change modes and effect families are still thinner than upstream
+- the imported feed effect follows upstream’s direct food-level addition semantics, so it does not separately adjust saturation or exhaustion beyond whatever Mojang’s `setFoodLevel(...)` path already does
 - the runtime bootstrap still registers `EffChange` through the minimal `set %object% to %object%` compatibility pattern instead of upstream’s richer `%~objects%` target surface, so the local runtime fix is intentionally narrow to hintable simple locals
 - coverage proves the higher-quality earlier effect diagnostic beats a later lower-quality statement diagnostic, but it does not yet separately cover the same quality/priority shape for an earlier condition failure versus a later statement failure on the live `.sk` path
 - broader upstream parse-error ordering is still open when multiple later plain-statement candidates each log distinct specific diagnostics before final failure selection

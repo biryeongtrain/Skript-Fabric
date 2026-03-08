@@ -103,6 +103,7 @@ import org.skriptlang.skript.fabric.SkriptFabric;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
 import org.skriptlang.skript.bukkit.base.effects.EffInvisible;
+import org.skriptlang.skript.bukkit.base.effects.EffFeed;
 import org.skriptlang.skript.bukkit.base.effects.EffInvulnerability;
 import org.skriptlang.skript.bukkit.base.effects.EffKill;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAtLocation;
@@ -682,6 +683,10 @@ public final class SkriptFabricBootstrap {
                 );
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();
+                Skript.registerEffect(
+                        EffFeed.class,
+                        "feed [the] %players% [by %-number% [beef[s]]]"
+                );
                 Skript.registerEffect(
                         EffKill.class,
                         "kill %entities%"

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.skriptlang.skript.bukkit.base.effects.EffFeed;
 import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
 import org.skriptlang.skript.bukkit.displays.text.EffTextDisplayDropShadow;
 import org.skriptlang.skript.bukkit.displays.text.EffTextDisplaySeeThroughBlocks;
@@ -53,6 +54,7 @@ final class EffectSyntaxParsingTest {
     @Test
     void failingEffectScriptsStillLoadExpectedEffectItems() throws Exception {
         Map<String, Class<?>> expectations = Map.ofEntries(
+                Map.entry("skript/gametest/effect/feed_event_player_by_beefs_marks_block.sk", EffFeed.class),
                 Map.entry("skript/gametest/effect/make_adult_marks_block.sk", EffMakeAdultOrBaby.class),
                 Map.entry("skript/gametest/effect/make_baby_marks_block.sk", EffMakeAdultOrBaby.class),
                 Map.entry("skript/gametest/effect/text_display_add_shadow_names_entity.sk", EffTextDisplayDropShadow.class),
