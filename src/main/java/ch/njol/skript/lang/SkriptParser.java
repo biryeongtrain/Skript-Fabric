@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -60,6 +61,11 @@ public class SkriptParser {
         public boolean[] isPlural = new boolean[0];
         public int time;
     }
+
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile(
+            "((the )?var(iable)? )?\\{.+\\}",
+            Pattern.CASE_INSENSITIVE
+    );
 
     public static String notOfType(Class<?>[] types) {
         StringBuilder builder = new StringBuilder("not of type ");
@@ -160,13 +166,34 @@ public class SkriptParser {
 
     @SuppressWarnings("unchecked")
     private <T> @Nullable Expression<? extends T> parseVariableExpression(String expression, Class<? extends T>[] returnTypes) {
-        if (expression == null || expression.length() < 3 || expression.charAt(0) != '{'
-                || expression.charAt(expression.length() - 1) != '}') {
+        if (expression == null || !VARIABLE_PATTERN.matcher(expression).matches()) {
             return null;
         }
-        String variableName = expression.substring(1, expression.length() - 1).trim();
+        int openBrace = expression.indexOf('{');
+        int closeBrace = expression.lastIndexOf('}');
+        if (openBrace < 0 || closeBrace <= openBrace) {
+            return null;
+        }
+        String variableName = expression.substring(openBrace + 1, closeBrace).trim();
         if (variableName.isEmpty()) {
             return null;
+        }
+        boolean inExpression = false;
+        int variableDepth = 0;
+        for (char character : variableName.toCharArray()) {
+            if (character == '%' && variableDepth == 0) {
+                inExpression = !inExpression;
+            }
+            if (inExpression) {
+                if (character == '{') {
+                    variableDepth++;
+                } else if (character == '}') {
+                    variableDepth--;
+                }
+            }
+            if (!inExpression && (character == '{' || character == '}')) {
+                return null;
+            }
         }
         return (Expression<? extends T>) Variable.newInstance(variableName, returnTypes);
     }

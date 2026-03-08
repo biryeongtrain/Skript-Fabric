@@ -1,0 +1,3 @@
+on gametest:
+    set var {MiXeDBlock} to "gold_block"
+    set test block at 0 1 0 to the variable {mixedblock}
