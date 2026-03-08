@@ -7,9 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.log.ParseLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -201,6 +204,105 @@ class ClassesCompatibilityTest {
         assertNull(parser.parse("invalid", ParseContext.DEFAULT));
     }
 
+    @Test
+    void parseSimpleClearsFailedParserErrorsBeforeLaterSuccess() {
+        ClassInfo<FallbackSourceType> first = new ClassInfo<>(FallbackSourceType.class, "fallbacksource");
+        first.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public FallbackSourceType parse(String input, ParseContext context) {
+                Skript.error("first parser should not leak");
+                return null;
+            }
+        });
+        Classes.registerClassInfo(first);
+
+        ClassInfo<FallbackTargetType> second = new ClassInfo<>(FallbackTargetType.class, "fallbacktarget");
+        second.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public FallbackTargetType parse(String input, ParseContext context) {
+                if (!input.startsWith("fallback-")) {
+                    return null;
+                }
+                try {
+                    return new FallbackTargetType(Integer.parseInt(input.substring(9)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(second);
+
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            FallbackBaseType parsed = Classes.parseSimple("fallback-14", FallbackBaseType.class, ParseContext.DEFAULT);
+
+            assertEquals(new FallbackTargetType(14), parsed);
+            assertNull(log.getError());
+            assertTrue(log.getErrors().isEmpty());
+        }
+    }
+
+    @Test
+    void parseClearsFailedDirectErrorsBeforeConverterSuccess() {
+        ClassInfo<ConverterFallbackTarget> direct = new ClassInfo<>(ConverterFallbackTarget.class, "converterfallbacktarget");
+        direct.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public ConverterFallbackTarget parse(String input, ParseContext context) {
+                Skript.error("direct parser should not leak");
+                return null;
+            }
+        });
+        Classes.registerClassInfo(direct);
+
+        ClassInfo<ConverterFallbackSource> source = new ClassInfo<>(ConverterFallbackSource.class, "converterfallbacksource");
+        source.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public ConverterFallbackSource parse(String input, ParseContext context) {
+                if (!input.startsWith("convert-")) {
+                    return null;
+                }
+                try {
+                    return new ConverterFallbackSource(Integer.parseInt(input.substring(8)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(source);
+        Converters.registerConverter(
+                ConverterFallbackSource.class,
+                ConverterFallbackTarget.class,
+                value -> new ConverterFallbackTarget(value.value())
+        );
+
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            ConverterFallbackTarget parsed = Classes.parse("convert-28", ConverterFallbackTarget.class, ParseContext.DEFAULT);
+
+            assertEquals(new ConverterFallbackTarget(28), parsed);
+            assertNull(log.getError());
+            assertTrue(log.getErrors().isEmpty());
+        }
+    }
+
     private static final class FooType {
     }
 
@@ -247,5 +349,20 @@ class ClassesCompatibilityTest {
     }
 
     private record ParserTargetType(int value) {
+    }
+
+    private sealed interface FallbackBaseType permits FallbackSourceType, FallbackTargetType {
+    }
+
+    private record FallbackSourceType(int value) implements FallbackBaseType {
+    }
+
+    private record FallbackTargetType(int value) implements FallbackBaseType {
+    }
+
+    private record ConverterFallbackSource(int value) {
+    }
+
+    private record ConverterFallbackTarget(int value) {
     }
 }

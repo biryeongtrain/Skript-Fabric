@@ -3,6 +3,8 @@ package ch.njol.skript.registrations;
 import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.log.ParseLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.StringMode;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -218,31 +220,70 @@ public final class Classes {
 
     @SuppressWarnings("unchecked")
     public static <T> @Nullable T parse(String text, Class<T> type, ParseContext context) {
-        T parsed = parseDirect(text, type, context);
-        if (parsed != null) {
-            return parsed;
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            T parsed = parseSimple(text, type, context);
+            if (parsed != null) {
+                log.printLog();
+                return parsed;
+            }
+
+            for (ConverterInfo<?, ?> converterInfo : Converters.getConverterInfos()) {
+                if (!type.isAssignableFrom(converterInfo.getTo())) {
+                    continue;
+                }
+
+                clearParseLog(log);
+                Object source = parseSimple(text, (Class<Object>) converterInfo.getFrom(), context);
+                if (source == null) {
+                    continue;
+                }
+
+                Object converted = ((ConverterInfo<Object, ?>) converterInfo).getConverter().convert(source);
+                if (type.isInstance(converted)) {
+                    log.printLog();
+                    return (T) converted;
+                }
+            }
+
+            log.printError();
+            return null;
         }
+    }
 
-        for (ConverterInfo<?, ?> converterInfo : Converters.getConverterInfos()) {
-            if (!type.isAssignableFrom(converterInfo.getTo())) {
-                continue;
+    public static <T> @Nullable T parseSimple(String text, Class<T> type, ParseContext context) {
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            T parsed = parsePrimitive(text, type);
+            if (parsed != null) {
+                log.printLog();
+                return parsed;
             }
 
-            Object source = parseDirect(text, (Class<Object>) converterInfo.getFrom(), context);
-            if (source == null) {
-                continue;
+            ClassInfo<T> exactInfo = getExactClassInfo(type);
+            parsed = parseWithClassInfo(text, type, context, exactInfo, log);
+            if (parsed != null) {
+                log.printLog();
+                return parsed;
             }
 
-            Object converted = ((ConverterInfo<Object, ?>) converterInfo).getConverter().convert(source);
-            if (type.isInstance(converted)) {
-                return (T) converted;
+            for (ClassInfo<?> info : getSortedClassInfos()) {
+                if (info == exactInfo || !type.isAssignableFrom(info.getC())) {
+                    continue;
+                }
+
+                parsed = parseWithClassInfo(text, type, context, info, log);
+                if (parsed != null) {
+                    log.printLog();
+                    return parsed;
+                }
             }
+
+            log.printError();
+            return null;
         }
-        return null;
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> @Nullable T parseDirect(String text, Class<T> type, ParseContext context) {
+    private static <T> @Nullable T parsePrimitive(String text, Class<T> type) {
         if (type == String.class) {
             return (T) text;
         }
@@ -266,32 +307,29 @@ public final class Classes {
             }
             return null;
         }
-
-        ClassInfo<?> exactInfo = REGISTERED_INFOS.get(type);
-        if (exactInfo != null) {
-            ClassInfo.Parser<?> parser = exactInfo.getParser();
-            if (parser != null && parser.canParse(context)) {
-                Object parsed = parser.parse(text, context);
-                if (type.isInstance(parsed)) {
-                    return (T) parsed;
-                }
-            }
-        }
-
-        for (ClassInfo<?> info : getSortedClassInfos()) {
-            if (!type.isAssignableFrom(info.getC())) {
-                continue;
-            }
-            ClassInfo.Parser<?> parser = info.getParser();
-            if (parser == null || !parser.canParse(context)) {
-                continue;
-            }
-            Object parsed = parser.parse(text, context);
-            if (type.isInstance(parsed)) {
-                return (T) parsed;
-            }
-        }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> @Nullable T parseWithClassInfo(
+            String text,
+            Class<T> type,
+            ParseContext context,
+            @Nullable ClassInfo<?> info,
+            ParseLogHandler log
+    ) {
+        if (info == null) {
+            return null;
+        }
+
+        ClassInfo.Parser<?> parser = info.getParser();
+        if (parser == null || !parser.canParse(context)) {
+            return null;
+        }
+
+        clearParseLog(log);
+        Object parsed = parser.parse(text, context);
+        return type.isInstance(parsed) ? (T) parsed : null;
     }
 
     @SuppressWarnings("unchecked")
@@ -370,6 +408,11 @@ public final class Classes {
             SORTED_INFOS = sortClassInfos();
             return SORTED_INFOS;
         }
+    }
+
+    private static void clearParseLog(ParseLogHandler log) {
+        log.clear();
+        log.clearError();
     }
 
     private static List<ClassInfo<?>> sortClassInfos() {
