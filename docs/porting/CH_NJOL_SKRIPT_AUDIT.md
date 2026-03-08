@@ -133,7 +133,7 @@ That means the real gap is behavior, not class presence.
 | Input-source compatibility | `ExprInput` now supports `input`, typed `%classinfo% input`, and `input index`; broader source usage paths are still not closed | input expressions depend on this bridge | `Part 1A` |
 | Variable runtime | `Variables` now covers case-insensitive storage, copy-back semantics, list-to-list reindexing, natural numeric ordering for prefix/list iteration, upstream-style raw nested map reads for `Variables.getVariable("list::*", ...)`, legacy list-variable loop/check semantics, and a first parse-time local-variable hint path through `HintManager`, but it is still an in-memory bridge only | variable semantics affect function calls, sections, and expressions | `Part 1B` |
 | Type/parse registry | `Classes` now covers codename/literal/supertype lookup, stable class-info ordering, shared literal-match ordering, converter-backed parse fallback, converter-backed `getParser(...)` fallback, and parse-log-aware fallback cleanup in `Classes.parse(...)`, but remains a small compatibility layer relative to upstream | typed literal and parser behavior depend on it | `Part 1B` |
-| User-visible syntax imports | `Part 2` has now started with base entity-state/control syntax on the active Fabric runtime, but most upstream condition/effect/expression families are still absent from the registered Fabric surface | the user now wants missing syntax imports first, with core closure only when it unblocks the next syntax family | `Part 2` |
+| User-visible syntax imports | `Part 2` has now started with base entity-state/control syntax plus follow-up `%material%`, `feed`, and invisible/visible effect forms on the active Fabric runtime, but most upstream condition/effect/expression families are still absent from the registered Fabric surface | the user now wants missing syntax imports first, with core closure only when it unblocks the next syntax family | `Part 2` |
 
 ## Part Tracker
 
@@ -142,7 +142,7 @@ That means the real gap is behavior, not class presence.
 | `Part 0` | inventory, documentation move, canonical doc layout | `completed` | completed on 2026-03-08 |
 | `Part 1A` | `lang` parser/runtime closure | `in_progress` | active implementation slices now include shared pattern matching, parser metadata flow, script loading, and variable-expression parsing |
 | `Part 1B` | `variables` / `classes` / `config` / `patterns` / `registrations` / `log` dependency closure | `in_progress` | already started because options, class-registry, and variable-storage behavior is now being tightened |
-| `Part 2` | import or replace missing user-visible upstream syntax in priority order | `in_progress` | first base entity-state/control slice is landed; continue with exact upstream syntax forms that the current runtime can support end-to-end |
+| `Part 2` | import or replace missing user-visible upstream syntax in priority order | `in_progress` | base entity-state/control plus `%material%`, `feed`, and invisible/visible follow-up slices are landed; continue with exact upstream syntax forms that the current runtime can support end-to-end |
 | `Part 3` | low-priority support packages (`doc`, `test`, `timings`, `update`, selected hooks/utilities) | `pending` | only after runtime-relevant surfaces are settled |
 
 ## Part 0 Progress Log
@@ -285,6 +285,12 @@ That means the real gap is behavior, not class presence.
   - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `216 / 216`
   - `./gradlew build --rerun-tasks` passed with the full `216 / 216` runtime suite
+  - regex-backed `ClassInfo.user(...)` aliases now work on the compatibility path again, so `%material%` and `%materials%` resolve through registered class infos instead of only raw codenames
+  - exact upstream `feed [the] %players% [by %-number% [beef[s]]]` and `make %livingentities% invisible/visible` forms now execute on the active Fabric runtime
+  - dedicated parser/bootstrap unit tests plus real `.sk` GameTests now cover `%material%`, feed, invisible, and visible runtime behavior
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `220 / 220`
+  - `./gradlew build --rerun-tasks` passed with the full `220 / 220` runtime suite
 - upstream cross-check corrected two false blockers:
   - `TriggerSection.run(...)` throwing `UnsupportedOperationException` matches upstream intent
   - function-call wrapper `init(...)` stubs match upstream direct-wrapper behavior and are not current blockers

@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `216 / 216`
+- Verified Fabric GameTests: `220 / 220`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -246,11 +246,13 @@ The list below groups the active syntax by domain and calls out the representati
   - location
   - block
   - item stack
+  - material
   - inventory
   - vector
   - slot
   - timespan
   - quaternion
+  - `%material%` / `%materials%` now resolve again through user-pattern classinfo aliases on the active compatibility path
 
 ### Breeding
 
@@ -421,6 +423,8 @@ The list below groups the active syntax by domain and calls out the representati
   - `delete %object%`
 - base entity control
   - `kill %entities%`
+  - `feed [the] %players%`
+  - `feed [the] %players% by %-number% [beef[s]]`
   - `silence %entities%`
   - `unsilence %entities%`
   - `make %entities% silent`
@@ -428,6 +432,10 @@ The list below groups the active syntax by domain and calls out the representati
   - `make %entities% invulnerable`
   - `make %entities% invincible`
   - `make %entities% vulnerable`
+  - `make %livingentities% invisible`
+  - `make %livingentities% not visible`
+  - `make %livingentities% visible`
+  - `make %livingentities% not invisible`
 - fishing approach-angle setter
 
 ### Breeding

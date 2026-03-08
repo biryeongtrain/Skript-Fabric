@@ -36,7 +36,7 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `216 / 216` scheduled Fabric GameTests completed without build failure
+  - `220 / 220` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
@@ -52,23 +52,21 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next syntax-import slice for base entity-state and entity-control forms that were still missing versus upstream
-- entity-state condition compatibility landed:
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsAlive.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsAlive.java) now covers `%entities% are alive/dead`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSilent.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSilent.java) now covers `%entities% are silent`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvulnerable.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvulnerable.java) now covers `%entities% are invulnerable/invincible`
-- entity-control effect compatibility landed:
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffKill.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffKill.java) now covers `kill %entities%`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSilence.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSilence.java) now covers `silence %entities%`, `unsilence %entities%`, `make %entities% silent`, and `make %entities% not silent`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvulnerability.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvulnerability.java) now covers `make %entities% invulnerable/invincible` and the vulnerable inverse forms
-- bootstrap and verification landed:
+- merged the next syntax-import slice for exact upstream `%material%`, `feed`, and invisible/visible forms that were still missing versus upstream
+- classinfo alias compatibility landed:
+  - [src/main/java/ch/njol/skript/classes/ClassInfo.java](../../src/main/java/ch/njol/skript/classes/ClassInfo.java) and [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now honor regex-backed `ClassInfo.user(...)` aliases on the compatibility path
+  - [src/main/java/org/skriptlang/skript/bukkit/base/types/ItemTypeClassInfo.java](../../src/main/java/org/skriptlang/skript/bukkit/base/types/ItemTypeClassInfo.java) now restores `%material%` / `%materials%` user aliases
+- exact effect syntax compatibility landed:
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffFeed.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffFeed.java) now covers `feed [the] %players% [by %-number% [beef[s]]]`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvisible.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvisible.java) now covers `make %livingentities% invisible`, `make %livingentities% not visible`, `make %livingentities% visible`, and `make %livingentities% not invisible`
   - [src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java](../../src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java) now registers those exact upstream-style syntax forms in the active Fabric runtime
-  - [src/test/java/org/skriptlang/skript/fabric/runtime/AliveKillSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/AliveKillSyntaxTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/SilentSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/SilentSyntaxTest.java), and [src/test/java/org/skriptlang/skript/fabric/runtime/InvulnerableSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvulnerableSyntaxTest.java) now prove parser/bootstrap registration for the exact new forms
-  - added real `.sk` fixtures and dedicated GameTest classes for alive/dead, silent, invulnerable, kill, make silent, and make invulnerable runtime behavior through the live resource-loader path
+- parser/runtime verification landed:
+  - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/FeedSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/FeedSyntaxTest.java), and [src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java) now prove parser/bootstrap registration for the exact new forms
+  - added real `.sk` fixtures and dedicated GameTest classes for `%material%` alias resolution, feeding the event player, and invisible/visible runtime behavior through the live resource-loader path
 - latest verification for this merged slice:
-  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `216 / 216`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `216 / 216`
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `220 / 220`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `220 / 220`
 
 ## What Landed In This Slice
 
@@ -86,6 +84,7 @@ New immediate priority:
   - `EffKill`, `EffSilence`, and `EffInvulnerability`
   - bootstrap registration now covers exact forms such as `%entities% are alive/dead`, `%entities% are silent`, `%entities% are invulnerable/invincible`, `kill %entities%`, `silence %entities%`, `unsilence %entities%`, and `make %entities% silent`
   - dedicated parser/bootstrap unit tests plus real `.sk` GameTests now verify those forms end-to-end
+  - follow-up syntax-import closure now also covers `%material%`, `feed [the] %players% [by %-number% [beef[s]]]`, and `make %livingentities% invisible/visible`
 - kept the first concrete closure target as `Part 1A: lang parser/runtime closure`
 - started `Part 1B` in parallel because `Classes`, `Variables`, `config`, and `structures` behavior is already being tightened in the same dependency cluster
 - landed the current `Part 1A` / `Part 1B` slices:
@@ -100,7 +99,7 @@ New immediate priority:
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, and `make_invulnerable_names_entity.sk`, increasing the current Fabric GameTest suite to `216 / 216`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, `make_invulnerable_names_entity.sk`, `material_alias_placeholder_set_test_block.sk`, `feed_event_player_by_beefs_marks_block.sk`, `make_invisible_names_entity.sk`, and `make_visible_names_entity.sk`, increasing the current Fabric GameTest suite to `220 / 220`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup

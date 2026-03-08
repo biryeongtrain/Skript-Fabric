@@ -77,6 +77,8 @@ Current measured baseline for that workstream:
   - `EffChange.init(...)` now publishes parse-time local-variable hints for the exact built-in `set %object% to %object%` path when it successfully targets a hintable local variable
   - base entity-state conditions now cover `%entities% are alive/dead`, `%entities% are silent`, and `%entities% are invulnerable/invincible`
   - base entity-control effects now cover `kill %entities%`, `silence %entities%`, `unsilence %entities%`, `make %entities% silent`, and `make %entities% (invulnerable|invincible|vulnerable)`
+  - regex-backed `ClassInfo.user(...)` aliases now resolve `%material%` / `%materials%` through registered class infos again
+  - exact upstream `feed [the] %players% [by %-number% [beef[s]]]` and `make %livingentities% invisible/visible` effect forms are now registered and live-verified on the active Fabric runtime
   - dedicated unit tests plus real `.sk` GameTests now verify those exact syntax families through the active Fabric bootstrap and live runtime
   - `Variables.getVariable("name::*", ...)` now reconstructs upstream-style nested list maps from the flat store, while `getVariablesWithPrefix(...)` keeps the current shallow direct-child behavior
   - `SkriptParser` now recognizes upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}`
@@ -87,7 +89,7 @@ Current measured baseline for that workstream:
   - `ParseLogHandler`, `SkriptLogger`, and `Statement.parse(...)` now retain specific parse errors across nested parser scopes, so valid effects used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
   - locked runtime GameTests now clear Skript variables before and after each body through `Variables.clearAll()`, which keeps real `.sk` verification isolated from suite-order leakage without changing production variable semantics
   - targeted unit verification passed on 2026-03-08
-  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `216 / 216`
+  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `220 / 220`
   - `./gradlew build --rerun-tasks` passed on 2026-03-08, including the full Fabric GameTest task
 
 This workstream runs in parallel with the Stage 5 and Stage 8 records below.
@@ -279,7 +281,7 @@ Status: `in_progress`
 Current completed slices:
 
 - `fabric-gametest` runtime harness is active
-- current real-script Fabric GameTest suite is green at `216 / 216`
+- current real-script Fabric GameTest suite is green at `220 / 220`
 
 ## Stage 8: Parity audit
 
@@ -410,6 +412,7 @@ Still remaining before Stage 8 can be called complete:
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging raw list-variable map reads, prefixed variable expression parsing, and higher-quality statement fallback diagnostics; the active suite increased to `205 / 205`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging inner-expression variable-name validation, classinfo-backed omitted placeholder defaults, and built-in `EffChange` local hints; the active suite increased to `207 / 207`.
 - 2026-03-08: `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after importing base entity-state/control syntax for alive/dead, silent, invulnerable, kill, and related forms; the active suite increased to `216 / 216`.
+- 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after restoring `%material%` alias lookup and importing exact upstream `feed` plus invisible/visible effect syntax; the active suite increased to `220 / 220`.
 - 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
 - 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 
