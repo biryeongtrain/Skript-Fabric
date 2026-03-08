@@ -178,13 +178,13 @@ public final class FunctionRegistry implements Registry<Function<?>> {
     private Retrieval<Signature<?>> getSignatures(NamespaceIdentifier namespace, String name, Class<?>[] args) {
         List<Signature<?>> candidates = new ArrayList<>();
         collectMatchingSignatures(candidates, namespace, name, args);
-        return resolveRetrieval(candidates);
+        return resolveRetrieval(candidates, args);
     }
 
     private Retrieval<Function<?>> getFunctions(NamespaceIdentifier namespace, String name, Class<?>[] args) {
         List<Function<?>> candidates = new ArrayList<>();
         collectMatchingFunctions(candidates, namespace, name, args);
-        return resolveRetrieval(candidates);
+        return resolveRetrieval(candidates, args);
     }
 
     private void collectMatchingSignatures(List<Signature<?>> candidates, NamespaceIdentifier namespace, String name, Class<?>[] args) {
@@ -246,6 +246,54 @@ public final class FunctionRegistry implements Registry<Function<?>> {
             }
         }
         return new Retrieval<>(RetrievalResult.AMBIGUOUS, null, conflicts);
+    }
+
+    private static <T> Retrieval<T> resolveRetrieval(List<T> candidates, Class<?>[] provided) {
+        Retrieval<T> base = resolveRetrieval(candidates);
+        if (base.result != RetrievalResult.AMBIGUOUS) {
+            return base;
+        }
+
+        // Upstream tie-breaker: if some provided arguments are exact (non-Object),
+        // prefer candidates whose parameter at that position exactly equals the provided type.
+        List<T> filtered = new ArrayList<>(candidates);
+        for (int idx = 0; idx < provided.length; idx++) {
+            final int pos = idx;
+            Class<?> p = provided[pos];
+            if (p == Object.class) {
+                continue;
+            }
+            Class<?> pComp = component(p);
+            int before = filtered.size();
+            filtered.removeIf(c -> {
+                Class<?>[] candArgs;
+                if (c instanceof Signature<?> s) {
+                    candArgs = Arrays.stream(s.getParameters()).map(Parameter::type).toArray(Class[]::new);
+                } else if (c instanceof Function<?> f) {
+                    candArgs = Arrays.stream(f.getParameters()).map(Parameter::type).toArray(Class[]::new);
+                } else {
+                    return false;
+                }
+                if (pos >= candArgs.length) {
+                    return true;
+                }
+                Class<?> candComp = component(candArgs[pos]);
+                return candComp != pComp;
+            });
+            if (filtered.isEmpty()) {
+                // Over-filtered; revert to original set and continue with next index
+                filtered = new ArrayList<>(candidates);
+            }
+            if (filtered.size() == 1) {
+                return new Retrieval<>(RetrievalResult.EXACT, filtered.getFirst(), null);
+            }
+            if (filtered.size() == before) {
+                continue;
+            }
+        }
+
+        // Still ambiguous; return ambiguity with conflicts for error reporting.
+        return resolveRetrieval(filtered);
     }
 
     private @Nullable Signature<?> getExactSignature(NamespaceIdentifier namespace, FunctionIdentifier identifier) {
