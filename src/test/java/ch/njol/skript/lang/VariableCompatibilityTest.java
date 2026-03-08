@@ -83,6 +83,24 @@ class VariableCompatibilityTest {
     }
 
     @Test
+    void clearingSectionOnlyScopeDropsRemovedSectionHintsFromLaterScopes() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        parser.getHintManager().enterScope(true);
+        parser.getHintManager().set("value", Integer.class);
+        parser.getHintManager().enterScope(false);
+
+        parser.getHintManager().clearScope(0, true);
+        parser.getHintManager().exitScope();
+        parser.getHintManager().enterScope(true);
+
+        Variable<String> variable = Variable.newInstance("_value", new Class[]{String.class});
+
+        assertNotNull(variable);
+        assertEquals(String.class, variable.getReturnType());
+    }
+
+    @Test
     void singleVariableSupportsSetAndAdd() {
         Variable<Number> variable = Variable.newInstance("count", new Class[]{Number.class});
         assertNotNull(variable);

@@ -46,7 +46,20 @@ public final class HintManager {
             scopeAt(level).hints().clear();
             return;
         }
-        scopeAt(level, true).hints().clear();
+        int sectionLevel = 0;
+        var iterator = scopes.iterator();
+        while (iterator.hasNext()) {
+            Scope scope = iterator.next();
+            if (!scope.section()) {
+                continue;
+            }
+            if (sectionLevel == level) {
+                iterator.remove();
+                return;
+            }
+            sectionLevel++;
+        }
+        throw new IndexOutOfBoundsException("Section scope level " + level + " is out of bounds");
     }
 
     public void mergeScope(int from, int to, boolean sectionOnly) {
