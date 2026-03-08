@@ -17,10 +17,21 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on broader statement orchestration after the plain-statement section-context regression slice.
+- Continue `Part 1A` on broader statement orchestration after restoring exact built-in local-variable hint producers for `set`.
 
 ## Work Log
 
+- compared the current loader hint flow against upstream `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and selected one contained shipped-syntax gap that still sits on the loader-orchestration boundary:
+  - the built-in `EffChange` syntax `set {_value} to 1` should act as a parse-time local-variable hint producer for later sibling lines, just like the already-green custom hint test harnesses
+- closed that built-in hint-producer slice without broadening the parser-owned scope:
+  - `EffChange.init(...)` now publishes hint return types through the current `HintManager` when the exact built-in `set %object% to %object%` path targets a hintable local variable
+  - `EffChange.execute(...)` now also bypasses stale hinted target conversion for those simple local `SET` lines, so a later built-in `set {_value} to "text"` actually stores the new runtime value instead of being coerced through the earlier hinted target type
+  - later sibling lines now see the inferred type from the exact built-in syntax, and a later built-in `set {_value} to "text"` correctly overrides the earlier integer hint with `String`
+- added focused `ScriptLoaderCompatibilityTest` coverage proving:
+  - `set {_value} to 1` allows a later exact syntax `capture hinted integer {_value}`
+  - a later exact syntax `set {_value} to "text"` overrides the earlier hint so `capture hinted text {_value}` also loads and executes
+- added real `.sk` coverage in `src/gametest/resources/skript/gametest/base/built_in_set_local_hint_test_block.sk` plus a matching `SkriptFabricBaseGameTest` harness that verifies the built-in `set` syntax loads, dispatches, and exposes the expected typed values on the live resource path
+- did not claim hint-flow parity complete: this slice restores the built-in `set` producer only, not the broader remaining built-in effect family
 - compared the current lane-owned `Statement` error-retention flow against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and selected one contained closure slice that stays inside Lane A ownership:
   - when an earlier effect or condition failure logs a higher-quality specific parse error, a later plain `Statement` failure must not replace it with a lower-quality specific error
 - `Statement.selectRetainedFailure(...)` now compares later statement-specific failures against the earlier retained effect/condition failure by parse-error quality, matching the upstream single-handler preference more closely:
@@ -94,6 +105,7 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
+- `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java`
 - `src/main/java/ch/njol/skript/ScriptLoader.java`
 - `src/main/java/ch/njol/skript/lang/Statement.java`
 - `src/main/java/ch/njol/skript/lang/TriggerItem.java`
@@ -101,6 +113,7 @@ Last updated: 2026-03-08
 - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java`
 - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricExpressionGameTest.java`
+- `src/gametest/resources/skript/gametest/base/built_in_set_local_hint_test_block.sk`
 - `src/gametest/resources/skript/gametest/base/equal_quality_parse_error_prefers_effect_test_block.sk`
 - `src/gametest/resources/skript/gametest/base/higher_quality_parse_error_prefers_effect_test_block.sk`
 - `src/gametest/resources/skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk`
@@ -109,6 +122,16 @@ Last updated: 2026-03-08
 
 ## Verification
 
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.builtInSetEffectOverridesEarlierHintsWithLaterStringAssignment --rerun-tasks --info`
+  - first run failed with `expected: <text> but was: <null>` because the later local `SET` still executed through the earlier hinted `Integer` target view
+  - fixed the runtime side inside `EffChange.execute(...)`, then continued verification on the finished tree
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.builtInSetEffectHintsIntegerLocalsForLaterSiblingLines --tests ch.njol.skript.ScriptLoaderCompatibilityTest.builtInSetEffectOverridesEarlierHintsWithLaterStringAssignment --rerun-tasks`
+  - passed
+- `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - passed on the finished tree with the new built-in `set` hint regressions included
+- `./gradlew runGameTest --rerun-tasks`
+  - passed
+  - the finished tree completed `206 / 206` required GameTests with the new built-in `set` live-script regression included
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsHigherQualityEffectErrorWhenLaterStatementAlsoFails --rerun-tasks`
   - passed
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
@@ -154,6 +177,8 @@ Last updated: 2026-03-08
 
 ## Unresolved Risks
 
+- this slice restores parse-time hints for the exact built-in `set` path only; broader built-in hint producers such as other change modes and effect families are still thinner than upstream
+- the runtime bootstrap still registers `EffChange` through the minimal `set %object% to %object%` compatibility pattern instead of upstream’s richer `%~objects%` target surface, so the local runtime fix is intentionally narrow to hintable simple locals
 - coverage proves the higher-quality earlier effect diagnostic beats a later lower-quality statement diagnostic, but it does not yet separately cover the same quality/priority shape for an earlier condition failure versus a later statement failure on the live `.sk` path
 - broader upstream parse-error ordering is still open when multiple later plain-statement candidates each log distinct specific diagnostics before final failure selection
 - coverage proves the fallback ordering for same-pattern effect/condition candidates that reject during `init(...)`, but it does not yet cover more complex multi-pattern ambiguity where multiple later statement candidates also log distinct specific errors
@@ -164,6 +189,11 @@ Last updated: 2026-03-08
 
 ## Merge Notes
 
+- current-cycle conflict surface also includes `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java`, `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`, and `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java` around the new built-in hint-producer path
+- preserve the exact `EffChange` behavior:
+  - only successful `SET` operations on hintable local variables should publish parse-time hints
+  - those same simple local `SET` operations must store the new runtime value without reusing a stale hinted target conversion from an earlier sibling line
+  - later built-in `set` lines must be able to overwrite earlier local hints before later sibling parsing
 - current-cycle conflict surface now also includes `Statement.java`, `ScriptLoaderCompatibilityTest.java`, and `SkriptFabricBaseGameTest.java` around the new higher-quality statement-vs-effect parse-error retention rule
 - preserve the new retained-failure ordering in `Statement.parse(...)`:
   - later plain-statement-specific errors should only replace an earlier effect/condition failure when they are strictly higher quality

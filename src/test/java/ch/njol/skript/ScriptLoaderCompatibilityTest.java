@@ -64,6 +64,10 @@ class ScriptLoaderCompatibilityTest {
         RecordingEffect.executed.clear();
         statementExecution.clear();
         CaptureHintedObjectEffect.lastReturnType = null;
+        CaptureHintedIntegerEffect.lastReturnType = null;
+        CaptureHintedIntegerEffect.lastCapturedValue = null;
+        CaptureHintedTextEffect.lastReturnType = null;
+        CaptureHintedTextEffect.lastCapturedValue = null;
         TestNumberSectionExpression.reset();
         Variables.clearAll();
         FunctionRegistry.getRegistry().clear();
@@ -142,6 +146,61 @@ class ScriptLoaderCompatibilityTest {
 
         assertEquals(2, items.size());
         assertEquals(Integer.class, CaptureHintedObjectEffect.lastReturnType);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void builtInSetEffectHintsIntegerLocalsForLaterSiblingLines() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        Skript.registerEffect(
+                EffChange.class,
+                "set %object% to %object%",
+                "add %object% to %object%",
+                "remove %object% from %object%",
+                "reset %object%",
+                "delete %object%"
+        );
+        Skript.registerEffect(CaptureHintedIntegerEffect.class, "capture hinted integer %integer%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                line("set {_value} to 1"),
+                line("capture hinted integer {_value}")
+        ));
+
+        assertEquals(2, items.size());
+        assertEquals(Integer.class, CaptureHintedIntegerEffect.lastReturnType);
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals(1, CaptureHintedIntegerEffect.lastCapturedValue);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void builtInSetEffectOverridesEarlierHintsWithLaterStringAssignment() {
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+        Skript.registerEffect(
+                EffChange.class,
+                "set %object% to %object%",
+                "add %object% to %object%",
+                "remove %object% from %object%",
+                "reset %object%",
+                "delete %object%"
+        );
+        Skript.registerEffect(CaptureHintedTextEffect.class, "capture hinted text %string%");
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                line("set {_value} to 1"),
+                line("set {_value} to \"text\""),
+                line("capture hinted text {_value}")
+        ));
+
+        assertEquals(3, items.size());
+        assertEquals(String.class, CaptureHintedTextEffect.lastReturnType);
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals("text", CaptureHintedTextEffect.lastCapturedValue);
     }
 
     @Test
@@ -829,6 +888,66 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "capture hinted object";
+        }
+    }
+
+    public static final class CaptureHintedIntegerEffect extends ch.njol.skript.lang.Effect {
+
+        private static @Nullable Class<?> lastReturnType;
+        private static @Nullable Integer lastCapturedValue;
+        private Expression<Integer> value;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            lastReturnType = expressions[0].getReturnType();
+            value = (Expression<Integer>) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+            lastCapturedValue = value.getSingle(event);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "capture hinted integer";
+        }
+    }
+
+    public static final class CaptureHintedTextEffect extends ch.njol.skript.lang.Effect {
+
+        private static @Nullable Class<?> lastReturnType;
+        private static @Nullable String lastCapturedValue;
+        private Expression<String> value;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            lastReturnType = expressions[0].getReturnType();
+            value = (Expression<String>) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+            lastCapturedValue = value.getSingle(event);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "capture hinted text";
         }
     }
 

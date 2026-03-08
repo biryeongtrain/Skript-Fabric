@@ -9,6 +9,9 @@ import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.UnparsedLiteral;
+import ch.njol.skript.lang.Variable;
+import ch.njol.skript.variables.HintManager;
+import ch.njol.skript.variables.Variables;
 import ch.njol.util.Kleenean;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -51,7 +54,16 @@ public final class EffChange extends Effect {
                 return false;
             }
         }
-        return changed.acceptChange(mode) != null;
+        if (changed.acceptChange(mode) == null) {
+            return false;
+        }
+        if (mode == ChangeMode.SET
+                && changeWith != null
+                && changed instanceof Variable<?> variable
+                && HintManager.canUseHints(variable)) {
+            getParser().getHintManager().set(variable, changeWith.possibleReturnTypes());
+        }
+        return true;
     }
 
     @Override
@@ -63,6 +75,12 @@ public final class EffChange extends Effect {
                 if (mode == ChangeMode.SET && changed.acceptChange(ChangeMode.DELETE) != null) {
                     changed.change(event, null, ChangeMode.DELETE);
                 }
+                return;
+            }
+            if (mode == ChangeMode.SET
+                    && changed instanceof Variable<?> variable
+                    && HintManager.canUseHints(variable)) {
+                Variables.setVariable(variable.getName().toString(event), delta[0], event, true);
                 return;
             }
             if (supportsKeyedChange(mode)
