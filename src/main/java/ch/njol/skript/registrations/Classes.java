@@ -2,6 +2,7 @@ package ch.njol.skript.registrations;
 
 import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.lang.DefaultExpression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
@@ -123,6 +124,15 @@ public final class Classes {
             return INFOS_BY_CODE_NAME.get(normalized.substring(0, normalized.length() - 1));
         }
         return null;
+    }
+
+    public static @Nullable DefaultExpression<?> getDefaultExpression(String codeName) {
+        return getClassInfo(codeName).getDefaultExpression();
+    }
+
+    public static <T> @Nullable DefaultExpression<T> getDefaultExpression(Class<T> type) {
+        ClassInfo<T> info = getExactClassInfo(type);
+        return info == null ? null : info.getDefaultExpression();
     }
 
     public static boolean isPluralClassInfoUserInput(@Nullable String userInput, @Nullable ClassInfo<?> classInfo) {

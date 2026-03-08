@@ -4,74 +4,115 @@ Last updated: 2026-03-08
 
 ## Scope
 
-- upstream `CondAI` syntax import
-- active Fabric runtime registration
-- targeted AI condition coverage
+- `Classes` registry default-expression lookup semantics only
+- targeted `ClassesCompatibilityTest` coverage only
 
 ## Owned Files
 
-- `src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondAI.java`
-- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-- `src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java`
-- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java`
-- `src/gametest/resources/skript/gametest/condition/has_ai_entity_names_entity.sk`
-- `src/gametest/resources/skript/gametest/condition/no_ai_entity_names_entity.sk`
-- `src/gametest/resources/fabric.mod.json`
+- `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `docs/porting/parallel/LANE_D_STATUS.md`
 
-## Goal For Next Session
+## Goal For This Slice
 
-- keep this slice merge-ready and let the coordinator fold the exact AI condition import into the canonical docs/status pass
+- restore the missing upstream-backed `Classes.getDefaultExpression(...)` helper surface on top of the already-ported `ClassInfo.defaultExpression(...)` data
+- keep the change mergeable and confined to `Classes` plus its compatibility test
 
 ## Work Log
 
-- read the canonical porting docs plus the upstream `ch/njol/skript/conditions/CondAI.java` source before editing
-- confirmed the upstream surface to import is the exact property-condition family:
-  - `%livingentities% (has|have) (ai|artificial intelligence)`
-  - `%livingentities% (doesn't|does not|do not|don't) have (ai|artificial intelligence)`
-- added `org/skriptlang/skript/bukkit/base/conditions/CondAI.java` as the local Fabric-runtime condition implementation
-  - uses the existing compatibility style from the already-landed base entity conditions
-  - checks Mojang AI state through `Mob#isNoAi()` and renders as `has artificial intelligence`
-- registered the exact upstream user-visible forms in `SkriptFabricBootstrap`
-- added targeted unit coverage in `AISyntaxTest` proving exact parse coverage for:
-  - `event-entity has ai`
-  - `event-entity has artificial intelligence`
-  - `event-entity does not have artificial intelligence`
-- added dedicated real `.sk` + GameTest coverage proving live runtime behavior for both branches:
-  - `event-entity has ai`
-  - `event-entity does not have artificial intelligence`
-  - plus direct runtime parse/evaluate checks for `event-entity has artificial intelligence` and `event-entity doesn't have ai`
-- registered the new dedicated GameTest entrypoint in `src/gametest/resources/fabric.mod.json`
-- this slice increased the full Fabric GameTest total from `220` to `223`
+- read the required porting docs in the requested order:
+  - `docs/porting/README.md`
+  - `docs/porting/NEXT_AGENT_HANDOFF.md`
+  - `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
+  - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
+  - `docs/porting/CODEX_PARALLEL_PROMPTS.md`
+- reviewed the existing lane file, local `Classes.java`, local `ClassesCompatibilityTest.java`, and upstream snapshot `/tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
+- selected one contained Part 1B gap that stayed inside the owned files:
+  - local `ClassInfo` already stored default expressions
+  - upstream `Classes` exposed lookup helpers by code name and exact class
+  - local `Classes` was missing those helper methods entirely
+- added the missing lookup helpers to `Classes`:
+  - `Classes.getDefaultExpression(String codeName)`
+  - `Classes.getDefaultExpression(Class<T> type)`
+- added targeted regression coverage proving:
+  - registered default expressions are returned by code name
+  - registered default expressions are returned by exact class
+  - unregistered exact classes return `null`
 
 ## Files Changed
 
-- `src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondAI.java`
-- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-- `src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java`
-- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java`
-- `src/gametest/resources/skript/gametest/condition/has_ai_entity_names_entity.sk`
-- `src/gametest/resources/skript/gametest/condition/no_ai_entity_names_entity.sk`
-- `src/gametest/resources/fabric.mod.json`
+- `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
+
+## Counts Changed
+
+- Stage 8 package-local audit counts changed: `0`
+- Fabric GameTest counts changed: `0`
+- targeted compatibility tests added: `1`
+
+## Exact Commands And Results
+
+- `sed -n '1,220p' docs/porting/README.md`
+  - read successfully
+- `sed -n '1,220p' docs/porting/NEXT_AGENT_HANDOFF.md`
+  - read successfully
+- `sed -n '1,260p' docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
+  - read successfully
+- `sed -n '1,260p' docs/porting/CODEX_PARALLEL_WORKFLOW.md`
+  - read successfully
+- `sed -n '1,260p' docs/porting/CODEX_PARALLEL_PROMPTS.md`
+  - read successfully
+- `if [ -f docs/porting/parallel/LANE_D_STATUS.md ]; then sed -n '1,240p' docs/porting/parallel/LANE_D_STATUS.md; else echo '__MISSING__'; fi`
+  - existing stale lane file found and reviewed
+- `git status --short`
+  - clean before edits
+- `sed -n '1,260p' src/main/java/ch/njol/skript/registrations/Classes.java`
+  - reviewed local implementation
+- `sed -n '1,260p' /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
+  - reviewed upstream implementation
+- `sed -n '1,260p' src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - reviewed existing compatibility coverage
+- `sed -n '261,520p' src/main/java/ch/njol/skript/registrations/Classes.java`
+  - reviewed remainder of local implementation
+- `sed -n '261,520p' /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
+  - reviewed remainder of upstream implementation
+- `diff -u /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java src/main/java/ch/njol/skript/registrations/Classes.java | sed -n '1,260p'`
+  - confirmed the missing default-expression helper surface
+- `sed -n '1,280p' src/main/java/ch/njol/skript/classes/ClassInfo.java`
+  - confirmed local `ClassInfo` already stores `DefaultExpression`
+- `rg -n "toString\\(|default expression|DefaultExpression|getDefaultExpression|clone\\(" src/main/java/ch/njol/skript/classes/ClassInfo.java /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
+  - isolated upstream default-expression helper methods as the contained gap
+- `rg -n "getAllSuperClassInfos|getDefaultExpression\\(|toString\\(Object value, StringMode|toString\\(Object\\[] values, boolean and\\)|clone\\(" src/main/java src/test/java`
+  - confirmed no existing local helper implementation or direct coverage
+- `rg -n "Classes\\.getDefaultExpression|defaultExpression\\(" src/test/java src/main/java`
+  - confirmed existing parser-side default-expression data but no `Classes` helper usage
+- `sed -n '1,220p' src/main/java/ch/njol/skript/lang/DefaultExpression.java`
+  - reviewed interface shape
+- `rg -n "class SimpleLiteral|record SimpleLiteral|new SimpleLiteral" src/main/java src/test/java`
+  - identified the existing default-expression test helper
+- `sed -n '1,220p' src/main/java/ch/njol/skript/lang/util/SimpleLiteral.java`
+  - reviewed helper implementation for the new test
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+  - passed
+  - `BUILD SUCCESSFUL`
+- `git diff -- src/main/java/ch/njol/skript/registrations/Classes.java src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - reviewed final code diff
+- `git status --short`
+  - only the owned files were modified
 
 ## Verification
 
-- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
   - passed
-- `./gradlew runGameTest --rerun-tasks`
-  - passed
-  - `223 / 223` required GameTests completed successfully
 
 ## Unresolved Risks
 
-- the imported condition maps upstream Bukkit `LivingEntity#hasAI()` onto Fabric’s `Mob#isNoAi()` surface, so non-mob living entities still follow the local compatibility fallback instead of a broader upstream-equivalent API
-- coverage proves the exact imported AI condition forms and live cow behavior, not wider future AI expression or effect families
+- this slice restores only the missing default-expression lookup helper surface in `Classes`; it does not close broader upstream `Classes` gaps such as fuller classinfo helper coverage or legacy stringification behavior
+- the new coverage is unit-only because the change is registry helper plumbing, not live `.sk` runtime behavior
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-  - `src/gametest/resources/fabric.mod.json`
-- lower-risk but possible conflicts:
-  - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java`
-  - `src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java`
+  - `src/main/java/ch/njol/skript/registrations/Classes.java`
+  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
