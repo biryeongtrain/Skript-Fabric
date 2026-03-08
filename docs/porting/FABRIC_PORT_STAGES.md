@@ -33,7 +33,7 @@ The user explicitly reprioritized the broader upstream `ch/njol/skript` surface 
 Current measured baseline for that workstream:
 
 - upstream `ch/njol/skript` snapshot `e6ec744`: `1189` Java files
-- local `ch/njol/skript`: `129` Java files
+- local `ch/njol/skript`: `140` Java files
 - detailed matrix and part tracker: [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md)
 - active implementation slices: `Part 2: missing user-visible syntax import`, `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
 - currently landed core slices:
@@ -75,6 +75,7 @@ Current measured baseline for that workstream:
   - `Variable.isValidVariableName(...)` now ignores `*` inside paired `%...%` spans, restoring dynamic variable-name forms such as `result::%{source::*}%`
   - `ClassInfo` now exposes default expressions, and `SkriptParser` now falls back to them for omitted non-optional placeholders when parser-scoped defaults are absent
   - `EffChange.init(...)` now publishes parse-time local-variable hints for the exact built-in `set %object% to %object%` path when it successfully targets a hintable local variable
+  - the missing legacy log-handler stack now exists locally again, `patterns.Keyword` prefiltering is restored, `variables.TypeHints` is back as a compatibility bridge, and legacy parser/converter wrapper surfaces now exist again through `classes.Parser`, `PatternedParser`, `Converter`, and `registrations.Converters`
   - base entity-state conditions now cover `%entities% are alive/dead`, `%entities% are silent`, and `%entities% are invulnerable/invincible`
   - base entity-control effects now cover `kill %entities%`, `silence %entities%`, `unsilence %entities%`, `make %entities% silent`, and `make %entities% (invulnerable|invincible|vulnerable)`
   - regex-backed `ClassInfo.user(...)` aliases now resolve `%material%` / `%materials%` through registered class infos again

@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is upstream `ch/njol/skript` helper parity for `Classes`, `Variables`, `patterns`, and loader hint fallback
+- latest closed slice is shortfall-focused upstream helper closure for legacy log handlers, `patterns.Keyword`, `variables.TypeHints`, and parser/converter wrappers
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

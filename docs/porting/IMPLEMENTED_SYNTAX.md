@@ -43,9 +43,10 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `129`
+  - local `ch/njol/skript`: `140`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
+  - latest shortfall-focused closure restored legacy log handlers, `patterns.Keyword`, `variables.TypeHints`, and parser/converter wrapper surfaces
 
 Primary registration sources:
 

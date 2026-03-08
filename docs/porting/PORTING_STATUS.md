@@ -57,8 +57,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `129` Java files
-- net missing local surface relative to that snapshot: `1060` Java files
+- local `src/main/java/ch/njol/skript`: `140` Java files
+- net missing local surface relative to that snapshot: `1049` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -80,13 +80,13 @@ Key local package counts versus upstream:
 - `lang`: local `81`, upstream `85`
 - `expressions`: local `3`, upstream `391`
 - `conditions`: local `1`, upstream `135`
-- `classes`: local `2`, upstream `28`
+- `classes`: local `5`, upstream `28`
 - `util`: local `8`, upstream `57`
-- `variables`: local `2`, upstream `11`
+- `variables`: local `3`, upstream `11`
 - `config`: local `6`, upstream `20`
-- `registrations`: local `2`, upstream `10`
-- `patterns`: local `12`, upstream `14`
-- `log`: local `4`, upstream `17`
+- `registrations`: local `3`, upstream `10`
+- `patterns`: local `13`, upstream `14`
+- `log`: local `9`, upstream `17`
 - `sections`: local `1`, upstream `10`
 - `structures`: local `1`, upstream `10`
 - `localization`: local `2`, upstream `11`
@@ -122,6 +122,11 @@ Landed slices so far:
   - user-pattern class infos now honor regex-backed aliases again, so `%material%` and `%materials%` resolve through registered class info aliases instead of only codenames
   - exact upstream condition/effect forms now also cover `feed [the] %players% [by %-number% [beef[s]]]`, `%entities% (is|are) (burning|ignited|on fire)`, `%livingentities% (is|are) (invisible|visible)`, `%livingentities% (has|have) (ai|artificial intelligence)`, `%players% (is|are) sprinting`, `make %livingentities% invisible`, `make %livingentities% not visible`, `make %livingentities% visible`, `make %livingentities% not invisible`, and exact sprinting start/stop effect forms
   - dedicated parser/bootstrap unit tests plus real `.sk` Fabric GameTests now verify the newer feed, invisible/visible, burning, AI, and sprinting forms through the live resource-loader path
+- shortfall-focused helper-surface closure:
+  - `ch/njol/skript/log` now restores the missing legacy handler stack through `LogHandler`, `BlockingLogHandler`, `FilteringLogHandler`, `CountingLogHandler`, and `RetainingLogHandler`, while wiring `ParseLogHandler` and `SkriptLogger` back through that compatibility surface
+  - `ch/njol/skript/patterns/Keyword` now exists locally and `SkriptPattern` again applies the upstream-style keyword prefilter before the heavier matcher path
+  - `ch/njol/skript/variables/TypeHints` now restores the legacy add/get/enter-scope/exit-scope/clear bridge on top of the active hint manager
+  - `ch/njol/skript/classes/Parser`, `PatternedParser`, `Converter`, and `ch/njol/skript/registrations/Converters` now restore the missing wrapper and adapter surface expected by older parser/converter paths
 - input-source parser/runtime closure:
   - `ch/njol/skript/expressions/ExprInput` is no longer only a minimal compatibility stub
   - `ch/njol/skript/lang/SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` directly when an `InputSource` context is active
@@ -292,6 +297,7 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks` passed after restoring `%material%` alias lookup plus exact upstream `feed` and invisible/visible effect forms
 - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --tests org.skriptlang.skript.fabric.runtime.BurningSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks` passed after merging exact upstream invisible/visible condition, burning, AI, and sprinting condition/effect syntax
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after restoring `Classes` default-expression lookup helpers, direct-parent variable null sentinels, pattern graph string/combinations parity, and statement-fallback section-line hint retention
+- `./gradlew test --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --tests ch.njol.skript.variables.TypeHintsCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.log.LogHandlerCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after restoring the legacy log-handler stack, `patterns.Keyword`, `variables.TypeHints`, and parser/converter wrapper surfaces
 - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
 - `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `230 / 230` scheduled Fabric GameTests
 

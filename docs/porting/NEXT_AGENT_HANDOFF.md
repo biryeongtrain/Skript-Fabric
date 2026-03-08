@@ -37,6 +37,10 @@ For the next Codex app parallel session, use:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
   - `230 / 230` scheduled Fabric GameTests completed without build failure
+- Current upstream `ch/njol/skript` inventory snapshot:
+  - upstream snapshot `e6ec744`: `1189` Java files
+  - local tree: `140` Java files
+  - remaining shortfall: `1049` Java files
 
 ## Priority Shift
 
@@ -52,16 +56,15 @@ New immediate priority:
 
 ## Latest Closure Slice
 
-- merged the next upstream `ch/njol/skript` core-closure batch rather than another user-visible syntax family:
-  - [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now restores the upstream helper overloads `getDefaultExpression(String)` and `getDefaultExpression(Class<?>)`, so exact registered classinfo defaults are reachable through the legacy surface again
-  - [src/main/java/ch/njol/skript/variables/Variables.java](../../src/main/java/ch/njol/skript/variables/Variables.java) now keeps direct-parent `null` sentinels when raw list-branch reads combine a direct value with descendant entries
-  - [src/main/java/ch/njol/skript/patterns/PatternElement.java](../../src/main/java/ch/njol/skript/patterns/PatternElement.java), [src/main/java/ch/njol/skript/patterns/GroupPatternElement.java](../../src/main/java/ch/njol/skript/patterns/GroupPatternElement.java), and [src/main/java/ch/njol/skript/patterns/SkriptPattern.java](../../src/main/java/ch/njol/skript/patterns/SkriptPattern.java) now preserve grouped string/combinations parity through `toFullString()`, `getCombinations(...)`, and `getAllCombinations()`, while [src/main/java/ch/njol/skript/patterns/MalformedPatternException.java](../../src/main/java/ch/njol/skript/patterns/MalformedPatternException.java) restores malformed pattern wrapping on the compatibility path
-  - [src/main/java/ch/njol/skript/ScriptLoader.java](../../src/main/java/ch/njol/skript/ScriptLoader.java) now keeps temporary local-variable hints alive when a section line fails `Section.parse(...)` but succeeds through statement fallback, and live coverage now includes [src/gametest/resources/skript/gametest/base/statement_fallback_section_hint_test_block.sk](../../src/gametest/resources/skript/gametest/base/statement_fallback_section_hint_test_block.sk)
+- merged the next shortfall-focused upstream `ch/njol/skript` helper-surface batch:
+  - [src/main/java/ch/njol/skript/log/LogHandler.java](../../src/main/java/ch/njol/skript/log/LogHandler.java), [src/main/java/ch/njol/skript/log/BlockingLogHandler.java](../../src/main/java/ch/njol/skript/log/BlockingLogHandler.java), [src/main/java/ch/njol/skript/log/FilteringLogHandler.java](../../src/main/java/ch/njol/skript/log/FilteringLogHandler.java), [src/main/java/ch/njol/skript/log/CountingLogHandler.java](../../src/main/java/ch/njol/skript/log/CountingLogHandler.java), and [src/main/java/ch/njol/skript/log/RetainingLogHandler.java](../../src/main/java/ch/njol/skript/log/RetainingLogHandler.java) now restore the missing legacy handler stack, while [src/main/java/ch/njol/skript/log/ParseLogHandler.java](../../src/main/java/ch/njol/skript/log/ParseLogHandler.java) and [src/main/java/ch/njol/skript/log/SkriptLogger.java](../../src/main/java/ch/njol/skript/log/SkriptLogger.java) are wired back through it
+  - [src/main/java/ch/njol/skript/patterns/Keyword.java](../../src/main/java/ch/njol/skript/patterns/Keyword.java) now exists locally and [src/main/java/ch/njol/skript/patterns/SkriptPattern.java](../../src/main/java/ch/njol/skript/patterns/SkriptPattern.java) again applies the upstream-style keyword prefilter before invoking the heavier matcher
+  - [src/main/java/ch/njol/skript/variables/TypeHints.java](../../src/main/java/ch/njol/skript/variables/TypeHints.java) now restores the legacy add/get/enter-scope/exit-scope/clear bridge on top of [src/main/java/ch/njol/skript/variables/HintManager.java](../../src/main/java/ch/njol/skript/variables/HintManager.java)
+  - [src/main/java/ch/njol/skript/classes/Parser.java](../../src/main/java/ch/njol/skript/classes/Parser.java), [src/main/java/ch/njol/skript/classes/PatternedParser.java](../../src/main/java/ch/njol/skript/classes/PatternedParser.java), [src/main/java/ch/njol/skript/classes/Converter.java](../../src/main/java/ch/njol/skript/classes/Converter.java), and [src/main/java/ch/njol/skript/registrations/Converters.java](../../src/main/java/ch/njol/skript/registrations/Converters.java) now restore the missing wrapper and adapter surface expected by older parser and converter paths
 - parser/runtime verification landed:
-  - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java), [src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java), [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java), [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java), and [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) now lock the restored helper, pattern, variable, and hint-retention paths
-  - [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) now runs the new statement-fallback section hint fixture through the live loader path
+  - [src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java](../../src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java), [src/test/java/ch/njol/skript/variables/TypeHintsCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/TypeHintsCompatibilityTest.java), [src/test/java/ch/njol/skript/log/LogHandlerCompatibilityTest.java](../../src/test/java/ch/njol/skript/log/LogHandlerCompatibilityTest.java), [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java), [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java), [src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java), [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java), [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java), and [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) now lock the restored wrapper, hint, keyword, log, variable, and parser paths
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew test --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --tests ch.njol.skript.variables.TypeHintsCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.log.LogHandlerCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
   - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
   - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `230 / 230`
 
@@ -74,8 +77,8 @@ New immediate priority:
   - [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md)
 - measured the upstream/local baseline for `ch/njol/skript`:
   - upstream snapshot `e6ec744`: `1189` Java files
-  - local tree: `129` Java files
-  - net missing relative surface: `1060` Java files
+  - local tree: `140` Java files
+  - net missing relative surface: `1049` Java files
 - started the first `Part 2` user-visible syntax-import slice on top of the current core closure:
   - `CondIsAlive`, `CondIsSilent`, and `CondIsInvulnerable`
   - `EffKill`, `EffSilence`, and `EffInvulnerability`
@@ -87,6 +90,10 @@ New immediate priority:
 - landed the current `Part 1A` / `Part 1B` slices:
   - `VariableString` now routes `StringMode.MESSAGE` through Patbox `TextPlaceholderAPI`, and `TriggerItem.walk(...)` now exposes the current event through `CurrentSkriptEvent` so live `%namespace:path%` placeholders resolve on active message/name paths
   - locked runtime GameTests now clear Skript variables before and after each body, preventing suite-order leakage while leaving production variable semantics unchanged
+  - the missing legacy log-handler stack is now restored through `LogHandler`, `BlockingLogHandler`, `FilteringLogHandler`, `CountingLogHandler`, and `RetainingLogHandler`, with `ParseLogHandler` and `SkriptLogger` wired back through the same compatibility surface
+  - `patterns.Keyword` now exists locally and `SkriptPattern` again applies the upstream-style keyword prefilter before the heavier matcher path
+  - `variables.TypeHints` now restores the legacy add/get/enter-scope/exit-scope/clear bridge on top of the active hint manager
+  - `classes.Parser`, `PatternedParser`, `Converter`, and `registrations.Converters` now restore the missing wrapper and adapter surface expected by older parser and converter paths
   - `Variable.isValidVariableName(...)` now ignores `*` inside paired `%...%` spans, restoring dynamic forms such as `result::%{source::*}%`
   - `ClassInfo` now exposes default expressions, and `SkriptParser` now falls back to them when omitted non-optional placeholders have no parser-scoped default
   - `Classes` now also exposes upstream helper overloads for default-expression lookup by codename or exact class
