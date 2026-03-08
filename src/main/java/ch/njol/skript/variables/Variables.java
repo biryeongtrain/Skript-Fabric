@@ -1,6 +1,7 @@
 package ch.njol.skript.variables;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -17,6 +18,88 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public final class Variables {
 
     public static boolean caseInsensitiveVariables = true;
+
+    private static final Comparator<String> VARIABLE_NAME_COMPARATOR = (first, second) -> {
+        if (first == null) {
+            return second == null ? 0 : -1;
+        }
+        if (second == null) {
+            return 1;
+        }
+
+        int firstIndex = 0;
+        int secondIndex = 0;
+        boolean lastNumberNegative = false;
+        boolean afterDecimalPoint = false;
+        while (firstIndex < first.length() && secondIndex < second.length()) {
+            char firstChar = first.charAt(firstIndex);
+            char secondChar = second.charAt(secondIndex);
+            if (Character.isDigit(firstChar) && Character.isDigit(secondChar)) {
+                int firstEnd = findLastDigit(first, firstIndex);
+                int secondEnd = findLastDigit(second, secondIndex);
+                int firstLeadingZeros = 0;
+                int secondLeadingZeros = 0;
+
+                if (!afterDecimalPoint) {
+                    while (firstIndex < firstEnd - 1 && first.charAt(firstIndex) == '0') {
+                        firstIndex++;
+                        firstLeadingZeros++;
+                    }
+                    while (secondIndex < secondEnd - 1 && second.charAt(secondIndex) == '0') {
+                        secondIndex++;
+                        secondLeadingZeros++;
+                    }
+                }
+
+                boolean previousNegative = lastNumberNegative;
+                lastNumberNegative = firstIndex - firstLeadingZeros > 0
+                        && first.charAt(firstIndex - firstLeadingZeros - 1) == '-';
+                int sign = (lastNumberNegative || previousNegative) ? -1 : 1;
+
+                if (!afterDecimalPoint && firstEnd - firstIndex != secondEnd - secondIndex) {
+                    return ((firstEnd - firstIndex) - (secondEnd - secondIndex)) * sign;
+                }
+
+                while (firstIndex < firstEnd && secondIndex < secondEnd) {
+                    char firstDigit = first.charAt(firstIndex);
+                    char secondDigit = second.charAt(secondIndex);
+                    if (firstDigit != secondDigit) {
+                        return (firstDigit - secondDigit) * sign;
+                    }
+                    firstIndex++;
+                    secondIndex++;
+                }
+
+                if (afterDecimalPoint && firstEnd - firstIndex != secondEnd - secondIndex) {
+                    return ((firstEnd - firstIndex) - (secondEnd - secondIndex)) * sign;
+                }
+                if (firstLeadingZeros != secondLeadingZeros) {
+                    return (firstLeadingZeros - secondLeadingZeros) * sign;
+                }
+
+                afterDecimalPoint = true;
+                continue;
+            }
+
+            if (firstChar != secondChar) {
+                return firstChar - secondChar;
+            }
+            if (firstChar != '.') {
+                lastNumberNegative = false;
+                afterDecimalPoint = false;
+            }
+            firstIndex++;
+            secondIndex++;
+        }
+
+        if (firstIndex < first.length()) {
+            return lastNumberNegative ? -1 : 1;
+        }
+        if (secondIndex < second.length()) {
+            return lastNumberNegative ? 1 : -1;
+        }
+        return 0;
+    };
 
     private static final Map<String, Object> GLOBAL_VARIABLES = new ConcurrentHashMap<>();
     private static final Map<Object, Map<String, Object>> LOCAL_VARIABLES =
@@ -64,7 +147,7 @@ public final class Variables {
         }
         String normalized = normalizeName(prefix);
         Map<String, Object> map = local ? localMap(event, false) : GLOBAL_VARIABLES;
-        Map<String, Object> matches = new TreeMap<>();
+        Map<String, Object> matches = new TreeMap<>(VARIABLE_NAME_COMPARATOR);
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (entry.getKey().startsWith(normalized)) {
                 matches.put(entry.getKey(), entry.getValue());
@@ -121,6 +204,14 @@ public final class Variables {
             return Variables.class;
         }
         return event.handle() != null ? event.handle() : event;
+    }
+
+    private static int findLastDigit(String input, int start) {
+        int index = start;
+        while (index < input.length() && Character.isDigit(input.charAt(index))) {
+            index++;
+        }
+        return index;
     }
 
     private static String normalizeName(String name) {

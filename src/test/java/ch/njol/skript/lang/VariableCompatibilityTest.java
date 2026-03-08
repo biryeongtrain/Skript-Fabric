@@ -81,6 +81,18 @@ class VariableCompatibilityTest {
     }
 
     @Test
+    void listVariablesExposeNumericKeysInNaturalOrder() {
+        Variable<String> variable = Variable.newInstance("scores::*", new Class[]{String.class});
+        assertNotNull(variable);
+
+        variable.change(SkriptEvent.EMPTY, new Object[]{"emerald_block"}, ChangeMode.SET, new String[]{"10"});
+        variable.change(SkriptEvent.EMPTY, new Object[]{"gold_block"}, ChangeMode.SET, new String[]{"2"});
+
+        assertArrayEquals(new String[]{"gold_block", "emerald_block"}, variable.getArray(SkriptEvent.EMPTY));
+        assertArrayEquals(new String[]{"2", "10"}, variable.getArrayKeys(SkriptEvent.EMPTY));
+    }
+
+    @Test
     void localVariablesAreScopedByEventHandle() {
         Variable<String> variable = Variable.newInstance("_session", new Class[]{String.class});
         assertNotNull(variable);
@@ -220,5 +232,36 @@ class VariableCompatibilityTest {
         assertTrue(java.util.Set.of("gold_block", "emerald_block").contains(secondValue));
         assertNull(foo.getSingle(SkriptEvent.EMPTY));
         assertNull(bar.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void parsedListToListSetUsesNaturalNumericOrderingForSourceKeys() {
+        Skript.registerEffect(
+                EffChange.class,
+                "set %object% to %object%",
+                "add %object% to %object%",
+                "remove %object% from %object%",
+                "reset %object%",
+                "delete %object%"
+        );
+
+        Statement setTen = Statement.parse("set {source::10} to \"emerald_block\"", "failed");
+        Statement setTwo = Statement.parse("set {source::2} to \"gold_block\"", "failed");
+        Statement copyList = Statement.parse("set {target::*} to {source::*}", "failed");
+        Variable<String> first = Variable.newInstance("target::1", new Class[]{String.class});
+        Variable<String> second = Variable.newInstance("target::2", new Class[]{String.class});
+
+        assertNotNull(setTen);
+        assertNotNull(setTwo);
+        assertNotNull(copyList);
+        assertNotNull(first);
+        assertNotNull(second);
+
+        TriggerItem.walk(setTen, SkriptEvent.EMPTY);
+        TriggerItem.walk(setTwo, SkriptEvent.EMPTY);
+        TriggerItem.walk(copyList, SkriptEvent.EMPTY);
+
+        assertEquals("gold_block", first.getSingle(SkriptEvent.EMPTY));
+        assertEquals("emerald_block", second.getSingle(SkriptEvent.EMPTY));
     }
 }
