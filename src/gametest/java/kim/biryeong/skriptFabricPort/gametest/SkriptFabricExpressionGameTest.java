@@ -1207,6 +1207,17 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
     }
 
     @GameTest
+    public void plainEffectArgumentParsesInsideOuterExpressionSection(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/plain_effect_argument_inside_outer_section_expression_names_entity.sk",
+                cow,
+                "nested effect arg"
+        );
+    }
+
+    @GameTest
     public void customDamageSourceSectionPropagatesLocalVariables(GameTestHelper helper) {
         Cow cow = createCow(helper, false);
         assertUseEntityScriptNamesEntity(
