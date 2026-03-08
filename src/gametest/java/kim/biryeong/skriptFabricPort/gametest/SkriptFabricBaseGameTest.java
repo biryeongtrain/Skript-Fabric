@@ -13,6 +13,9 @@ import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.log.ErrorQuality;
+import ch.njol.skript.log.LogEntry;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
@@ -166,6 +169,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.function.Consumer;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -174,6 +178,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
 
     private static final AtomicBoolean FAILED_EFFECT_FALLBACK_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
+    private static final AtomicBoolean QUALITY_PRIORITY_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
 
     @GameTest
@@ -660,6 +665,41 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileKeepingHigherQualityEarlierParseError(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureHigherQualityParseErrorTestSyntaxRegistered();
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/higher_quality_parse_error_prefers_effect_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().anyMatch(message ->
+                                message.contains("higher-quality gametest effect rejected")
+                        ),
+                        Component.literal("Expected the real .sk load path to retain the earlier higher-quality effect parse error.")
+                );
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message ->
+                                message.contains("lower-quality gametest statement rejected")
+                        ),
+                        Component.literal("Expected the later lower-quality statement error to stay suppressed.")
+                );
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message ->
+                                message.contains("Can't understand this condition/effect: ambiguous loader quality syntax")
+                        ),
+                        Component.literal("Expected the generic loader fallback to stay suppressed.")
+                );
+            }
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void coreMappingsExposeMojangBackedTypes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState());
 
@@ -885,6 +925,13 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
     }
 
+    private static void ensureHigherQualityParseErrorTestSyntaxRegistered() {
+        if (QUALITY_PRIORITY_PARSE_ERROR_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerEffect(HigherQualityRejectingGameTestEffect.class, "ambiguous loader quality syntax");
+            Skript.registerStatement(LowerQualityRejectingGameTestStatement.class, "ambiguous loader quality syntax");
+        }
+    }
+
     private static void ensureUnreachableTestStatementRegistered() {
         if (UNREACHABLE_TEST_STATEMENT_REGISTERED.compareAndSet(false, true)) {
             Skript.registerStatement(StopGameTestTriggerStatement.class, "stop gametest trigger");
@@ -935,6 +982,57 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         @Override
         public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "ambiguous gametest condition";
+        }
+    }
+
+    public static final class HigherQualityRejectingGameTestEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.NOT_AN_EXPRESSION,
+                    "higher-quality gametest effect rejected"
+            ));
+            return false;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "higher-quality gametest effect";
+        }
+    }
+
+    public static final class LowerQualityRejectingGameTestStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("lower-quality gametest statement rejected");
+            return false;
+        }
+
+        @Override
+        protected boolean run(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "lower-quality gametest statement";
         }
     }
 
