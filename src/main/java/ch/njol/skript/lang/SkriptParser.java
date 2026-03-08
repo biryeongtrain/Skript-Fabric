@@ -47,6 +47,7 @@ public class SkriptParser {
     public static class ParseResult {
         public String expr = "";
         public Expression<?>[] exprs = new Expression<?>[0];
+        public @Nullable SkriptPattern source;
         public List<Matcher> regexes = List.of();
         public List<String> tags = new ArrayList<>();
         public int mark = 0;
@@ -354,6 +355,7 @@ public class SkriptParser {
                 }
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
+                parseResult.source = compiledPattern;
                 parseResult.exprs = applyDefaultValues(
                         matched.expressions(),
                         compiledPattern
@@ -412,6 +414,7 @@ public class SkriptParser {
                 }
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
+                parseResult.source = compiledPattern;
                 parseResult.exprs = applyDefaultValues(
                         matched.expressions(),
                         compiledPattern

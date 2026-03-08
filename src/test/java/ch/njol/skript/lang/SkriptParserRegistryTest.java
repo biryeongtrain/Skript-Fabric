@@ -23,6 +23,7 @@ import ch.njol.skript.lang.parser.DefaultValueData;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.patterns.SkriptPattern;
 import ch.njol.skript.registrations.Classes;
 import java.util.List;
 import net.minecraft.world.damagesource.DamageSource;
@@ -58,6 +59,8 @@ class SkriptParserRegistryTest {
         AutoTagAwareSection.lastMax = false;
         OptionalRegexSection.lastCapturedText = null;
         TimeAwareCaptureEffect.lastTime = 0;
+        SourceAwareEffect.lastSource = null;
+        LegacySourceAwareEffect.lastSource = null;
     }
 
     @Test
@@ -316,6 +319,38 @@ class SkriptParserRegistryTest {
         assertNotNull(parsed);
         assertInstanceOf(OrderedTagAwareEffect.class, parsed);
         assertEquals(List.of("repeat", "unique", "repeat"), OrderedTagAwareEffect.lastTags);
+    }
+
+    @Test
+    void effectPatternProvidesCompiledPatternSourceInParseResult() {
+        Skript.registerEffect(SourceAwareEffect.class, "source aware %string%");
+
+        Statement parsed = Statement.parse("source aware hello", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(SourceAwareEffect.class, parsed);
+        assertNotNull(SourceAwareEffect.lastSource);
+        assertEquals("source aware %string%", SourceAwareEffect.lastSource.toString());
+    }
+
+    @Test
+    void parseStaticProvidesCompiledPatternSourceInParseResult() {
+        SyntaxElementInfo<LegacySourceAwareEffect> info = new SyntaxElementInfo<>(
+                new String[]{"legacy source aware"},
+                LegacySourceAwareEffect.class,
+                LegacySourceAwareEffect.class.getName()
+        );
+
+        LegacySourceAwareEffect parsed = SkriptParser.parseStatic(
+                "legacy source aware",
+                java.util.List.of(info).iterator(),
+                ParseContext.DEFAULT,
+                "failed"
+        );
+
+        assertNotNull(parsed);
+        assertNotNull(LegacySourceAwareEffect.lastSource);
+        assertEquals("legacy source aware", LegacySourceAwareEffect.lastSource.toString());
     }
 
     @Test
@@ -677,6 +712,46 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "ordered tag aware effect";
+        }
+    }
+
+    public static class SourceAwareEffect extends Effect {
+
+        static @Nullable SkriptPattern lastSource;
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, ch.njol.util.Kleenean isDelayed, ParseResult parseResult) {
+            lastSource = parseResult.source;
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "source aware effect";
+        }
+    }
+
+    public static class LegacySourceAwareEffect extends Effect {
+
+        static @Nullable SkriptPattern lastSource;
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, ch.njol.util.Kleenean isDelayed, ParseResult parseResult) {
+            lastSource = parseResult.source;
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "legacy source aware effect";
         }
     }
 
