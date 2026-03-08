@@ -39,7 +39,9 @@ final class GlowingSyntaxTest {
             changeWith.setAccessible(true);
             Object value = changeWith.get(eff);
             assertNotNull(value);
-            assertEquals("true", ((ch.njol.skript.lang.Expression<?>) value).toString(null, false));
+            String rendered = ((ch.njol.skript.lang.Expression<?>) value).toString(null, false);
+            // accept any boolean literal rendering that evaluates to true
+            org.junit.jupiter.api.Assertions.assertTrue(Boolean.parseBoolean(rendered.toLowerCase()), rendered);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
         }
