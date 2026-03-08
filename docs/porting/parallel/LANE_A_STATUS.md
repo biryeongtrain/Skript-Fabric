@@ -17,9 +17,55 @@ Last updated: 2026-03-08
 
 ## Goal For Next Session
 
-- Continue `Part 1A` on broader statement orchestration after restoring exact built-in local-variable hint producers for `set`.
+- Keep Lane A focused on `ch/njol/skript/log/**` compatibility slices unless the coordinator explicitly reassigns `Statement` / `ScriptLoader`.
 
 ## Work Log
+
+### 2026-03-08 Legacy Log-Handler Compatibility Slice
+
+- compared the local `ch/njol/skript/log/**` package against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` in `/tmp/skript-upstream-e6ec744-2`
+- selected the upstream log surface that fits the current local architecture without crossing into Bukkit-only or parser-owned code:
+  - restored `LogHandler`
+  - restored `BlockingLogHandler`
+  - restored `FilteringLogHandler`
+  - restored `CountingLogHandler`
+  - restored `RetainingLogHandler`
+  - adapted `ParseLogHandler` and `SkriptLogger` onto a generic thread-local handler stack
+- kept the current retained parse-log behavior intact while broadening the compatibility surface:
+  - `ParseLogHandler` now extends `LogHandler` instead of acting as a one-off shim
+  - `SkriptLogger` now supports stacked handler chaining with upstream-style `LOG`, `CACHED`, and `DO_NOT_LOG` outcomes
+  - `startRetainingLog()` and generic `startLogHandler(...)` are now available on the local logger surface
+  - retained parse errors still replay correctly into outer handlers when `printError(...)` is used
+- added focused unit coverage in `src/test/java/ch/njol/skript/log/LogHandlerCompatibilityTest.java`:
+  - `CountingLogHandler` counts only messages at or above its minimum level
+  - `FilteringLogHandler` blocks lower-level entries before they reach older handlers
+  - `BlockingLogHandler` suppresses older handlers entirely
+  - `ParseLogHandler.printError(...)` still replays the retained best error into an outer retaining handler
+  - `RetainingLogHandler.printErrors(...)` emits its fallback error when no retained error exists
+  - `RetainingLogHandler.getErrors()` still exposes only severe entries
+- intentionally skipped upstream log classes that do not fit the current local architecture cleanly:
+  - `BukkitLoggerFilter` and the `CommandSender` parts of `RetainingLogHandler` are Bukkit-specific
+  - `ErrorDescLogHandler`, `RedirectingLogHandler`, `TestingLogHandler`, `TimingLogHandler`, `Verbosity`, and `HandlerList` depend on upstream parser-instance, testing, or console integration that the current local logger does not expose
+  - `HandlerList` in particular was not ported because the local logger already has a simpler thread-local deque that provides the needed stack semantics without introducing another container layer
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/log/LogHandler.java`
+  - `src/main/java/ch/njol/skript/log/BlockingLogHandler.java`
+  - `src/main/java/ch/njol/skript/log/FilteringLogHandler.java`
+  - `src/main/java/ch/njol/skript/log/CountingLogHandler.java`
+  - `src/main/java/ch/njol/skript/log/RetainingLogHandler.java`
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+  - `src/main/java/ch/njol/skript/log/SkriptLogger.java`
+  - `src/test/java/ch/njol/skript/log/LogHandlerCompatibilityTest.java`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.log.LogHandlerCompatibilityTest --rerun-tasks`
+    - passed
+  - `./gradlew test --tests ch.njol.skript.log.LogHandlerCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - passed
+- merge note:
+  - highest conflict risk is limited to `src/main/java/ch/njol/skript/log/ParseLogHandler.java` and `src/main/java/ch/njol/skript/log/SkriptLogger.java` if another lane or the coordinator touches parse-log plumbing before merge
+- unresolved risks kept open:
+  - this slice restores the reusable log-handler compatibility surface, but it does not port Bukkit-facing sender formatting or upstream test-mode warning hooks
+  - upstream classes that depend on parser-instance-owned handler state remain intentionally unported until the coordinator decides they are worth adapting to the local logger architecture
 
 ### 2026-03-08 Statement Fallback Section-Hint Slice
 
