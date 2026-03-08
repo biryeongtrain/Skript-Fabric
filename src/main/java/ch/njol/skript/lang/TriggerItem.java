@@ -19,6 +19,14 @@ public abstract class TriggerItem implements Debuggable {
             return next;
         }
         debug(event, false);
+        ExecutionIntent intent = executionIntent();
+        if (intent instanceof ExecutionIntent.StopTrigger) {
+            exitSections(event, parent);
+            return null;
+        }
+        if (intent instanceof ExecutionIntent.StopSections stopSections) {
+            return exitSections(event, parent, stopSections.levels());
+        }
         TriggerSection parentSection = parent;
         return parentSection == null ? null : parentSection.getNext();
     }
@@ -86,6 +94,35 @@ public abstract class TriggerItem implements Debuggable {
 
     public @Nullable TriggerItem getActualNext() {
         return next;
+    }
+
+    private void exitSections(SkriptEvent event, @Nullable TriggerSection section) {
+        TriggerSection current = section;
+        while (current != null) {
+            exitSection(event, current);
+            current = current.getParent();
+        }
+    }
+
+    private @Nullable TriggerItem exitSections(SkriptEvent event, @Nullable TriggerSection section, int levels) {
+        TriggerSection current = section;
+        int remaining = levels;
+        while (current != null && remaining > 1) {
+            exitSection(event, current);
+            current = current.getParent();
+            remaining--;
+        }
+        if (current == null) {
+            return null;
+        }
+        exitSection(event, current);
+        return current.getNext();
+    }
+
+    private void exitSection(SkriptEvent event, TriggerSection section) {
+        if (section instanceof SectionExitHandler handler) {
+            handler.exit(event);
+        }
     }
 
     @Override

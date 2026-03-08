@@ -297,6 +297,60 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsWarnsWhenRegisteredSectionContainsStopTrigger() {
+        registerExecutionIntentStatements();
+        Skript.registerSection(StoppingSection.class, "stop section holder");
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+
+        List<TriggerItem> items;
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            items = ScriptLoader.loadItems(root(
+                    line("record before stop"),
+                    section("stop section holder", line("stop test trigger")),
+                    line("record after stop")
+            ));
+
+            assertEquals(3, items.size());
+            assertEquals(
+                    1L,
+                    logs.messages().stream()
+                            .filter(message -> message.contains("Unreachable code. The previous statement stops further execution."))
+                            .count()
+            );
+        }
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals(List.of("before", "stop"), statementExecution);
+    }
+
+    @Test
+    void loadItemsDoesNotWarnWhenRegisteredSectionOnlyStopsItsOwnBody() {
+        registerExecutionIntentStatements();
+        Skript.registerSection(StoppingSection.class, "stop section holder");
+        Skript.registerStatement(StopCurrentSectionStatement.class, "stop current section");
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+
+        List<TriggerItem> items;
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            items = ScriptLoader.loadItems(root(
+                    section("stop section holder", line("stop current section")),
+                    line("record after stop")
+            ));
+
+            assertEquals(2, items.size());
+            assertFalse(
+                    logs.messages().stream()
+                            .anyMatch(message -> message.contains("Unreachable code. The previous statement stops further execution."))
+            );
+        }
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals(List.of("stop-section", "after"), statementExecution);
+    }
+
+    @Test
     void loadItemsKeepsSpecificSectionOwnershipError() {
         Skript.registerEffect(RecordingEffect.class, "mark inside", "mark after");
 
@@ -399,6 +453,35 @@ class ScriptLoaderCompatibilityTest {
         }
     }
 
+    public static final class StoppingSection extends Section {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            if (sectionNode == null) {
+                return false;
+            }
+            loadCode(sectionNode);
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return walk(event, true);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "stop section holder";
+        }
+    }
+
     public static final class RecordingEffect extends ch.njol.skript.lang.Effect {
 
         private static final List<String> executed = RecordingSection.executed;
@@ -497,6 +580,35 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "stop test trigger";
+        }
+    }
+
+    public static final class StopCurrentSectionStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            statementExecution.add("stop-section");
+            return false;
+        }
+
+        @Override
+        protected @Nullable ExecutionIntent executionIntent() {
+            return ExecutionIntent.stopSection();
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "stop current section";
         }
     }
 
