@@ -1,0 +1,3 @@
+on use entity:
+    kill event-entity
+    set test block under player event-player to red_wool

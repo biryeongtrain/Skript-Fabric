@@ -11,10 +11,13 @@
   "entrypoints": {
     "fabric-gametest": [
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricBaseGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricAliveKillGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricConditionGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEffectGameTest",
-      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEventGameTest"
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEventGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInvulnerableGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSilentGameTest"
     ]
   }
 }

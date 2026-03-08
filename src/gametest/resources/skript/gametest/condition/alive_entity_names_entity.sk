@@ -1,0 +1,3 @@
+on use entity:
+    event-entity is alive
+    set test name of entity event-entity to "alive entity"

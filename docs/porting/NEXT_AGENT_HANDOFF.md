@@ -36,39 +36,39 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `207 / 207` scheduled Fabric GameTests completed without build failure
+  - `216 / 216` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
 Do not continue the next Stage 8 package-local Bukkit slice yet.
-The user explicitly reprioritized the broader upstream `ch/njol/skript` package surface first.
+The user explicitly reprioritized missing upstream user-visible syntax first.
 
 New immediate priority:
 
 - keep the current Stage 8 status frozen and accurately recorded
-- audit and close the broader `ch/njol/skript` surface against upstream
-- continue with `lang` and its immediate dependency cluster before importing larger missing syntax packages
+- import missing upstream syntax families into the active Fabric runtime using exact existing Skript forms
+- use the broader `ch/njol/skript` closure track as an enabling dependency when the next syntax family is blocked by parser/runtime gaps
 - after that upstream closure track, resume the broader Bukkit-behavior parity push until verified behavior matches upstream as closely as practical
 
 ## Latest Closure Slice
 
-- merged the next three-lane coordinator slice for inner-expression variable-name validation, classinfo-backed omitted placeholder defaults, and built-in `EffChange` local hints
-- variable-name validation compatibility landed:
-  - [src/main/java/ch/njol/skript/lang/Variable.java](../../src/main/java/ch/njol/skript/lang/Variable.java) now ignores `*` characters inside paired `%...%` spans when validating variable names, restoring accepted forms such as `result::%{source::*}%` and `result::%{source::*}%::*`
-  - [src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/VariableCompatibilityTest.java) now proves accepted and rejected forms through `isValidVariableName(...)`, `newInstance(...)`, and parser-facing variable-expression coverage
-  - added [src/gametest/resources/skript/gametest/base/variable_name_expression_inner_list_marker_set_test_block.sk](../../src/gametest/resources/skript/gametest/base/variable_name_expression_inner_list_marker_set_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that executes a real `.sk` file using `set {result::%{source::*}%} ...`
-- classinfo-backed omitted-default compatibility landed:
-  - [src/main/java/ch/njol/skript/classes/ClassInfo.java](../../src/main/java/ch/njol/skript/classes/ClassInfo.java) now exposes `defaultExpression(...)` / `getDefaultExpression()`
-  - [src/main/java/ch/njol/skript/lang/SkriptParser.java](../../src/main/java/ch/njol/skript/lang/SkriptParser.java) now falls back from parser-scoped `DefaultValueData` to exact `ClassInfo` default expressions for omitted non-optional placeholders
-  - [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java) now proves parser-scoped defaults still win while exact `ClassInfo` defaults backfill omitted forms like `default number`
-- built-in local-hint compatibility landed:
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java) now publishes parse-time local-variable hints when the exact built-in `set %object% to %object%` path successfully targets a hintable local variable
-  - [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) now proves both `set {_value} to 1` -> `%integer%` and later `set {_value} to "text"` -> `%string%`
-  - added [src/gametest/resources/skript/gametest/base/built_in_set_local_hint_test_block.sk](../../src/gametest/resources/skript/gametest/base/built_in_set_local_hint_test_block.sk) plus [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) coverage that executes the exact built-in `set` syntax through the live resource-loader path
+- merged the next syntax-import slice for base entity-state and entity-control forms that were still missing versus upstream
+- entity-state condition compatibility landed:
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsAlive.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsAlive.java) now covers `%entities% are alive/dead`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSilent.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSilent.java) now covers `%entities% are silent`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvulnerable.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvulnerable.java) now covers `%entities% are invulnerable/invincible`
+- entity-control effect compatibility landed:
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffKill.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffKill.java) now covers `kill %entities%`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSilence.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSilence.java) now covers `silence %entities%`, `unsilence %entities%`, `make %entities% silent`, and `make %entities% not silent`
+  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvulnerability.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvulnerability.java) now covers `make %entities% invulnerable/invincible` and the vulnerable inverse forms
+- bootstrap and verification landed:
+  - [src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java](../../src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java) now registers those exact upstream-style syntax forms in the active Fabric runtime
+  - [src/test/java/org/skriptlang/skript/fabric/runtime/AliveKillSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/AliveKillSyntaxTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/SilentSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/SilentSyntaxTest.java), and [src/test/java/org/skriptlang/skript/fabric/runtime/InvulnerableSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvulnerableSyntaxTest.java) now prove parser/bootstrap registration for the exact new forms
+  - added real `.sk` fixtures and dedicated GameTest classes for alive/dead, silent, invulnerable, kill, make silent, and make invulnerable runtime behavior through the live resource-loader path
 - latest verification for this merged slice:
-  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `207 / 207`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `207 / 207`
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `216 / 216`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `216 / 216`
 
 ## What Landed In This Slice
 
@@ -81,6 +81,11 @@ New immediate priority:
   - upstream snapshot `e6ec744`: `1189` Java files
   - local tree: `128` Java files
   - net missing relative surface: `1061` Java files
+- started the first `Part 2` user-visible syntax-import slice on top of the current core closure:
+  - `CondIsAlive`, `CondIsSilent`, and `CondIsInvulnerable`
+  - `EffKill`, `EffSilence`, and `EffInvulnerability`
+  - bootstrap registration now covers exact forms such as `%entities% are alive/dead`, `%entities% are silent`, `%entities% are invulnerable/invincible`, `kill %entities%`, `silence %entities%`, `unsilence %entities%`, and `make %entities% silent`
+  - dedicated parser/bootstrap unit tests plus real `.sk` GameTests now verify those forms end-to-end
 - kept the first concrete closure target as `Part 1A: lang parser/runtime closure`
 - started `Part 1B` in parallel because `Classes`, `Variables`, `config`, and `structures` behavior is already being tightened in the same dependency cluster
 - landed the current `Part 1A` / `Part 1B` slices:
@@ -95,7 +100,7 @@ New immediate priority:
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, and `built_in_set_local_hint_test_block.sk`, increasing the current Fabric GameTest suite to `207 / 207`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, and `make_invulnerable_names_entity.sk`, increasing the current Fabric GameTest suite to `216 / 216`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup
@@ -164,7 +169,8 @@ New immediate priority:
   - `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks` passed after closing explicit literal-pattern ordering parity
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging the latest parse-log-aware class parsing, ordered duplicate parser tags, and statement fallback slice
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging classinfo-backed omitted defaults, inner-expression variable-name list-marker validation, and built-in `EffChange` local hints
-  - `./gradlew runGameTest --rerun-tasks` passed with `207 / 207`
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks` passed after importing the first missing base entity-state/control syntax families
+  - `./gradlew runGameTest --rerun-tasks` passed with `216 / 216`
   - `./gradlew build --rerun-tasks` passed
 
 ## Files Changed In This Slice
@@ -210,8 +216,14 @@ New immediate priority:
 - [src/main/java/ch/njol/skript/variables/HintManager.java](../../src/main/java/ch/njol/skript/variables/HintManager.java)
 - [src/main/java/ch/njol/skript/variables/Variables.java](../../src/main/java/ch/njol/skript/variables/Variables.java)
 - [src/main/java/org/skriptlang/skript/lang/entry/KeyValueEntryData.java](../../src/main/java/org/skriptlang/skript/lang/entry/KeyValueEntryData.java)
+- [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsAlive.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsAlive.java)
+- [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvulnerable.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvulnerable.java)
+- [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSilent.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSilent.java)
 - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondCompare.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondCompare.java)
 - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java)
+- [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvulnerability.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvulnerability.java)
+- [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffKill.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffKill.java)
+- [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSilence.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSilence.java)
 - [src/main/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextEntity.java](../../src/main/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextEntity.java)
 - [src/main/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextLocation.java](../../src/main/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextLocation.java)
 - [src/main/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextLooter.java](../../src/main/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextLooter.java)
@@ -231,6 +243,9 @@ New immediate priority:
 - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
 - [src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java](../../src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java)
 - [src/test/java/ch/njol/skript/structures/StructureEntryValidatorCompatibilityTest.java](../../src/test/java/ch/njol/skript/structures/StructureEntryValidatorCompatibilityTest.java)
+- [src/test/java/org/skriptlang/skript/fabric/runtime/AliveKillSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/AliveKillSyntaxTest.java)
+- [src/test/java/org/skriptlang/skript/fabric/runtime/InvulnerableSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvulnerableSyntaxTest.java)
+- [src/test/java/org/skriptlang/skript/fabric/runtime/SilentSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/SilentSyntaxTest.java)
 - [src/test/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextLocationCompatibilityTest.java](../../src/test/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprLootContextLocationCompatibilityTest.java)
 - [src/test/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprSecCreateLootContextCompatibilityTest.java](../../src/test/java/org/skriptlang/skript/bukkit/loottables/elements/expressions/ExprSecCreateLootContextCompatibilityTest.java)
 - [src/test/java/org/skriptlang/skript/bukkit/potion/elements/PotionEntityObjectCompatibilityTest.java](../../src/test/java/org/skriptlang/skript/bukkit/potion/elements/PotionEntityObjectCompatibilityTest.java)
@@ -293,7 +308,7 @@ New immediate priority:
 - After that upstream closure track, the repo still has to continue the broader Bukkit-behavior parity push toward 100% verified-equivalent behavior.
 - Entire upstream top-level packages are still absent locally, including `effects`, `events`, `entity`, `command`, `aliases`, and others listed in the audit doc.
 - `ch/njol/skript/lang` is close in file count but not in behavioral completeness.
-- `Part 1A` and `Part 1B` are both active now, but broader statement orchestration, remaining input-source usage, broader classinfo-backed default-expression/default-value parity, and deeper variable/class runtime semantics are still pending.
+- `Part 1A` and `Part 1B` remain active as enabling workstreams, and `Part 2` syntax import is now active too, but broader statement orchestration, remaining input-source usage, broader classinfo-backed default-expression/default-value parity, deeper variable/class runtime semantics, and most missing user-visible syntax families are still pending.
 - pure registered section loading is now closed in `ScriptLoader`, loader fallback now restores the better retained section-versus-statement diagnostic, nested section-contained stop-trigger intent now propagates through loader/runtime, local hint scopes now open/freeze/merge through the current stop-flow path, plain conditions no longer masquerade as section headers, and plain statement parsing no longer leaks outer expression-section ownership into nested argument parsing; the remaining gap is broader statement orchestration and richer built-in hint producers.
 - do not reopen the just-closed inline optional-whitespace and inline alternation parser gap unless a new failing unit reproducer or real `.sk` path appears; the current verified closure covers `on[to]`, `when injured`, and `not breedable`
 - the shared parser matcher now forwards general parse tags and XOR marks on the current compatibility surface, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails when optional or alternation-scoped raw-regex captures are omitted, and now lets parser-owned `DefaultValueData` backfill omitted non-optional placeholders on exact forms such as `default number [%number%]`; broader upstream pattern element-graph/runtime parity plus fuller classinfo-backed default-expression/default-value parity are still open
@@ -304,27 +319,16 @@ New immediate priority:
 
 ## Recommended Next Priority
 
-Continue `Part 1A: lang parser/runtime closure`, while keeping the already-started `Part 1B` dependency closure in sync.
+Continue `Part 2` missing-user-visible-syntax imports first, while keeping the already-started `Part 1A` and `Part 1B` closure tracks in sync as enabling work.
 
 Recommended order:
 
-1. audit upstream versus local behavior for:
-   - `ch/njol/skript/lang/SkriptParser`
-   - `ch/njol/skript/lang/Statement`
-   - `ch/njol/skript/ScriptLoader`
-   - `ch/njol/skript/sections/SecIf`
-   - `ch/njol/skript/expressions/ExprInput`
-   - `ch/njol/skript/registrations/Classes`
-   - `ch/njol/skript/variables/Variables`
-2. prioritize the still-open parser/runtime gaps that were not closed in this slice:
-   - `Statement` orchestration and diagnostics beyond the now-closed plain-statement section-context regression
-   - remaining `SkriptParser` classinfo-backed default-expression/default-value parity beyond the now-landed parser-owned `DefaultValueData` backfill
-   - remaining `Classes` and `Variables` behavior that still diverges from upstream beyond ordering, hint-consumption, and converter fallback
-   - broader `InputSource` usage paths beyond the now-landed typed `input` forms
-3. land real behavior, not just placeholders, and add regression coverage
+1. audit upstream user-visible syntax families that are still missing from the active Fabric runtime, starting with simple condition/effect/expression forms that do not need a new backend abstraction
+2. only drop back into `SkriptParser`, `Statement`, `ScriptLoader`, `Classes`, or `Variables` closure when the next syntax family is blocked by missing core behavior
+3. land exact upstream syntax forms, not renamed approximations, and add regression coverage
 4. when the change affects user-visible script behavior, add real `.sk` plus Fabric GameTest coverage
 5. update [PORTING_STATUS.md](PORTING_STATUS.md), this handoff, and [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md) in the same turn
-6. after the upstream `ch/njol/skript` closure track is materially landed, resume the broader Stage 8 and behavioral-parity push toward 100% verified Bukkit-equivalent behavior
+6. after the missing syntax surface is materially landed, resume the broader Stage 8 and behavioral-parity push toward 100% verified Bukkit-equivalent behavior
 
 ## Verification Policy
 
@@ -336,12 +340,10 @@ Recommended order:
 ```
 
 - If the next slice is limited to non-runtime compatibility internals, at minimum run the narrow relevant unit tests and then decide whether GameTest coverage also needs to move.
-- Latest targeted non-runtime verification already completed in this slice:
+- Latest targeted syntax-import verification already completed in this slice:
 
 ```bash
-./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks
-./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks
-./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
+./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks
 ```
 
 - Latest full verification already completed in this slice:
@@ -358,7 +360,8 @@ Recommended order:
 
 현재 우선순위:
 - 기존 Stage 8 상태는 유지하되, 다음 package-local Bukkit audit로 바로 가지 말 것
-- upstream `ch/njol/skript` surface audit/closure 를 먼저 진행할 것
+- upstream 대비 아직 빠진 user-visible syntax 를 먼저 구현할 것
+- `docs/porting/CH_NJOL_SKRIPT_AUDIT.md` 의 `Part 1A` / `Part 1B` 는 다음 syntax family 를 막는 경우에만 enabling track 으로 진행할 것
 - canonical docs 는 `docs/porting` 아래에 있고, 루트 문서는 포인터임
 
 현재 상태:
@@ -367,7 +370,7 @@ Recommended order:
 - Effect 24/24 완료
 - Stage 5 closure 22/22
 - Stage 8 package-local audit 23/214
-- latest verified GameTest 207/207
+- latest verified GameTest 216/216
 - build 통과
 - new `ch/njol/skript` baseline: local 128 / upstream 1189
 
@@ -380,10 +383,20 @@ Recommended order:
 - dirty worktree 정리하지 마
 
 다음 작업:
-- `docs/porting/CH_NJOL_SKRIPT_AUDIT.md` 기준으로 `Part 1A` 를 계속 진행하고, 이미 시작된 `Part 1B` 의존성 closure 와 같이 움직여
+- upstream 에서 아직 빠진 user-visible syntax family 를 먼저 찾고, exact syntax 그대로 추가해
+- `docs/porting/CH_NJOL_SKRIPT_AUDIT.md` 기준으로 `Part 1A` / `Part 1B` 는 그 syntax family 를 막을 때만 같이 진행해
 - upstream 역할과 local behavior 를 class-by-class 로 대조해
 - placeholder/stub 경로를 실제 동작으로 바꾸고, 필요한 테스트를 추가해
 - 현재 닫힌 것:
+  - real `.sk` base entity-state/control syntax:
+    - `%entities% are alive/dead`
+    - `%entities% are silent`
+    - `%entities% are invulnerable/invincible`
+    - `kill %entities%`
+    - `silence %entities%`
+    - `unsilence %entities%`
+    - `make %entities% silent`
+    - `make %entities% invulnerable/vulnerable`
   - real `.sk` conditional `if / else if / else` chain
   - real `.sk` parenthesized conditional chain
   - real `.sk` `parse if` / `else parse if` chain

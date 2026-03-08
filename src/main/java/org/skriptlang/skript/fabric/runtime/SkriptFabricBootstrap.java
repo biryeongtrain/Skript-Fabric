@@ -5,8 +5,11 @@ import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsAlive;
 import org.skriptlang.skript.bukkit.base.conditions.CondCompare;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsInvulnerable;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsNamed;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsSilent;
 import org.skriptlang.skript.bukkit.base.types.DamageSourceClassInfo;
 import org.skriptlang.skript.bukkit.brewing.elements.CondBrewingConsume;
 import org.skriptlang.skript.bukkit.brewing.elements.ExprBrewingFuelLevel;
@@ -99,6 +102,8 @@ import org.skriptlang.skript.bukkit.base.types.WorldClassInfo;
 import org.skriptlang.skript.fabric.SkriptFabric;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
+import org.skriptlang.skript.bukkit.base.effects.EffInvulnerability;
+import org.skriptlang.skript.bukkit.base.effects.EffKill;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAtLocation;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAtBlock;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockAboveBlock;
@@ -106,6 +111,7 @@ import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlock;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestEntityName;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestItemName;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockUnderPlayer;
+import org.skriptlang.skript.bukkit.base.effects.EffSilence;
 import org.skriptlang.skript.fabric.syntax.event.EvtAttackEntity;
 import org.skriptlang.skript.fabric.syntax.event.EvtBrewingFuel;
 import org.skriptlang.skript.fabric.syntax.event.EvtDamage;
@@ -191,6 +197,21 @@ public final class SkriptFabricBootstrap {
                         "%entity% is not named",
                         "%itemstack% is named",
                         "%itemstack% is not named"
+                );
+                Skript.registerCondition(
+                        CondIsAlive.class,
+                        "%entities% (is|are) (alive|1¦dead)",
+                        "%entities% (isn't|is not|aren't|are not) (alive|1¦dead)"
+                );
+                Skript.registerCondition(
+                        CondIsSilent.class,
+                        "%entities% (is|are) silent",
+                        "%entities% (isn't|is not|aren't|are not) silent"
+                );
+                Skript.registerCondition(
+                        CondIsInvulnerable.class,
+                        "%entities% (is|are) (invulnerable|invincible)",
+                        "%entities% (isn't|is not|aren't|are not) (invulnerable|invincible)"
                 );
                 Skript.registerCondition(
                         CondBrewingConsume.class,
@@ -660,6 +681,22 @@ public final class SkriptFabricBootstrap {
                 );
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();
+                Skript.registerEffect(
+                        EffKill.class,
+                        "kill %entities%"
+                );
+                Skript.registerEffect(
+                        EffSilence.class,
+                        "silence %entities%",
+                        "unsilence %entities%",
+                        "make %entities% silent",
+                        "make %entities% not silent"
+                );
+                Skript.registerEffect(
+                        EffInvulnerability.class,
+                        "make %entities% (invulnerable|invincible)",
+                        "make %entities% (not (invulnerable|invincible)|vulnerable|vincible)"
+                );
                 Skript.registerEffect(
                         EffSetTestBlock.class,
                         "set test block at %integer% %integer% %integer% to %string%"

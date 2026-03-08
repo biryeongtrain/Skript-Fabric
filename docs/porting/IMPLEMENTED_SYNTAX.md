@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `207 / 207`
+- Verified Fabric GameTests: `216 / 216`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -153,8 +153,14 @@ None in the current Fabric registration set.
 
 - `is empty`
   - representative forms: `%itemstack% is empty`, `%slot% is empty`, `%inventory% is empty`
+- `is alive`
+  - representative forms: `%entities% are alive`, `%entities% are dead`
 - `is named`
   - representative forms: `%entity% is named`, `%itemstack% is named`
+- `is silent`
+  - representative forms: `%entities% are silent`, `%entities% are not silent`
+- `is invulnerable`
+  - representative forms: `%entities% are invulnerable`, `%entities% are invincible`, `%entities% are vulnerable`
 - generic comparison
   - representative forms: `%objects% is %objects%`
   - current audit note: ambiguous bare item-id equality is not parity-complete yet
@@ -413,6 +419,15 @@ The list below groups the active syntax by domain and calls out the representati
   - `remove %object% from %object%`
   - `reset %object%`
   - `delete %object%`
+- base entity control
+  - `kill %entities%`
+  - `silence %entities%`
+  - `unsilence %entities%`
+  - `make %entities% silent`
+  - `make %entities% not silent`
+  - `make %entities% invulnerable`
+  - `make %entities% invincible`
+  - `make %entities% vulnerable`
 - fishing approach-angle setter
 
 ### Breeding
