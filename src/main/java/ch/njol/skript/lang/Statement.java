@@ -65,32 +65,42 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
         }
         log.clear();
 
+        ParseLogHandler effectFailure = null;
         Effect effect = Effect.parse(expression, null, node, items);
         if (effect != null) {
             log.printLog();
             return effect;
         }
         if (log.hasError()) {
-            log.printError();
-            return null;
+            effectFailure = log.backup();
         }
-        log.clear();
+        resetParseLog(log);
 
+        ParseLogHandler conditionFailure = null;
         Condition condition = parseCondition(expression, node, items, sectionContext);
         if (condition != null) {
             log.printLog();
             return condition;
         }
         if (log.hasError()) {
-            log.printError();
-            return null;
+            conditionFailure = log.backup();
         }
-        log.clear();
+        resetParseLog(log);
 
         Statement statement = parseRegisteredStatement(expression, defaultError, node, items, sectionContext);
         if (statement != null) {
             log.printLog();
             return statement;
+        }
+        ParseLogHandler statementFailure = log.backup();
+        ParseLogHandler retainedFailure = selectRetainedFailure(
+                defaultError,
+                statementFailure,
+                conditionFailure,
+                effectFailure
+        );
+        if (retainedFailure != null) {
+            log.restore(retainedFailure);
         }
         log.printError(defaultError);
         return null;
@@ -182,5 +192,62 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             }
             return parsed;
         });
+    }
+
+    private static void resetParseLog(ParseLogHandler log) {
+        log.clear();
+        log.clearError();
+    }
+
+    private static @Nullable ParseLogHandler selectRetainedFailure(
+            @Nullable String defaultError,
+            ParseLogHandler statementFailure,
+            @Nullable ParseLogHandler conditionFailure,
+            @Nullable ParseLogHandler effectFailure
+    ) {
+        if (hasSpecificError(statementFailure, defaultError)) {
+            return statementFailure;
+        }
+        ParseLogHandler previousFailure = moreRelevantFailure(conditionFailure, effectFailure);
+        if (previousFailure != null) {
+            return previousFailure;
+        }
+        return statementFailure.hasError() ? statementFailure : null;
+    }
+
+    private static boolean hasSpecificError(ParseLogHandler log, @Nullable String defaultError) {
+        if (!log.hasError()) {
+            return false;
+        }
+        if (defaultError == null || defaultError.isBlank()) {
+            return true;
+        }
+        for (var error : log.getErrors()) {
+            if (!defaultError.equals(error.getMessage())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static @Nullable ParseLogHandler moreRelevantFailure(
+            @Nullable ParseLogHandler primary,
+            @Nullable ParseLogHandler fallback
+    ) {
+        if (primary == null || !primary.hasError()) {
+            return fallback != null && fallback.hasError() ? fallback : null;
+        }
+        if (fallback == null || !fallback.hasError()) {
+            return primary;
+        }
+        if (primary.getError() == null) {
+            return fallback;
+        }
+        if (fallback.getError() == null) {
+            return primary;
+        }
+        return primary.getError().getQuality().priority() >= fallback.getError().getQuality().priority()
+                ? primary
+                : fallback;
     }
 }

@@ -172,6 +172,7 @@ import org.joml.Vector3f;
 
 public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTestSupport {
 
+    private static final AtomicBoolean FAILED_EFFECT_FALLBACK_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
 
     @GameTest
@@ -536,6 +537,40 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     }
 
     @GameTest
+    public void executesRealSkriptFileUsingStatementFallbackAfterFailedEffectParse(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureFailedEffectFallbackTestSyntaxRegistered();
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            helper.setBlock(new BlockPos(0, 1, 0), Blocks.AIR.defaultBlockState());
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/statement_fallback_after_failed_effect_set_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message -> message.contains("ambiguous gametest effect rejected")),
+                        Component.literal("Expected the real .sk load path to keep parsing after the failed effect candidate.")
+                );
+            }
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void coreMappingsExposeMojangBackedTypes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState());
 
@@ -747,9 +782,67 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         helper.succeed();
     }
 
+    private static void ensureFailedEffectFallbackTestSyntaxRegistered() {
+        if (FAILED_EFFECT_FALLBACK_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerEffect(RejectingGameTestEffect.class, "ambiguous loader syntax");
+            Skript.registerStatement(LoadsAfterFailedEffectStatement.class, "ambiguous loader syntax");
+        }
+    }
+
     private static void ensureUnreachableTestStatementRegistered() {
         if (UNREACHABLE_TEST_STATEMENT_REGISTERED.compareAndSet(false, true)) {
             Skript.registerStatement(StopGameTestTriggerStatement.class, "stop gametest trigger");
+        }
+    }
+
+    public static final class RejectingGameTestEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("ambiguous gametest effect rejected");
+            return false;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "ambiguous gametest effect";
+        }
+    }
+
+    public static final class LoadsAfterFailedEffectStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected boolean run(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            if (event.handle() instanceof GameTestHelper helper) {
+                helper.setBlock(new BlockPos(0, 1, 0), Blocks.EMERALD_BLOCK.defaultBlockState());
+            } else if (event.level() != null) {
+                event.level().setBlockAndUpdate(new BlockPos(0, 1, 0), Blocks.EMERALD_BLOCK.defaultBlockState());
+            }
+            return true;
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "ambiguous loader syntax";
         }
     }
 
