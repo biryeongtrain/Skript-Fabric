@@ -10,6 +10,7 @@ Last updated: 2026-03-08
 
 ## Owned Files
 
+- `src/main/java/ch/njol/skript/lang/function/Parameter.java`
 - `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
@@ -19,7 +20,8 @@ Last updated: 2026-03-08
 
 - compare local function lookup behavior against `/tmp/skript-upstream-e6ec744-2`
 - restore one contained observable gap in local-vs-global function resolution
-- prove the gap with focused compatibility regressions
+- restore one contained optional/default-parameter parity gap in legacy function defaults
+- prove the gaps with focused compatibility regressions
 
 ## What Landed
 
@@ -27,9 +29,12 @@ Last updated: 2026-03-08
 - fixed `FunctionRegistry.getSignature(...)` and `FunctionRegistry.getFunction(...)` so globals are fallback-only when a script namespace already has a matching result
 - added a registry-level regression proving a local compatible overload no longer becomes ambiguous because of a broader global candidate
 - added a call-binding regression proving `FunctionReference.validateFunction(true)` now binds to the local signature instead of failing on mixed local/global ambiguity
+- restored `Parameter.newInstance(...)` so legacy function defaults are parsed as expressions instead of literal-only `Classes.parse(...)` values
+- added a regression proving a registered integer expression can be used as a function parameter default
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/lang/function/Parameter.java`
 - `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
@@ -37,9 +42,9 @@ Last updated: 2026-03-08
 
 ## Counts Changed
 
-- source files changed: `1`
+- source files changed: `2`
 - test files changed: `2`
-- test methods added: `2`
+- test methods added: `3`
 - canonical docs changed: `0`
 
 ## Exact Commands And Results
@@ -76,16 +81,22 @@ Last updated: 2026-03-08
   - compared adjacent default-argument behavior
 - `git diff --no-index -- src/main/java/ch/njol/skript/lang/function/Signature.java /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Signature.java`
   - compared adjacent signature/min-arity behavior
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.parameterParsesRegisteredExpressionAsDefaultValue`
+  - failed before the fix; `Parameter.newInstance(...)` rejected a registered integer expression default
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.functionRegistryPrefersLocalMatchBeforeGlobalCandidates --rerun-tasks`
   - failed before the fix; the new regression reproduced the ambiguity bug
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest.functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate --rerun-tasks`
   - failed before the fix; local call binding was blocked by the same ambiguity
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.parameterParsesRegisteredExpressionAsDefaultValue`
+  - passed after parsing function defaults through `SkriptParser`
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest.functionRegistryPrefersLocalMatchBeforeGlobalCandidates --rerun-tasks`
   - passed after the registry fix
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest.functionReferencePrefersLocalSignatureOverCompatibleGlobalCandidate --rerun-tasks`
   - passed after the registry fix
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest`
+  - passed after the default-expression fix
 
 ## Verification
 
@@ -97,4 +108,5 @@ Last updated: 2026-03-08
 ## Unresolved Risks
 
 - this slice only restores local-first fallback behavior in the legacy registry APIs; broader upstream deltas in the function package remain
+- this slice restores parsed default-expression handling for function parameters, but does not yet chase broader signature-parser parity such as duplicate-name validation
 - verification is limited to the targeted compatibility tests above

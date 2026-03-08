@@ -4,9 +4,13 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Literal;
+import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.Variable;
-import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.log.RetainingLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.LiteralUtils;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -127,12 +131,23 @@ public final class Parameter<T> {
         }
         Expression<? extends T> defaultExpr = null;
         if (def != null && !def.isBlank()) {
-            T parsed = Classes.parse(def, type.getC(), ch.njol.skript.lang.ParseContext.DEFAULT);
-            if (parsed == null) {
-                Skript.error("Can't understand this expression: " + def);
-                return null;
+            RetainingLogHandler log = SkriptLogger.startRetainingLog();
+            try {
+                @SuppressWarnings("unchecked")
+                Expression<? extends T> parsed = (Expression<? extends T>) new SkriptParser(
+                        def,
+                        SkriptParser.ALL_FLAGS,
+                        ParseContext.DEFAULT
+                ).parseExpression(new Class[]{type.getC()});
+                defaultExpr = parsed;
+                if (defaultExpr == null || LiteralUtils.hasUnparsedLiteral(defaultExpr)) {
+                    log.printErrors("Can't understand this expression: " + def);
+                    return null;
+                }
+                log.printLog();
+            } finally {
+                log.stop();
             }
-            defaultExpr = new SimpleLiteral<>(parsed, true);
         }
 
         List<Modifier> modifiers = new ArrayList<>();

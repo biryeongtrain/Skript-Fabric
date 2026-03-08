@@ -6,13 +6,19 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
 import java.util.Arrays;
 import java.util.List;
+import ch.njol.util.Kleenean;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
 class FunctionCoreCompatibilityTest {
 
@@ -30,6 +36,22 @@ class FunctionCoreCompatibilityTest {
         assertNotNull(parameter);
         assertTrue(parameter.isOptional());
         assertEquals(7, parameter.getDefaultExpression().getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void parameterParsesRegisteredExpressionAsDefaultValue() {
+        Skript.registerExpression(FunctionDefaultNumberExpression.class, Integer.class, "function default number");
+
+        Parameter<Integer> parameter = Parameter.newInstance(
+                "count",
+                Classes.getSuperClassInfo(Integer.class),
+                true,
+                "function default number"
+        );
+
+        assertNotNull(parameter);
+        assertNotNull(parameter.getDefaultExpression());
+        assertEquals(9, parameter.getDefaultExpression().getSingle(SkriptEvent.EMPTY));
     }
 
     @Test
@@ -321,6 +343,39 @@ class FunctionCoreCompatibilityTest {
         @Override
         public boolean resetReturnValue() {
             return true;
+        }
+    }
+
+    public static class FunctionDefaultNumberExpression extends SimpleExpression<Integer> {
+
+        @Override
+        protected Integer @Nullable [] get(SkriptEvent event) {
+            return new Integer[]{9};
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ParseResult parseResult
+        ) {
+            return expressions.length == 0;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "function default number";
         }
     }
 }
