@@ -52,6 +52,7 @@ class SkriptParserRegistryTest {
         BranchTagAwareSection.lastSecond = false;
         AutoTagAwareSection.lastMin = false;
         AutoTagAwareSection.lastMax = false;
+        OptionalRegexSection.lastCapturedText = null;
     }
 
     @Test
@@ -209,6 +210,25 @@ class SkriptParserRegistryTest {
         assertInstanceOf(AutoTagAwareSection.class, maximum);
         assertFalse(AutoTagAwareSection.lastMin);
         assertTrue(AutoTagAwareSection.lastMax);
+    }
+
+    @Test
+    void sectionPatternAllowsOptionalRegexCaptureToBeOmitted() {
+        Skript.registerSection(OptionalRegexSection.class, "watch [<.+>] target");
+
+        SectionNode omittedNode = new SectionNode("watch target");
+        Section omitted = Section.parse("watch target", null, omittedNode, List.of());
+
+        assertNotNull(omitted);
+        assertInstanceOf(OptionalRegexSection.class, omitted);
+        assertNull(OptionalRegexSection.lastCapturedText);
+
+        SectionNode presentNode = new SectionNode("watch nearby target");
+        Section present = Section.parse("watch nearby target", null, presentNode, List.of());
+
+        assertNotNull(present);
+        assertInstanceOf(OptionalRegexSection.class, present);
+        assertEquals("nearby", OptionalRegexSection.lastCapturedText);
     }
 
     @Test
@@ -675,6 +695,34 @@ class SkriptParserRegistryTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "regex capture section";
+        }
+    }
+
+    public static class OptionalRegexSection extends Section {
+
+        static @Nullable String lastCapturedText;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                ch.njol.util.Kleenean isDelayed,
+                ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            lastCapturedText = parseResult.regexes.isEmpty() ? null : parseResult.regexes.getFirst().group();
+            return sectionNode != null;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return getNext();
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "optional regex section";
         }
     }
 

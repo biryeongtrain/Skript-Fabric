@@ -50,7 +50,10 @@ public final class SkriptPattern {
                     expressions.add(parsed);
                 }
                 case REGEX -> {
-                    if (captured == null || capture.regexPattern() == null) {
+                    if (captured == null) {
+                        continue;
+                    }
+                    if (capture.regexPattern() == null) {
                         return null;
                     }
                     Matcher rawMatcher = capture.regexPattern().matcher(captured.trim());

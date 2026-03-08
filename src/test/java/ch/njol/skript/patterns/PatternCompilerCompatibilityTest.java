@@ -83,4 +83,30 @@ class PatternCompilerCompatibilityTest {
         assertNotNull(result);
         assertTrue(result.tags().contains("sha-256"));
     }
+
+    @Test
+    void compiledPatternSkipsOptionalRegexCaptureWhenOmitted() {
+        SkriptPattern pattern = PatternCompiler.compile("show [<.+>] result");
+
+        MatchResult omitted = pattern.match("show result");
+        MatchResult present = pattern.match("show captured result");
+
+        assertNotNull(omitted);
+        assertTrue(omitted.regexes().isEmpty());
+        assertNotNull(present);
+        assertEquals("captured", present.regexes().getFirst().group());
+    }
+
+    @Test
+    void compiledPatternSkipsRegexCapturesFromUnmatchedAlternationBranches() {
+        SkriptPattern pattern = PatternCompiler.compile("check (<\\d+>|literal)");
+
+        MatchResult literal = pattern.match("check literal");
+        MatchResult regex = pattern.match("check 42");
+
+        assertNotNull(literal);
+        assertTrue(literal.regexes().isEmpty());
+        assertNotNull(regex);
+        assertEquals("42", regex.regexes().getFirst().group());
+    }
 }
