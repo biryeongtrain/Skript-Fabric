@@ -36,36 +36,34 @@ For the next Codex app parallel session, use:
 - Latest verified runtime baseline from 2026-03-08:
   - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
-  - `229 / 229` scheduled Fabric GameTests completed without build failure
+  - `230 / 230` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift
 
 Do not continue the next Stage 8 package-local Bukkit slice yet.
-The user explicitly reprioritized missing upstream user-visible syntax first.
+The user explicitly reprioritized upstream `ch/njol/skript` implementation first.
 
 New immediate priority:
 
 - keep the current Stage 8 status frozen and accurately recorded
-- import missing upstream syntax families into the active Fabric runtime using exact existing Skript forms
-- use the broader `ch/njol/skript` closure track as an enabling dependency when the next syntax family is blocked by parser/runtime gaps
+- close the broader `ch/njol/skript` surface first, especially the next blocking `Part 1A` / `Part 1B` parser, loader, variable, and registry gaps
+- import missing upstream syntax families into the active Fabric runtime using exact existing Skript forms once those blocking closure slices are green
 - after that upstream closure track, resume the broader Bukkit-behavior parity push until verified behavior matches upstream as closely as practical
 
 ## Latest Closure Slice
 
-- merged the next exact upstream syntax-import batch for user-visible forms that were still missing versus upstream:
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsBurning.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsBurning.java) now covers `%entities% (is|are) (burning|ignited|on fire)`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvisible.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvisible.java) now covers `%livingentities% (is|are) (invisible|visible)`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondAI.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondAI.java) now covers `%livingentities% (has|have) (ai|artificial intelligence)`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSprinting.java](../../src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsSprinting.java) now covers `%players% (is|are) sprinting`
-  - [src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSprinting.java](../../src/main/java/org/skriptlang/skript/bukkit/base/effects/EffSprinting.java) now covers exact upstream-style sprinting start/stop effect forms
-  - [src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java](../../src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java) now registers the full merged condition/effect batch in the active Fabric runtime
+- merged the next upstream `ch/njol/skript` core-closure batch rather than another user-visible syntax family:
+  - [src/main/java/ch/njol/skript/registrations/Classes.java](../../src/main/java/ch/njol/skript/registrations/Classes.java) now restores the upstream helper overloads `getDefaultExpression(String)` and `getDefaultExpression(Class<?>)`, so exact registered classinfo defaults are reachable through the legacy surface again
+  - [src/main/java/ch/njol/skript/variables/Variables.java](../../src/main/java/ch/njol/skript/variables/Variables.java) now keeps direct-parent `null` sentinels when raw list-branch reads combine a direct value with descendant entries
+  - [src/main/java/ch/njol/skript/patterns/PatternElement.java](../../src/main/java/ch/njol/skript/patterns/PatternElement.java), [src/main/java/ch/njol/skript/patterns/GroupPatternElement.java](../../src/main/java/ch/njol/skript/patterns/GroupPatternElement.java), and [src/main/java/ch/njol/skript/patterns/SkriptPattern.java](../../src/main/java/ch/njol/skript/patterns/SkriptPattern.java) now preserve grouped string/combinations parity through `toFullString()`, `getCombinations(...)`, and `getAllCombinations()`, while [src/main/java/ch/njol/skript/patterns/MalformedPatternException.java](../../src/main/java/ch/njol/skript/patterns/MalformedPatternException.java) restores malformed pattern wrapping on the compatibility path
+  - [src/main/java/ch/njol/skript/ScriptLoader.java](../../src/main/java/ch/njol/skript/ScriptLoader.java) now keeps temporary local-variable hints alive when a section line fails `Section.parse(...)` but succeeds through statement fallback, and live coverage now includes [src/gametest/resources/skript/gametest/base/statement_fallback_section_hint_test_block.sk](../../src/gametest/resources/skript/gametest/base/statement_fallback_section_hint_test_block.sk)
 - parser/runtime verification landed:
-  - [src/test/java/org/skriptlang/skript/fabric/runtime/BurningSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/BurningSyntaxTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java), [src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/AISyntaxTest.java), and [src/test/java/org/skriptlang/skript/fabric/runtime/SprintingSyntaxTest.java](../../src/test/java/org/skriptlang/skript/fabric/runtime/SprintingSyntaxTest.java) now prove parser/bootstrap registration for the exact new forms
-  - added dedicated real `.sk` fixtures and GameTest coverage through [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBurningGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBurningGameTest.java), [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java), [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricAIGameTest.java), and [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricSprintingGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricSprintingGameTest.java)
+  - [src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java), [src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java), [src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java), [src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java), and [src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java) now lock the restored helper, pattern, variable, and hint-retention paths
+  - [src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java](../../src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java) now runs the new statement-fallback section hint fixture through the live loader path
 - latest verification for this merged slice:
-  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --tests org.skriptlang.skript.fabric.runtime.BurningSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `229 / 229`
-  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `229 / 229`
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
+  - `./gradlew build --rerun-tasks` passed, and the build path again executed the full Fabric GameTest suite with `230 / 230`
 
 ## What Landed In This Slice
 
@@ -76,8 +74,8 @@ New immediate priority:
   - [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md)
 - measured the upstream/local baseline for `ch/njol/skript`:
   - upstream snapshot `e6ec744`: `1189` Java files
-  - local tree: `128` Java files
-  - net missing relative surface: `1061` Java files
+  - local tree: `129` Java files
+  - net missing relative surface: `1060` Java files
 - started the first `Part 2` user-visible syntax-import slice on top of the current core closure:
   - `CondIsAlive`, `CondIsSilent`, and `CondIsInvulnerable`
   - `EffKill`, `EffSilence`, and `EffInvulnerability`
@@ -91,14 +89,17 @@ New immediate priority:
   - locked runtime GameTests now clear Skript variables before and after each body, preventing suite-order leakage while leaving production variable semantics unchanged
   - `Variable.isValidVariableName(...)` now ignores `*` inside paired `%...%` spans, restoring dynamic forms such as `result::%{source::*}%`
   - `ClassInfo` now exposes default expressions, and `SkriptParser` now falls back to them when omitted non-optional placeholders have no parser-scoped default
+  - `Classes` now also exposes upstream helper overloads for default-expression lookup by codename or exact class
   - `EffChange.init(...)` now publishes parse-time local-variable hints for the exact built-in `set %object% to %object%` path when it targets a hintable local variable
   - `Variables.getVariable("name::*", ...)` now reconstructs upstream-style nested list maps, including `null` parent sentinels when a direct parent value and descendants coexist, while `getVariablesWithPrefix(...)` keeps the current shallow direct-child view
   - `SkriptParser` now recognizes upstream-prefixed variable forms such as `var {x}`, `variable {x}`, and `the variable {x}`
   - `Statement.selectRetainedFailure(...)` now keeps earlier higher-quality effect/condition parse errors over later lower-quality plain-statement failures on the same syntax line
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
+  - shared pattern-element graph nodes now preserve grouped string/combinations parity through `toFullString()`, `getCombinations(...)`, and `getAllCombinations()`, and malformed grouped patterns now wrap through local `MalformedPatternException`
+  - `ScriptLoader.parseSectionTriggerItem(...)` now keeps temporary hint scopes alive when a section line falls back from `Section.parse(...)` to a plain statement and still succeeds
   - `Statement.parse(...)` now keeps same-pattern effect/condition init failures non-terminal until the plain registered-statement path has been tried, while restoring the best prior specific error if no statement matches
-  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, `make_invulnerable_names_entity.sk`, `material_alias_placeholder_set_test_block.sk`, `feed_event_player_by_beefs_marks_block.sk`, `make_invisible_names_entity.sk`, `make_visible_names_entity.sk`, `burning_entity_names_entity.sk`, `ignited_entity_names_entity.sk`, `on_fire_entity_names_entity.sk`, `invisible_entity_names_entity.sk`, `visible_entity_names_entity.sk`, `has_ai_entity_names_entity.sk`, `no_ai_entity_names_entity.sk`, `sprinting_player_names_player.sk`, `make_player_start_sprinting_names_player.sk`, and `make_player_stop_sprinting_names_player.sk`, increasing the current Fabric GameTest suite to `229 / 229`
+  - real base `.sk` coverage now includes `statement_fallback_after_failed_effect_set_test_block.sk`, `statement_fallback_section_hint_test_block.sk`, `patbox_placeholder_entity_name_test_block.sk`, `prefixed_variable_set_test_block.sk`, `higher_quality_parse_error_prefers_effect_test_block.sk`, `variable_name_expression_inner_list_marker_set_test_block.sk`, `built_in_set_local_hint_test_block.sk`, `alive_entity_names_entity.sk`, `silent_entity_names_entity.sk`, `invulnerable_entity_names_entity.sk`, `kill_entity_marks_block.sk`, `make_silent_names_entity.sk`, `make_invulnerable_names_entity.sk`, `material_alias_placeholder_set_test_block.sk`, `feed_event_player_by_beefs_marks_block.sk`, `make_invisible_names_entity.sk`, `make_visible_names_entity.sk`, `burning_entity_names_entity.sk`, `ignited_entity_names_entity.sk`, `on_fire_entity_names_entity.sk`, `invisible_entity_names_entity.sk`, `visible_entity_names_entity.sk`, `has_ai_entity_names_entity.sk`, `no_ai_entity_names_entity.sk`, `sprinting_player_names_player.sk`, `make_player_start_sprinting_names_player.sk`, and `make_player_stop_sprinting_names_player.sk`, increasing the current Fabric GameTest suite to `230 / 230`
   - `ExprInput` now acts as a working compatibility expression instead of a pure stub
   - `SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` when `InputSource` context is active
   - `Classes` now normalizes spaced, hyphenated, and plural user type names for parser-facing class-info lookup
@@ -317,16 +318,16 @@ New immediate priority:
 
 ## Recommended Next Priority
 
-Continue `Part 2` missing-user-visible-syntax imports first, while keeping the already-started `Part 1A` and `Part 1B` closure tracks in sync as enabling work.
+Continue `Part 1A` and `Part 1B` upstream `ch/njol/skript` closure first, then resume `Part 2` exact missing-syntax imports on top of that cleaner core.
 
 Recommended order:
 
-1. audit upstream user-visible syntax families that are still missing from the active Fabric runtime, starting with simple condition/effect/expression forms that do not need a new backend abstraction
-2. only drop back into `SkriptParser`, `Statement`, `ScriptLoader`, `Classes`, or `Variables` closure when the next syntax family is blocked by missing core behavior
-3. land exact upstream syntax forms, not renamed approximations, and add regression coverage
+1. audit the next missing or behavior-thin upstream `ch/njol/skript` slices, starting with `SkriptParser`, `Statement`, `ScriptLoader`, `Classes`, `Variables`, and nearby dependency closures
+2. land those core closures with upstream method shapes and semantics first, not local approximations
+3. once a core slice is green, pull the next exact upstream syntax family that the slice unblocks
 4. when the change affects user-visible script behavior, add real `.sk` plus Fabric GameTest coverage
 5. update [PORTING_STATUS.md](PORTING_STATUS.md), this handoff, and [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md) in the same turn
-6. after the missing syntax surface is materially landed, resume the broader Stage 8 and behavioral-parity push toward 100% verified Bukkit-equivalent behavior
+6. after the missing `ch/njol/skript` surface and exact syntax imports are materially landed, resume the broader Stage 8 and behavioral-parity push toward 100% verified Bukkit-equivalent behavior
 
 ## Verification Policy
 
@@ -358,8 +359,8 @@ Recommended order:
 
 현재 우선순위:
 - 기존 Stage 8 상태는 유지하되, 다음 package-local Bukkit audit로 바로 가지 말 것
-- upstream 대비 아직 빠진 user-visible syntax 를 먼저 구현할 것
-- `docs/porting/CH_NJOL_SKRIPT_AUDIT.md` 의 `Part 1A` / `Part 1B` 는 다음 syntax family 를 막는 경우에만 enabling track 으로 진행할 것
+- upstream `ch/njol/skript` 구현을 먼저 진행할 것
+- exact user-visible syntax import 는 그 다음 blocking closure slice 가 닫힌 뒤 이어갈 것
 - canonical docs 는 `docs/porting` 아래에 있고, 루트 문서는 포인터임
 
 현재 상태:
@@ -368,9 +369,9 @@ Recommended order:
 - Effect 24/24 완료
 - Stage 5 closure 22/22
 - Stage 8 package-local audit 23/214
-- latest verified GameTest 216/216
+- latest verified GameTest 230/230
 - build 통과
-- new `ch/njol/skript` baseline: local 128 / upstream 1189
+- new `ch/njol/skript` baseline: local 129 / upstream 1189
 
 중요 제약:
 - 사용자 Skript 문법에 fabric 접두/접미사를 넣지 마

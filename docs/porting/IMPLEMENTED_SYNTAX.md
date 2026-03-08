@@ -21,7 +21,7 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `229 / 229`
+- Verified Fabric GameTests: `230 / 230`
 - Latest full verification:
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -43,7 +43,7 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `128`
+  - local `ch/njol/skript`: `129`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
 
@@ -114,6 +114,7 @@ None in the current Fabric registration set.
 - variable-name validation now ignores `*` inside paired `%...%` spans, so dynamic forms such as `result::%{source::*}%` parse again while invalid outer list markers still fail
 - exact built-in `set {_value} to ...` lines now publish parse-time local-variable hints for later sibling lines through `EffChange`
 - omitted non-optional placeholders can now fall back to exact `ClassInfo` default expressions when the parser did not register a narrower default
+- `Classes` now also exposes exact registered default expressions through `getDefaultExpression(String)` and `getDefaultExpression(Class<?>)`
 - variables default to case-insensitive storage and lookup
 - list-variable `set` copies keyed list sources into reindexed numeric target slots instead of preserving source keys
 - prefix/list iteration now uses natural numeric ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set`
@@ -128,6 +129,7 @@ None in the current Fabric registration set.
 - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order instead of collapsing them into a unique set
 - `PatternCompiler` / `SkriptPattern` now support placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦`
 - `PatternCompiler` now also builds a lightweight `PatternElement` graph, and `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)` for the current upstream-introspection compatibility surface
+- grouped `PatternElement` nodes now preserve string/combinations parity through `toFullString()`, `getCombinations(...)`, and `getAllCombinations()`, and malformed grouped patterns now wrap through `MalformedPatternException`
 - `PatternCompiler` now also preserves placeholder-local parse flags (`*` / `~`), leading optional markers, plural metadata, and `@time`, and `SkriptPattern` now applies placeholder-local parse flags plus time through the shared matcher while leaving plurality metadata non-enforcing on the current green corpus
 - the shared matcher now keeps omitted optional raw-regex captures and unmatched alternation regex branches from failing `ParseResult` construction
 - `SkriptParser` now preserves required whitespace around omitted inline optional groups and inline alternation branches for the currently verified natural-script surface, which keeps live forms like `%objects% can be equipped on[to] entities`, `%objects% will lose durability when injured`, and `make %entities% not breedable` green again
@@ -138,6 +140,7 @@ None in the current Fabric registration set.
 - `input`, typed `%classinfo% input`, and `input index` resolve directly in active `InputSource` context
 - registered pure `Section` nodes now load through `ScriptLoader.loadItems(...)` instead of being dropped into statement-only fallback
 - `ScriptLoader` section-node fallback now restores the more specific retained section-versus-statement diagnostic when both parse paths fail
+- `ScriptLoader.parseSectionTriggerItem(...)` now keeps temporary local-variable hints when a section line fails `Section.parse(...)` but succeeds through statement fallback, and that path is live-covered by `statement_fallback_section_hint_test_block.sk`
 - `ScriptLoader.loadItems(...)` and `parseSectionTriggerItem(...)` now manage section and temporary non-section hint scopes, so failed section parses clear temporary hints while successful section loads can propagate, freeze, or merge hints through the active stop-flow path
 - stopping statements now make `ScriptLoader` emit the upstream-style unreachable-code warning behind `ScriptWarning.UNREACHABLE_CODE` suppression, and real `.sk` coverage verifies that the later line never executes
 - nested `ExecutionIntent.stopTrigger()` and `ExecutionIntent.stopSection()` results now propagate through `TriggerItem.walk(...)`, and registered sections now surface stop-trigger intent back to `ScriptLoader` for unreachable-code warnings

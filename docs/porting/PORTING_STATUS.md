@@ -36,13 +36,13 @@ Last updated: 2026-03-08
 - Latest runtime verification:
   - `./gradlew build --rerun-tasks` passed on 2026-03-08
   - build path executed `runGameTest` successfully on 2026-03-08
-  - `229 / 229` scheduled Fabric GameTests completed without build failure
+  - `230 / 230` scheduled Fabric GameTests completed without build failure
 
 ## Priority Shift On 2026-03-08
 
 Further Stage 8 package-local audit is temporarily deprioritized.
-The immediate priority is now user-visible syntax that is still missing versus upstream.
-The broader upstream `ch/njol/skript` closure workstream remains active as an enabling track, especially `Part 1A` and `Part 1B`, but it is now in service of landing more exact upstream syntax families end-to-end.
+The immediate priority is now the broader upstream `ch/njol/skript` closure workstream itself.
+Exact missing upstream syntax families remain important, but they now follow the next blocking `Part 1A` / `Part 1B` closure slices instead of leading them.
 
 Detailed tracking for this workstream lives in [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md).
 
@@ -57,8 +57,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `128` Java files
-- net missing local surface relative to that snapshot: `1061` Java files
+- local `src/main/java/ch/njol/skript`: `129` Java files
+- net missing local surface relative to that snapshot: `1060` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -85,7 +85,7 @@ Key local package counts versus upstream:
 - `variables`: local `2`, upstream `11`
 - `config`: local `6`, upstream `20`
 - `registrations`: local `2`, upstream `10`
-- `patterns`: local `11`, upstream `14`
+- `patterns`: local `12`, upstream `14`
 - `log`: local `4`, upstream `17`
 - `sections`: local `1`, upstream `10`
 - `structures`: local `1`, upstream `10`
@@ -151,6 +151,7 @@ Landed slices so far:
   - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order instead of collapsing them into a unique set
   - `PatternCompiler` / `SkriptPattern` now support placeholders, raw regex captures, optional groups, alternation, general `tag:` metadata, and XOR parse marks via `¦` on the current compatibility surface
   - `PatternCompiler` now also builds a lightweight `PatternElement` graph, and `SkriptPattern` now exposes `countTypes()`, `countNonNullTypes()`, and `getElements(...)` for the current upstream-introspection compatibility surface
+  - `PatternElement` graph nodes now preserve grouped string/combinations parity through `toFullString()`, `getCombinations(...)`, and `getAllCombinations()`, and malformed grouped patterns now wrap through local `MalformedPatternException`
   - bare leading `:` metadata now auto-derives from following literal and choice branches on the current compatibility surface, so forms such as `:future`, `:non(-| )`, and `:(min|max)[imum]` reach `ParseResult` again
   - unmatched optional and alternation-scoped raw-regex captures now stay matchable through the shared matcher path instead of failing `ParseResult` construction
   - `PatternCompiler` now also preserves placeholder-local parse flags (`*` / `~`), leading optional markers, plural metadata, and `@time` metadata through `TypePatternElement`
@@ -193,7 +194,7 @@ Landed slices so far:
 - loader hint-scope closure:
   - `ParserInstance` now owns an upstream-style `HintManager`, resets it per script load, and exposes the active local-variable hint stack to parser/runtime compatibility code
   - `ScriptLoader.loadItems(...)` now opens section hint scopes, freezes them behind stopping statements, and merges `stopSection` hints into the resumed sibling scope
-  - `parseSectionTriggerItem(...)` now opens a temporary non-section hint scope around `Section.parse(...)`, so failed section parsing clears temporary hints before statement fallback runs
+  - `parseSectionTriggerItem(...)` now opens a temporary non-section hint scope around `Section.parse(...)`, so failed section parsing clears temporary hints before statement fallback runs, while section lines that succeed through statement fallback keep the narrowed hint scope alive
   - `ScriptLoaderCompatibilityTest` now covers failed-section hint rollback, successful sibling propagation, stop-trigger scope freezing, and stop-section hint merging
 - class/type registry closure:
   - `ClassInfo` and `Classes` now close the missing codename, literal-pattern, and supertype resolution behavior that the parser/runtime depends on
@@ -202,6 +203,7 @@ Landed slices so far:
   - `Classes.getParser(...)` now also falls back through registered converters after direct parser lookup, so converter-backed parser owners can still satisfy requested class infos on the current compatibility surface
   - `Classes.parse(...)` now falls back through registered converters after direct parser lookup, so converter-backed source types can still satisfy requested class infos on the current compatibility surface
   - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success, so successful fallback no longer leaks earlier parser diagnostics
+  - `Classes.getDefaultExpression(String)` and `Classes.getDefaultExpression(Class<T>)` now expose exact registered classinfo defaults through the upstream helper surface
 - variable/runtime closure:
   - `SkriptParser` now recognizes `{...}` variable expressions directly
   - `SkriptParser` now also recognizes the upstream-prefixed forms `var {x}`, `variable {x}`, and `the variable {x}` on the current compatibility surface
@@ -256,6 +258,7 @@ Landed slices so far:
   - plain-effect section ownership plus local-variable copy-back through `set {_component} to a blank equippable component:`
   - plain-effect argument parsing inside an outer expression section path
   - statement fallback after failed effect parse through `ambiguous loader syntax`
+  - statement-fallback section-line hint propagation through `statement_fallback_section_hint_test_block.sk`
   - Patbox placeholder resolution through `%player:name%` in a live entity-name mutation fixture
 
 Targeted verification completed on 2026-03-08:
@@ -288,8 +291,9 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after merging classinfo-backed omitted defaults, inner-expression variable-name list-marker validation, and built-in `EffChange` local hints
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks` passed after restoring `%material%` alias lookup plus exact upstream `feed` and invisible/visible effect forms
 - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --tests org.skriptlang.skript.fabric.runtime.BurningSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks` passed after merging exact upstream invisible/visible condition, burning, AI, and sprinting condition/effect syntax
-- `./gradlew runGameTest --rerun-tasks` passed with `229 / 229`
-- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `229 / 229` scheduled Fabric GameTests
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after restoring `Classes` default-expression lookup helpers, direct-parent variable null sentinels, pattern graph string/combinations parity, and statement-fallback section-line hint retention
+- `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `230 / 230` scheduled Fabric GameTests
 
 ## Foundation Already Landed Before This Pivot
 

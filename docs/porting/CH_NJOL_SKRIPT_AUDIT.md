@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `128`
-- local shortfall versus the captured upstream snapshot: `1061`
+- local `ch/njol/skript`: `129`
+- local shortfall versus the captured upstream snapshot: `1060`
 
 Local top-level packages currently present:
 
@@ -84,7 +84,7 @@ Upstream top-level packages currently absent locally:
 | `literals` | `16` | `0` | absent | `P2` | depends on parser/type behavior |
 | `localization` | `11` | `2` | partial shim | `P2` | not blocking initial parser closure, but still largely absent |
 | `log` | `17` | `4` | partial shim | `P1` | parse/runtime diagnostics still thin |
-| `patterns` | `14` | `11` | partial shim | `P1` | foundational parsing dependency; shared matcher, parse-tag flow, and lightweight pattern-element graph APIs now exist locally |
+| `patterns` | `14` | `12` | partial shim | `P1` | foundational parsing dependency; shared matcher, parse-tag flow, lightweight pattern-element graph APIs, and grouped string/combinations parity now exist locally |
 | `registrations` | `10` | `2` | partial shim | `P1` | foundational registration dependency |
 | `sections` | `10` | `1` | partial shim | `P1` | section behavior now includes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, implicit condition sections, generic section nodes through `ScriptLoader`, and `SecIf` through the section registry path; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity |
 | `structures` | `10` | `1` | partial shim | `P1` | now active because `options:` support has started; keep in the dependency-closure track |
@@ -126,14 +126,14 @@ That means the real gap is behavior, not class presence.
 
 | Cluster | Current local signals | Why it matters | First closure target |
 | --- | --- | --- | --- |
-| Parser flow | `SkriptParser` now uses a shared compiled matcher, forwards general parse tags plus XOR marks, preserves duplicate parse tags in encounter order, keeps the current natural forms green, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails on omitted optional/alternation raw-regex captures, exposes a lightweight `PatternElement` graph through `SkriptPattern`, backfills omitted non-optional placeholders from parser-scoped `DefaultValueData`, and now recognizes upstream-prefixed variable forms such as `var {x}` / `variable {x}` / `the variable {x}`; broader upstream pattern element-graph/runtime parity plus fuller classinfo-backed default-expression/default-value parity are still open | parser behavior controls every syntax import after this | `Part 1A` |
+| Parser flow | `SkriptParser` now uses a shared compiled matcher, forwards general parse tags plus XOR marks, preserves duplicate parse tags in encounter order, keeps the current natural forms green, derives the current bare leading `:` auto-tags again, preserves placeholder-local `*` / `~` / `@time` metadata, no longer fails on omitted optional/alternation raw-regex captures, exposes a lightweight `PatternElement` graph through `SkriptPattern`, preserves grouped string/combinations parity plus malformed pattern wrapping on that graph, backfills omitted non-optional placeholders from parser-scoped `DefaultValueData`, and now recognizes upstream-prefixed variable forms such as `var {x}` / `variable {x}` / `the variable {x}`; broader upstream pattern element-graph/runtime parity plus fuller default-value parity are still open | parser behavior controls every syntax import after this | `Part 1A` |
 | Statement loading | `Statement.parse(...)` now retains specific function/effect/condition parse errors, lets later same-pattern plain statements win after earlier effect/condition init failures, rejects plain conditions used as section headers, clears inherited outer section ownership for plain statements, benefits from the first local hint-scope lifecycle, and now keeps earlier higher-quality effect/condition parse errors over later lower-quality plain-statement failures; exact `set {_var} to true:` section ownership is regression-covered, but broader orchestration and built-in hint flow are still thin | statement ordering and section ownership determine real script semantics | `Part 1A` |
-| Script loading | `ScriptLoader.replaceOptions(...)` is real now, `loadItems(...)` now handles registered section nodes before falling back to statements, plain effects can own section-managing expressions through `Effect.parse(...)`, section-versus-statement fallback now restores the better retained diagnostic, stopping statements now emit unreachable-code warnings behind script-level warning suppression, nested section-contained stop-trigger intent now propagates through loader/runtime while `stopSection` stays local, section and temporary non-section hint scopes now open/freeze/merge through the active loader path, and the active Fabric runtime parser strips inline comments plus `###` block comments through `Node.splitLine(...)`; the broader upstream parse/log/hint flow is still much thinner than upstream | script preprocessing and trigger-item construction parity are still incomplete | `Part 1A` |
+| Script loading | `ScriptLoader.replaceOptions(...)` is real now, `loadItems(...)` now handles registered section nodes before falling back to statements, plain effects can own section-managing expressions through `Effect.parse(...)`, section-versus-statement fallback now restores the better retained diagnostic, stopping statements now emit unreachable-code warnings behind script-level warning suppression, nested section-contained stop-trigger intent now propagates through loader/runtime while `stopSection` stays local, section and temporary non-section hint scopes now open/freeze/merge through the active loader path, section lines that fall back successfully from `Section.parse(...)` to a plain statement now keep their narrowed hint scope, and the active Fabric runtime parser strips inline comments plus `###` block comments through `Node.splitLine(...)`; the broader upstream parse/log/hint flow is still much thinner than upstream | script preprocessing and trigger-item construction parity are still incomplete | `Part 1A` |
 | If-section support | `SecIf` now executes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, and implicit conditional sections through a registered section path, and `Condition.parse(...)` now unwraps grouped outer parentheses | basic conditional-section behavior is now much closer to upstream; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity beyond the minimal `implicit:` support | `Part 1A` |
 | Input-source compatibility | `ExprInput` now supports `input`, typed `%classinfo% input`, and `input index`; broader source usage paths are still not closed | input expressions depend on this bridge | `Part 1A` |
 | Variable runtime | `Variables` now covers case-insensitive storage, copy-back semantics, list-to-list reindexing, natural numeric ordering for prefix/list iteration, upstream-style raw nested map reads for `Variables.getVariable("list::*", ...)`, legacy list-variable loop/check semantics, and a first parse-time local-variable hint path through `HintManager`, but it is still an in-memory bridge only | variable semantics affect function calls, sections, and expressions | `Part 1B` |
-| Type/parse registry | `Classes` now covers codename/literal/supertype lookup, stable class-info ordering, shared literal-match ordering, converter-backed parse fallback, converter-backed `getParser(...)` fallback, and parse-log-aware fallback cleanup in `Classes.parse(...)`, but remains a small compatibility layer relative to upstream | typed literal and parser behavior depend on it | `Part 1B` |
-| User-visible syntax imports | `Part 2` now covers base entity-state/control syntax plus follow-up `%material%`, `feed`, invisible/visible condition and effect forms, burning/on-fire forms, AI forms, and sprinting condition/effect forms on the active Fabric runtime, but most upstream condition/effect/expression families are still absent from the registered Fabric surface | the user now wants missing syntax imports first, with core closure only when it unblocks the next syntax family | `Part 2` |
+| Type/parse registry | `Classes` now covers codename/literal/supertype lookup, stable class-info ordering, shared literal-match ordering, converter-backed parse fallback, converter-backed `getParser(...)` fallback, parse-log-aware fallback cleanup in `Classes.parse(...)`, and upstream helper default-expression lookup overloads, but remains a small compatibility layer relative to upstream | typed literal and parser behavior depend on it | `Part 1B` |
+| User-visible syntax imports | `Part 2` now covers base entity-state/control syntax plus follow-up `%material%`, `feed`, invisible/visible condition and effect forms, burning/on-fire forms, AI forms, and sprinting condition/effect forms on the active Fabric runtime, but most upstream condition/effect/expression families are still absent from the registered Fabric surface | syntax import remains important, but the user now wants the next blocking `ch/njol/skript` closure slices first | `Part 2` |
 
 ## Part Tracker
 
@@ -144,6 +144,18 @@ That means the real gap is behavior, not class presence.
 | `Part 1B` | `variables` / `classes` / `config` / `patterns` / `registrations` / `log` dependency closure | `in_progress` | already started because options, class-registry, and variable-storage behavior is now being tightened |
 | `Part 2` | import or replace missing user-visible upstream syntax in priority order | `in_progress` | base entity-state/control plus `%material%`, `feed`, invisible/visible condition and effect forms, burning/on-fire forms, AI forms, and sprinting condition/effect forms are landed; continue with exact upstream syntax forms that the current runtime can support end-to-end |
 | `Part 3` | low-priority support packages (`doc`, `test`, `timings`, `update`, selected hooks/utilities) | `pending` | only after runtime-relevant surfaces are settled |
+
+## Latest Merged Upstream-Core Batch
+
+- restored upstream helper lookup surface through `Classes.getDefaultExpression(String)` and `Classes.getDefaultExpression(Class<?>)`
+- restored direct-parent `null` sentinels on raw list-branch reads in `Variables.getVariable(...)`
+- restored grouped pattern string/combinations parity plus malformed pattern wrapping through `PatternElement`, `GroupPatternElement`, `SkriptPattern`, and `MalformedPatternException`
+- restored temporary hint retention when `ScriptLoader.parseSectionTriggerItem(...)` falls back from `Section.parse(...)` to a plain statement on the same section line; real `.sk` coverage now includes `statement_fallback_section_hint_test_block.sk`
+- merged verification on 2026-03-08:
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - `./gradlew runGameTest --rerun-tasks`
+  - `./gradlew build --rerun-tasks`
+- current verified Fabric runtime baseline after that merge: `230 / 230`
 
 ## Latest Merged Syntax-Import Batch
 
@@ -167,7 +179,7 @@ That means the real gap is behavior, not class presence.
   - `./gradlew build --rerun-tasks` passed on the last runtime verification
 - measured the upstream/local `ch/njol/skript` source gap:
   - upstream `1189`
-  - local `128`
+  - local `129`
 - wrote the first top-level package matrix and selected `lang` as the first closure slice
 - landed the current concrete `Part 1A` and `Part 1B` code slices:
   - `ExprInput` now resolves current input values instead of acting as a pure stub

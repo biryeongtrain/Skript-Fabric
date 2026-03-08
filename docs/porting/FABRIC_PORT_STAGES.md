@@ -33,7 +33,7 @@ The user explicitly reprioritized the broader upstream `ch/njol/skript` surface 
 Current measured baseline for that workstream:
 
 - upstream `ch/njol/skript` snapshot `e6ec744`: `1189` Java files
-- local `ch/njol/skript`: `128` Java files
+- local `ch/njol/skript`: `129` Java files
 - detailed matrix and part tracker: [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md)
 - active implementation slices: `Part 2: missing user-visible syntax import`, `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
 - currently landed core slices:
@@ -414,6 +414,7 @@ Still remaining before Stage 8 can be called complete:
 - 2026-03-08: `./gradlew test --tests org.skriptlang.skript.fabric.runtime.SilentSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvulnerableSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AliveKillSyntaxTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after importing base entity-state/control syntax for alive/dead, silent, invulnerable, kill, and related forms; the active suite increased to `216 / 216`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.FeedSyntaxTest --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after restoring `%material%` alias lookup and importing exact upstream `feed` plus invisible/visible effect syntax; the active suite increased to `220 / 220`.
 - 2026-03-08: `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --tests org.skriptlang.skript.fabric.runtime.BurningSyntaxTest --tests org.skriptlang.skript.fabric.runtime.AISyntaxTest --tests org.skriptlang.skript.fabric.runtime.SprintingSyntaxTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging exact upstream invisible/visible condition, burning, AI, and sprinting condition/effect syntax; the active suite increased to `229 / 229`.
+- 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after restoring `Classes` default-expression lookup helpers, direct-parent variable null sentinels, pattern graph string/combinations parity plus malformed pattern wrapping, and statement-fallback section-line hint retention; the active suite increased to `230 / 230`.
 - 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
 - 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 
