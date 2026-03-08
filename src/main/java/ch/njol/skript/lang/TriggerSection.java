@@ -84,6 +84,15 @@ public abstract class TriggerSection extends TriggerItem {
         return getNext();
     }
 
+    public final @Nullable ExecutionIntent loaderExecutionIntent() {
+        return executionIntent();
+    }
+
+    @Override
+    protected @Nullable ExecutionIntent executionIntent() {
+        return triggerExecutionIntent();
+    }
+
     protected @Nullable ExecutionIntent triggerExecutionIntent() {
         TriggerItem current = first;
         while (current != null) {

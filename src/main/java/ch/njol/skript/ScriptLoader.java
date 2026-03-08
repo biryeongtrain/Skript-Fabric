@@ -5,6 +5,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.TriggerItem;
+import ch.njol.skript.lang.TriggerSection;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.log.ParseLogHandler;
@@ -58,8 +59,10 @@ public final class ScriptLoader {
                     }
                     items.add(item);
                     previousItem = item;
-                    executionStops = item instanceof Statement statement
-                            && statement.loaderExecutionIntent() != null;
+                    executionStops = (item instanceof Statement statement
+                            && statement.loaderExecutionIntent() != null)
+                            || (item instanceof TriggerSection triggerSection
+                            && triggerSection.loaderExecutionIntent() != null);
                 }
             }
         } finally {
