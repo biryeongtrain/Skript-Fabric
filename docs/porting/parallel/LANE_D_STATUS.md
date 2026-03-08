@@ -4,115 +4,121 @@ Last updated: 2026-03-08
 
 ## Scope
 
-- `Classes` registry default-expression lookup semantics only
-- targeted `ClassesCompatibilityTest` coverage only
+- legacy wrapper/helper compatibility for `ch/njol/skript/classes`
+- legacy converter-registry bridge for `ch/njol/skript/registrations/Converters.java`
+- focused wrapper compatibility tests only
 
 ## Owned Files
 
-- `src/main/java/ch/njol/skript/registrations/Classes.java`
-- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/classes/Parser.java`
+- `src/main/java/ch/njol/skript/classes/PatternedParser.java`
+- `src/main/java/ch/njol/skript/classes/Converter.java`
+- `src/main/java/ch/njol/skript/registrations/Converters.java`
+- `src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Goal For This Slice
 
-- restore the missing upstream-backed `Classes.getDefaultExpression(...)` helper surface on top of the already-ported `ClassInfo.defaultExpression(...)` data
-- keep the change mergeable and confined to `Classes` plus its compatibility test
+- restore the legacy `Parser`, `PatternedParser`, `Converter`, and `Converters` surfaces from the upstream snapshot where they fit the current Fabric compatibility runtime
+- keep the slice contained to wrapper plumbing and targeted unit coverage
+- avoid widening into `Classes.java`, `SkriptParser.java`, serializer/config ports, or GameTest-only runtime behavior
 
-## Work Log
+## What Landed
 
-- read the required porting docs in the requested order:
-  - `docs/porting/README.md`
-  - `docs/porting/NEXT_AGENT_HANDOFF.md`
-  - `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
-  - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
-  - `docs/porting/CODEX_PARALLEL_PROMPTS.md`
-- reviewed the existing lane file, local `Classes.java`, local `ClassesCompatibilityTest.java`, and upstream snapshot `/tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
-- selected one contained Part 1B gap that stayed inside the owned files:
-  - local `ClassInfo` already stored default expressions
-  - upstream `Classes` exposed lookup helpers by code name and exact class
-  - local `Classes` was missing those helper methods entirely
-- added the missing lookup helpers to `Classes`:
-  - `Classes.getDefaultExpression(String codeName)`
-  - `Classes.getDefaultExpression(Class<T> type)`
-- added targeted regression coverage proving:
-  - registered default expressions are returned by code name
-  - registered default expressions are returned by exact class
-  - unregistered exact classes return `null`
+- added legacy abstract `Parser<T>` that plugs directly into the current `ClassInfo.Parser<T>` contract and preserves upstream-facing stringification helpers
+- added legacy `PatternedParser<T>` with upstream-style `getPatterns()` plus `getCombinedPatterns()`
+- added legacy `Converter<F, T>` as a bridge over the current `org.skriptlang.skript.lang.converter.Converter`, including the legacy chaining flags and usable `ConverterUtils` helper wrappers
+- added legacy `ch.njol.skript.registrations.Converters` as a bridge over the current converter backend:
+  - registration
+  - lookup
+  - existence checks
+  - single and array conversion helpers
+  - strict conversion helpers
+- added focused compatibility coverage proving the restored wrappers are usable on the current local runtime through `ClassInfo`, `Classes.parse(...)`, and the active converter backend
+- kept `src/main/java/ch/njol/skript/registrations/Classes.java` untouched
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/registrations/Classes.java`
-- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/classes/Parser.java`
+- `src/main/java/ch/njol/skript/classes/PatternedParser.java`
+- `src/main/java/ch/njol/skript/classes/Converter.java`
+- `src/main/java/ch/njol/skript/registrations/Converters.java`
+- `src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Counts Changed
 
 - Stage 8 package-local audit counts changed: `0`
 - Fabric GameTest counts changed: `0`
-- targeted compatibility tests added: `1`
+- source files added: `4`
+- test files added: `1`
+- test methods added: `4`
+- canonical docs changed: `0`
 
 ## Exact Commands And Results
 
-- `sed -n '1,220p' docs/porting/README.md`
+- `sed -n '1,240p' docs/porting/README.md`
   - read successfully
-- `sed -n '1,220p' docs/porting/NEXT_AGENT_HANDOFF.md`
+- `sed -n '1,240p' docs/porting/NEXT_AGENT_HANDOFF.md`
   - read successfully
 - `sed -n '1,260p' docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
+  - read successfully
+- `sed -n '1,260p' docs/porting/FABRIC_PORT_STAGES.md`
   - read successfully
 - `sed -n '1,260p' docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - read successfully
 - `sed -n '1,260p' docs/porting/CODEX_PARALLEL_PROMPTS.md`
   - read successfully
-- `if [ -f docs/porting/parallel/LANE_D_STATUS.md ]; then sed -n '1,240p' docs/porting/parallel/LANE_D_STATUS.md; else echo '__MISSING__'; fi`
-  - existing stale lane file found and reviewed
-- `git status --short`
-  - clean before edits
+- `ls docs/porting/parallel`
+  - confirmed an existing stale `LANE_D_STATUS.md` was present and needed replacement
+- `sed -n '1,240p' src/main/java/ch/njol/skript/classes/ClassInfo.java`
+  - reviewed the current local parser attachment point
 - `sed -n '1,260p' src/main/java/ch/njol/skript/registrations/Classes.java`
-  - reviewed local implementation
-- `sed -n '1,260p' /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
-  - reviewed upstream implementation
+  - reviewed the local classes runtime and confirmed wrapper work could stay outside this file
+- `sed -n '1,260p' /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/classes/Parser.java`
+  - reviewed upstream parser wrapper shape
+- `sed -n '1,260p' /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/classes/PatternedParser.java`
+  - reviewed upstream patterned parser shape
+- `sed -n '1,260p' /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/classes/Converter.java`
+  - reviewed upstream legacy converter wrapper shape
+- `sed -n '1,320p' /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/registrations/Converters.java`
+  - reviewed upstream legacy converter-registry bridge
+- `sed -n '1,320p' src/main/java/org/skriptlang/skript/lang/converter/Converters.java`
+  - reviewed the active backend the wrapper would delegate to
+- `sed -n '1,240p' src/main/java/org/skriptlang/skript/lang/converter/Converter.java`
+  - reviewed active converter flags and signature
+- `sed -n '1,240p' src/main/java/org/skriptlang/skript/lang/converter/ConverterInfo.java`
+  - reviewed active converter info shape
 - `sed -n '1,260p' src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-  - reviewed existing compatibility coverage
-- `sed -n '261,520p' src/main/java/ch/njol/skript/registrations/Classes.java`
-  - reviewed remainder of local implementation
-- `sed -n '261,520p' /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
-  - reviewed remainder of upstream implementation
-- `diff -u /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java src/main/java/ch/njol/skript/registrations/Classes.java | sed -n '1,260p'`
-  - confirmed the missing default-expression helper surface
-- `sed -n '1,280p' src/main/java/ch/njol/skript/classes/ClassInfo.java`
-  - confirmed local `ClassInfo` already stores `DefaultExpression`
-- `rg -n "toString\\(|default expression|DefaultExpression|getDefaultExpression|clone\\(" src/main/java/ch/njol/skript/classes/ClassInfo.java /tmp/skript-upstream-ueogiz/src/main/java/ch/njol/skript/registrations/Classes.java`
-  - isolated upstream default-expression helper methods as the contained gap
-- `rg -n "getAllSuperClassInfos|getDefaultExpression\\(|toString\\(Object value, StringMode|toString\\(Object\\[] values, boolean and\\)|clone\\(" src/main/java src/test/java`
-  - confirmed no existing local helper implementation or direct coverage
-- `rg -n "Classes\\.getDefaultExpression|defaultExpression\\(" src/test/java src/main/java`
-  - confirmed existing parser-side default-expression data but no `Classes` helper usage
-- `sed -n '1,220p' src/main/java/ch/njol/skript/lang/DefaultExpression.java`
-  - reviewed interface shape
-- `rg -n "class SimpleLiteral|record SimpleLiteral|new SimpleLiteral" src/main/java src/test/java`
-  - identified the existing default-expression test helper
-- `sed -n '1,220p' src/main/java/ch/njol/skript/lang/util/SimpleLiteral.java`
-  - reviewed helper implementation for the new test
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+  - reviewed existing registrations/classes coverage to avoid overlap
+- `sed -n '1,220p' src/main/java/ch/njol/util/StringUtils.java`
+  - confirmed the local helper available for `PatternedParser.getCombinedPatterns()`
+- `./gradlew test --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
+  - first run failed in `:compileTestJava` because the test used incompatible wildcard generics against `ConverterUtils`
+- `./gradlew test --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
+  - passed after tightening the test generics
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
   - passed
-  - `BUILD SUCCESSFUL`
-- `git diff -- src/main/java/ch/njol/skript/registrations/Classes.java src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-  - reviewed final code diff
-- `git status --short`
-  - only the owned files were modified
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
+  - passed
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
   - passed
 
 ## Unresolved Risks
 
-- this slice restores only the missing default-expression lookup helper surface in `Classes`; it does not close broader upstream `Classes` gaps such as fuller classinfo helper coverage or legacy stringification behavior
-- the new coverage is unit-only because the change is registry helper plumbing, not live `.sk` runtime behavior
+- `PatternedParser` is restored as a usable wrapper base, but local `Classes.registerClassInfo(...)` still does not auto-index literal patterns from `PatternedParser` instances the way upstream did; this slice intentionally left `Classes.java` untouched to stay inside the requested scope fence
+- the legacy `NO_COMMAND_ARGUMENTS` converter flag is preserved as the upstream numeric value `8`, but the local runtime does not currently expose the old command-layer constant or command-specific converter gating
+- verification is unit-only because this slice restores compatibility plumbing, not user-visible `.sk` behavior
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/registrations/Classes.java`
-  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/classes/Parser.java`
+  - `src/main/java/ch/njol/skript/classes/PatternedParser.java`
+  - `src/main/java/ch/njol/skript/classes/Converter.java`
+  - `src/main/java/ch/njol/skript/registrations/Converters.java`
+  - `src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/registrations/Classes.java` was intentionally not changed in this lane
