@@ -9,17 +9,20 @@ import ch.njol.skript.lang.parser.ParseStackOverflowException;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.parser.ParsingStack;
 import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.patterns.MatchResult;
+import ch.njol.skript.patterns.PatternCompiler;
+import ch.njol.skript.patterns.SkriptPattern;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
 import org.skriptlang.skript.registration.SyntaxInfo;
 
 public class SkriptParser {
@@ -43,6 +46,7 @@ public class SkriptParser {
         public Expression<?>[] exprs = new Expression<?>[0];
         public List<Matcher> regexes = List.of();
         public Set<String> tags = Set.of();
+        public int mark = 0;
 
         public boolean hasTag(String tag) {
             return tags.contains(tag);
@@ -300,7 +304,7 @@ public class SkriptParser {
             for (int matchedPattern = 0; patterns != null && matchedPattern < patterns.length; matchedPattern++) {
                 ParsingStack.Element stackElement = new ParsingStack.Element(legacySyntaxInfo(info), matchedPattern);
                 E element = null;
-                PatternMatch matched = null;
+                MatchResult matched = null;
                 try {
                     parsingStack.push(stackElement);
                     matched = match(input, patterns[matchedPattern], context, PARSE_LITERALS);
@@ -320,8 +324,9 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.exprs = matched.expressions();
-                parseResult.regexes = List.of(matched.regexes());
+                parseResult.regexes = matched.regexes();
                 parseResult.tags = matched.tags();
+                parseResult.mark = matched.mark();
                 try {
                     if (element.init(matched.expressions(), matchedPattern, Kleenean.FALSE, parseResult)) {
                         return element;
@@ -352,7 +357,7 @@ public class SkriptParser {
             for (int matchedPattern = 0; patterns != null && matchedPattern < patterns.length; matchedPattern++) {
                 ParsingStack.Element stackElement = new ParsingStack.Element(rawSyntaxInfo(info), matchedPattern);
                 E element = null;
-                PatternMatch matched = null;
+                MatchResult matched = null;
                 try {
                     parsingStack.push(stackElement);
                     matched = match(input, patterns[matchedPattern], context, ALL_FLAGS);
@@ -372,8 +377,9 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.exprs = matched.expressions();
-                parseResult.regexes = List.of(matched.regexes());
+                parseResult.regexes = matched.regexes();
                 parseResult.tags = matched.tags();
+                parseResult.mark = matched.mark();
                 try {
                     if (element.init(matched.expressions(), matchedPattern, Kleenean.FALSE, parseResult)) {
                         return element;
@@ -413,104 +419,19 @@ public class SkriptParser {
         }
     }
 
-    private record Capture(CaptureType type, @Nullable Class<?>[] returnTypes, @Nullable String regex) {
-        private static Capture expression(Class<?>[] returnTypes) {
-            return new Capture(CaptureType.EXPRESSION, returnTypes, null);
-        }
+    private static final Map<String, SkriptPattern> PATTERNS = new ConcurrentHashMap<>();
 
-        private static Capture regex(String pattern) {
-            return new Capture(CaptureType.REGEX, null, pattern);
-        }
-    }
-
-    private enum CaptureType {
-        EXPRESSION,
-        REGEX
-    }
-
-    private record CompiledPattern(String regex, Capture[] captures, Set<String> tags) {
-    }
-
-    private record PatternMatch(Expression<?>[] expressions, Matcher[] regexes, Set<String> tags) {
-    }
-
-    private static @Nullable PatternMatch match(String expr, String pattern, ParseContext context, int flags) {
+    private static @Nullable MatchResult match(String expr, String pattern, ParseContext context, int flags) {
         if (pattern == null || pattern.isBlank()) {
             return null;
         }
-        CompiledPattern compiled = compilePattern(pattern);
-        if (compiled == null || compiled.regex().isEmpty()) {
-            return null;
-        }
-        Matcher matcher = Pattern.compile("^" + compiled.regex() + "$", Pattern.CASE_INSENSITIVE)
-                .matcher(normalizeWhitespace(expr));
-        if (!matcher.matches()) {
-            return null;
-        }
-        List<Expression<?>> expressions = new ArrayList<>();
-        List<Matcher> regexes = new ArrayList<>();
-        Capture[] captures = compiled.captures();
-        for (int i = 0; i < captures.length; i++) {
-            String captured = matcher.group(i + 1);
-            Capture capture = captures[i];
-            if (capture.type() == CaptureType.EXPRESSION) {
-                if (captured == null) {
-                    expressions.add(null);
-                    continue;
-                }
-                @SuppressWarnings("unchecked")
-                Expression<?> parsed = new SkriptParser(captured.trim(), flags, context)
-                        .parseExpression((Class<? extends Object>[]) capture.returnTypes());
-                if (parsed == null) {
-                    return null;
-                }
-                expressions.add(parsed);
-                continue;
-            }
-
-            if (captured == null) {
-                return null;
-            }
-            String regex = capture.regex();
-            if (regex == null) {
-                return null;
-            }
-            Matcher rawMatcher = Pattern.compile("^" + regex + "$", Pattern.CASE_INSENSITIVE)
-                    .matcher(captured.trim());
-            if (!rawMatcher.matches()) {
-                return null;
-            }
-            regexes.add(rawMatcher);
-        }
-        return new PatternMatch(
-                expressions.toArray(Expression<?>[]::new),
-                regexes.toArray(Matcher[]::new),
-                compiled.tags()
-        );
-    }
-
-    private static @Nullable CompiledPattern compilePattern(String pattern) {
-        Set<String> tags = Set.of();
-        String normalizedPattern = normalizePattern(pattern);
-        if (normalizedPattern.startsWith("implicit:")) {
-            tags = Set.of("implicit");
-            normalizedPattern = normalizedPattern.substring("implicit:".length()).trim();
-        }
-        List<Capture> captures = new ArrayList<>();
-        String regex;
+        SkriptPattern compiled;
         try {
-            regex = compileSequence(normalizedPattern, captures);
+            compiled = PATTERNS.computeIfAbsent(pattern, PatternCompiler::compile);
         } catch (IllegalArgumentException exception) {
             return null;
         }
-        return new CompiledPattern(regex, captures.toArray(Capture[]::new), tags);
-    }
-
-    private static String normalizePattern(String pattern) {
-        String normalized = normalizeWhitespace(pattern.trim());
-        normalized = normalized.replaceAll("\\d+¦", "");
-        normalized = normalized.replaceAll("([\\p{L}]+)/(\\p{L}+)", "($1|$2)");
-        return normalized;
+        return compiled.match(expr, flags, context);
     }
 
     private static String normalizeWhitespace(String value) {
@@ -518,33 +439,6 @@ public class SkriptParser {
             return "";
         }
         return value.trim().replaceAll("\\s+", " ");
-    }
-
-    private static Class<?>[] resolvePlaceholderTypes(String placeholder) {
-        if (placeholder == null || placeholder.isBlank()) {
-            return new Class[]{Object.class};
-        }
-        String raw = placeholder.strip().toLowerCase(Locale.ENGLISH);
-        raw = raw.replace("-", "").replace("*", "").replace("~", "");
-        String[] parts = raw.split("/");
-        List<Class<?>> resolved = new ArrayList<>(parts.length);
-        for (String part : parts) {
-            String typeName = part.trim();
-            if (typeName.endsWith("s") && typeName.length() > 1) {
-                typeName = typeName.substring(0, typeName.length() - 1);
-            }
-            Class<?> type = switch (typeName) {
-                case "string", "text" -> String.class;
-                case "integer", "int", "number" -> Integer.class;
-                case "decimal", "double" -> Double.class;
-                case "boolean", "bool" -> Boolean.class;
-                case "potioncause", "potioneffectcause" -> FabricPotionEffectCause.class;
-                case "object", "value", "any", "expression" -> Object.class;
-                default -> Object.class;
-            };
-            resolved.add(type);
-        }
-        return resolved.toArray(Class[]::new);
     }
 
     private static @Nullable Object parseUntypedLiteral(String expression, Class<?>[] returnTypes) {
@@ -617,286 +511,6 @@ public class SkriptParser {
             }
         }
         return false;
-    }
-
-    private static String compileSequence(String pattern, List<Capture> captures) {
-        if (pattern.isEmpty()) {
-            return "";
-        }
-        if (pattern.isBlank()) {
-            return "\\s+";
-        }
-        List<String> tokens = splitTopLevelTokens(pattern);
-        StringBuilder regex = new StringBuilder();
-        if (Character.isWhitespace(pattern.charAt(0))) {
-            regex.append("\\s+");
-        }
-        boolean hasRequiredBefore = false;
-        for (int i = 0; i < tokens.size(); i++) {
-            String token = tokens.get(i);
-            boolean optionalRoot = isWrappedBy(token, '[', ']');
-            if (!optionalRoot) {
-                if (hasRequiredBefore) {
-                    regex.append("\\s+");
-                }
-                regex.append(compileToken(token, captures));
-                hasRequiredBefore = true;
-                continue;
-            }
-
-            String inner = token.substring(1, token.length() - 1);
-            String body = compileGroupContent(inner, captures);
-            boolean hasRequiredAfter = hasRequiredTokenAfter(tokens, i + 1);
-            if (!hasRequiredBefore) {
-                regex.append("(?:").append(body);
-                if (hasRequiredAfter) {
-                    regex.append("\\s+");
-                }
-                regex.append(")?");
-                continue;
-            }
-            regex.append("(?:\\s+").append(body).append(")?");
-        }
-        if (Character.isWhitespace(pattern.charAt(pattern.length() - 1))) {
-            regex.append("\\s+");
-        }
-        return regex.toString();
-    }
-
-    private static String compileToken(String token, List<Capture> captures) {
-        if (token.isBlank()) {
-            return "\\s+";
-        }
-        if (isWrappedBy(token, '(', ')')) {
-            return "(?:" + compileAlternatives(token.substring(1, token.length() - 1), captures) + ")";
-        }
-
-        StringBuilder regex = new StringBuilder();
-        for (int i = 0; i < token.length(); i++) {
-            char ch = token.charAt(i);
-            if (ch == '%') {
-                int end = token.indexOf('%', i + 1);
-                if (end < 0) {
-                    throw new IllegalArgumentException("Unclosed placeholder in token: " + token);
-                }
-                String placeholder = token.substring(i + 1, end).trim();
-                regex.append("(.+?)");
-                captures.add(Capture.expression(resolvePlaceholderTypes(placeholder)));
-                i = end;
-                continue;
-            }
-            if (ch == '<') {
-                int end = token.indexOf('>', i + 1);
-                if (end < 0) {
-                    throw new IllegalArgumentException("Unclosed regex capture in token: " + token);
-                }
-                String rawRegex = token.substring(i + 1, end).trim();
-                if (rawRegex.isEmpty()) {
-                    throw new IllegalArgumentException("Empty regex capture in token: " + token);
-                }
-                regex.append('(').append(rawRegex).append(')');
-                captures.add(Capture.regex(rawRegex));
-                i = end;
-                continue;
-            }
-            if (ch == '[') {
-                int end = findMatching(token, i, '[', ']');
-                regex.append("(?:")
-                        .append(compileGroupContent(token.substring(i + 1, end), captures))
-                        .append(")?");
-                i = end;
-                continue;
-            }
-            if (ch == '(') {
-                int end = findMatching(token, i, '(', ')');
-                regex.append("(?:")
-                        .append(compileAlternatives(token.substring(i + 1, end), captures))
-                        .append(')');
-                i = end;
-                continue;
-            }
-            regex.append(Pattern.quote(String.valueOf(ch)));
-        }
-        return regex.toString();
-    }
-
-    private static String compileAlternatives(String pattern, List<Capture> captures) {
-        List<String> branches = splitTopLevel(pattern, '|');
-        StringBuilder regex = new StringBuilder();
-        for (int i = 0; i < branches.size(); i++) {
-            if (i > 0) {
-                regex.append('|');
-            }
-            regex.append(compileSequence(branches.get(i), captures));
-        }
-        return regex.toString();
-    }
-
-    private static String compileGroupContent(String pattern, List<Capture> captures) {
-        List<String> branches = splitTopLevel(pattern, '|');
-        if (branches.size() > 1) {
-            StringBuilder regex = new StringBuilder();
-            for (int i = 0; i < branches.size(); i++) {
-                if (i > 0) {
-                    regex.append('|');
-                }
-                regex.append(compileSequence(branches.get(i), captures));
-            }
-            return "(?:" + regex + ")";
-        }
-        return compileSequence(pattern, captures);
-    }
-
-    private static List<String> splitTopLevelTokens(String pattern) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        int squareDepth = 0;
-        int parenDepth = 0;
-        boolean inPlaceholder = false;
-        boolean inRegex = false;
-        for (int i = 0; i < pattern.length(); i++) {
-            char ch = pattern.charAt(i);
-            if (!inPlaceholder && !inRegex && squareDepth == 0 && parenDepth == 0 && Character.isWhitespace(ch)) {
-                if (!current.isEmpty()) {
-                    tokens.add(current.toString());
-                    current.setLength(0);
-                }
-                continue;
-            }
-            current.append(ch);
-            if (ch == '%' && !inRegex) {
-                inPlaceholder = !inPlaceholder;
-                continue;
-            }
-            if (inPlaceholder) {
-                continue;
-            }
-            if (ch == '<' && !inRegex) {
-                inRegex = true;
-                continue;
-            }
-            if (ch == '>' && inRegex) {
-                inRegex = false;
-                continue;
-            }
-            if (inRegex) {
-                continue;
-            }
-            if (ch == '[') {
-                squareDepth++;
-            } else if (ch == ']') {
-                squareDepth--;
-            } else if (ch == '(') {
-                parenDepth++;
-            } else if (ch == ')') {
-                parenDepth--;
-            }
-        }
-        if (!current.isEmpty()) {
-            tokens.add(current.toString());
-        }
-        return tokens;
-    }
-
-    private static List<String> splitTopLevel(String pattern, char delimiter) {
-        List<String> parts = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        int squareDepth = 0;
-        int parenDepth = 0;
-        boolean inPlaceholder = false;
-        boolean inRegex = false;
-        for (int i = 0; i < pattern.length(); i++) {
-            char ch = pattern.charAt(i);
-            if (!inPlaceholder && !inRegex && squareDepth == 0 && parenDepth == 0 && ch == delimiter) {
-                parts.add(current.toString());
-                current.setLength(0);
-                continue;
-            }
-            current.append(ch);
-            if (ch == '%' && !inRegex) {
-                inPlaceholder = !inPlaceholder;
-                continue;
-            }
-            if (inPlaceholder) {
-                continue;
-            }
-            if (ch == '<' && !inRegex) {
-                inRegex = true;
-                continue;
-            }
-            if (ch == '>' && inRegex) {
-                inRegex = false;
-                continue;
-            }
-            if (inRegex) {
-                continue;
-            }
-            if (ch == '[') {
-                squareDepth++;
-            } else if (ch == ']') {
-                squareDepth--;
-            } else if (ch == '(') {
-                parenDepth++;
-            } else if (ch == ')') {
-                parenDepth--;
-            }
-        }
-        parts.add(current.toString());
-        return parts;
-    }
-
-    private static boolean isWrappedBy(String value, char open, char close) {
-        if (value.length() < 2 || value.charAt(0) != open) {
-            return false;
-        }
-        return findMatching(value, 0, open, close) == value.length() - 1;
-    }
-
-    private static boolean hasRequiredTokenAfter(List<String> tokens, int startIndex) {
-        for (int i = startIndex; i < tokens.size(); i++) {
-            if (!isWrappedBy(tokens.get(i), '[', ']')) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static int findMatching(String value, int openIndex, char open, char close) {
-        int depth = 0;
-        boolean inPlaceholder = false;
-        boolean inRegex = false;
-        for (int i = openIndex; i < value.length(); i++) {
-            char ch = value.charAt(i);
-            if (ch == '%' && !inRegex) {
-                inPlaceholder = !inPlaceholder;
-                continue;
-            }
-            if (inPlaceholder) {
-                continue;
-            }
-            if (ch == '<' && !inRegex) {
-                inRegex = true;
-                continue;
-            }
-            if (ch == '>' && inRegex) {
-                inRegex = false;
-                continue;
-            }
-            if (inRegex) {
-                continue;
-            }
-            if (ch == open) {
-                depth++;
-                continue;
-            }
-            if (ch == close) {
-                depth--;
-                if (depth == 0) {
-                    return i;
-                }
-            }
-        }
-        throw new IllegalArgumentException("Unmatched delimiter in value: " + value);
     }
 
     private static boolean bracketsMatch(char open, char close) {
