@@ -22,6 +22,28 @@ Last updated: 2026-03-08
 
 ### Latest Slice
 
+- switched this lane to the user-priority `Part 2` syntax-import track for one concrete upstream-visible effect family instead of continuing parser internals first
+- imported upstream `EffInvisible` behavior for the exact effect forms:
+  - `make %livingentities% (invisible|not visible)`
+  - `make %livingentities% (visible|not invisible)`
+- verified the upstream source before implementing with:
+  - `curl -L --silent https://raw.githubusercontent.com/SkriptLang/Skript/master/src/main/java/ch/njol/skript/effects/EffInvisible.java | sed -n '1,120p'`
+    - confirmed the exact registered patterns and the `matchedPattern == 0` visibility toggle
+- added a Fabric runtime effect implementation at `org/skriptlang/skript/bukkit/base/effects/EffInvisible.java` that applies `LivingEntity#setInvisible(boolean)` on the active Mojang runtime
+- wired the effect into `SkriptFabricBootstrap` alongside the existing base entity-control effect registrations so the exact upstream forms are available in the active Fabric runtime
+- added focused syntax coverage proving all four exact surface forms parse to the new effect with the expected boolean state:
+  - `make event-entity invisible`
+  - `make event-entity not visible`
+  - `make event-entity visible`
+  - `make event-entity not invisible`
+- added real `.sk` + GameTest runtime verification for a living entity using the exact upstream alternates rather than a rewritten variant:
+  - `make event-entity not visible`
+  - `make event-entity not invisible`
+  - verified on a cow that the scripts both execute and mutate the Mojang invisibility flag in the live Fabric runtime
+- did not broaden this slice into the invisible condition family; the user asked for one concrete effect syntax family first
+
+### Previous Slice
+
 - closed the current parser default-value gap for omitted non-optional placeholders by adding the missing `ClassInfo` default-expression fallback behind the already-green parser-scoped `DefaultValueData` path
 - compared the local implementation against upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` with:
   - `curl -L --silent https://raw.githubusercontent.com/SkriptLang/Skript/e6ec744dd83cb1a362dd420cde11a0d74aef977d/src/main/java/ch/njol/skript/lang/SkriptParser.java | sed -n '372,428p'`
@@ -38,7 +60,7 @@ Last updated: 2026-03-08
 - did not add GameTest coverage for this slice because the local runtime does not currently register shipped classinfo default expressions, so this change stays parser/unit infrastructure coverage rather than a live shipped `.sk` behavior change
 - did not mark parity complete: broader upstream parser parity remains open around richer default-expression diagnostics and the remaining matcher/runtime differences outside this contained fallback closure
 
-### Previous Slice
+### Earlier Slice
 
 - closed an upstream-backed parser-flow parity slice around prefixed variable expressions
 - upstream snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` still accepts `var {x}`, `variable {x}`, and `the variable {x}` through `SkriptParser.parseVariable(...)`, while the local parser only recognized bare `{x}` expressions
@@ -54,6 +76,13 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
+- `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffInvisible.java`
+- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
+- `src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java`
+- `src/gametest/resources/skript/gametest/effect/make_invisible_names_entity.sk`
+- `src/gametest/resources/skript/gametest/effect/make_visible_names_entity.sk`
+- `docs/porting/parallel/LANE_B_STATUS.md`
 - `src/main/java/ch/njol/skript/classes/ClassInfo.java`
 - `src/main/java/ch/njol/skript/lang/SkriptParser.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
@@ -64,6 +93,10 @@ Last updated: 2026-03-08
 
 ## Verification
 
+- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks`
+  - passed
+- live `.sk` verification is present through `SkriptFabricInvisibleGameTest` plus the two new effect resources
+  - full `./gradlew runGameTest --rerun-tasks` is deferred to coordinator integration verification
 - `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - passed
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
@@ -79,6 +112,8 @@ Last updated: 2026-03-08
 
 ## Exact Syntax Exercised
 
+- unit parse forms: `make event-entity invisible`, `make event-entity not visible`, `make event-entity visible`, `make event-entity not invisible`
+- live effect forms: `make event-entity not visible`, `make event-entity not invisible`
 - parser omitted forms: `default number`, `default number 5`
 - parser forms: `var {MiXeD}`, `the variable {MiXeD}`
 - live statement form: `set var {MiXeDBlock} to "gold_block"`
@@ -86,12 +121,15 @@ Last updated: 2026-03-08
 
 ## Unresolved Risks
 
+- this slice verifies the exact upstream effect surface and live flag mutation for living entities, but it does not add the separate upstream invisible condition family
 - local omitted-placeholder handling now matches upstream more closely for classinfo-backed defaults, but broader upstream parity is still open around multi-type invalid-default diagnostics and other `getDefaultExpressions(...)` error surfaces
 - prefixed variable forms now match upstream more closely, but the local parser still accepts variable expressions in broader parse contexts than upstream because this slice intentionally did not touch the surrounding context gates
 - broader upstream parser parity is still open around matcher/runtime behavior outside these contained fallback and prefixed-variable fixes
 
 ## Merge Notes
 
+- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java` now registers the upstream invisible effect forms in the active runtime
+- `src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java`, `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java`, and the two new `.sk` resources carry the exact invisible/visible coverage for this slice
 - highest conflict risk is `src/main/java/ch/njol/skript/lang/SkriptParser.java`
 - `src/main/java/ch/njol/skript/classes/ClassInfo.java` now carries the new default-expression compatibility surface
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java` now carries the exact omitted-form default-value regressions
