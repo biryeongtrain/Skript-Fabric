@@ -7,6 +7,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.StringMode;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -364,6 +365,16 @@ public final class Classes {
     public static <T> T clone(T value) {
         if (value == null) {
             return null;
+        }
+        if (value.getClass().isArray()) {
+            int length = Array.getLength(value);
+            Object clone = Array.newInstance(value.getClass().getComponentType(), length);
+            for (int index = 0; index < length; index++) {
+                Array.set(clone, index, clone(Array.get(value, index)));
+            }
+            @SuppressWarnings("unchecked")
+            T cast = (T) clone;
+            return cast;
         }
         if (value instanceof Cloneable) {
             try {

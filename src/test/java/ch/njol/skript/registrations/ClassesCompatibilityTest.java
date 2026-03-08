@@ -1,7 +1,9 @@
 package ch.njol.skript.registrations;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -322,6 +324,23 @@ class ClassesCompatibilityTest {
             assertNull(log.getError());
             assertTrue(log.getErrors().isEmpty());
         }
+    }
+
+    @Test
+    void cloneRecursivelyCopiesNestedArrays() {
+        int[] inner = {1, 2};
+        Object[] original = {inner};
+
+        Object[] clone = Classes.clone(original);
+
+        assertNotSame(original, clone);
+        assertNotSame(original[0], clone[0]);
+
+        int[] clonedInner = (int[]) clone[0];
+        clonedInner[0] = 99;
+
+        assertArrayEquals(new int[]{1, 2}, inner);
+        assertArrayEquals(new int[]{99, 2}, clonedInner);
     }
 
     private static final class FooType {

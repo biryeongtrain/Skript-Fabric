@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -176,6 +177,26 @@ class FunctionCallCompatibilityTest {
         assertArrayEquals(new String[]{"k1", "k2"}, expression.getArrayKeys(SkriptEvent.EMPTY));
     }
 
+    @Test
+    void keyedFunctionArgumentsReceiveClonedArrayValues() {
+        ArrayMutatingFunction function = registerArrayMutatingFunction("mutateArrays");
+        int[] original = {1, 2};
+
+        FunctionReference<?> reference = new FunctionReference<>(
+                "mutateArrays",
+                null,
+                null,
+                new Expression[]{new ArrayValueExpression(original)}
+        );
+
+        assertTrue(reference.validateFunction(true));
+        reference.execute(SkriptEvent.EMPTY);
+
+        assertArrayEquals(new int[]{1, 2}, original);
+        assertNotSame(original, function.observedArray);
+        assertArrayEquals(new int[]{99, 2}, function.observedArray);
+    }
+
     private static EchoFunction registerEchoFunction() {
         ClassInfo<String> stringInfo = Classes.getSuperClassInfo(String.class);
         Signature<String> signature = new Signature<>(
@@ -221,6 +242,21 @@ class FunctionCallCompatibilityTest {
                 false
         );
         ListEchoFunction function = new ListEchoFunction(signature);
+        Functions.register(function);
+        return function;
+    }
+
+    private static ArrayMutatingFunction registerArrayMutatingFunction(String name) {
+        ClassInfo<Object> objectInfo = Classes.getSuperClassInfo(Object.class);
+        Signature<Object> signature = new Signature<>(
+                null,
+                name,
+                new Parameter[]{new Parameter<>("values", objectInfo, false, null)},
+                false,
+                null,
+                true
+        );
+        ArrayMutatingFunction function = new ArrayMutatingFunction(signature);
         Functions.register(function);
         return function;
     }
@@ -306,6 +342,29 @@ class FunctionCallCompatibilityTest {
         }
     }
 
+    private static final class ArrayMutatingFunction extends Function<Object> {
+
+        private int[] observedArray;
+
+        private ArrayMutatingFunction(Signature<Object> signature) {
+            super(signature);
+        }
+
+        @Override
+        public Object[] execute(FunctionEvent<?> event, Object[][] params) {
+            KeyedValue<?> keyedValue = (KeyedValue<?>) params[0][0];
+            observedArray = (int[]) keyedValue.value();
+            observedArray[0] = 99;
+            return null;
+        }
+
+        @Override
+        public boolean resetReturnValue() {
+            observedArray = null;
+            return true;
+        }
+    }
+
     private static final class FixedKeyExpression extends SimpleExpression<String> implements KeyProviderExpression<String> {
 
         private final String[] values;
@@ -358,6 +417,25 @@ class FunctionCallCompatibilityTest {
         @Override
         public Class<? extends String> getReturnType() {
             return String.class;
+        }
+    }
+
+    private static final class ArrayValueExpression extends SimpleExpression<Object> {
+
+        private final Object value;
+
+        private ArrayValueExpression(Object value) {
+            this.value = value;
+        }
+
+        @Override
+        protected Object[] get(SkriptEvent event) {
+            return new Object[]{value};
+        }
+
+        @Override
+        public Class<? extends Object> getReturnType() {
+            return Object.class;
         }
     }
 }
