@@ -21,6 +21,25 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+### 2026-03-08 Invisible/Visible Condition Slice
+
+- compared the current local tree against upstream `CondIsInvisible` from snapshot `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and confirmed Lane B had only landed the invisible/visible effect family, not the matching condition family
+- imported the exact upstream invisible/visible condition surface into the active Fabric runtime without renaming the user-facing forms:
+  - `%livingentities% (is|are) invisible`
+  - `%livingentities% (is|are) visible`
+  - `%livingentities% (isn't|is not|aren't|are not) invisible`
+  - `%livingentities% (isn't|is not|aren't|are not) visible`
+- added `org/skriptlang/skript/bukkit/base/conditions/CondIsInvisible.java` with the upstream negation/tag behavior adapted to the local Fabric event bridge:
+  - it keeps the upstream `visible` parse-tag inversion logic
+  - it accepts the local `event-entity` compatibility expression by gating on `Entity` at init time and narrowing to `LivingEntity` at check time
+- wired the condition into `SkriptFabricBootstrap` with the exact upstream-expanded `%livingentities%` patterns
+- extended `InvisibleSyntaxTest` so the targeted unit coverage now proves all four exact condition forms parse on the active runtime alongside the already-landed effect forms
+- added real `.sk` coverage in `skript/gametest/condition/invisible_entity_names_entity.sk` and `skript/gametest/condition/visible_entity_names_entity.sk`, then extended `SkriptFabricInvisibleGameTest` to prove:
+  - the invisible condition executes through the live resource-loader path and names an actually invisible cow
+  - the visible condition executes through the live resource-loader path and names an actually visible cow
+  - direct parsed conditions also evaluate correctly against a live Fabric use-entity event handle
+- the new live condition coverage increased the full Fabric GameTest total to `223 / 223`
+
 - compared the current loader hint flow against upstream `e6ec744dd83cb1a362dd420cde11a0d74aef977d` and selected one contained shipped-syntax gap that still sits on the loader-orchestration boundary:
   - the built-in `EffChange` syntax `set {_value} to 1` should act as a parse-time local-variable hint producer for later sibling lines, just like the already-green custom hint test harnesses
 - closed that built-in hint-producer slice without broadening the parser-owned scope:
@@ -105,6 +124,12 @@ Last updated: 2026-03-08
 
 ## Files Changed
 
+- `src/main/java/org/skriptlang/skript/bukkit/base/conditions/CondIsInvisible.java`
+- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
+- `src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java`
+- `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java`
+- `src/gametest/resources/skript/gametest/condition/invisible_entity_names_entity.sk`
+- `src/gametest/resources/skript/gametest/condition/visible_entity_names_entity.sk`
 - `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java`
 - `src/main/java/ch/njol/skript/ScriptLoader.java`
 - `src/main/java/ch/njol/skript/lang/Statement.java`
@@ -122,6 +147,11 @@ Last updated: 2026-03-08
 
 ## Verification
 
+- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.InvisibleSyntaxTest --rerun-tasks`
+  - first run failed because the new condition rejected the local `event-entity` bridge when it required `LivingEntity` at init time
+  - reran after matching the local Fabric compatibility path used by `EffInvisible` and narrowing to `LivingEntity` during `check(...)`; command passed
+- `./gradlew runGameTest --rerun-tasks`
+  - passed with `223 / 223` required GameTests completed, including the new invisible/visible condition `.sk` coverage
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.builtInSetEffectOverridesEarlierHintsWithLaterStringAssignment --rerun-tasks --info`
   - first run failed with `expected: <text> but was: <null>` because the later local `SET` still executed through the earlier hinted `Integer` target view
   - fixed the runtime side inside `EffChange.execute(...)`, then continued verification on the finished tree
@@ -192,6 +222,7 @@ Last updated: 2026-03-08
 
 ## Unresolved Risks
 
+- the invisible/visible condition now matches the exact upstream visible forms, but the local implementation still relies on the Fabric compatibility bridge accepting broad `Entity`-typed event expressions and narrowing at runtime because `event-entity` is not typed as `LivingEntity`
 - this slice restores parse-time hints for the exact built-in `set` path only; broader built-in hint producers such as other change modes and effect families are still thinner than upstream
 - the imported feed effect follows upstream’s direct food-level addition semantics, so it does not separately adjust saturation or exhaustion beyond whatever Mojang’s `setFoodLevel(...)` path already does
 - the runtime bootstrap still registers `EffChange` through the minimal `set %object% to %object%` compatibility pattern instead of upstream’s richer `%~objects%` target surface, so the local runtime fix is intentionally narrow to hintable simple locals
@@ -205,6 +236,11 @@ Last updated: 2026-03-08
 
 ## Merge Notes
 
+- current-cycle conflict surface now also includes `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`, `src/test/java/org/skriptlang/skript/fabric/runtime/InvisibleSyntaxTest.java`, and `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricInvisibleGameTest.java` around the new invisible/visible condition slice
+- preserve the exact invisible condition registration and behavior:
+  - keep the bootstrap patterns as `%livingentities% (is|are) (invisible|:visible)` and `%livingentities% (isn't|is not|aren't|are not) (invisible|:visible)`
+  - keep the upstream-style `visible` parse-tag inversion logic in `CondIsInvisible`
+  - keep the local `Entity`-level init gate so `event-entity is invisible/visible` continues to parse on the current Fabric bridge
 - current-cycle conflict surface also includes `src/main/java/org/skriptlang/skript/bukkit/base/effects/EffChange.java`, `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`, and `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricBaseGameTest.java` around the new built-in hint-producer path
 - preserve the exact `EffChange` behavior:
   - only successful `SET` operations on hintable local variables should publish parse-time hints

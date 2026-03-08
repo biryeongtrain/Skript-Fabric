@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.parser.ParserInstance;
@@ -14,6 +15,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.bukkit.base.conditions.CondIsInvisible;
 import org.skriptlang.skript.bukkit.base.effects.EffInvisible;
 
 final class InvisibleSyntaxTest {
@@ -44,11 +46,45 @@ final class InvisibleSyntaxTest {
         assertTrue(expression(notInvisible, "livingEntities").toString(null, false).contains("event-entity"));
     }
 
+    @Test
+    void invisibleConditionParsesExactUpstreamForms() throws Exception {
+        CondIsInvisible invisible = parseConditionInEvent("event-entity is invisible", CondIsInvisible.class, FabricUseEntityHandle.class);
+        assertFalse(invisible.isNegated());
+        assertEquals("event-entity", expression(invisible, "livingEntities").toString(null, false));
+
+        CondIsInvisible visible = parseConditionInEvent("event-entity is visible", CondIsInvisible.class, FabricUseEntityHandle.class);
+        assertTrue(visible.isNegated());
+        assertEquals("event-entity", expression(visible, "livingEntities").toString(null, false));
+
+        CondIsInvisible notInvisible = parseConditionInEvent("event-entity is not invisible", CondIsInvisible.class, FabricUseEntityHandle.class);
+        assertTrue(notInvisible.isNegated());
+        assertEquals("event-entity", expression(notInvisible, "livingEntities").toString(null, false));
+
+        CondIsInvisible notVisible = parseConditionInEvent("event-entity is not visible", CondIsInvisible.class, FabricUseEntityHandle.class);
+        assertFalse(notVisible.isNegated());
+        assertEquals("event-entity", expression(notVisible, "livingEntities").toString(null, false));
+    }
+
     private <T> T parseEffectInEvent(String effect, Class<T> effectClass, Class<?>... eventClasses) {
         Statement statement = parseStatementInEvent(effect, eventClasses);
         assertNotNull(statement);
         assertInstanceOf(effectClass, statement);
         return effectClass.cast(statement);
+    }
+
+    private <T> T parseConditionInEvent(String condition, Class<T> conditionClass, Class<?>... eventClasses) {
+        ParserInstance parser = ParserInstance.get();
+        String previousEventName = parser.getCurrentEventName();
+        Class<?>[] previousEventClasses = parser.getCurrentEventClasses();
+        try {
+            parser.setCurrentEvent("gametest", eventClasses);
+            Condition parsed = Condition.parse(condition, null);
+            assertNotNull(parsed);
+            assertInstanceOf(conditionClass, parsed);
+            return conditionClass.cast(parsed);
+        } finally {
+            restoreEventContext(parser, previousEventName, previousEventClasses);
+        }
     }
 
     private Statement parseStatementInEvent(String statement, Class<?>... eventClasses) {
