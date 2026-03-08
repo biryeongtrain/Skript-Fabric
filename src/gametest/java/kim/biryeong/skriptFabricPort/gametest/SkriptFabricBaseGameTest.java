@@ -2,6 +2,7 @@ package kim.biryeong.skriptFabricPort.gametest;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.Expression;
@@ -11,6 +12,7 @@ import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.log.ErrorQuality;
@@ -182,8 +184,10 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
     private static final AtomicBoolean TIED_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean QUALITY_PRIORITY_PARSE_ERROR_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static final AtomicBoolean UNREACHABLE_TEST_STATEMENT_REGISTERED = new AtomicBoolean(false);
+    private static final AtomicBoolean STATEMENT_FALLBACK_SECTION_HINT_TEST_SYNTAX_REGISTERED = new AtomicBoolean(false);
     private static Integer lastBuiltInHintedInteger;
     private static String lastBuiltInHintedText;
+    private static Integer lastStatementFallbackHintedInteger;
     private static String lastCapturedMaterialAlias;
 
     @GameTest
@@ -388,6 +392,46 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
             helper.assertTrue(
                     "gold_block".equals(lastBuiltInHintedText),
                     Component.literal("Expected the later built-in string set to override the local hint for %string% syntax.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void executesRealSkriptFileUsingStatementFallbackSectionHints(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            ensureStatementFallbackSectionHintTestSyntaxRegistered();
+
+            lastStatementFallbackHintedInteger = null;
+
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            try (TestLogAppender logs = TestLogAppender.attach()) {
+                runtime.loadFromResource("skript/gametest/base/statement_fallback_section_hint_test_block.sk");
+
+                helper.assertTrue(
+                        logs.messages().stream().noneMatch(message ->
+                                message.contains("capture statement fallback hinted integer {_value}")
+                        ),
+                        Component.literal("Expected statement-managed section hints to stay visible to later sibling lines on the real .sk load path.")
+                );
+            }
+
+            int executed = runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    helper,
+                    helper.getLevel().getServer(),
+                    helper.getLevel(),
+                    null
+            ));
+
+            helper.assertTrue(
+                    executed == 1,
+                    Component.literal("Expected exactly one Skript trigger execution but got " + executed)
+            );
+            helper.assertTrue(
+                    Integer.valueOf(1).equals(lastStatementFallbackHintedInteger),
+                    Component.literal("Expected the later sibling line to read the integer stored inside the statement-managed section body.")
             );
             runtime.clearScripts();
         });
@@ -1087,6 +1131,24 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
     }
 
+    private static void ensureStatementFallbackSectionHintTestSyntaxRegistered() {
+        if (STATEMENT_FALLBACK_SECTION_HINT_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
+            Skript.registerExpression(
+                    StatementManagedHintGameTestExpression.class,
+                    Integer.class,
+                    "statement hint value"
+            );
+            Skript.registerStatement(
+                    StatementManagedHintGameTestStatement.class,
+                    "statement-managed hint %integer%"
+            );
+            Skript.registerEffect(
+                    CaptureStatementFallbackHintedIntegerGameTestEffect.class,
+                    "capture statement fallback hinted integer %integer%"
+            );
+        }
+    }
+
     public static final class RejectingGameTestEffect extends ch.njol.skript.lang.Effect {
 
         @Override
@@ -1324,6 +1386,102 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         @Override
         public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "stop gametest trigger";
+        }
+    }
+
+    public static final class StatementManagedHintGameTestStatement extends Statement {
+
+        private StatementManagedHintGameTestExpression expression;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                SkriptParser.ParseResult parseResult
+        ) {
+            expression = (StatementManagedHintGameTestExpression) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected boolean run(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return expression.runManagedSection(event);
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "statement-managed hint";
+        }
+    }
+
+    public static final class StatementManagedHintGameTestExpression extends SectionExpression<Integer> {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int pattern,
+                Kleenean delayed,
+                SkriptParser.ParseResult parseResult,
+                @org.jetbrains.annotations.Nullable SectionNode node,
+                @org.jetbrains.annotations.Nullable List<TriggerItem> triggerItems
+        ) {
+            ParserInstance.get().getHintManager().set("value", Integer.class);
+            if (node != null) {
+                loadOptionalCode(node);
+            }
+            return true;
+        }
+
+        @Override
+        protected Integer @org.jetbrains.annotations.Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return new Integer[]{1};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        public boolean runManagedSection(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return runSection(event);
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "statement hint value";
+        }
+    }
+
+    public static final class CaptureStatementFallbackHintedIntegerGameTestEffect extends ch.njol.skript.lang.Effect {
+
+        private Expression<Integer> value;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                SkriptParser.ParseResult parseResult
+        ) {
+            value = (Expression<Integer>) expressions[0];
+            return true;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            lastStatementFallbackHintedInteger = value.getSingle(event);
+        }
+
+        @Override
+        public String toString(org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "capture statement fallback hinted integer";
         }
     }
 

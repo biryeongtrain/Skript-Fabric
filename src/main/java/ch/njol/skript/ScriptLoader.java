@@ -109,27 +109,27 @@ public final class ScriptLoader {
         String sectionError = "Can't understand this section: " + parsedInput;
         ParserInstance parser = ParserInstance.get();
         parser.getHintManager().enterScope(false);
-        TriggerItem section = null;
+        TriggerItem item = null;
         try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
-            section = ch.njol.skript.lang.Section.parse(parsedInput, sectionError, sectionNode, triggerItems);
-            if (section != null) {
+            item = ch.njol.skript.lang.Section.parse(parsedInput, sectionError, sectionNode, triggerItems);
+            if (item != null) {
                 log.printLog();
-                return section;
+                return item;
             }
 
             ParseLogHandler sectionLog = log.backup();
             log.clear();
             log.clearError();
 
-            TriggerItem statement = Statement.parse(
+            item = Statement.parse(
                     parsedInput,
                     "Can't understand this condition/effect: " + parsedInput,
                     sectionNode,
                     triggerItems
             );
-            if (statement != null) {
+            if (item != null) {
                 log.printLog();
-                return statement;
+                return item;
             }
 
             ParseLogHandler statementLog = log.backup();
@@ -146,7 +146,7 @@ public final class ScriptLoader {
             }
             return null;
         } finally {
-            if (section == null) {
+            if (item == null) {
                 parser.getHintManager().clearScope(0, false);
             }
             parser.getHintManager().exitScope();
