@@ -50,6 +50,10 @@ Current measured baseline for that workstream:
   - `Skript.registerStructure(...)` now accepts `EntryValidator`, and `KeyValueEntryData` now accepts both `SimpleNode` and `EntryNode` inputs on the compatibility path
   - `StructOptions` now loads through a recursive validator-backed entry path, so runtime `EntryNode` trees and raw simple `key: value` nodes both work without losing `Invalid line in options` diagnostics
   - `ScriptLoader.loadItems(...)` now routes section nodes through registered `Section` parsing before statement fallback
+  - `Classes.parse(...)` now clears stale direct-parser failures before later parser or converter fallback success, so successful fallback does not leak earlier parser diagnostics
+  - `SkriptParser.ParseResult.tags` and the shared matcher now preserve duplicate parse tags in encounter order
+  - `Statement.parse(...)` now lets a later same-pattern plain statement registration win after earlier effect/condition init failures, while restoring the best prior specific error if no statement ultimately matches
+  - real base `.sk` coverage now also proves statement fallback after failed effect parse through `runtime.loadFromResource(...)`
   - `Statement.parse(...)` now routes effect parsing through `Effect.parse(...)`, and `Effect.parse(...)` now allows plain effects with section-managing expressions to own their section body instead of dropping it
   - `ScriptLoader` section-node fallback now restores the better retained section-versus-statement diagnostic, plain conditions no longer silently parse as section headers, stopping statements now emit unreachable-code warnings behind script-level warning suppression, and nested section-contained stop-trigger intent now propagates through loader/runtime while `stopSection` stays local
   - the shared compiled matcher now lives in `ch/njol/skript/patterns`, so `SkriptParser` and direct pattern compilation now share parse-tag/mark handling, including the current bare leading `:` auto-tag derivation surface and omitted optional/alternation raw-regex capture handling
@@ -72,7 +76,7 @@ Current measured baseline for that workstream:
   - `SkriptRuntime.parseScript(...)` now uses that split logic, so trailing comments on section headers, option entries, conditions, and effects no longer break live `.sk` loading
   - `ParseLogHandler`, `SkriptLogger`, and `Statement.parse(...)` now retain specific parse errors across nested parser scopes, so valid effects used as sections keep their ownership diagnostic instead of falling through to a generic `Can't understand this section` fallback
   - targeted unit verification passed on 2026-03-08
-  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `198 / 198`
+  - `./gradlew runGameTest --rerun-tasks` passed on 2026-03-08 with `199 / 199`
   - `./gradlew build --rerun-tasks` passed on 2026-03-08, including the full Fabric GameTest task
 
 This workstream runs in parallel with the Stage 5 and Stage 8 records below.
@@ -264,7 +268,7 @@ Status: `in_progress`
 Current completed slices:
 
 - `fabric-gametest` runtime harness is active
-- current real-script Fabric GameTest suite is green at `198 / 198`
+- current real-script Fabric GameTest suite is green at `199 / 199`
 
 ## Stage 8: Parity audit
 
@@ -390,6 +394,7 @@ Still remaining before Stage 8 can be called complete:
 - 2026-03-08: `./gradlew test --tests '*ClassesCompatibilityTest' --tests '*FunctionCoreCompatibilityTest' --tests '*FunctionImplementationCompatibilityTest' --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the explicit literal-pattern ordering follow-up and section execution-intent propagation follow-up; the active suite remained `197 / 197`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the local-variable type-hint, lightweight pattern-element graph API, and loader hint-scope slices; the build path again executed the full Fabric GameTest suite successfully and the active suite remained `197 / 197`.
 - 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks`, `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the converter-backed class parsing, placeholder flag/time metadata, and plain-statement section-context slices; the active suite increased to `198 / 198`.
+- 2026-03-08: `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`, `./gradlew runGameTest --rerun-tasks`, and `./gradlew build --rerun-tasks` all passed after merging the parse-log-aware `Classes.parse(...)`, ordered duplicate parser-tag accumulation, and statement fallback after failed effect/condition init slices; the active suite increased to `199 / 199`.
 - 2026-03-07: the original Bukkit `Eff*.java` class list from commit `145c3c9` is now source-complete in the active Fabric tree at `24 / 24`, remaining source-level effect ports `0`.
 - 2026-03-07: the active Fabric GameTest suite now passes at `176 / 176` required tests.
 
