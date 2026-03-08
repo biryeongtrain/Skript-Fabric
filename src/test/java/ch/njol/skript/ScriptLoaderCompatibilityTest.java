@@ -9,8 +9,10 @@ import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.Condition;
+import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Section;
+import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.parser.ParserInstance;
@@ -28,14 +30,17 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.skriptlang.skript.lang.structure.Structure;
-import org.skriptlang.skript.lang.script.Script;
-import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableWrapper;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.ExprSecBlankEquipComp;
+import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.lang.script.Script;
+import org.skriptlang.skript.lang.script.ScriptWarning;
+import org.skriptlang.skript.lang.structure.Structure;
 
 class ScriptLoaderCompatibilityTest {
+
+    private static final List<String> statementExecution = new ArrayList<>();
 
     @AfterEach
     void cleanupParserState() {
@@ -43,6 +48,7 @@ class ScriptLoaderCompatibilityTest {
         ParserInstance.get().setCurrentScript(null);
         RecordingSection.executed.clear();
         RecordingEffect.executed.clear();
+        statementExecution.clear();
         Variables.clearAll();
     }
 
@@ -241,6 +247,56 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsWarnsWhenLaterLineIsUnreachable() {
+        registerExecutionIntentStatements();
+        ParserInstance parser = ParserInstance.get();
+        parser.setCurrentScript(new Script(null, java.util.List.of()));
+
+        List<TriggerItem> items;
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            items = ScriptLoader.loadItems(root(
+                    line("record before stop"),
+                    line("stop test trigger"),
+                    line("record after stop")
+            ));
+
+            assertEquals(3, items.size());
+            assertEquals(
+                    1L,
+                    logs.messages().stream()
+                            .filter(message -> message.contains("Unreachable code. The previous statement stops further execution."))
+                            .count()
+            );
+        }
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+        assertEquals(List.of("before", "stop"), statementExecution);
+    }
+
+    @Test
+    void loadItemsSkipsUnreachableWarningWhenScriptSuppressesIt() {
+        registerExecutionIntentStatements();
+        ParserInstance parser = ParserInstance.get();
+        Script script = new Script(null, java.util.List.of());
+        script.suppressWarning(ScriptWarning.UNREACHABLE_CODE);
+        parser.setCurrentScript(script);
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("record before stop"),
+                    line("stop test trigger"),
+                    line("record after stop")
+            ));
+
+            assertEquals(3, items.size());
+            assertFalse(
+                    logs.messages().stream()
+                            .anyMatch(message -> message.contains("Unreachable code. The previous statement stops further execution."))
+            );
+        }
+    }
+
+    @Test
     void loadItemsKeepsSpecificSectionOwnershipError() {
         Skript.registerEffect(RecordingEffect.class, "mark inside", "mark after");
 
@@ -304,6 +360,11 @@ class ScriptLoaderCompatibilityTest {
 
     private static SimpleNode line(String key) {
         return new SimpleNode(key);
+    }
+
+    private static void registerExecutionIntentStatements() {
+        Skript.registerStatement(RecordingStatement.class, "record before stop", "record after stop");
+        Skript.registerStatement(StopTriggerStatement.class, "stop test trigger");
     }
 
     public static final class RecordingSection extends Section {
@@ -380,6 +441,62 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public boolean check(SkriptEvent event) {
             return true;
+        }
+    }
+
+    public static final class RecordingStatement extends Statement {
+
+        private String label;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            label = matchedPattern == 0 ? "before" : "after";
+            return true;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            statementExecution.add(label);
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return label == null ? "record statement" : label;
+        }
+    }
+
+    public static final class StopTriggerStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            return true;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            statementExecution.add("stop");
+            return false;
+        }
+
+        @Override
+        protected @Nullable ExecutionIntent executionIntent() {
+            return ExecutionIntent.stopTrigger();
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "stop test trigger";
         }
     }
 

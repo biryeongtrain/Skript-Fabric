@@ -1,0 +1,4 @@
+on gametest:
+    set test block at 0 1 0 to gold_block
+    stop gametest trigger
+    set test block at 1 1 0 to diamond_block

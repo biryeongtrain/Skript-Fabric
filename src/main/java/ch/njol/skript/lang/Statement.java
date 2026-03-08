@@ -13,6 +13,10 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 
 public abstract class Statement extends TriggerItem implements SyntaxElement {
 
+    public final @Nullable ExecutionIntent loaderExecutionIntent() {
+        return executionIntent();
+    }
+
     public static @Nullable Statement parse(String input, String defaultError) {
         return parse(input, defaultError, null, null);
     }
