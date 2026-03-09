@@ -3,10 +3,12 @@ package ch.njol.skript.expressions;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.ExpressionList;
 import ch.njol.skript.lang.KeyedIterableExpression;
 import ch.njol.skript.lang.KeyedValue;
 import ch.njol.skript.lang.SkriptParser;
@@ -14,6 +16,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -108,6 +111,49 @@ class ExpressionTextCollectionCompatibilityTest {
         assertArrayEquals(new Object[]{2, 5, 10}, sorted.getArray(SkriptEvent.EMPTY));
         assertArrayEquals(new String[]{"two", "five", "ten"}, collectKeys(sorted.keyedIterator(SkriptEvent.EMPTY)));
         assertTrue(sorted.canReturn(Number.class));
+    }
+
+    @Test
+    void anyOfExceptReverseShuffleAndDifferenceMatchLegacySemantics() {
+        ExprAnyOf anyOf = new ExprAnyOf();
+        anyOf.init(new Expression[]{new SimpleLiteral<>(new String[]{"alpha", "beta"}, String.class, true)}, 0, Kleenean.FALSE, parseResult(""));
+        assertTrue(anyOf.isSingle());
+        assertEquals(false, anyOf.getAnd());
+        assertNull(anyOf.acceptChange(ch.njol.skript.classes.Changer.ChangeMode.SET));
+
+        ExprExcept except = new ExprExcept();
+        except.init(new Expression[]{
+                new ExpressionList<>(
+                        new Expression[]{
+                                new SimpleLiteral<>("alpha", false),
+                                new SimpleLiteral<>("beta", false),
+                                new SimpleLiteral<>("gamma", false)
+                        },
+                        Object.class,
+                        true
+                ),
+                new SimpleLiteral<>(new String[]{"beta"}, String.class, true)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new Object[]{"alpha", "gamma"}, except.getArray(SkriptEvent.EMPTY));
+
+        ExprReversedList reversed = new ExprReversedList();
+        reversed.init(new Expression[]{new KeyedStringExpression(
+                new String[]{"alpha", "beta", "gamma"},
+                new String[]{"one", "two", "three"}
+        )}, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new Object[]{"gamma", "beta", "alpha"}, reversed.getArray(SkriptEvent.EMPTY));
+        assertArrayEquals(new String[]{"three", "two", "one"}, collectKeys(reversed.keyedIterator(SkriptEvent.EMPTY)));
+
+        ExprShuffledList shuffled = new ExprShuffledList();
+        shuffled.init(new Expression[]{new KeyedObjectExpression(
+                new Object[]{1, 2, 3},
+                new String[]{"one", "two", "three"}
+        )}, 0, Kleenean.FALSE, parseResult(""));
+        Object[] shuffledValues = shuffled.getArray(SkriptEvent.EMPTY);
+        assertEquals(3, shuffledValues.length);
+        assertTrue(Arrays.asList(shuffledValues).containsAll(List.of(1, 2, 3)));
+        assertEquals(3, collectKeys(shuffled.keyedIterator(SkriptEvent.EMPTY)).length);
+
     }
 
     @Test

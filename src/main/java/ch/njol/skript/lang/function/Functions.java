@@ -2,6 +2,7 @@ package ch.njol.skript.lang.function;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptAPIException;
+import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.parser.ParserInstance;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -146,6 +147,41 @@ public abstract class Functions {
             }
         }
         return getGlobalSignature(name);
+    }
+
+    public static @Nullable Function<?> loadFunction(Script script, SectionNode node, Signature<?> signature) {
+        String scriptName = script.getConfig() == null ? null : script.getConfig().getFileName();
+        Namespace namespace = scriptName == null ? null : getScriptNamespace(scriptName);
+        if (namespace == null) {
+            namespace = globalFunctions.get(signature.getName());
+            if (namespace == null) {
+                return null;
+            }
+        }
+
+        if (Skript.debug() || node.debug()) {
+            Skript.debug(signature.toString());
+        }
+
+        Function<?> function;
+        try {
+            function = new ScriptFunction<>(signature, node);
+        } catch (SkriptAPIException exception) {
+            unregisterFunction(signature);
+            return null;
+        }
+
+        if (namespace.getFunction(signature.getName()) == null) {
+            namespace.addFunction(function);
+        }
+
+        if (function.getSignature().isLocal()) {
+            FunctionRegistry.getRegistry().register(scriptName, function);
+        } else {
+            FunctionRegistry.getRegistry().register(null, function);
+        }
+
+        return function;
     }
 
     public static @Nullable Namespace getScriptNamespace(String script) {

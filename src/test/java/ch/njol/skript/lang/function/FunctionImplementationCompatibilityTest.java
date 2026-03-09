@@ -2,19 +2,31 @@ package ch.njol.skript.lang.function;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.config.Config;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.lang.Effect;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.variables.Variables;
+import ch.njol.util.Kleenean;
+import java.io.File;
+import java.util.List;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.lang.script.Script;
 
 class FunctionImplementationCompatibilityTest {
 
@@ -23,6 +35,7 @@ class FunctionImplementationCompatibilityTest {
         FunctionRegistry.getRegistry().clear();
         Functions.clear();
         ch.njol.skript.variables.Variables.clearAll();
+        ParserInstance.get().setCurrentScript(null);
     }
 
     @Test
@@ -150,5 +163,114 @@ class FunctionImplementationCompatibilityTest {
         assertEquals(1, Variables.getVariable("xs::1", callContext, true));
         assertEquals(7, Variables.getVariable("xs::2", callContext, true));
         assertNull(Variables.getVariable("xs::0", callContext, true));
+    }
+
+    @Test
+    void scriptFunctionPublishesSingleParameterHintsWhileLoadingBody() {
+        ParserInstance.get().setCurrentScript(new Script(new Config("function", "function.sk", new File("function.sk")), List.of()));
+        Skript.registerEffect(CaptureFunctionIntegerHintEffect.class, "lane d capture function integer %integer%");
+        CaptureFunctionIntegerHintEffect.reset();
+
+        ClassInfo<Integer> intInfo = Classes.getSuperClassInfo(Integer.class);
+        Signature<Integer> signature = new Signature<>(
+                null,
+                "hintedSingle",
+                new Parameter[]{new Parameter<>("_value", intInfo, true, null)},
+                false,
+                intInfo,
+                true
+        );
+
+        ScriptFunction<Integer> function = new ScriptFunction<>(
+                signature,
+                functionNode("function hintedSingle:", "lane d capture function integer {_value}")
+        );
+
+        assertNotNull(function);
+        assertEquals(Integer.class, CaptureFunctionIntegerHintEffect.lastReturnType);
+    }
+
+    @Test
+    void scriptFunctionPublishesListParameterHintsWhileLoadingBody() {
+        ParserInstance.get().setCurrentScript(new Script(new Config("function", "function.sk", new File("function.sk")), List.of()));
+        Skript.registerEffect(CaptureFunctionIntegerHintEffect.class, "lane d capture function integer %integer%");
+        CaptureFunctionIntegerHintEffect.reset();
+
+        ClassInfo<Integer> intInfo = Classes.getSuperClassInfo(Integer.class);
+        Signature<Integer> signature = new Signature<>(
+                null,
+                "hintedList",
+                new Parameter[]{new Parameter<>("_values", intInfo, false, null)},
+                false,
+                intInfo,
+                false
+        );
+
+        ScriptFunction<Integer> function = new ScriptFunction<>(
+                signature,
+                functionNode("function hintedList:", "lane d capture function integer {_values::1}")
+        );
+
+        assertNotNull(function);
+        assertEquals(Integer.class, CaptureFunctionIntegerHintEffect.lastReturnType);
+    }
+
+    @Test
+    void functionsLoadFunctionBuildsAndRegistersScriptImplementation() {
+        Script script = new Script(new Config("loader", "loader.sk", new File("loader.sk")), List.of());
+        ParserInstance.get().setCurrentScript(script);
+
+        ClassInfo<Integer> intInfo = Classes.getSuperClassInfo(Integer.class);
+        Signature<Integer> signature = new Signature<>(
+                "loader.sk",
+                "loadedLocal",
+                new Parameter[]{new Parameter<>("x", intInfo, true, null)},
+                true,
+                intInfo,
+                true
+        );
+        assertNotNull(Functions.registerSignature(signature));
+
+        Function<?> function = Functions.loadFunction(script, functionNode("function loadedLocal:"), signature);
+
+        assertNotNull(function);
+        assertTrue(function instanceof ScriptFunction<?>);
+        assertEquals(function, Functions.getLocalFunction("loadedLocal", "loader.sk"));
+        assertEquals(
+                FunctionRegistry.RetrievalResult.EXACT,
+                FunctionRegistry.getRegistry().getExactFunction("loader.sk", "loadedLocal", Integer.class).result()
+        );
+    }
+
+    private static SectionNode functionNode(String key, String... bodyLines) {
+        SectionNode node = new SectionNode(key);
+        for (String bodyLine : bodyLines) {
+            node.add(new SimpleNode(bodyLine));
+        }
+        return node;
+    }
+
+    public static class CaptureFunctionIntegerHintEffect extends Effect {
+
+        private static @Nullable Class<?> lastReturnType;
+
+        static void reset() {
+            lastReturnType = null;
+        }
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+            lastReturnType = expressions[0].getReturnType();
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "capture function integer hint";
+        }
     }
 }

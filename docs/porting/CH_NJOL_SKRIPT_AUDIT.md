@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `165`
-- local shortfall versus the captured upstream snapshot: `1024`
+- local `ch/njol/skript`: `276`
+- local shortfall versus the captured upstream snapshot: `913`
 
 Local top-level packages currently present:
 
@@ -43,6 +43,7 @@ Local top-level packages currently present:
 - `events`
 - `expressions`
 - `lang`
+- `literals`
 - `localization`
 - `log`
 - `patterns`
@@ -59,7 +60,6 @@ Upstream top-level packages currently absent locally:
 - `command`
 - `doc`
 - `hooks`
-- `literals`
 - `test`
 - `timings`
 - `update`
@@ -70,24 +70,24 @@ Upstream top-level packages currently absent locally:
 | --- | --- | --- | --- | --- | --- |
 | `aliases` | `12` | `0` | absent | `P2` | likely needed after core parser/type closure; do not replace registry-backed parsing with large hardcoded tables |
 | `bukkitutil` | `26` | `0` | absent | `P3` | Bukkit-specific helpers; audit only when a Fabric replacement path is justified |
-| `classes` | `28` | `7` | partial shim | `P1` | foundational for parsing and stringification; `Classes` now covers codename/literal/supertype lookup plus class-info ordering, and the local tree now also restores legacy parser/converter wrapper types, but the layer is still far thinner than upstream |
+| `classes` | `28` | `11` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores legacy parser/converter wrappers and more registry-facing helper surface, but the layer is still far thinner than upstream |
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
-| `conditions` | `135` | `3` | partial shim | `P2` | very large missing surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
-| `config` | `20` | `13` | partial shim | `P1` | loader/parser support dependency |
+| `conditions` | `135` | `6` | partial shim | `P2` | very large missing surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
+| `config` | `20` | `20` | present but behavior-incomplete | `P1` | count parity is now closed, but broader runtime behavior still needs upstream comparison |
 | `doc` | `18` | `0` | absent | `P3` | low runtime value; defer |
-| `effects` | `123` | `1` | scaffolding-only | `P2` | base package is present through shared scaffolding, but the user-visible surface is still almost entirely missing |
-| `entity` | `34` | `1` | scaffolding-only | `P2` | base package is present through shared scaffolding, but runtime adapters remain largely absent |
-| `events` | `53` | `1` | scaffolding-only | `P2` | base package is present through shared scaffolding, but event classes remain largely absent |
-| `expressions` | `391` | `8` | partial shim | `P2` | largest remaining user-visible surface; after current dependency closure, split into larger class bundles rather than small syntax slices |
+| `effects` | `123` | `7` | partial shim | `P2` | base package now has a small verified effect surface, but most user-visible runtime forms are still missing |
+| `entity` | `34` | `27` | partial shim | `P2` | the exact-entity leaf registry widened substantially in the current batch, but several data types and behavior paths still remain |
+| `events` | `53` | `4` | partial shim | `P2` | base package is present through shared scaffolding, but event classes remain largely absent |
+| `expressions` | `391` | `20` | partial shim | `P2` | larger collection and arithmetic-adjacent helpers are now landing, but the remaining user-visible surface is still very large |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
-| `lang` | `85` | `81` | present but behavior-incomplete | `P0` | local delta is effectively only `package-info.java`; this is the highest-leverage closure slice |
-| `literals` | `16` | `0` | absent | `P2` | depends on parser/type behavior |
-| `localization` | `11` | `2` | partial shim | `P2` | not blocking initial parser closure, but still largely absent |
-| `log` | `17` | `11` | partial shim | `P1` | parse/runtime diagnostics are now backed by a restored legacy handler stack, but the logging layer is still much thinner than upstream |
-| `patterns` | `14` | `13` | partial shim | `P1` | foundational parsing dependency; shared matcher, parse-tag flow, lightweight pattern-element graph APIs, grouped string/combinations parity, and `Keyword` prefiltering now exist locally |
-| `registrations` | `10` | `4` | partial shim | `P1` | foundational registration dependency; local compatibility now also restores the legacy `Converters` bridge |
-| `sections` | `10` | `1` | partial shim | `P1` | section behavior now includes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, implicit condition sections, generic section nodes through `ScriptLoader`, and `SecIf` through the section registry path; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity |
-| `structures` | `10` | `2` | partial shim | `P1` | now active because `options:` support has started; keep in the dependency-closure track |
+| `lang` | `85` | `85` | present but behavior-incomplete | `P0` | file-count parity is now closed; the remaining gap is foundational behavior, not class presence |
+| `literals` | `16` | `14` | partial shim | `P2` | most low-dependency numeric/special literal helpers are present, but the package is still not fully closed |
+| `localization` | `11` | `11` | present but behavior-incomplete | `P2` | count parity is now closed, but the message stack still needs broader runtime comparison |
+| `log` | `17` | `14` | partial shim | `P1` | parse/runtime diagnostics are now backed by a restored legacy handler stack, but the logging layer is still thinner than upstream |
+| `patterns` | `14` | `14` | present but behavior-incomplete | `P1` | foundational parsing dependency; file-count parity is closed, but matcher behavior still matters more than raw presence |
+| `registrations` | `10` | `10` | present but behavior-incomplete | `P1` | file-count parity is closed after the event-value and experiment bridge imports, but deeper runtime parity still needs auditing |
+| `sections` | `10` | `2` | partial shim | `P1` | section behavior now includes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, implicit condition sections, generic section nodes through `ScriptLoader`, and `SecIf` through the section registry path; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity |
+| `structures` | `10` | `3` | partial shim | `P1` | `options:` is real and the current batch tried to widen structure closure further, but the next slice still needs a clean verified import |
 | `test` | `42` | `0` | absent | `P3` | low shipping-runtime value; use local test harnesses instead |
 | `timings` | `2` | `0` | absent | `P3` | defer |
 | `update` | `10` | `0` | absent | `P3` | defer |
@@ -96,30 +96,24 @@ Upstream top-level packages currently absent locally:
 
 ## `lang` Breakdown
 
-`lang` is numerically close but behaviorally incomplete.
+`lang` is numerically closed but behaviorally incomplete.
 
 Current counts:
 
-- local `lang` total: `81`
+- local `lang` total: `85`
 - upstream `lang` total: `85`
 - local root files: `47`
-- local `function`: `14`
-- local `parser`: `4`
+- local `function`: `15`
+- local `parser`: `5`
 - local `simplification`: `2`
-- local `util`: `14`
+- local `util`: `15`
 - upstream root files: `48`
 - upstream `function`: `15`
 - upstream `parser`: `5`
 - upstream `simplification`: `2`
 - upstream `util`: `15`
 
-The numeric delta is only the missing `package-info.java` files:
-
-- `ch/njol/skript/lang/package-info.java`
-- `ch/njol/skript/lang/function/package-info.java`
-- `ch/njol/skript/lang/parser/package-info.java`
-- `ch/njol/skript/lang/util/package-info.java`
-
+The numeric delta is now closed.
 That means the real gap is behavior, not class presence.
 
 ## Current Blocker Clusters
@@ -148,11 +142,12 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- restored upstream `Classes.getExactParser(...)`, so exact parser lookup no longer falls through subtype or converter-backed parser resolution
-- local `Classes.parseSimple(...)` keeps a temporary scalar fallback after registered parsers, because the upstream `JavaClasses` scalar registrations are not ported yet and removing that fallback regressed the verified runtime baseline
-- `PatternCompiler.compileLeadingAutoTaggedGroup(...)` now carries same-token suffix placeholder indices into exact branch activation, so tagged-branch matches still enforce omitted required defaults from their suffix placeholders
-- resolved local `DynamicFunctionReference` instances now retain a tracked `Script` and invalidate correctly after script unload
-- restored the upstream `ParserInstance` section-slice helper surface: `getSectionsUntil(...)`, `getSections(int)`, and `getSections(int, Class<? extends TriggerSection>)`
+- merged five verified worker bundles on 2026-03-09:
+  - Lane A restored `EventValues`, `EventConverter`, the experiment-backed `Feature` enum, and the owned `registrations/experiments` interfaces
+  - Lane B restored lightweight `config` / `util` / `localization` compatibility helpers, closing file-count parity in `config` and `localization`
+  - Lane D restored script-function loading hints and local function load registration behavior
+  - Lane E restored the collection-difference expression bundle (`ExprAnyOf`, `ExprDifference`, `ExprExcept`, `ExprReversedList`, `ExprShuffledList`)
+  - Lane F widened the exact-entity leaf registry through `ExactEntityData` plus twenty-two concrete entity data wrappers
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

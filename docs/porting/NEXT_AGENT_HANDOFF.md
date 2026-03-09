@@ -17,7 +17,7 @@ Last updated: 2026-03-09
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `165 / 1189`, shortfall `1024`
+- upstream `ch/njol/skript` snapshot: local `276 / 1189`, shortfall `913`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,9 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head is the first package-bundle closure batch on top of the existing `lang-core` baseline
+- current verified head merges Lane A, B, D, E, and F follow-up bundles on top of the existing `lang-core` baseline
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest bundle batch restored upstream helper surface in `classes`, `config`, `util`, `variables`, and `log`, and added shared scaffolding under `expressions` / `conditions` / `effects` / `events` / `entity`
+- the latest bundle batch restored `registrations` event-value helpers, lightweight `config` / `util` / `localization` scaffolding, function-loading hints, collection-difference expressions, and a broader exact-entity data bundle
 
 ## Recent Closed Prereqs
 
@@ -46,12 +46,11 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. `classes` + `registrations` + `patterns`
-2. `config` + `util` + `localization`
-3. `variables` + `sections` + `structures` + `aliases` + `literals`
-4. remaining `lang` + `log` blocker imports
-5. larger `expressions` + `conditions` bundle closure
-6. larger `effects` + `events` + `entity` bundle closure
+1. remaining `variables` + `sections` + `structures` + `aliases` + `literals` closure, starting from the failed `StructEvent` / `StructExample` slice
+2. next `effects` + `events` bundle that builds on the widened exact-entity registry without new `org/...` runtime edits
+3. next `expressions` + `conditions` bundle after the collection-difference slice
+4. remaining `classes` / `registrations` follow-up that stays on local event abstractions
+5. remaining `util` / `log` / `lang` blocker imports that still unlock broader package closure
 
 ## Parallel Defaults
 

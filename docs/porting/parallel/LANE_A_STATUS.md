@@ -8,36 +8,27 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- landed two verified commits:
-  - `feat(classes): restore enum compatibility helpers`
-  - `chore(classes): restore legacy package metadata`
-- restored more upstream-backed owned compatibility surface:
-  - added `ch/njol/skript/classes/EnumParser` with the local fallback enum-name mapping needed before localization parity closes
-  - added `ch/njol/skript/classes/EnumClassInfo`
-  - added `ch/njol/skript/registrations/Comparators` as the legacy bridge over the current comparator backend
-  - extended `ClassInfo` with legacy doc/builder hooks (`getName()`, `usage(...)`, `description(...)`, `examples(...)`, `since(...)`, `requiredPlugins(...)`, `documentationId(...)`, `hasDocs()`) and enum auto-supplier parity
-  - added `ch/njol/skript/classes/SerializableChecker`
-  - restored owned `package-info.java` metadata under `classes`, `registrations`, and `patterns`
-- tightened lane tests for enum parsing/class-info wiring, comparator bridge lookup, doc-hook storage, enum auto-suppliers, and the serializable-checker alias
+- restored an upstream-backed registration bundle on top of the earlier enum/doc helper surface
+- added `ch/njol/skript/registrations/EventConverter` and `EventValues` against the local event abstraction
+- expanded `Feature` into the real experiment-backed compatibility enum and added the owned `registrations/experiments` interfaces `QueueExperimentSyntax` and `ReflectionExperimentSyntax`
+- added focused coverage in `EventValuesCompatibilityTest` for exact lookup, conversion-backed lookup, exclude handling, and feature registration wiring
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
-  - passed
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.registrations.EventValuesCompatibilityTest --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
 - Lane A safe imports are now mostly blocked on non-owned dependencies:
   - `Serializer`, `EnumSerializer`, `YggdrasilSerializer`, and `ConfigurationSerializer` need `ch.njol.yggdrasil/**`
-  - `EventConverter` / `EventValues` and `classes/registry/**` depend on absent Bukkit event/registry surfaces
   - `classes/data/**` is a larger bootstrap bundle that pulls in non-owned runtime and registration dependencies
-- next safe Lane A follow-up is only whichever of those bundles becomes unblocked by coordinator merges; otherwise hand off remaining owned delta as blocked
+- next safe Lane A follow-up is whichever remaining `classes` or `registrations` bundle can stay on the local event/runtime abstractions without reopening Bukkit-only registry surface
 
 ## Merge Notes
 
 - likely conflict files:
-  - `src/main/java/ch/njol/skript/classes/ClassInfo.java`
-  - `src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java`
-  - `src/main/java/ch/njol/skript/registrations/Comparators.java`
+  - `src/main/java/ch/njol/skript/registrations/Feature.java`
+  - `src/main/java/ch/njol/skript/registrations/EventValues.java`
+  - `src/main/java/ch/njol/skript/registrations/EventConverter.java`
+  - `src/test/java/ch/njol/skript/registrations/EventValuesCompatibilityTest.java`

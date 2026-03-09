@@ -31,7 +31,7 @@ public abstract class EntityData<E extends Entity> {
                 .defaultExpression(new SimpleLiteral<>(new SimpleEntityData("entity", Entity.class), true))
                 .before("entitytype")
                 .supplier(() -> {
-                    Iterator<SimpleEntityData> iterator = EntityDataRegistry.all().iterator();
+                    Iterator<EntityData<?>> iterator = EntityDataRegistry.all().iterator();
                     return new Iterator<>() {
                         @Override
                         public boolean hasNext() {

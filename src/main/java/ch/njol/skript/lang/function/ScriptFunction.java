@@ -6,8 +6,10 @@ import ch.njol.skript.lang.KeyProviderExpression;
 import ch.njol.skript.lang.KeyedValue;
 import ch.njol.skript.lang.ReturnHandler;
 import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleEvent;
 import ch.njol.skript.util.Utils;
+import ch.njol.skript.variables.HintManager;
 import ch.njol.skript.variables.Variables;
 import java.util.Arrays;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +29,20 @@ public class ScriptFunction<T> extends Function<T> implements ReturnHandler<T> {
     public ScriptFunction(Signature<T> signature, SectionNode node) {
         super(signature);
         Functions.currentFunction = this;
+        HintManager hintManager = ParserInstance.get().getHintManager();
         try {
+            hintManager.enterScope(false);
+            for (Parameter<?> parameter : signature.getParameters()) {
+                String hintName = parameter.name();
+                if (parameter.isSingle()) {
+                    hintManager.set(hintName, parameter.type());
+                    continue;
+                }
+                hintManager.set(hintName + ch.njol.skript.lang.Variable.SEPARATOR + "*", parameter.type().getComponentType());
+            }
             trigger = loadReturnableTrigger(node, "function " + signature.getName(), new SimpleEvent());
         } finally {
+            hintManager.exitScope();
             Functions.currentFunction = null;
         }
         trigger.setLineNumber(node.getLine());

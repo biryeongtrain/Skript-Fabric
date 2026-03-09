@@ -27,9 +27,9 @@ import org.jetbrains.annotations.Nullable;
 
 final class EntityDataRegistry {
 
-    private static final Map<String, SimpleEntityData> BY_NAME = new LinkedHashMap<>();
-    private static final Map<net.minecraft.world.entity.EntityType<?>, SimpleEntityData> BY_TYPE = new LinkedHashMap<>();
-    private static final List<SimpleEntityData> ALL = new ArrayList<>();
+    private static final Map<String, EntityData<?>> BY_NAME = new LinkedHashMap<>();
+    private static final Map<net.minecraft.world.entity.EntityType<?>, EntityData<?>> BY_TYPE = new LinkedHashMap<>();
+    private static final List<EntityData<?>> ALL = new ArrayList<>();
     private static boolean initialized;
 
     private EntityDataRegistry() {
@@ -40,6 +40,7 @@ final class EntityDataRegistry {
             return;
         }
 
+        registerSpecificExacts();
         for (net.minecraft.world.entity.EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
             ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
             if (key == null) {
@@ -72,7 +73,7 @@ final class EntityDataRegistry {
         initialized = true;
     }
 
-    static @Nullable SimpleEntityData parse(String input) {
+    static @Nullable EntityData<?> parse(String input) {
         ensureInitialized();
         if (input == null || input.isBlank()) {
             return null;
@@ -81,7 +82,7 @@ final class EntityDataRegistry {
         if (normalized.isEmpty()) {
             return null;
         }
-        SimpleEntityData exact = BY_NAME.get(normalized);
+        EntityData<?> exact = BY_NAME.get(normalized);
         if (exact != null) {
             return exact;
         }
@@ -89,12 +90,12 @@ final class EntityDataRegistry {
             if (candidate.equals(normalized)) {
                 continue;
             }
-            SimpleEntityData singularMatch = BY_NAME.get(candidate);
+            EntityData<?> singularMatch = BY_NAME.get(candidate);
             if (singularMatch != null) {
                 return singularMatch;
             }
         }
-        for (SimpleEntityData data : ALL) {
+        for (EntityData<?> data : ALL) {
             String codeName = normalize(data.getCodeName());
             if (normalized.equals(codeName)) {
                 return data;
@@ -108,19 +109,22 @@ final class EntityDataRegistry {
         return null;
     }
 
-    static @Nullable SimpleEntityData fromType(net.minecraft.world.entity.EntityType<?> entityType) {
+    static @Nullable EntityData<?> fromType(net.minecraft.world.entity.EntityType<?> entityType) {
         ensureInitialized();
         return BY_TYPE.get(entityType);
     }
 
-    static @Nullable SimpleEntityData fromClass(Class<? extends Entity> entityClass) {
+    static @Nullable EntityData<?> fromClass(Class<? extends Entity> entityClass) {
         ensureInitialized();
-        for (SimpleEntityData data : ALL) {
-            if (data.isExactType() && data.getType() == entityClass) {
+        for (EntityData<?> data : ALL) {
+            if (data instanceof SimpleEntityData simple && simple.isExactType() && data.getType() == entityClass) {
+                return data;
+            }
+            if (data instanceof ExactEntityData<?> && data.getType() == entityClass) {
                 return data;
             }
         }
-        for (SimpleEntityData data : ALL) {
+        for (EntityData<?> data : ALL) {
             if (data.getType().isAssignableFrom(entityClass)) {
                 return data;
             }
@@ -128,13 +132,13 @@ final class EntityDataRegistry {
         return null;
     }
 
-    static Collection<SimpleEntityData> all() {
+    static Collection<EntityData<?>> all() {
         ensureInitialized();
         return List.copyOf(ALL);
     }
 
     private static void alias(String alias, net.minecraft.world.entity.EntityType<?> entityType) {
-        SimpleEntityData existing = BY_TYPE.get(entityType);
+        EntityData<?> existing = BY_TYPE.get(entityType);
         if (existing == null) {
             register(SimpleEntityData.exact(alias, entityType));
             return;
@@ -142,12 +146,45 @@ final class EntityDataRegistry {
         BY_NAME.putIfAbsent(normalize(alias), existing);
     }
 
-    private static void register(SimpleEntityData data) {
+    private static void register(EntityData<?> data) {
+        if (data instanceof SimpleEntityData simple && simple.isExactType() && BY_TYPE.containsKey(simple.getMinecraftType())) {
+            return;
+        }
+        if (data instanceof ExactEntityData<?> exact && BY_TYPE.containsKey(exact.getMinecraftType())) {
+            return;
+        }
         ALL.add(data);
         BY_NAME.putIfAbsent(normalize(data.getCodeName()), data);
-        if (data.isExactType()) {
-            BY_TYPE.putIfAbsent(data.getMinecraftType(), data);
+        if (data instanceof SimpleEntityData simple && simple.isExactType()) {
+            BY_TYPE.putIfAbsent(simple.getMinecraftType(), data);
         }
+        if (data instanceof ExactEntityData<?> exact) {
+            BY_TYPE.putIfAbsent(exact.getMinecraftType(), data);
+        }
+    }
+
+    private static void registerSpecificExacts() {
+        register(new AxolotlData());
+        register(new BeeData());
+        register(new CatData());
+        register(new ChickenData());
+        register(new CowData());
+        register(new CreeperData());
+        register(new EndermanData());
+        register(new FoxData());
+        register(new FrogData());
+        register(new GoatData());
+        register(new LlamaData());
+        register(new PandaData());
+        register(new ParrotData());
+        register(new PigData());
+        register(new RabbitData());
+        register(new SalmonData());
+        register(new SheepData());
+        register(new TropicalFishData());
+        register(new VillagerData());
+        register(new WolfData());
+        register(new ZombieVillagerData());
     }
 
     private static String humanize(String path) {
