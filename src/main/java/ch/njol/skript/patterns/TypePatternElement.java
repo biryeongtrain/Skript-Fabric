@@ -1,5 +1,6 @@
 package ch.njol.skript.patterns;
 
+import ch.njol.skript.lang.SkriptParser;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -66,6 +67,9 @@ public final class TypePatternElement extends PatternElement {
 
     @Override
     public Set<String> getCombinations(boolean clean) {
-        return Set.of(toString());
+        if (!clean || flagMask == SkriptParser.PARSE_LITERALS) {
+            return Set.of(toString());
+        }
+        return Set.of("%*%");
     }
 }

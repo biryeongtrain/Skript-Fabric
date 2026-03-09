@@ -261,4 +261,15 @@ class PatternCompilerCompatibilityTest {
         assertTrue(second.pluralities()[0]);
         assertEquals(1, second.time());
     }
+
+    @Test
+    void compiledPatternCleanCombinationsCollapseNonLiteralPlaceholdersToWildcard() {
+        SkriptPattern pattern = PatternCompiler.compile("root %-*integer% then %strings@1%");
+
+        TypePatternElement first = pattern.getElements(TypePatternElement.class).getFirst();
+        TypePatternElement second = pattern.getElements(TypePatternElement.class).getLast();
+
+        assertEquals(Set.of("%-*integer%"), first.getCombinations(true));
+        assertEquals(Set.of("%*%"), second.getCombinations(true));
+    }
 }

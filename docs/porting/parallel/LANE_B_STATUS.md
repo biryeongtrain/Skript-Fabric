@@ -4,54 +4,47 @@ Last updated: 2026-03-09
 
 ## Scope
 
-- parser/default-value surface only
+- `SkriptParser` / `patterns` parser-matcher surface only
 - allowed files only:
   - `src/main/java/ch/njol/skript/lang/SkriptParser.java`
-  - `src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java`
-  - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
-  - `src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java`
+  - `src/main/java/ch/njol/skript/patterns/**`
+  - parser-facing tests
   - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Goal For This Slice
 
-- close one contained omitted-placeholder/default-value or parser-metadata gap in `SkriptParser`
-- stay out of `InputSource`, `Classes`, pattern compilation, and unrelated parser behavior
+- close one contained upstream-backed parser/pattern mismatch
+- stay out of `InputSource`, `Classes`, loader flow, and unrelated runtime behavior
 
 ## Latest Slice
 
-- mismatch: legacy parse path (`SkriptParser.parseStatic`) matched patterns with `PARSE_LITERALS`, silently rejecting expression-only placeholders like `%~type%` and thus blocking registered expressions in legacy syntaxes. Upstream intent is to allow both expressions and literals at the pattern level and rely on per-placeholder flag masks (`%*type%`, `%~type%`, `@time`) to constrain what is accepted.
-- minimal fix in parser: switch `parseStatic` to pass `ALL_FLAGS` to the shared matcher (placeholder metadata still narrows behavior). This restores parity with upstream legacy parsing of placeholders and keeps literal/expression restrictions enforced where they belong (on the placeholder).
+- mismatch: `TypePatternElement.getCombinations(true)` always returned the raw placeholder text locally, but upstream collapses any non-literal placeholder to `%*%` when building clean pattern combinations. That clean-form parity matters for upstream-style conflict/comparison surfaces.
+- minimal fix in patterns: keep literal-only placeholders (`%*type%`) intact for clean combinations, but collapse all other placeholder combinations to `%*%`, matching upstream.
 
 ## Regression Added
 
-- `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest` (already present from the prior slice)
-  - focused parse of single pattern `probe [%string%]` against input `probe`
-  - asserts parse fails when no default `string` expression exists (matching upstream)
-- `ch.njol.skript.lang.parser.SkriptParserStaticFlagsCompatibilityTest`
-  - asserts `parseStatic` accepts a registered expression for `%~integer%` when invoked via a legacy `SyntaxElementInfo`
-  - also asserts literals are still rejected for `%~...%` as enforced by the placeholder mask
+- `ch.njol.skript.patterns.PatternCompilerCompatibilityTest`
+  - added a focused assertion that clean combinations preserve `%-*integer%`
+  - added a focused assertion that clean combinations collapse `%strings@1%` to `%*%`
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
-- `src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java`
-- `src/test/java/ch/njol/skript/lang/parser/SkriptParserStaticFlagsCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`
+- `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests 'ch.njol.skript.lang.parser.SkriptParserStaticFlagsCompatibilityTest'`
-  - `./gradlew test --tests 'ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest'`
-  - `./gradlew test --tests 'ch.njol.skript.lang.SkriptParserRegistryTest'`
-- results: all passed
+  - `./gradlew test --tests 'ch.njol.skript.patterns.PatternCompilerCompatibilityTest' --rerun-tasks`
+- results: passed
 
 ## Remaining Risks
 
-- this slice keeps scope to parser flags and omitted-placeholder behavior only
-- broader upstream parity around richer classinfo/default-expression behavior outside omitted-placeholder backfill is still open
+- this slice only covers clean combination parity for placeholder pattern elements
+- broader matcher/runtime parity in `SkriptParser` and deeper `patterns` backtracking behavior is still open
 
 ## Merge Notes
 
-- conflict surface is limited to the parser/default-value files listed above
-- this slice does not touch `InputSource`, `Classes`, or pattern files
+- conflict surface is limited to `TypePatternElement` and the pattern compatibility test
+- this slice does not touch loader flow, `InputSource`, or `Classes`
