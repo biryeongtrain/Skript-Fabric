@@ -133,7 +133,7 @@ public final class Parameter<T> {
             return null;
         }
         Expression<? extends T> defaultExpr = null;
-        if (def != null && !def.isBlank()) {
+        if (def != null) {
             RetainingLogHandler log = SkriptLogger.startRetainingLog();
             try {
                 @SuppressWarnings("unchecked")

@@ -9,19 +9,19 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed overload-resolution mismatch in `FunctionRegistry.resolveRetrieval(...)`
-- local behavior greedily filtered ambiguous overloads one argument position at a time, which could incorrectly pick the overload matching the earliest exact argument even when a later exact argument favored a different overload
-- upstream evaluates non-`Object` exact positions across the whole candidate before narrowing, so split exact matches remain ambiguous instead of collapsing to the first candidate
+- fixed one upstream-backed default-parameter mismatch in `Parameter.newInstance(...)`
+- local behavior treated whitespace-only default text as if no default was provided, so invalid defaults like `x: number =   ` slipped through as required parameters
+- upstream still parses the supplied default text and rejects blank defaults when they do not form a valid expression
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java`
+- `src/main/java/ch/njol/skript/lang/function/Parameter.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 
 ## Verification
 
-- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest --rerun-tasks`
+- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/Parameter.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Parameter.java`
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
@@ -30,4 +30,4 @@ Last updated: 2026-03-09
 
 ## Merge Notes
 
-- low-conflict slice limited to `FunctionRegistry.java`, one focused regression, and this lane file
+- low-conflict slice limited to `Parameter.java`, one focused regression, and this lane file

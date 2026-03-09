@@ -56,6 +56,18 @@ class FunctionCoreCompatibilityTest {
     }
 
     @Test
+    void parameterRejectsBlankDefaultExpression() {
+        Parameter<Integer> parameter = Parameter.newInstance(
+                "count",
+                Classes.getSuperClassInfo(Integer.class),
+                true,
+                "   "
+        );
+
+        assertNull(parameter);
+    }
+
+    @Test
     void parameterParseKeepsCommasInsideQuotedDefaultExpressions() {
         List<Parameter<?>> parameters = Parameter.parse("message: string = \"a, b\", count: number");
 
