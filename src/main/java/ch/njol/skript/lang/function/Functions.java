@@ -50,6 +50,12 @@ public abstract class Functions {
         return function;
     }
 
+    @Deprecated(forRemoval = true, since = "2.13")
+    public static JavaFunction<?> registerFunction(JavaFunction<?> function) {
+        register(function);
+        return function;
+    }
+
     public static @Nullable Signature<?> registerSignature(Signature<?> signature) {
         rememberScript(signature.namespace());
         Parameter<?>[] parameters = signature.getParameters();
@@ -90,12 +96,20 @@ public abstract class Functions {
         return namespace.getFunction(name, false);
     }
 
+    public static @Nullable Function<?> getFunction(String name) {
+        return getGlobalFunction(name);
+    }
+
     public static @Nullable Signature<?> getGlobalSignature(String name) {
         Namespace namespace = globalFunctions.get(name);
         if (namespace == null) {
             return null;
         }
         return namespace.getSignature(name, false);
+    }
+
+    public static @Nullable Signature<?> getSignature(String name) {
+        return getGlobalSignature(name);
     }
 
     public static @Nullable Function<?> getLocalFunction(String name, String script) {
@@ -206,6 +220,20 @@ public abstract class Functions {
 
     public static Collection<Function<?>> getFunctions() {
         return javaNamespace.getFunctions();
+    }
+
+    public static Collection<JavaFunction<?>> getJavaFunctions() {
+        Collection<JavaFunction<?>> functions = new ArrayList<>();
+        for (Function<?> function : javaNamespace.getFunctions()) {
+            if (function instanceof JavaFunction<?> javaFunction) {
+                functions.add(javaFunction);
+            }
+        }
+        return functions;
+    }
+
+    public static void clearFunctions() {
+        clear();
     }
 
     public static void clear() {

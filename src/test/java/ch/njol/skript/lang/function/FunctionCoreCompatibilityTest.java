@@ -1,6 +1,7 @@
 package ch.njol.skript.lang.function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -342,6 +343,55 @@ class FunctionCoreCompatibilityTest {
         Signature<?> registered = Functions.registerSignature(localSignature);
         assertNotNull(registered);
         assertNotNull(Functions.getLocalSignature("helloLocal", "script.sk"));
+    }
+
+    @Test
+    void functionsFacadeProvidesGlobalShortcutsAndJavaFunctionView() {
+        Functions.clearFunctions();
+
+        Signature<Integer> globalSignature = new Signature<>(
+                null,
+                "shortcut",
+                new Parameter[]{new Parameter<>("x", Classes.getSuperClassInfo(Integer.class), true, null)},
+                false,
+                Classes.getSuperClassInfo(Integer.class),
+                true
+        );
+        JavaFunction<Integer> function = new JavaFunction<>(globalSignature) {
+            @Override
+            public Integer[] execute(FunctionEvent<?> event, Object[][] params) {
+                return new Integer[]{1};
+            }
+        };
+
+        assertSame(function, Functions.registerFunction(function));
+        assertSame(function, Functions.getFunction("shortcut"));
+        assertSame(globalSignature, Functions.getSignature("shortcut"));
+        assertEquals(1, Functions.getJavaFunctions().size());
+        assertSame(function, Functions.getJavaFunctions().iterator().next());
+    }
+
+    @Test
+    void clearFunctionsWithoutArgumentsResetsFacadeState() {
+        Functions.clear();
+
+        Signature<Integer> globalSignature = new Signature<>(
+                null,
+                "clearAll",
+                new Parameter[]{new Parameter<>("x", Classes.getSuperClassInfo(Integer.class), true, null)},
+                false,
+                Classes.getSuperClassInfo(Integer.class),
+                true
+        );
+        Functions.register(new RecordingFunction(globalSignature));
+
+        assertNotNull(Functions.getFunction("clearAll"));
+
+        Functions.clearFunctions();
+
+        assertNull(Functions.getFunction("clearAll"));
+        assertTrue(Functions.getFunctions().isEmpty());
+        assertTrue(Functions.getJavaFunctions().isEmpty());
     }
 
     @Test
