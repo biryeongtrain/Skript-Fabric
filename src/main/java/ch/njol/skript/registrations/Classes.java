@@ -357,43 +357,9 @@ public final class Classes {
                 }
             }
 
-            T primitive = parsePrimitive(text, type);
-            if (primitive != null) {
-                log.printLog();
-                return primitive;
-            }
-
             log.printError();
             return null;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> @Nullable T parsePrimitive(String text, Class<T> type) {
-        if (type == String.class) {
-            return (T) text;
-        }
-        if (type == Integer.class || type == int.class) {
-            try {
-                return (T) Integer.valueOf(text);
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-        if (type == Double.class || type == double.class) {
-            try {
-                return (T) Double.valueOf(text);
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-        if (type == Boolean.class || type == boolean.class) {
-            if ("true".equalsIgnoreCase(text) || "false".equalsIgnoreCase(text)) {
-                return (T) Boolean.valueOf(text);
-            }
-            return null;
-        }
-        return null;
     }
 
     @SuppressWarnings("unchecked")

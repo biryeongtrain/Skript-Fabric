@@ -23,6 +23,10 @@ Last updated: 2026-03-09
 
 ## Work Log
 
+- compared local `Classes.parseSimple(...)` with upstream `ch/njol/skript/registrations/Classes#parseSimple`
+- mismatch found: upstream only parses through registered `ClassInfo` parsers, while the local bridge still accepted raw `String`/number/boolean targets through a non-upstream primitive fallback
+- applied minimal fix: removed the primitive fallback from `Classes.parseSimple(...)` and added a focused regression proving unregistered primitive targets now return `null` unless a matching classinfo parser is registered
+
 - compared local `Classes` exact parser lookup surface with upstream `ch/njol/skript/registrations/Classes#getExactParser`
 - mismatch found: upstream exposes `getExactParser(Class<?>)` to retrieve only the parser registered on the exact classinfo, while the local bridge only exposed broader `getParser(...)` lookup that can resolve subtype and converter-backed parsers
 - applied minimal fix: added `Classes.getExactParser(...)` with upstream-compatible exact-classinfo semantics and a focused compatibility regression
@@ -111,6 +115,11 @@ Last updated: 2026-03-09
 - real `.sk` fixture count changed: `0`
 
 ## Verification
+
+- Repro (before fix): `Classes.parseSimple("wrapped-value", String.class, ParseContext.DEFAULT)` returned the raw string, and `Integer` / `Boolean` targets also parsed without any registered classinfo parser, which upstream does not allow
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms `parseSimple(...)` now returns `null` for unregistered primitive targets and still prefers a registered `ClassInfo<String>` parser when present
 
 - Repro (before fix): local `Classes` exposed no upstream-compatible exact parser lookup, so callers could only use `getParser(...)`, which may resolve subtype or converter-backed parsers instead of the exact registered parser
 - Targeted tests and commands:

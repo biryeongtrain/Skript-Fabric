@@ -444,6 +444,13 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void parseSimpleDoesNotUsePrimitiveFallbackWithoutARegisteredParser() {
+        assertNull(Classes.parseSimple("wrapped-value", String.class, ParseContext.DEFAULT));
+        assertNull(Classes.parseSimple("42", Integer.class, ParseContext.DEFAULT));
+        assertNull(Classes.parseSimple("true", Boolean.class, ParseContext.DEFAULT));
+    }
+
+    @Test
     void parseClearsFailedDirectErrorsBeforeConverterSuccess() {
         ClassInfo<ConverterFallbackTarget> direct = new ClassInfo<>(ConverterFallbackTarget.class, "converterfallbacktarget");
         direct.setParser(new ClassInfo.Parser<>() {
