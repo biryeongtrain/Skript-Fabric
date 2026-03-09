@@ -9,25 +9,25 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed runtime mismatch in `Function.execute(Object[][])`
-- local behavior previously aborted execution when `executeWithNulls` was disabled and a runtime caller passed a `null` parameter slot directly
-- upstream only aborts that legacy guard for empty arrays; `null` slots still reach the function body unless a default expression fills them first
+- fixed one upstream-backed namespace-fallback mismatch in `DynamicFunctionReference.parseFunction(...)` / `resolveFunction(...)`
+- local behavior previously treated an unresolved `from missing.sk` suffix as a real source hint, resolving a global function while retaining the bogus script name in the string form
+- upstream first validates the script source and only keeps the `from ...` namespace when that script actually resolves; otherwise it falls back to the global function without preserving the invalid suffix
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/Function.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
 
 ## Verification
 
-- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/Function.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Function.java`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks`
+- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- continue upstream diff review for one remaining mergeable mismatch in overload resolution, namespace fallback, or `DefaultFunction`-specific runtime edges
+- continue upstream diff review for one remaining mergeable mismatch in overload resolution or keyed/default execution semantics that stays inside `lang/function`
 
 ## Merge Notes
 
-- low-conflict slice limited to `Function.java`, one focused regression, and this lane file
+- low-conflict slice limited to `DynamicFunctionReference.java`, one focused regression, and this lane file

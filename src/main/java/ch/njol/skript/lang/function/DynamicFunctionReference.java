@@ -180,10 +180,18 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
         if (clean.contains("(") && clean.contains(")")) {
             clean = clean.replaceAll("\\(.*\\).*", "").trim();
         }
-        DynamicFunctionReference<Object> reference = sourceScript == null || sourceScript.isBlank()
+        String resolvedSource = normalizeSourceScript(sourceScript);
+        DynamicFunctionReference<Object> reference = resolvedSource == null
                 ? new DynamicFunctionReference<>(clean)
-                : new DynamicFunctionReference<>(clean, sourceScript, null);
+                : new DynamicFunctionReference<>(clean, resolvedSource, null);
         return reference.valid() ? reference : null;
+    }
+
+    private static @Nullable String normalizeSourceScript(@Nullable String sourceScript) {
+        if (sourceScript == null || sourceScript.isBlank()) {
+            return null;
+        }
+        return Functions.getScriptNamespace(sourceScript) != null ? sourceScript : null;
     }
 
     public static final class Input {

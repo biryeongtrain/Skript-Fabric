@@ -176,6 +176,17 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void parseFunctionDropsMissingSourceSuffixBeforeGlobalFallback() {
+        registerEchoFunction();
+
+        DynamicFunctionReference<?> reference = DynamicFunctionReference.parseFunction("echo() from missing.sk");
+
+        assertNotNull(reference);
+        assertTrue(reference.valid());
+        assertEquals("echo()", reference.toString());
+    }
+
+    @Test
     void dynamicLocalFunctionReferenceRetainsSourceScriptInStringForm() {
         registerLocalEchoFunction("local.sk", "stringifiedLocal");
 
