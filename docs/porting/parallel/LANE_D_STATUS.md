@@ -4,33 +4,25 @@ Last updated: 2026-03-09
 
 ## Scope
 
-- `ch/njol/skript/lang/function` runtime and default-parameter parity only
+- `ch/njol/skript/lang/parser` + `ch/njol/skript/log` shared logging compatibility
 - touched no canonical docs and no files outside lane ownership
 
 ## Latest Slice
 
-- primary diff review did not expose a new mergeable overload/default-parameter mismatch beyond the already-closed slices in this lane
-- fixed one fallback dynamic-reference unload edge in `DynamicFunctionReference(Function<?>)`
-- locally, a resolved local function wrapped directly into `new DynamicFunctionReference<>(function)` dropped the tracked source `Script`, so it stayed valid after script invalidation unlike upstream
-- `DynamicFunctionReference(Function<?>)` now reattaches the registered source script through `Functions.getScript(signature.namespace())`
-- added one narrow regression proving a direct-function local dynamic reference becomes invalid and stops executing after its tracked script is invalidated
-
-## Files Changed
-
-- `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
-- `docs/porting/parallel/LANE_D_STATUS.md`
+- restored upstream-facing parser-owned log handler state through `ParserInstance.getHandlers()` plus new local `HandlerList`
+- `SkriptLogger` now uses the active parser instance handler stack instead of a raw thread-local deque, and now exposes upstream-facing `Verbosity`, node bridge, and tracked logging helpers needed by broader imports
+- added focused regressions for parser-instance handler isolation, parser-bound log routing, verbosity threshold ordering, and node bridge behavior
 
 ## Verification
 
-- upstream reference: compared local constructor-time source-tracking/unload behavior against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`; upstream resolves the source `Script` even for already-resolved function objects, while local only did so for string-resolved references
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
+- upstream reference: compared parser/log API ownership against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/HandlerList.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/Verbosity.java`, and `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/SkriptLogger.java`
+- `./gradlew test --tests ch.njol.skript.log.LogHandlerCompatibilityTest --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- continue upstream diff review for one remaining mergeable primary mismatch in overload selection or default-parameter execution semantics; if none remain, keep narrowing namespace/dynamic-reference unload edges inside `lang/function`
+- continue upstream diff review for more mergeable `lang/function` runtime/default-parameter gaps, or import another self-contained `log` support class if it stays lane-local and verifiable
 
 ## Merge Notes
 
-- low-conflict slice limited to `DynamicFunctionReference.java`, one focused regression in `FunctionCallCompatibilityTest`, and this lane file
+- likely conflict surface is `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`, `src/main/java/ch/njol/skript/log/SkriptLogger.java`, the two new `log` support classes, and the focused parser/log compatibility tests

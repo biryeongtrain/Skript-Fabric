@@ -3,6 +3,7 @@ package ch.njol.skript.lang.parser;
 import ch.njol.skript.config.Config;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.log.HandlerList;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public final class ParserInstance {
     private List<TriggerSection> currentSections = new ArrayList<>();
     private Kleenean hasDelayBefore = Kleenean.FALSE;
     private HintManager hintManager = new HintManager(true);
+    private final HandlerList handlers = new HandlerList();
 
     public static ParserInstance get() {
         return LOCAL.get();
@@ -266,6 +268,10 @@ public final class ParserInstance {
 
     public HintManager getHintManager() {
         return hintManager;
+    }
+
+    public HandlerList getHandlers() {
+        return handlers;
     }
 
     public void setHasDelayBefore(Kleenean hasDelayBefore) {

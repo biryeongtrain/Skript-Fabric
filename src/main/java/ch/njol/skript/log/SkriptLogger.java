@@ -1,20 +1,26 @@
 package ch.njol.skript.log;
 
-import java.util.ArrayDeque;
+import ch.njol.skript.config.Node;
+import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.log.LogHandler.LogResult;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ch.njol.skript.log.LogHandler.LogResult;
 
 public final class SkriptLogger {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("skript-fabric");
-    private static final ThreadLocal<Deque<LogHandler>> LOG_HANDLERS =
-            ThreadLocal.withInitial(ArrayDeque::new);
+    static final Logger LOGGER = LoggerFactory.getLogger("skript-fabric");
+    static final Level SEVERE = Level.SEVERE;
+    static final Level DEBUG = Level.INFO;
+    private static Verbosity verbosity = Verbosity.NORMAL;
+    private static boolean debug;
 
     private SkriptLogger() {
+    }
+
+    private static HandlerList getHandlers() {
+        return ParserInstance.get().getHandlers();
     }
 
     public static RetainingLogHandler startRetainingLog() {
@@ -26,21 +32,26 @@ public final class SkriptLogger {
     }
 
     public static <T extends LogHandler> T startLogHandler(T handler) {
-        LOG_HANDLERS.get().addFirst(handler);
+        getHandlers().add(handler);
         return handler;
     }
 
     static boolean removeHandler(LogHandler handler) {
-        Deque<LogHandler> handlers = LOG_HANDLERS.get();
-        boolean removed = handlers.removeFirstOccurrence(handler);
-        if (handlers.isEmpty()) {
-            LOG_HANDLERS.remove();
+        HandlerList handlers = getHandlers();
+        if (!handlers.contains(handler)) {
+            return false;
         }
-        return removed;
+        if (handler.equals(handlers.remove())) {
+            return true;
+        }
+        while (!handler.equals(handlers.remove())) {
+            // Restore upstream stack removal semantics for out-of-order stops.
+        }
+        return true;
     }
 
     static boolean isStopped(LogHandler handler) {
-        return !LOG_HANDLERS.get().contains(handler);
+        return !getHandlers().contains(handler);
     }
 
     public static void logAll(Collection<LogEntry> entries) {
@@ -51,7 +62,7 @@ public final class SkriptLogger {
         if (entry == null) {
             return;
         }
-        for (LogHandler handler : LOG_HANDLERS.get()) {
+        for (LogHandler handler : getHandlers()) {
             LogResult result = handler.log(entry);
             if (result == LogResult.CACHED || result == LogResult.DO_NOT_LOG) {
                 return;
@@ -66,5 +77,34 @@ public final class SkriptLogger {
         } else {
             LOGGER.debug(message);
         }
+    }
+
+    public static void log(Level level, String message) {
+        log(new LogEntry(level, message));
+    }
+
+    public static void setVerbosity(Verbosity value) {
+        verbosity = value == null ? Verbosity.NORMAL : value;
+        debug = verbosity.compareTo(Verbosity.DEBUG) >= 0;
+    }
+
+    public static boolean log(Verbosity minimum) {
+        return minimum.compareTo(verbosity) <= 0;
+    }
+
+    public static boolean debug() {
+        return debug;
+    }
+
+    public static void setNode(Node node) {
+        ParserInstance.get().setNode(node);
+    }
+
+    public static Node getNode() {
+        return ParserInstance.get().getNode();
+    }
+
+    public static void logTracked(Level level, String message, ErrorQuality quality) {
+        log(new LogEntry(level, quality, message));
     }
 }

@@ -14,6 +14,9 @@ import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.InputSource;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.log.HandlerList;
+import ch.njol.skript.log.RetainingLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.util.Kleenean;
 import java.io.File;
 import java.util.List;
@@ -251,6 +254,34 @@ class ParserInstanceCompatibilityTest {
         parser.setHasDelayBefore(Kleenean.TRUE);
         parser.setCurrentScript(new Script(null, List.of()));
         assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+    }
+
+    @Test
+    void parserInstanceExposesDedicatedHandlerListPerParser() {
+        ParserInstance outer = new ParserInstance();
+        ParserInstance inner = new ParserInstance();
+
+        ParserInstance.withInstance(outer, () -> {
+            try (RetainingLogHandler outerHandler = SkriptLogger.startRetainingLog()) {
+                HandlerList outerList = outer.getHandlers();
+                HandlerList innerList = inner.getHandlers();
+
+                assertTrue(outerList.contains(outerHandler));
+                assertFalse(innerList.contains(outerHandler));
+
+                ParserInstance.withInstance(inner, () -> {
+                    try (RetainingLogHandler innerHandler = SkriptLogger.startRetainingLog()) {
+                        assertTrue(inner.getHandlers().contains(innerHandler));
+                        assertFalse(outer.getHandlers().contains(innerHandler));
+                        return null;
+                    }
+                });
+            }
+            return null;
+        });
+
+        assertFalse(outer.getHandlers().iterator().hasNext());
+        assertFalse(inner.getHandlers().iterator().hasNext());
     }
 
     private static class BaseEvent {

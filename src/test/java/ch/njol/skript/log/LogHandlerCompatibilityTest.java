@@ -3,8 +3,12 @@ package ch.njol.skript.log;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.lang.parser.ParserInstance;
 import java.util.Collection;
 import java.util.logging.Level;
 import org.junit.jupiter.api.Test;
@@ -90,5 +94,61 @@ class LogHandlerCompatibilityTest {
             assertEquals(1, errors.size());
             assertEquals("error", errors.iterator().next().getMessage());
         }
+    }
+
+    @Test
+    void logHandlersFollowParserInstanceBoundariesWhenSwitchingInstances() {
+        ParserInstance outer = new ParserInstance();
+        ParserInstance inner = new ParserInstance();
+
+        ParserInstance.withInstance(outer, () -> {
+            try (RetainingLogHandler outerHandler = SkriptLogger.startRetainingLog()) {
+                SkriptLogger.log(new LogEntry(Level.WARNING, "outer"));
+
+                ParserInstance.withInstance(inner, () -> {
+                    try (RetainingLogHandler innerHandler = SkriptLogger.startRetainingLog()) {
+                        SkriptLogger.log(new LogEntry(Level.SEVERE, "inner"));
+                        assertEquals(1, innerHandler.size());
+                        return null;
+                    }
+                });
+
+                assertEquals(1, outerHandler.size());
+                assertEquals("outer", outerHandler.getLog().iterator().next().getMessage());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void verbosityBridgeMatchesUpstreamThresholdOrdering() {
+        SkriptLogger.setVerbosity(Verbosity.HIGH);
+
+        assertTrue(SkriptLogger.log(Verbosity.NORMAL));
+        assertTrue(SkriptLogger.log(Verbosity.HIGH));
+        assertFalse(SkriptLogger.log(Verbosity.VERY_HIGH));
+        assertFalse(SkriptLogger.debug());
+
+        SkriptLogger.setVerbosity(Verbosity.DEBUG);
+
+        assertTrue(SkriptLogger.log(Verbosity.VERY_HIGH));
+        assertTrue(SkriptLogger.debug());
+    }
+
+    @Test
+    void nodeBridgeUsesCurrentParserInstanceStorage() {
+        ParserInstance parser = new ParserInstance();
+        SectionNode root = new SectionNode("root");
+        SimpleNode child = new SimpleNode("child");
+        root.add(child);
+
+        ParserInstance.withInstance(parser, () -> {
+            SkriptLogger.setNode(root);
+            assertNull(SkriptLogger.getNode());
+
+            SkriptLogger.setNode(child);
+            assertEquals(child, SkriptLogger.getNode());
+            return null;
+        });
     }
 }
