@@ -197,6 +197,18 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void consignKeepsPrimitiveArraysAsSingleArguments() {
+        int[] primitiveArray = new int[]{1, 2, 3};
+
+        Object[][] consigned = FunctionReference.consign(primitiveArray);
+
+        assertEquals(1, consigned.length);
+        assertNotNull(consigned[0]);
+        assertEquals(1, consigned[0].length);
+        assertSame(primitiveArray, consigned[0][0]);
+    }
+
+    @Test
     void functionReferenceTracksValidatedSignatureCalls() {
         EchoFunction function = registerEchoFunction();
 

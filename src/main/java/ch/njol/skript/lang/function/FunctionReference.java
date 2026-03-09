@@ -230,7 +230,7 @@ public class FunctionReference<T> {
             Object argument = arguments[i];
             if (argument == null) {
                 result[i] = null;
-            } else if (argument.getClass().isArray()) {
+            } else if (argument instanceof Object[]) {
                 result[i] = (Object[]) argument;
             } else {
                 result[i] = new Object[]{argument};

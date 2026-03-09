@@ -12,11 +12,14 @@ Last updated: 2026-03-09
 - fixed one upstream-backed function runtime mismatch in `FunctionReference.execute(...)`
 - local behavior tried to revalidate unresolved references through the reload-only `validateFunction(false)` path, so fresh global references with `script == null` returned `null` instead of lazily binding and executing
 - upstream allows those global references to resolve on first execution, so the local path now validates them as first-use calls and binds the function/signature before running
+- fixed one execution long-tail mismatch in `FunctionReference.consign(...)`
+- local behavior treated any Java array as `Object[]`, which throws on primitive arrays during direct function execution helpers; upstream only unwraps `Object[]` and keeps primitive arrays as single scalar arguments
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Verification
 
