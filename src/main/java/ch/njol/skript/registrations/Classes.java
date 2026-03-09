@@ -170,7 +170,16 @@ public final class Classes {
     }
 
     public static String toString(Object value, StringMode mode) {
-        return value == null ? "null" : value.toString();
+        if (value == null) {
+            return "null";
+        }
+        for (ClassInfo<?> info : getSortedClassInfos()) {
+            ClassInfo.Parser<?> parser = info.getParser();
+            if (parser instanceof ch.njol.skript.classes.Parser<?> legacyParser && info.getC().isInstance(value)) {
+                return legacyToString(legacyParser, value, mode);
+            }
+        }
+        return value.toString();
     }
 
     public static String toString(Object[] values, boolean and) {
@@ -178,10 +187,12 @@ public final class Classes {
             return toString((Object) null, StringMode.MESSAGE);
         }
         if (values.length == 1) {
-            return String.valueOf(values[0]);
+            return toString(values[0], StringMode.MESSAGE);
         }
         if (values.length == 2) {
-            return values[0] + (and ? " and " : " or ") + values[1];
+            return toString(values[0], StringMode.MESSAGE)
+                    + (and ? " and " : " or ")
+                    + toString(values[1], StringMode.MESSAGE);
         }
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < values.length; i++) {
@@ -192,9 +203,14 @@ public final class Classes {
                     builder.append(", ");
                 }
             }
-            builder.append(values[i]);
+            builder.append(toString(values[i], StringMode.MESSAGE));
         }
         return builder.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String legacyToString(ch.njol.skript.classes.Parser<?> parser, Object value, StringMode mode) {
+        return ((ch.njol.skript.classes.Parser<Object>) parser).toString(value, mode);
     }
 
     public static @Nullable List<ClassInfo<?>> getPatternInfos(String text) {

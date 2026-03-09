@@ -40,6 +40,20 @@ class LegacyWrapperCompatibilityTest {
     }
 
     @Test
+    void classesToStringUsesLegacyParserFormatting() {
+        LegacyParser parser = new LegacyParser();
+        ClassInfo<LegacyValue> info = new ClassInfo<>(LegacyValue.class, "legacyvalue");
+        info.setParser(parser);
+        Classes.registerClassInfo(info);
+
+        LegacyValue value = new LegacyValue(7);
+
+        assertEquals("legacy 7", Classes.toString(value, StringMode.MESSAGE));
+        assertEquals("debug legacy 7", Classes.toString(value, StringMode.DEBUG));
+        assertEquals("legacy 7 and legacy 8", Classes.toString(new Object[]{value, new LegacyValue(8)}, true));
+    }
+
+    @Test
     void patternedParserExposesCombinedPatternsAndParsesThroughClasses() {
         CompassParser parser = new CompassParser();
         ClassInfo<CompassPoint> info = new ClassInfo<>(CompassPoint.class, "compasspoint");

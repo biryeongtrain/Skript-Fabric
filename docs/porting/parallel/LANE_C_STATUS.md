@@ -30,6 +30,10 @@ Last updated: 2026-03-09
 - compared local `Classes.toString(Object[], boolean)` with upstream `ch/njol/skript/registrations/Classes#toString(Object[], boolean, ...)`
 - mismatch found: upstream returns the null sentinel for empty arrays, while the local bridge returned an empty string
 - applied minimal fix: empty `Object[]` stringification now delegates to `toString(null, StringMode.MESSAGE)`; added a focused compatibility regression
+- compared local `Classes.toString(Object, StringMode)` with upstream `ch/njol/skript/registrations/Classes#toString(Object, StringMode, ...)`
+- mismatch found: upstream routes registered legacy parser types through parser-backed string rendering, while the local bridge always fell back to `Object.toString()` and array joins bypassed parser formatting too
+- reproduced via `LegacyWrapperCompatibilityTest` with a registered legacy `Parser<LegacyValue>` whose message/debug rendering differs from `record` `toString()`
+- applied minimal fix: `Classes.toString(...)` now uses registered legacy parsers for message/debug/variable-name rendering, and `Object[]` joins delegate each element through the same path
 
 ## Files Changed
 
@@ -37,6 +41,7 @@ Last updated: 2026-03-09
 - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/registrations/Classes.java`
 - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
@@ -50,7 +55,10 @@ Last updated: 2026-03-09
 - Repro (before fix): `setVariable("scores::*", null, ...)` left `scores::group` and `scores::group::1` intact instead of deleting the list contents
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.variables.VariablesCompatibilityTest --rerun-tasks`
-- After fix: command above passes; new regression confirms descendant deletion while preserving the direct `scores` value
+- Repro (before fix): `Classes.toString(new LegacyValue(7), StringMode.MESSAGE)` returned `LegacyValue[value=7]` instead of legacy parser output `legacy 7`
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
+- After fix: targeted commands pass; regressions confirm descendant list deletion parity and legacy parser-backed class stringification parity
 
 ## Unresolved Risks
 
