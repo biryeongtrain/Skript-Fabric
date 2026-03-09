@@ -628,7 +628,7 @@ class SkriptParserRegistryTest {
     }
 
     @Test
-    void scriptLoaderLeavesParserNodeAtLoadedSectionRoot() {
+    void scriptLoaderDropsParentlessLoadedSectionRootNode() {
         Skript.registerEffect(NodeAwareEffect.class, "node aware");
 
         ParserInstance parser = ParserInstance.get();
@@ -640,7 +640,7 @@ class SkriptParserRegistryTest {
         ScriptLoader.loadItems(root);
 
         assertEquals("node aware", NodeAwareEffect.lastNodeKey);
-        assertEquals(root, parser.getNode());
+        assertNull(parser.getNode());
     }
 
     @Test
