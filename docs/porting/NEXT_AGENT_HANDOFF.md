@@ -30,17 +30,14 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Variables.setVariable("name::*", null, ...)` now deletes list descendants like upstream while preserving a direct parent value such as `scores`
-- `TypePatternElement.getCombinations(true)` now keeps literal-only placeholders intact but collapses non-literal placeholders to `%*%` in clean pattern combinations
-- `Function.execute(Object[][])` now also rejects direct over-arity calls even for a single plural parameter; plural argument condensing stays in the call path, not in raw `execute(...)`
-- retained parse-failure selection can now keep an earlier semantic parse error over a later lower-quality `NOT_AN_EXPRESSION` statement failure again
-- `ParserInstance.isCurrentEvent(...)` now matches upstream's one-way subtype rule, so superclass parse contexts no longer satisfy subclass-only event queries
+- `Classes.toString(Object[], ...)` now returns the upstream null sentinel for empty arrays instead of `""`
+- parser-scoped `DefaultValueData` now requires an exact type match, so omitted `%integer%` placeholders no longer consume a default registered only for `Number.class`
+- `TriggerItem.walk(...)` now catches runtime exceptions and returns `false`, matching the legacy bridge behavior instead of bubbling the exception
 - targeted regressions added:
-  - [VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java)
-  - [PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java)
-  - [FunctionImplementationCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java)
-  - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
-  - [ParserInstanceCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java)
+  - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
+  - [ParserCompatibilityDataAndStackTest.java](../../src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java)
+  - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
+  - [TriggerItemCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java)
 
 ## Recent Closed Prereqs
 
@@ -83,7 +80,7 @@ Lane files under `docs/porting/parallel/` should stay short:
 Latest targeted verification:
 
 ```bash
-./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.TriggerItemCompatibilityTest --rerun-tasks
 ```
 
 Full verification:
