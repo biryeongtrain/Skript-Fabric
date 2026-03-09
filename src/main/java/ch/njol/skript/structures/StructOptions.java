@@ -156,7 +156,7 @@ public final class StructOptions extends Structure {
                 return false;
             }
             int separator = key.indexOf(':');
-            return separator > 0 && separator < key.length() - 1;
+            return separator > 0;
         }
     }
 

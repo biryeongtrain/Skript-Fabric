@@ -315,6 +315,26 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void optionsStructureAcceptsEmptyOptionValuesLikeUpstream() {
+        StructOptions.register();
+        ParserInstance parser = ParserInstance.get();
+        Script script = new Script(null, java.util.List.of());
+        parser.setCurrentScript(script);
+
+        SectionNode options = section(
+                "options",
+                line("blank:"),
+                section("blocks", line("nested:"))
+        );
+
+        Structure structure = Structure.parse("options", options, null);
+
+        assertTrue(structure instanceof StructOptions);
+        assertTrue(structure.load());
+        assertEquals("send  and ", ScriptLoader.replaceOptions("send {@blank} and {@blocks.nested}"));
+    }
+
+    @Test
     void optionsStructureLogsInvalidNestedSimpleLinesWithoutRejectingValidEntries() {
         StructOptions.register();
         ParserInstance parser = ParserInstance.get();

@@ -23,6 +23,11 @@ Last updated: 2026-03-09
 
 ## Work Log
 
+- compared local `StructOptions.OptionEntryData` with upstream `ch/njol/skript/structures/StructOptions#init` + `SectionNode#convertToEntries`
+- mismatch found: upstream accepts `options:` entries with empty values such as `blank:`, but the local validator rejected those runtime/simple nodes as invalid because `OptionEntryData.canCreateWith(...)` required at least one character after `:`
+- reproduced via `ScriptLoaderCompatibilityTest` with `options: blank:` and nested `blocks: nested:`
+- applied minimal fix: `StructOptions` now accepts any non-empty key with `:` for option entries, matching upstream empty-string option loading
+
 - compared local `Node.setKey(...)` / `SectionNode` lookup maintenance with upstream `ch/njol/skript/config/Node#rename` and `SectionNode#renamed`
 - mismatch found: renaming a mapped child node updated the node key locally but left `SectionNode`'s case-insensitive lookup map stale, so `get(...)` still resolved the old key and missed the new one
 - reproduced via `SectionNodeCompatibilityTest` by renaming an `EntryNode` after `add(...)`
@@ -47,6 +52,8 @@ Last updated: 2026-03-09
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/structures/StructOptions.java`
+- `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/config/Node.java`
 - `src/main/java/ch/njol/skript/config/SectionNode.java`
 - `src/test/java/ch/njol/skript/config/SectionNodeCompatibilityTest.java`
@@ -56,6 +63,8 @@ Last updated: 2026-03-09
 
 ## Exact Counts Changed
 
+- Java source file count changed in `src/main/java/ch/njol/skript/structures`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/ch/njol/skript/config`: `0` added, `2` modified
 - Java test file count changed in `src/test/java/ch/njol/skript/config`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
@@ -64,6 +73,10 @@ Last updated: 2026-03-09
 
 ## Verification
 
+- Repro (before fix): parsing `options:` with `blank:` logged `Invalid line in options` and left `{@blank}` unresolved instead of loading an empty-string option like upstream
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms empty-value options load through the validator path for both top-level and nested entries
 - Repro (before fix): after `node.add(entry); entry.setKey("Beacon");`, `node.get("beacon")` returned `null` and `node.get("marker")` still returned the renamed node
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.config.SectionNodeCompatibilityTest --rerun-tasks`
