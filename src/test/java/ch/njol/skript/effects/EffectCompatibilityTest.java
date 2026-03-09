@@ -4,14 +4,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.LoopSection;
 import ch.njol.skript.lang.Statement;
+import ch.njol.skript.lang.TriggerItem;
+import ch.njol.skript.lang.TriggerSection;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.util.Kleenean;
 import java.lang.reflect.Field;
@@ -128,6 +135,8 @@ final class EffectCompatibilityTest {
                 "make %livingentities% stop shivering",
                 "force %livingentities% to stop shivering"
         );
+        EffContinue.register();
+        EffExit.register();
     }
 
     private static <T> void registerClassInfo(Class<T> type, String codeName) {
@@ -233,6 +242,62 @@ final class EffectCompatibilityTest {
         assertFalse(readBoolean(stop, "start"));
     }
 
+    @Test
+    void continueEffectTargetsOuterLoopAndExitsInnerSections() {
+        ParserInstance parser = ParserInstance.get();
+        List<TriggerSection> previousSections = new ArrayList<>(parser.getCurrentSections());
+        try {
+            TrackingLoopSection outerLoop = new TrackingLoopSection("outer");
+            TrackingSection innerSection = new TrackingSection("inner");
+            TrackingLoopSection innerLoop = new TrackingLoopSection("inner-loop");
+            parser.setCurrentSections(new ArrayList<>(List.of(outerLoop, innerSection, innerLoop)));
+
+            EffContinue effect = parseEffect("continue the 1st loop", EffContinue.class);
+
+            assertEquals(ExecutionIntent.stopSections(3), effect.executionIntent());
+            assertEquals(outerLoop, effect.walk(SkriptEvent.EMPTY));
+            assertEquals(1, innerSection.exitCount);
+            assertEquals(1, innerLoop.exitCount);
+            assertEquals("continue the 1st loop", effect.toString(null, false));
+        } finally {
+            parser.setCurrentSections(previousSections);
+        }
+    }
+
+    @Test
+    void exitEffectStopsNestedLoopAndReturnsOuterNext() {
+        ParserInstance parser = ParserInstance.get();
+        List<TriggerSection> previousSections = new ArrayList<>(parser.getCurrentSections());
+        try {
+            TrackingLoopSection outerLoop = new TrackingLoopSection("outer");
+            TrackingSection innerSection = new TrackingSection("inner");
+            TrackingLoopSection innerLoop = new TrackingLoopSection("inner-loop");
+            MarkerItem afterOuter = new MarkerItem("after-outer");
+            outerLoop.setNext(afterOuter);
+            parser.setCurrentSections(new ArrayList<>(List.of(outerLoop, innerSection, innerLoop)));
+
+            EffExit effect = parseEffect("stop 2 loops", EffExit.class);
+
+            assertEquals(ExecutionIntent.stopSections(2), effect.executionIntent());
+            assertEquals(afterOuter, effect.walk(SkriptEvent.EMPTY));
+            assertEquals(1, outerLoop.exitCount);
+            assertEquals(1, innerSection.exitCount);
+            assertEquals(1, innerLoop.exitCount);
+            assertEquals("stop 2 loops", effect.toString(null, false));
+        } finally {
+            parser.setCurrentSections(previousSections);
+        }
+    }
+
+    @Test
+    void exitEffectStopsTriggerWithoutSections() {
+        EffExit effect = parseEffect("stop trigger", EffExit.class);
+
+        assertInstanceOf(ExecutionIntent.StopTrigger.class, effect.executionIntent());
+        assertNull(effect.walk(SkriptEvent.EMPTY));
+        assertEquals("stop trigger", effect.toString(null, false));
+    }
+
     private <T> T parseEffect(String input, Class<T> type) {
         Statement parsed = Statement.parse(input, "failed");
         assertNotNull(parsed);
@@ -256,6 +321,93 @@ final class EffectCompatibilityTest {
         Field field = owner.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(owner);
+    }
+
+    private static final class TrackingSection extends TriggerSection implements ch.njol.skript.lang.SectionExitHandler {
+
+        private final String label;
+        private int exitCount;
+
+        private TrackingSection(String label) {
+            this.label = label;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return getNext();
+        }
+
+        @Override
+        public void exit(SkriptEvent event) {
+            exitCount++;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return label;
+        }
+    }
+
+    private static final class TrackingLoopSection extends LoopSection {
+
+        private final String label;
+        private int exitCount;
+
+        private TrackingLoopSection(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            return true;
+        }
+
+        @Override
+        public TriggerItem getActualNext() {
+            return getNext();
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return getNext();
+        }
+
+        @Override
+        public void exit(SkriptEvent event) {
+            super.exit(event);
+            exitCount++;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return label;
+        }
+    }
+
+    private static final class MarkerItem extends TriggerItem {
+
+        private final String label;
+
+        private MarkerItem(String label) {
+            this.label = label;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return label;
+        }
     }
 
     public static final class TestPlayerExpression extends SimpleExpression<ServerPlayer> {
