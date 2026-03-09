@@ -1,0 +1,55 @@
+package ch.njol.skript.effects;
+
+import ch.njol.skript.Skript;
+import ch.njol.skript.lang.Effect;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.util.Kleenean;
+import net.minecraft.world.entity.Entity;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
+
+public class EffSilence extends Effect {
+
+    private static boolean registered;
+
+    private Expression<Entity> entities;
+    private boolean silence;
+
+    public static synchronized void register() {
+        if (registered) {
+            return;
+        }
+        Skript.registerEffect(
+                EffSilence.class,
+                "silence %entities%",
+                "unsilence %entities%",
+                "make %entities% silent",
+                "make %entities% not silent"
+        );
+        registered = true;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        if (expressions.length != 1 || !expressions[0].canReturn(Entity.class)) {
+            return false;
+        }
+        entities = (Expression<Entity>) expressions[0];
+        silence = matchedPattern % 2 == 0;
+        return true;
+    }
+
+    @Override
+    protected void execute(SkriptEvent event) {
+        for (Entity entity : entities.getAll(event)) {
+            entity.setSilent(silence);
+        }
+    }
+
+    @Override
+    public String toString(@Nullable SkriptEvent event, boolean debug) {
+        return (silence ? "silence " : "unsilence ") + entities.toString(event, debug);
+    }
+}

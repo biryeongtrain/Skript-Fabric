@@ -10,16 +10,24 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- no batch recorded yet under the new six-lane bundle-closure split
+- landed an entity compatibility bundle plus Fabric-backed event/effect glue that stays inside lane ownership
+- restored `EntityData`, `SimpleEntityData`, `EntityType`, and `EntityDataRegistry`
+- restored `EvtBreeding`, `EvtBucketCatch`, and `EvtDamage`
+- restored `EffFeed`, `EffInvisible`, `EffInvulnerability`, `EffKill`, `EffSilence`, and `EffSprinting`
+- added focused compatibility coverage in `EntityCompatibilityTest`, `EventCompatibilityTest`, and `EffectCompatibilityTest`
 
 ## Verification
 
-- not run yet
+- `./gradlew test --tests ch.njol.skript.entity.EntityCompatibilityTest --tests ch.njol.skript.effects.EffectCompatibilityTest --tests ch.njol.skript.events.EventCompatibilityTest --rerun-tasks`
+  - passed
 
 ## Next Lead
 
-- start with shared support, abstract helpers, and import-enabling runtime glue inside `effects` / `events` / `entity`
+- next importable Lane F bundle is whichever additional `effects` / `events` / `entity` cluster can sit on the existing Fabric runtime without crossing into Lane E expression/condition ownership or non-owned `org/...` edits
 
 ## Merge Notes
 
-- none yet
+- likely conflicts:
+  - `src/main/java/ch/njol/skript/entity/*`
+  - `src/main/java/ch/njol/skript/events/Evt*.java`
+  - `src/main/java/ch/njol/skript/effects/Eff*.java`
