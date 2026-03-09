@@ -568,6 +568,35 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails() {
+        Skript.registerEffect(DefaultQualityRejectingAmbiguousEffect.class, "default-quality statement priority syntax");
+        Skript.registerStatement(NotExpressionRejectingAmbiguousStatement.class, "default-quality statement priority syntax");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("default-quality statement priority syntax")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("default-quality ambiguous effect rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("not-expression ambiguous statement rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition/effect: default-quality statement priority syntax")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsWarnsWhenLaterLineIsUnreachable() {
         registerExecutionIntentStatements();
         ParserInstance parser = ParserInstance.get();
@@ -1342,7 +1371,11 @@ class ScriptLoaderCompatibilityTest {
                 Kleenean isDelayed,
                 ch.njol.skript.lang.SkriptParser.ParseResult parseResult
         ) {
-            Skript.error("lower-quality ambiguous statement rejected");
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.GENERIC,
+                    "lower-quality ambiguous statement rejected"
+            ));
             return false;
         }
 
@@ -1381,6 +1414,29 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "semantic ambiguous effect";
+        }
+    }
+
+    public static final class DefaultQualityRejectingAmbiguousEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            Skript.error("default-quality ambiguous effect rejected");
+            return false;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "default-quality ambiguous effect";
         }
     }
 

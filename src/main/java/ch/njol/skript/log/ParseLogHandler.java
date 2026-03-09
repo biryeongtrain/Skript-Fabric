@@ -38,8 +38,9 @@ public class ParseLogHandler extends LogHandler {
 
     public void printError(@Nullable String defaultError) {
         stop();
-        if (error != null) {
-            SkriptLogger.log(error);
+        LogEntry preferredError = findPreferredError(defaultError);
+        if (preferredError != null) {
+            SkriptLogger.log(preferredError);
             return;
         }
         if (defaultError != null && !defaultError.isBlank()) {
@@ -105,6 +106,29 @@ public class ParseLogHandler extends LogHandler {
         logEntries.clear();
         logEntries.addAll(copy.logEntries);
         error = copy.error;
+    }
+
+    private @Nullable LogEntry findPreferredError(@Nullable String defaultError) {
+        if (error == null) {
+            return null;
+        }
+        if (defaultError == null || defaultError.isBlank() || !defaultError.equals(error.getMessage())) {
+            return error;
+        }
+
+        LogEntry preferred = null;
+        for (LogEntry entry : logEntries) {
+            if (entry.getLevel().intValue() < Level.SEVERE.intValue()) {
+                continue;
+            }
+            if (defaultError.equals(entry.getMessage())) {
+                continue;
+            }
+            if (preferred == null || entry.getQuality().priority() > preferred.getQuality().priority()) {
+                preferred = entry;
+            }
+        }
+        return preferred != null ? preferred : error;
     }
 
     @Override

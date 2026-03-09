@@ -21,6 +21,36 @@ Last updated: 2026-03-09
 
 ## Work Log
 
+### 2026-03-09 Retained Default-Error Suppression Slice
+
+- compared the lane-owned retained-diagnostics flow against upstream `e6ec744` and found one remaining mismatch around generic fallback emission on plain statement parsing:
+  - local `Statement.parse(...)` was passing the generic loader default error into `SkriptParser.parseModern(...)`
+  - when an earlier effect/condition candidate had already logged a stronger specific parse failure, the parser-level fallback could overwrite the retained error path before Lane A's selection logic ran
+  - local `LogEntry(Level, message)` also still defaulted to `GENERIC`, so ordinary `Skript.error(...)` parse failures were weaker than upstream's default semantic parse errors
+- implemented the narrowest lane-owned fix:
+  - `src/main/java/ch/njol/skript/lang/Statement.java`
+    - stopped feeding the generic default loader error into the registered-statement parser path; the outer statement loader now remains the only place that emits that fallback
+  - `src/main/java/ch/njol/skript/log/LogEntry.java`
+    - restored upstream-style semantic default quality for plain severe log entries
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+    - when asked to print a default error, the handler now prefers any retained specific severe error over that same generic fallback text
+- added one focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails`
+  - the harness uses an effect that fails through plain `Skript.error(...)` and a later statement that fails with `ErrorQuality.NOT_AN_EXPRESSION`
+  - assertions prove the loader keeps the earlier specific effect diagnostic and suppresses both the later statement diagnostic and the generic `Can't understand this condition/effect: ...` fallback
+- adjusted the existing lower-quality statement test helper to log an explicit `GENERIC` error so the older retained-priority regression still exercises the intended quality ordering after restoring upstream default severe quality
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/lang/Statement.java`
+  - `src/main/java/ch/njol/skript/log/LogEntry.java`
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails --rerun-tasks`
+    - passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - passed
+
 ### 2026-03-09 Section-Fallback Error Replay Slice
 
 - compared the lane-owned section fallback flow against upstream `ScriptLoader.loadItems(...)` in `/tmp/skript-upstream-e6ec744-2` and found one remaining mismatch on the successful section-to-statement fallback path:

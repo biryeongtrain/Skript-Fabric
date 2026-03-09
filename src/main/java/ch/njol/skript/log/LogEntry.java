@@ -9,7 +9,7 @@ public final class LogEntry {
     private final String message;
 
     public LogEntry(Level level, String message) {
-        this(level, ErrorQuality.GENERIC, message);
+        this(level, ErrorQuality.SEMANTIC_ERROR, message);
     }
 
     public LogEntry(Level level, ErrorQuality quality, String message) {

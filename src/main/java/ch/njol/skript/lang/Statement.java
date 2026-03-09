@@ -160,7 +160,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
                     expression,
                     (Iterator) iterator,
                     ParseContext.DEFAULT,
-                    defaultError
+                    null
             );
             return statement;
         }
@@ -183,7 +183,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
                     expression,
                     (Iterator) wrappedIterator,
                     ParseContext.DEFAULT,
-                    defaultError
+                    null
             );
             if (parsed != null && !sectionContext.claimed()) {
                 Skript.error("The line '" + expression
