@@ -64,6 +64,9 @@ Last updated: 2026-03-09
 - compared local parser-registry `org.skriptlang.skript.util.Priority` ordering with upstream `Priority` / `PriorityImpl`
 - mismatch found: upstream preserves transitive relative ordering like `Priority.after(Priority.before(base)) < base`, while the local integer-backed priority model collapsed that value back to the base priority and let parser-registry insertion order drift
 - applied minimal fix: replaced the collapsed integer priority with the upstream relationship-based implementation so transitive parser-registry ordering compares like upstream again
+- compared local `Variables.withLocalVariables(...)` with upstream `ch/njol/skript/variables/Variables#withLocalVariables`
+- mismatch found: upstream does not special-case `provider == user`, so reusing the same local-variable scope clears that scope after the action, while the local bridge short-circuited and preserved the locals
+- applied minimal fix: removed the same-scope fast path so local-variable handoff now follows upstream's copy-back-and-clear flow even when both events resolve to the same scope
 
 ## Files Changed
 
@@ -78,6 +81,8 @@ Last updated: 2026-03-09
 - `src/main/java/org/skriptlang/skript/util/Priority.java`
 - `src/main/java/org/skriptlang/skript/util/PriorityImpl.java`
 - `src/test/java/org/skriptlang/skript/registration/SyntaxRegistryServiceTest.java`
+- `src/main/java/ch/njol/skript/variables/Variables.java`
+- `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
@@ -91,6 +96,8 @@ Last updated: 2026-03-09
 - Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/org/skriptlang/skript/util`: `1` added, `1` modified
 - Java test file count changed in `src/test/java/org/skriptlang/skript/registration`: `0` added, `1` modified
+- Java source file count changed in `src/main/java/ch/njol/skript/variables`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript/variables`: `0` added, `1` modified
 - real `.sk` fixture count changed: `0`
 
 ## Verification
@@ -131,6 +138,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests org.skriptlang.skript.registration.SyntaxRegistryServiceTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms transitive relative priorities stay ordered before their base parser-registry entries like upstream
+- Repro (before fix): `Variables.withLocalVariables(shared, shared, ...)` preserved `_` locals on the shared event, while upstream's copy-back-and-clear flow removes them after the action
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.variables.VariablesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms same-scope local-variable handoff now clears the shared scope like upstream
 
 ## Unresolved Risks
 
@@ -142,6 +153,8 @@ Last updated: 2026-03-09
   - `src/main/java/ch/njol/skript/lang/ParseContext.java`
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/variables/Variables.java`
+  - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
   - `src/main/java/org/skriptlang/skript/util/Priority.java`
   - `src/test/java/org/skriptlang/skript/registration/SyntaxRegistryServiceTest.java`
   - `docs/porting/parallel/LANE_C_STATUS.md`

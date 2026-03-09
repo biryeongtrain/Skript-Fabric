@@ -120,4 +120,15 @@ class VariablesCompatibilityTest {
         assertNull(Variables.getVariable("scores::group", SkriptEvent.EMPTY, false));
         assertNull(Variables.getVariable("scores::group::1", SkriptEvent.EMPTY, false));
     }
+
+    @Test
+    void withLocalVariablesClearsLocalsWhenProviderAndUserShareTheSameScope() {
+        SkriptEvent shared = new SkriptEvent(new Object(), null, null, null);
+        Variables.setVariable("state", "outer", shared, true);
+
+        Variables.withLocalVariables(shared, shared, () ->
+                Variables.setVariable("state", "inner", shared, true));
+
+        assertNull(Variables.getVariable("state", shared, true));
+    }
 }

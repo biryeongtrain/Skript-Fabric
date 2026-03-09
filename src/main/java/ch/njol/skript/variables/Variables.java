@@ -186,10 +186,6 @@ public final class Variables {
     ) {
         Object sourceKey = eventScopeKey(source);
         Object targetKey = eventScopeKey(target);
-        if (sourceKey.equals(targetKey)) {
-            action.run();
-            return;
-        }
         Map<String, Object> sourceLocals = LOCAL_VARIABLES.get(sourceKey);
         if (sourceLocals == null || sourceLocals.isEmpty()) {
             LOCAL_VARIABLES.remove(targetKey);
