@@ -4,6 +4,12 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
+- compared local `ParseLogHandler.printError(default)` against upstream `e6ec744` and found one remaining retained-diagnostic tie mismatch: when the default fallback was retained first and a later same-quality specific error arrived afterward, the local helper still rescanned the log and replaced the retained best error, while upstream keeps the first highest-quality retained error
+- fixed `src/main/java/ch/njol/skript/log/ParseLogHandler.java` to log the retained best error directly instead of rescanning for a later same-quality specific replacement during `printError(default)`
+- tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java` with `parseLogHandlerKeepsFirstHighestQualityErrorWhenDefaultWasRetainedFirst`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.parseLogHandlerKeepsFirstHighestQualityErrorWhenDefaultWasRetainedFirst --tests ch.njol.skript.ScriptLoaderCompatibilityTest.retainingLogHandlerDefaultFallbackUsesSemanticErrorQuality --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails --rerun-tasks`
+
 - compared `SecIf` against upstream `SecConditional` and found one remaining retained-diagnostic mismatch on explicit single-line conditionals: local `if ...` still parsed its condition with a null default error, so invalid explicit conditions lost the upstream-specific `Can't understand this condition: '...'` message
 - fixed `src/main/java/ch/njol/skript/sections/SecIf.java` to keep the condition-specific default for explicit `if` / `else if` while still suppressing it for implicit conditionals
 - tightened `src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java` with `explicitInvalidIfRetainsSpecificConditionError`
@@ -24,6 +30,7 @@ Last updated: 2026-03-09
 ## Merge Notes
 
 - preserve the upstream-style rule that successful section-to-statement fallback drops the failed section parse log, including warnings
+- `src/main/java/ch/njol/skript/log/ParseLogHandler.java` remains the most likely conflict if another lane touched retained parse-log tie handling
 
 ## Scope
 
@@ -43,6 +50,26 @@ Last updated: 2026-03-09
 - Keep Lane A focused on `ch/njol/skript/log/**` compatibility slices unless the coordinator explicitly reassigns `Statement` / `ScriptLoader`.
 
 ## Work Log
+
+### 2026-03-09 Parse-Log Tie Retention Slice
+
+- compared `src/main/java/ch/njol/skript/log/ParseLogHandler.java` against upstream `e6ec744` in `/tmp/skript-upstream-e6ec744-2`
+- found one remaining retained-diagnostic tie mismatch:
+  - local `printError(@Nullable String defaultError)` rescanned severe log entries after the retained best error had already been chosen
+  - if the default fallback was logged first and a later same-quality specific error appeared, the local helper replaced that retained best error, while upstream keeps the first highest-quality retained error
+- implemented the narrowest lane-owned fix:
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+    - `printError(default)` now logs the retained best error directly and only falls back to the supplied default when no error was retained
+- added one focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `parseLogHandlerKeepsFirstHighestQualityErrorWhenDefaultWasRetainedFirst`
+  - logs a retained default semantic error followed by a later specific semantic error, then proves `printError(default)` still replays the first retained error into the outer handler
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/log/ParseLogHandler.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.parseLogHandlerKeepsFirstHighestQualityErrorWhenDefaultWasRetainedFirst --tests ch.njol.skript.ScriptLoaderCompatibilityTest.retainingLogHandlerDefaultFallbackUsesSemanticErrorQuality --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails --rerun-tasks`
+    - passed
 
 ### 2026-03-09 Explicit If Condition-Diagnostic Slice
 

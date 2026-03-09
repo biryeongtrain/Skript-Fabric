@@ -1007,6 +1007,21 @@ class ScriptLoaderCompatibilityTest {
         }
     }
 
+    @Test
+    void parseLogHandlerKeepsFirstHighestQualityErrorWhenDefaultWasRetainedFirst() {
+        try (RetainingLogHandler outerLog = SkriptLogger.startRetainingLog();
+             ParseLogHandler parseLog = SkriptLogger.startParseLogHandler()) {
+            parseLog.error("default retained error", ErrorQuality.SEMANTIC_ERROR);
+            parseLog.error("later specific retained error", ErrorQuality.SEMANTIC_ERROR);
+
+            parseLog.printError("default retained error");
+
+            LogEntry error = outerLog.getFirstError();
+            assertEquals("default retained error", error == null ? null : error.getMessage());
+            assertEquals(ErrorQuality.SEMANTIC_ERROR, error == null ? null : error.getQuality());
+        }
+    }
+
     private static SectionNode root(Node... children) {
         SectionNode root = new SectionNode("root");
         for (Node child : children) {
