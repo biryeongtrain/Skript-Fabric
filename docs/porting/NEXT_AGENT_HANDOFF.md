@@ -33,9 +33,13 @@ Use local upstream sources only. Do not browse.
 - `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted string literal arguments
 - ordinary keyed function arguments now preserve their keyed metadata across `Parameter.newInstance(...)`
 - keyed plural defaults now keep upstream behavior: single-value defaults zip, multi-value defaults stay unkeyed
+- `DynamicFunctionReference.resolveFunction(...)` now preserves `from local.sk` for local dynamic references
 - omitted placeholder defaults now ignore placeholders on inactive choice branches instead of treating them like omitted active placeholders
+- invalid required omitted-placeholder defaults now retain the upstream-style default-expression parse error instead of failing silently
 - statement fallback now keeps `EffectSection` parsing in statement mode when section-mode init rejects the body
+- `ScriptLoader.loadItems(...)` now leaves `ParserInstance.getNode()` at the loaded section root instead of restoring an unrelated prior node
 - `Classes.toString(...)` now routes legacy parser-backed values through parser stringification instead of raw `Object.toString()`
+- legacy parser-backed debug strings now wrap as `[codename:debug text]`
 - targeted regressions added:
   - [LegacyWrapperCompatibilityTest.java](../../src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java)
   - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
@@ -57,10 +61,10 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default and inactive-choice-placeholder rules
+1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, and invalid-default-diagnostic rules
 2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification and classinfo-cloner slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, and doubled-quote literal cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, and local dynamic-reference namespace cases
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback and parser-node-root retention
 
 ## Parallel Defaults
 

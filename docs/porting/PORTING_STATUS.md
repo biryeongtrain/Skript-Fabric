@@ -149,12 +149,16 @@ Landed slices so far:
   - `Parameter.newInstance(...)` now preserves keyed argument metadata for ordinary keyed parameters instead of re-zipping with numeric fallback keys
   - keyed plural defaults now still follow upstream semantics after that slice: single-value defaults zip to `KeyedValue[]`, while multi-value defaults remain unkeyed
   - `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted function-call literal arguments
+  - `DynamicFunctionReference.resolveFunction(...)` now preserves the source script for local references so stringified local forms still print `from local.sk`
+  - `ScriptLoader.loadItems(...)` now leaves `ParserInstance.getNode()` anchored at the loaded section root after parsing
   - `ScriptLoader.loadItems(...)` now clears stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line, so successful fallback does not replay an error from the failed section path
   - statement fallback now forces `EffectSection` parsing through statement mode when section-mode init rejects the body, preserving upstream effect-section fallback behavior
   - omitted placeholders now consume only exact classinfo defaults instead of broader superclass defaults
   - omitted placeholder default lookup now ignores placeholders on inactive alternation branches instead of forcing defaults or parse failure for expressions that were never selected
+  - invalid required omitted-placeholder defaults now retain the upstream-style default-expression parse error instead of failing silently
   - `Classes.toString(...)` now uses registered legacy parser stringification for scalar and array values instead of falling back straight to raw `Object.toString()`
   - `Classes.clone(...)` now respects registered classinfo cloners instead of returning the original object when no array clone path applies
+  - legacy parser-backed debug stringification now wraps as `[codename:debug text]`
   - retained parse-failure selection now keeps earlier semantic parse errors over later lower-quality `NOT_AN_EXPRESSION` statement failures again
   - `SkriptParser.parseModern(...)` and `parseStatic(...)` now fail the whole pattern when a required placeholder is omitted through an optional branch and no parser or classinfo default exists, instead of constructing a `null` expression path that upstream rejects
   - the current `Statement` / `ScriptLoader` / `Section` corpus was rerun in a separate lane audit and did not surface another mergeable mismatch in the green suite
