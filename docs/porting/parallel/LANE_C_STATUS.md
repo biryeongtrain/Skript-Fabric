@@ -41,6 +41,9 @@ Last updated: 2026-03-09
 - compared local fallback `Classes.toString(Object, StringMode.VARIABLE_NAME)` with upstream `ch/njol/skript/registrations/Classes#toString(Object, StringMode, ...)`
 - mismatch found: upstream prefixes unparsed fallback values as `object:...`, while the local bridge returned raw `Object.toString()`
 - applied minimal fix: variable-name fallback stringification now returns `object:` + value when no registered parser matches
+- compared local `Classes.toString(Object, StringMode)` array handling with upstream `ch/njol/skript/registrations/Classes#toString(Object, StringMode, ...)`
+- mismatch found: upstream formats object-typed arrays as bracketed element strings, while the local bridge fell through to Java array identity text
+- applied minimal fix: `Classes.toString(Object, StringMode)` now detects arrays up front and recursively formats elements like upstream
 
 ## Files Changed
 
@@ -69,6 +72,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms upstream variable-name fallback prefix parity
+- Repro (before fix): `Classes.toString((Object) new Object[]{"alpha", "beta"}, StringMode.MESSAGE)` returned Java array identity text instead of upstream `[alpha, beta]`
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms object-typed arrays use upstream bracketed element stringification
 
 ## Unresolved Risks
 

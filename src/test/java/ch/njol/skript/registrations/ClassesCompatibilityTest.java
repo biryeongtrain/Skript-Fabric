@@ -185,6 +185,13 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void objectTypedArraysUseBracketedElementStringificationLikeUpstream() {
+        Object value = new Object[]{"alpha", "beta"};
+
+        assertEquals("[alpha, beta]", Classes.toString(value, ch.njol.skript.util.StringMode.MESSAGE));
+    }
+
+    @Test
     void parseFallsBackThroughRegisteredConverters() {
         ClassInfo<ParsedType> parsed = new ClassInfo<>(ParsedType.class, "parsed");
         parsed.setParser(new ClassInfo.Parser<>() {

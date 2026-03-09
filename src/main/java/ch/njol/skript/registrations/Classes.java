@@ -173,6 +173,20 @@ public final class Classes {
         if (value == null) {
             return "null";
         }
+        if (value.getClass().isArray()) {
+            int length = Array.getLength(value);
+            if (length == 0) {
+                return "null";
+            }
+            StringBuilder builder = new StringBuilder("[");
+            for (int index = 0; index < length; index++) {
+                if (index > 0) {
+                    builder.append(", ");
+                }
+                builder.append(toString(Array.get(value, index), mode));
+            }
+            return builder.append(']').toString();
+        }
         for (ClassInfo<?> info : getSortedClassInfos()) {
             ClassInfo.Parser<?> parser = info.getParser();
             if (parser instanceof ch.njol.skript.classes.Parser<?> legacyParser && info.getC().isInstance(value)) {
