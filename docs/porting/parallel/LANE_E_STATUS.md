@@ -1,6 +1,6 @@
 # Lane E Status
 
-Last updated: 2026-03-09
+Last updated: 2026-03-10
 
 ## Scope
 
@@ -9,25 +9,27 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- landed the next low-dependency string/value bundle on top of the shared expression helpers
-- restored `ExprJoinSplit`, `ExprIndicesOfValue`, `ExprDefaultValue`, and `CondAlphanumeric`
-- expanded `ExpressionTextCollectionCompatibilityTest` to cover join/split behavior, default-value fallback, string/list position lookup, and keyed index lookup
-- expanded `ConditionBundleCompatibilityTest` to cover positive and negated alphanumeric checks
+- kept the low-dependency string/value bundle intact and moved into the adjacent numeric/chance bundle
+- restored `CondChance` and `ExprRandomNumber`
+- expanded `ConditionBundleCompatibilityTest` to cover percent, unit-interval, and `fails` chance forms with deterministic boundary values
+- expanded `ExpressionTextCollectionCompatibilityTest` to cover single and plural random integers, fixed-bound doubles, and impossible integer-range handling
 
 ## Verification
 
 - `./gradlew test --tests ch.njol.skript.expressions.ExpressionTextCollectionCompatibilityTest --rerun-tasks`
   - passed
-- `./gradlew test --tests ch.njol.skript.expressions.ExpressionTextCollectionCompatibilityTest --tests ch.njol.skript.conditions.ConditionBundleCompatibilityTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.conditions.ConditionBundleCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- next importable Lane E bundle is the remaining low-dependency collection/string/value cluster that still avoids new runtime ownership crossings; `CondContains` still looks worse than adjacent expression imports because it drags aliases/inventory/container surface back into scope
+- next importable Lane E bundle is still the nearby low-dependency expression/condition surface that avoids aliases or inventory/container crossings; `CondContains` still looks worse than adjacent bundles because it pulls that wider surface back into scope
 
 ## Merge Notes
 
 - likely conflicts:
+  - `src/main/java/ch/njol/skript/conditions/CondChance.java`
+  - `src/main/java/ch/njol/skript/expressions/ExprRandomNumber.java`
   - `src/main/java/ch/njol/skript/conditions/CondAlphanumeric.java`
   - `src/main/java/ch/njol/skript/expressions/ExprDefaultValue.java`
   - `src/main/java/ch/njol/skript/expressions/ExprIndicesOfValue.java`

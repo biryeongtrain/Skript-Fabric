@@ -2,6 +2,7 @@ package ch.njol.skript.expressions;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -244,6 +245,51 @@ class ExpressionTextCollectionCompatibilityTest {
         assertTrue(whether.init(new Expression[0], 0, Kleenean.FALSE, parse));
         assertEquals(Boolean.TRUE, whether.getSingle(SkriptEvent.EMPTY));
         assertEquals("whether test condition", whether.toString(SkriptEvent.EMPTY, false));
+    }
+
+    @Test
+    void randomNumberSupportsIntegerDoubleAndAmountEdgeCases() {
+        ExprRandomNumber singleInteger = new ExprRandomNumber();
+        SkriptParser.ParseResult integerParse = parseResult("");
+        integerParse.tags.add("integer");
+        singleInteger.init(new Expression[]{
+                null,
+                new SimpleLiteral<>(5, false),
+                new SimpleLiteral<>(5, false)
+        }, 0, Kleenean.FALSE, integerParse);
+        assertEquals(5L, singleInteger.getSingle(SkriptEvent.EMPTY));
+        assertTrue(singleInteger.isSingle());
+        assertEquals(Long.class, singleInteger.getReturnType());
+
+        ExprRandomNumber multipleIntegers = new ExprRandomNumber();
+        SkriptParser.ParseResult multipleParse = parseResult("");
+        multipleParse.tags.add("integer");
+        multipleIntegers.init(new Expression[]{
+                new SimpleLiteral<>(3, false),
+                new SimpleLiteral<>(1, false),
+                new SimpleLiteral<>(1, false)
+        }, 0, Kleenean.FALSE, multipleParse);
+        assertArrayEquals(new Number[]{1L, 1L, 1L}, multipleIntegers.getArray(SkriptEvent.EMPTY));
+        assertFalse(multipleIntegers.isSingle());
+
+        ExprRandomNumber decimal = new ExprRandomNumber();
+        decimal.init(new Expression[]{
+                null,
+                new SimpleLiteral<>(2.5, false),
+                new SimpleLiteral<>(2.5, false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(2.5D, decimal.getSingle(SkriptEvent.EMPTY));
+        assertEquals(Double.class, decimal.getReturnType());
+
+        ExprRandomNumber impossibleIntegerRange = new ExprRandomNumber();
+        SkriptParser.ParseResult impossibleParse = parseResult("");
+        impossibleParse.tags.add("integer");
+        impossibleIntegerRange.init(new Expression[]{
+                null,
+                new SimpleLiteral<>(0.5, false),
+                new SimpleLiteral<>(0.6, false)
+        }, 0, Kleenean.FALSE, impossibleParse);
+        assertArrayEquals(new Number[0], impossibleIntegerRange.getArray(SkriptEvent.EMPTY));
     }
 
     private static SkriptParser.ParseResult parseResult(String expr) {

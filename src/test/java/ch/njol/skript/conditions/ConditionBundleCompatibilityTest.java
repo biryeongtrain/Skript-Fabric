@@ -101,6 +101,32 @@ class ConditionBundleCompatibilityTest {
         assertTrue(negated.check(SkriptEvent.EMPTY));
     }
 
+    @Test
+    void chanceSupportsPercentPlainUnitAndFailedFormsDeterministically() {
+        CondChance percentAlways = new CondChance();
+        SkriptParser.ParseResult percentParse = parseResult("");
+        percentParse.mark = 1;
+        percentAlways.init(new Expression[]{new SimpleLiteral<>(100, false)}, 0, Kleenean.FALSE, percentParse);
+        assertTrue(percentAlways.check(SkriptEvent.EMPTY));
+        assertEquals("chance of [100]%", percentAlways.toString(SkriptEvent.EMPTY, false));
+
+        CondChance plainAlways = new CondChance();
+        plainAlways.init(new Expression[]{new SimpleLiteral<>(1, false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertTrue(plainAlways.check(SkriptEvent.EMPTY));
+
+        CondChance percentNever = new CondChance();
+        SkriptParser.ParseResult neverParse = parseResult("");
+        neverParse.mark = 1;
+        neverParse.tags.add("fail");
+        percentNever.init(new Expression[]{new SimpleLiteral<>(0, false)}, 0, Kleenean.FALSE, neverParse);
+        assertTrue(percentNever.check(SkriptEvent.EMPTY));
+        assertEquals("chance of [0]% failed", percentNever.toString(SkriptEvent.EMPTY, false));
+
+        CondChance plainNever = new CondChance();
+        plainNever.init(new Expression[]{new SimpleLiteral<>(0, false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertFalse(plainNever.check(SkriptEvent.EMPTY));
+    }
+
     private static SkriptParser.ParseResult parseResult(String expr) {
         SkriptParser.ParseResult result = new SkriptParser.ParseResult();
         result.expr = expr;
