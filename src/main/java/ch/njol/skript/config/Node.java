@@ -2,12 +2,14 @@ package ch.njol.skript.config;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Node {
+public class Node implements NodeNavigator {
 
     private String key;
     private int line = -1;
     private boolean debug;
     private SectionNode parent;
+    private Config config;
+    private String comment = "";
 
     public Node() {
     }
@@ -51,6 +53,23 @@ public class Node {
 
     public void setParent(SectionNode parent) {
         this.parent = parent;
+        this.config = parent == null ? null : parent.getConfig();
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
+    void setConfig(Config config) {
+        this.config = config;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    void setComment(String comment) {
+        this.comment = comment == null ? "" : comment;
     }
 
     public void remove() {
@@ -59,6 +78,14 @@ public class Node {
             return;
         }
         currentParent.remove(this);
+    }
+
+    public Node get(String key) {
+        return null;
+    }
+
+    public Node getCurrentNode() {
+        return this;
     }
 
     public static LineSplit splitLine(String line) {

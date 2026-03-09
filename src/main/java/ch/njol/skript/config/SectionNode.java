@@ -10,6 +10,10 @@ public class SectionNode extends Node implements Iterable<Node> {
     private final List<Node> children = new ArrayList<>();
     private @Nullable NodeMap nodeMap;
 
+    SectionNode(Config config) {
+        setConfig(config);
+    }
+
     public SectionNode() {
     }
 
@@ -34,6 +38,7 @@ public class SectionNode extends Node implements Iterable<Node> {
     public void add(Node node) {
         node.remove();
         node.setParent(this);
+        attachConfig(node, getConfig());
         children.add(node);
         nodeMap().put(node);
     }
@@ -115,8 +120,19 @@ public class SectionNode extends Node implements Iterable<Node> {
             node.setKey(key);
         }
         node.setParent(this);
+        attachConfig(node, getConfig());
         children.set(index, node);
         nodeMap().put(node);
+    }
+
+    private static void attachConfig(Node node, @Nullable Config config) {
+        node.setConfig(config);
+        if (node instanceof SectionNode sectionNode) {
+            for (Node child : sectionNode.children) {
+                child.setParent(sectionNode);
+                attachConfig(child, config);
+            }
+        }
     }
 
     void renamed(Node node, @Nullable String oldKey) {
