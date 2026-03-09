@@ -420,6 +420,17 @@ class ClassesCompatibilityTest {
         assertEquals(new CloneTrackedType(5), original);
     }
 
+    @Test
+    void cloneDoesNotReflectivelyCloneCloneableValuesWithoutClassInfoCloner() {
+        CloneableType original = new CloneableType(5);
+        Classes.registerClassInfo(new ClassInfo<>(CloneableType.class, "cloneabletype"));
+
+        CloneableType clone = Classes.clone(original);
+
+        assertSame(original, clone);
+        assertEquals(0, original.cloneCalls);
+    }
+
     private static final class FooType {
     }
 
@@ -457,6 +468,22 @@ class ClassesCompatibilityTest {
     }
 
     private record CloneTrackedType(int value) {
+    }
+
+    private static final class CloneableType implements Cloneable {
+
+        private final int value;
+        private int cloneCalls;
+
+        private CloneableType(int value) {
+            this.value = value;
+        }
+
+        @Override
+        protected CloneableType clone() {
+            cloneCalls++;
+            return new CloneableType(value + 1);
+        }
     }
 
     private record ParsedType(int value) {

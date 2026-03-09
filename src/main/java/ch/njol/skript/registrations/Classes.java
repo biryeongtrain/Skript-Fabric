@@ -412,12 +412,6 @@ public final class Classes {
         if (cloned != value) {
             return cloned;
         }
-        if (value instanceof Cloneable) {
-            try {
-                return (T) value.getClass().getMethod("clone").invoke(value);
-            } catch (ReflectiveOperationException ignored) {
-            }
-        }
         return value;
     }
 

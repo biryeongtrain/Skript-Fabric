@@ -52,6 +52,9 @@ Last updated: 2026-03-09
 - compared local `Classes.parseSimple(...)` with upstream `ch/njol/skript/registrations/Classes#parseSimple`
 - mismatch found: upstream iterates sorted registered classinfos and therefore prefers the most specific compatible parser first, while the local bridge short-circuited through an exact base-type classinfo before later subtype parsers
 - applied minimal fix: `Classes.parseSimple(...)` now follows sorted classinfo order for registered parsers, so subtype parsers win over broader base-type parsers like upstream
+- compared local `Classes.clone(...)` with upstream `ch/njol/skript/registrations/Classes#clone(Object)`
+- mismatch found: upstream stops after the registered `ClassInfo` cloner and otherwise returns the original value, while the local bridge fell through to reflective `Cloneable#clone()` and could duplicate values that upstream leaves unchanged
+- applied minimal fix: `Classes.clone(...)` now matches upstream by removing the reflective `Cloneable` fallback; added a focused compatibility regression
 
 ## Files Changed
 
@@ -96,6 +99,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms `Classes.parseSimple(...)` prefers the most specific registered compatible parser over an earlier exact base-type parser
+- Repro (before fix): `Classes.clone(...)` invoked a value's reflective `clone()` method even when the registered `ClassInfo` had no cloner, producing a distinct object where upstream returns the original instance
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms `Cloneable` values are not reflectively cloned without an explicit `ClassInfo` cloner
 
 ## Unresolved Risks
 
