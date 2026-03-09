@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - specific parser precedence in `Classes.parseSimple(...)`, explicit-parser binding in `InputSource.parseExpression(...)`, and config-only node skipping in `ScriptLoader.loadItems(...)` all landed through worker merges on 2026-03-09
+  - worker merges on 2026-03-09 aligned `Classes.clone(...)` fallback with upstream, restored raw-input keyword prefilter parity in `SkriptPattern`, made `TriggerItem.walk(...)` rethrow non-`Exception` throwables, and validated skipped loader nodes before dispatch
 
 ## Priority Shift On 2026-03-08
 
@@ -138,6 +138,10 @@ Landed slices so far:
   - retained severe parse-log fallback now uses semantic error quality instead of a generic quality bucket
   - `SkriptParser.parseStatic(...)` now matches legacy `SyntaxElementInfo` patterns with `ALL_FLAGS`, so expression-only placeholders such as `%~integer%` work again through the legacy parse path while placeholder-level masks still control literal versus expression acceptance
   - `Classes.getPatternInfos(...)` now only returns explicitly registered literal-pattern matches, so parser-backed class infos no longer appear as unparsed-literal candidates unless they also declare a literal pattern
+  - `Classes.clone(...)` no longer reflectively clones arbitrary `Cloneable` values without an explicit classinfo cloner
+  - `SkriptPattern` keyword prefiltering now runs on raw input before trim normalization, matching upstream leading/trailing whitespace behavior more closely
+  - `TriggerItem.walk(...)` now rethrows non-`Exception` throwables while keeping `Exception` and `StackOverflowError` compatibility handling
+  - `ScriptLoader.loadItems(...)` now validates skipped non-dispatch nodes before returning, so invalid config-only nodes still log the expected parse error
   - explicit literal-pattern matches returned by `Classes.getPatternInfos(...)` now preserve upstream registration order instead of being re-sorted by class-info specificity/dependency order
   - `Classes.getClassInfo(...)` and `getClassInfoNoError(...)` are case-sensitive again, so registry-backed codename probes now match upstream instead of lowercasing arbitrary input
   - `FunctionRegistry` now prefers exact non-`Object` parameter matches over broader assignable overloads, so a literal `Integer` argument no longer makes an exact overload ambiguous with a wider `Number` branch

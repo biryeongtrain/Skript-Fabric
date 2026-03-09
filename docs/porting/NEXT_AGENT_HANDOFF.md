@@ -29,9 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.parseSimple(...)` now prefers the most specific compatible registered parser in classinfo order instead of short-circuiting through the exact base type first
-- `InputSource.parseExpression(...)` now binds nested parsing to the explicit parser instance instead of leaking through the ambient thread-local parser
-- `ScriptLoader.loadItems(...)` now skips config-only child nodes such as `EntryNode`, matching upstream's `SimpleNode` / `SectionNode` dispatch
+- `Classes.clone(...)` no longer reflectively clones arbitrary `Cloneable` values without an explicit classinfo cloner
+- `SkriptPattern` keyword prefiltering now checks raw input before trim normalization, so leading whitespace still blocks literal keywords while trailing whitespace remains accepted
+- `TriggerItem.walk(...)` now rethrows non-`Exception` throwables instead of silently collapsing them into `false`, while keeping `Exception` and `StackOverflowError` handling intact
+- `ScriptLoader.loadItems(...)` now validates skipped non-dispatch nodes before returning, so invalid `EntryNode` lines still emit upstream-style parse diagnostics
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
@@ -57,7 +58,7 @@ These are already closed. Do not reopen without a new reproducer.
 - keep `Coordinator + 5 workers`
 - worker reasoning default: `medium`
 - use local upstream snapshot only
-- one mismatch per lane
+- one primary mismatch plus one fallback mismatch per lane
 - no web
 - worker docs stay minimal
 
@@ -73,7 +74,7 @@ Lane files under `docs/porting/parallel/` should stay short:
 
 ## Verification
 
-Latest targeted verification:
+Optional targeted verification while narrowing a lane:
 
 ```bash
 ./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
