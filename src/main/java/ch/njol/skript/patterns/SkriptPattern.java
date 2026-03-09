@@ -127,16 +127,23 @@ public final class SkriptPattern {
             }
             return all;
         }
-        Set<Integer> best = null;
+        int bestSize = Integer.MAX_VALUE;
+        LinkedHashSet<Integer> best = new LinkedHashSet<>();
         for (Set<Integer> candidate : candidates) {
             if (!candidate.containsAll(present)) {
                 continue;
             }
-            if (best == null || candidate.size() < best.size()) {
-                best = candidate;
+            if (candidate.size() < bestSize) {
+                bestSize = candidate.size();
+                best.clear();
+                best.addAll(candidate);
+                continue;
+            }
+            if (candidate.size() == bestSize) {
+                best.addAll(candidate);
             }
         }
-        return best == null ? present : best;
+        return best.isEmpty() ? present : best;
     }
 
     public <T extends PatternElement> List<T> getElements(Class<T> type) {

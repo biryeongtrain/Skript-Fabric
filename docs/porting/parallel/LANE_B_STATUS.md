@@ -18,13 +18,13 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: when an entire optional alternation was omitted and no placeholders were matched anywhere, local active-placeholder tracking could require a default for only the first branch instead of all omitted required placeholders.
-- minimal fix: widened the no-present-expression path to keep all omitted branch placeholders active, matching upstream default-resolution behavior for that narrow case.
+- mismatch: when an omitted optional alternation followed an already-matched placeholder, local active-placeholder selection still collapsed to one smallest branch and could skip required defaults from sibling omitted branches.
+- minimal fix: when multiple equally small active-placeholder candidates fit the matched expressions, union them instead of picking the first branch so omitted optional alternations keep every required sibling placeholder active.
 
 ## Regression Added
 
 - `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
-  - validates that omitting an optional alternation still requires defaults for every required placeholder branch
+  - validates that omitting an optional alternation still requires defaults for every required placeholder branch, including when an earlier placeholder already matched
 
 ## Files Changed
 
@@ -42,7 +42,6 @@ Last updated: 2026-03-09
 ## Remaining Risks
 
 - this narrows one omitted-placeholder/default-value edge case only
-- optional alternation cases that still have matched placeholders elsewhere remain on the existing heuristic path
 
 ## Merge Notes
 

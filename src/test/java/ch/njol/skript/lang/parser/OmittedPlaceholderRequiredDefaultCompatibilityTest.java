@@ -128,6 +128,38 @@ class OmittedPlaceholderRequiredDefaultCompatibilityTest {
         }
     }
 
+    @Test
+    void omittedOptionalChoiceStillRequiresAllBranchDefaultsAfterEarlierMatch() {
+        SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
+            NullAcceptingEffect.class,
+            new String[]{"probe %number% [text %string%|count %number%]"},
+            NullAcceptingEffect.class.getName()
+        );
+
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number"));
+        Classes.registerClassInfo(new ClassInfo<>(String.class, "string"));
+
+        DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
+        data.addDefaultValue(String.class, new SimpleLiteral<>("fallback", true));
+        try {
+            Effect parsed = SkriptParser.parseModern(
+                    "probe 1",
+                    List.of(info).iterator(),
+                    ParseContext.DEFAULT,
+                    null
+            );
+
+            assertNull(
+                    parsed,
+                    "omitted optional alternation after an earlier match should still require defaults for each branch placeholder"
+            );
+        } finally {
+            data.removeDefaultValue(String.class);
+            Classes.clearClassInfos();
+        }
+    }
+
     public static final class NullAcceptingEffect extends Effect {
         @Override
         public boolean init(
