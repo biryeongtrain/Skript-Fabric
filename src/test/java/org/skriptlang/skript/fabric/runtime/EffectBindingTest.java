@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
+import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class EffectBindingTest {
 
@@ -59,6 +61,13 @@ final class EffectBindingTest {
     void responsiveFixtureBindsEntityTargetAndPositiveMode() throws Exception {
         EffMakeResponsive effect = loadFirstEffect("skript/gametest/effect/make_responsive_names_entity.sk", EffMakeResponsive.class);
         assertTrue(!readBoolean(effect, "negated"));
+        assertEquals("event-entity", expression(effect, "entities").toString(null, false));
+    }
+
+    @Test
+    void makeChildFixtureBindsEntityTargetAndBabyMode() throws Exception {
+        EffMakeAdultOrBaby effect = loadFirstEffect("skript/gametest/effect/force_event_entity_to_become_child_marks_block.sk", EffMakeAdultOrBaby.class);
+        assertFalse(readBoolean(effect, "adult"));
         assertEquals("event-entity", expression(effect, "entities").toString(null, false));
     }
 

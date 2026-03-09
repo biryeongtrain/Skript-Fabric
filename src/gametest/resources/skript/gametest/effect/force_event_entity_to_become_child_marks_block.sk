@@ -1,0 +1,3 @@
+on use entity:
+    force event-entity to become a child
+    set test block under player event-player to black_wool

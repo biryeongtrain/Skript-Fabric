@@ -21,7 +21,7 @@ public final class EffMakeAdultOrBaby extends Effect {
             return false;
         }
         entities = (Expression<Entity>) expressions[0];
-        adult = matchedPattern == 0 || matchedPattern == 2 || matchedPattern == 3;
+        adult = parseResult.hasTag("adult");
         return true;
     }
 

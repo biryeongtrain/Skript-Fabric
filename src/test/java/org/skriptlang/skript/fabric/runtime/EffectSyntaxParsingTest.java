@@ -57,6 +57,7 @@ final class EffectSyntaxParsingTest {
                 Map.entry("skript/gametest/effect/feed_event_player_by_beefs_marks_block.sk", EffFeed.class),
                 Map.entry("skript/gametest/effect/make_adult_marks_block.sk", EffMakeAdultOrBaby.class),
                 Map.entry("skript/gametest/effect/make_baby_marks_block.sk", EffMakeAdultOrBaby.class),
+                Map.entry("skript/gametest/effect/force_event_entity_to_become_child_marks_block.sk", EffMakeAdultOrBaby.class),
                 Map.entry("skript/gametest/effect/text_display_add_shadow_names_entity.sk", EffTextDisplayDropShadow.class),
                 Map.entry("skript/gametest/effect/text_display_make_see_through_names_entity.sk", EffTextDisplaySeeThroughBlocks.class),
                 Map.entry("skript/gametest/effect/make_responsive_names_entity.sk", EffMakeResponsive.class),

@@ -51,12 +51,8 @@ final class SkriptFabricAdditionalEffects {
         );
         Skript.registerEffect(
                 EffMakeAdultOrBaby.class,
-                "make %entities% adult",
-                "make %entities% (baby|child)",
-                "force %entities% to be adult",
-                "force %entities% to become adult",
-                "force %entities% to be (baby|child)",
-                "force %entities% to become (baby|child)"
+                "make %livingentities% [a[n]] (:adult|baby|child)",
+                "force %livingentities% to be[come] a[n] (:adult|baby|child)"
         );
         Skript.registerEffect(
                 EffBrewingConsume.class,
