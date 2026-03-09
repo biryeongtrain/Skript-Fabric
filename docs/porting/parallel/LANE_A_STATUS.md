@@ -4,6 +4,12 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
+- compared `SecIf` against upstream `SecConditional` and found one remaining retained-diagnostic mismatch on explicit single-line conditionals: local `if ...` still parsed its condition with a null default error, so invalid explicit conditions lost the upstream-specific `Can't understand this condition: '...'` message
+- fixed `src/main/java/ch/njol/skript/sections/SecIf.java` to keep the condition-specific default for explicit `if` / `else if` while still suppressing it for implicit conditionals
+- tightened `src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java` with `explicitInvalidIfRetainsSpecificConditionError`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.sections.SecIfCompatibilityTest.explicitInvalidIfRetainsSpecificConditionError --tests ch.njol.skript.sections.SecIfCompatibilityTest.implicitConditionalRunsAsIfSection --rerun-tasks`
+
 - compared the lane-owned retained-diagnostic ordering against upstream `e6ec744` and found one remaining long-tail mismatch in `Statement.parse(...)`: the registered-statement pass still fed the generic loader fallback into `SkriptParser.parseModern(...)`, which let that parser-level default artificially raise later statement failures over earlier retained effect diagnostics
 - implemented the narrowest fix in `src/main/java/ch/njol/skript/lang/Statement.java` by keeping the registered-statement parse on a null default error so the outer retained-failure selection remains the only source of `Can't understand this condition/effect: ...`
 - tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java` with `loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError`, which proves an earlier generic effect rejection still wins even when a later plain statement also fails and would otherwise pick up the parser fallback
@@ -37,6 +43,27 @@ Last updated: 2026-03-09
 - Keep Lane A focused on `ch/njol/skript/log/**` compatibility slices unless the coordinator explicitly reassigns `Statement` / `ScriptLoader`.
 
 ## Work Log
+
+### 2026-03-09 Explicit If Condition-Diagnostic Slice
+
+- compared `src/main/java/ch/njol/skript/sections/SecIf.java` against upstream `SecConditional` in `/tmp/skript-upstream-e6ec744-2`
+- found one remaining retained-diagnostic mismatch on explicit single-line conditionals:
+  - local `SecIf` passed a null default error into `Condition.parse(...)` for every single-line condition
+  - upstream only suppresses that default for implicit conditionals, so explicit invalid `if ...` lines should still retain `Can't understand this condition: '...'`
+- implemented the narrowest fix:
+  - `src/main/java/ch/njol/skript/sections/SecIf.java`
+    - explicit single-line conditionals now forward the upstream condition-specific default error while implicit conditionals continue using null
+- added one focused regression:
+  - `src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java`
+  - `explicitInvalidIfRetainsSpecificConditionError`
+  - proves an explicit invalid `if` line now logs the retained condition-specific diagnostic
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/sections/SecIf.java`
+  - `src/test/java/ch/njol/skript/sections/SecIfCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.sections.SecIfCompatibilityTest.explicitInvalidIfRetainsSpecificConditionError --tests ch.njol.skript.sections.SecIfCompatibilityTest.implicitConditionalRunsAsIfSection --rerun-tasks`
+    - passed
 
 ### 2026-03-09 Statement Default-Fallback Inflation Slice
 

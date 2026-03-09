@@ -167,7 +167,10 @@ public final class SecIf extends EffectSection {
                     return false;
                 }
                 String conditionText = parseResult.regexes.getFirst().group().trim();
-                Condition parsedCondition = Condition.parse(conditionText, null);
+                Condition parsedCondition = Condition.parse(
+                        conditionText,
+                        implicit ? null : "Can't understand this condition: '" + conditionText + "'"
+                );
                 if (parsedCondition == null) {
                     return false;
                 }

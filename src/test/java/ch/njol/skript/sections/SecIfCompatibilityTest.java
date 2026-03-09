@@ -18,6 +18,12 @@ import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -237,6 +243,22 @@ class SecIfCompatibilityTest {
     }
 
     @Test
+    void explicitInvalidIfRetainsSpecificConditionError() {
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    section("if not a real condition", line("track body"))
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition: 'not a real condition'")
+                    )
+            );
+        }
+    }
+
+    @Test
     void thenWithoutMultilineConditionalIsRejected() {
         List<TriggerItem> items = ScriptLoader.loadItems(root(
                 section("then", line("track body"))
@@ -428,6 +450,38 @@ class SecIfCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "track body";
+        }
+    }
+
+    private static final class TestLogAppender extends AbstractAppender implements AutoCloseable {
+
+        private final List<String> messages = new ArrayList<>();
+        private final Logger logger = (Logger) LogManager.getRootLogger();
+
+        private TestLogAppender() {
+            super("SecIfCompatibilityTest", null, PatternLayout.createDefaultLayout(), false, null);
+        }
+
+        static TestLogAppender attach() {
+            TestLogAppender appender = new TestLogAppender();
+            appender.start();
+            appender.logger.addAppender(appender);
+            return appender;
+        }
+
+        @Override
+        public void append(LogEvent event) {
+            messages.add(event.getMessage().getFormattedMessage());
+        }
+
+        List<String> messages() {
+            return List.copyOf(messages);
+        }
+
+        @Override
+        public void close() {
+            logger.removeAppender((Appender) this);
+            stop();
         }
     }
 }
