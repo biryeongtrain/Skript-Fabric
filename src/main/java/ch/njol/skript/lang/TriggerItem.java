@@ -53,6 +53,8 @@ public abstract class TriggerItem implements Debuggable {
                 ex.printStackTrace();
             }
             return false;
+        } catch (Throwable throwable) {
+            throw throwable;
         }
     }
 
