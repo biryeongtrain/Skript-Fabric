@@ -55,9 +55,13 @@ Last updated: 2026-03-09
 - compared local `Classes.clone(...)` with upstream `ch/njol/skript/registrations/Classes#clone(Object)`
 - mismatch found: upstream stops after the registered `ClassInfo` cloner and otherwise returns the original value, while the local bridge fell through to reflective `Cloneable#clone()` and could duplicate values that upstream leaves unchanged
 - applied minimal fix: `Classes.clone(...)` now matches upstream by removing the reflective `Cloneable` fallback; added a focused compatibility regression
+- compared local `Classes.parse(...)` converter fallback with upstream `ch/njol/skript/registrations/Classes#parse`
+- mismatch found: upstream skips converters flagged `CONVERTER_NO_COMMAND_ARGUMENTS` in `ParseContext.COMMAND` and `ParseContext.PARSE`, while the local bridge still applied those converters in all contexts
+- applied minimal fix: restored upstream parse-context gating for flagged converters and reintroduced the missing compatibility enum values needed to express those contexts
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/lang/ParseContext.java`
 - `src/main/java/ch/njol/skript/structures/StructOptions.java`
 - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/config/Node.java`
@@ -74,6 +78,7 @@ Last updated: 2026-03-09
 - Java source file count changed in `src/main/java/ch/njol/skript/config`: `0` added, `2` modified
 - Java test file count changed in `src/test/java/ch/njol/skript/config`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
+- Java source file count changed in `src/main/java/ch/njol/skript/lang`: `0` added, `1` modified
 - Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
 - real `.sk` fixture count changed: `0`
 
@@ -103,6 +108,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms `Cloneable` values are not reflectively cloned without an explicit `ClassInfo` cloner
+- Repro (before fix): `Classes.parse("flagged-9", ..., ParseContext.COMMAND)` and `ParseContext.PARSE` still converted through a converter flagged `NO_COMMAND_ARGUMENTS`, while upstream rejects that converter outside `DEFAULT`
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms flagged converters still work in `ParseContext.DEFAULT` but are skipped in `COMMAND` and `PARSE`
 
 ## Unresolved Risks
 
@@ -111,6 +120,7 @@ Last updated: 2026-03-09
 ## Merge Notes
 
 - likely conflict surface:
+  - `src/main/java/ch/njol/skript/lang/ParseContext.java`
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
   - `docs/porting/parallel/LANE_C_STATUS.md`

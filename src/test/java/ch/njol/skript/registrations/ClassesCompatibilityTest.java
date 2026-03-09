@@ -23,6 +23,8 @@ import org.skriptlang.skript.lang.converter.Converters;
 
 class ClassesCompatibilityTest {
 
+    private static final int CONVERTER_NO_COMMAND_ARGUMENTS = 8;
+
     @AfterEach
     void cleanupClassInfos() {
         Classes.clearClassInfos();
@@ -218,6 +220,40 @@ class ClassesCompatibilityTest {
         ConvertedType parsedValue = Classes.parse("parsed-42", ConvertedType.class, ParseContext.DEFAULT);
 
         assertEquals(new ConvertedType(42), parsedValue);
+    }
+
+    @Test
+    void parseSkipsNoCommandArgumentConvertersInCommandAndParseContexts() {
+        ClassInfo<FlaggedParsedType> parsed = new ClassInfo<>(FlaggedParsedType.class, "flaggedparsed");
+        parsed.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public FlaggedParsedType parse(String input, ParseContext context) {
+                if (!input.startsWith("flagged-")) {
+                    return null;
+                }
+                try {
+                    return new FlaggedParsedType(Integer.parseInt(input.substring(8)));
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        });
+        Classes.registerClassInfo(parsed);
+        Converters.registerConverter(
+                FlaggedParsedType.class,
+                FlaggedConvertedType.class,
+                value -> new FlaggedConvertedType(value.value()),
+                CONVERTER_NO_COMMAND_ARGUMENTS
+        );
+
+        assertEquals(new FlaggedConvertedType(9), Classes.parse("flagged-9", FlaggedConvertedType.class, ParseContext.DEFAULT));
+        assertNull(Classes.parse("flagged-9", FlaggedConvertedType.class, ParseContext.COMMAND));
+        assertNull(Classes.parse("flagged-9", FlaggedConvertedType.class, ParseContext.PARSE));
     }
 
     @Test
@@ -490,6 +526,12 @@ class ClassesCompatibilityTest {
     }
 
     private record ConvertedType(int value) {
+    }
+
+    private record FlaggedParsedType(int value) {
+    }
+
+    private record FlaggedConvertedType(int value) {
     }
 
     private record ParserSourceType(int value) {

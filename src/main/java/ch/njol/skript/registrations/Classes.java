@@ -25,6 +25,9 @@ import org.skriptlang.skript.lang.properties.Property;
 
 public final class Classes {
 
+    // Upstream gates these converters through Commands.CONVERTER_NO_COMMAND_ARGUMENTS.
+    private static final int CONVERTER_NO_COMMAND_ARGUMENTS = 8;
+
     private static final Map<Class<?>, ClassInfo<?>> REGISTERED_INFOS = new ConcurrentHashMap<>();
     private static final Map<Class<?>, ClassInfo<?>> SUPER_CLASS_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, ClassInfo<?>> INFOS_BY_CODE_NAME = new ConcurrentHashMap<>();
@@ -295,6 +298,10 @@ public final class Classes {
             }
 
             for (ConverterInfo<?, ?> converterInfo : Converters.getConverterInfos()) {
+                if ((context == ParseContext.COMMAND || context == ParseContext.PARSE)
+                        && (converterInfo.getFlags() & CONVERTER_NO_COMMAND_ARGUMENTS) != 0) {
+                    continue;
+                }
                 if (!type.isAssignableFrom(converterInfo.getTo())) {
                     continue;
                 }
