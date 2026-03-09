@@ -444,10 +444,12 @@ class ClassesCompatibilityTest {
     }
 
     @Test
-    void parseSimpleDoesNotUsePrimitiveFallbackWithoutARegisteredParser() {
-        assertNull(Classes.parseSimple("wrapped-value", String.class, ParseContext.DEFAULT));
-        assertNull(Classes.parseSimple("42", Integer.class, ParseContext.DEFAULT));
-        assertNull(Classes.parseSimple("true", Boolean.class, ParseContext.DEFAULT));
+    void parseSimpleFallsBackForBaselineScalarTypesWithoutARegisteredParser() {
+        assertEquals("wrapped-value", Classes.parseSimple("wrapped-value", String.class, ParseContext.DEFAULT));
+        assertEquals(42, Classes.parseSimple("42", Integer.class, ParseContext.DEFAULT));
+        assertEquals(Boolean.TRUE, Classes.parseSimple("true", Boolean.class, ParseContext.DEFAULT));
+        assertEquals(3.5D, Classes.parseSimple("3.5", Double.class, ParseContext.DEFAULT));
+        assertNull(Classes.parseSimple("invalid", Integer.class, ParseContext.DEFAULT));
     }
 
     @Test

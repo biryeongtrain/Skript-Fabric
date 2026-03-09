@@ -24,8 +24,8 @@ Last updated: 2026-03-09
 ## Work Log
 
 - compared local `Classes.parseSimple(...)` with upstream `ch/njol/skript/registrations/Classes#parseSimple`
-- mismatch found: upstream only parses through registered `ClassInfo` parsers, while the local bridge still accepted raw `String`/number/boolean targets through a non-upstream primitive fallback
-- applied minimal fix: removed the primitive fallback from `Classes.parseSimple(...)` and added a focused regression proving unregistered primitive targets now return `null` unless a matching classinfo parser is registered
+- mismatch found: upstream only parses through registered `ClassInfo` parsers, but the current port baseline still lacks the upstream scalar `ClassInfo` registrations from `JavaClasses`, so removing the local `String`/number/boolean fallback broke runtime literal parsing before that registry slice lands
+- applied minimal integration fix: restored the narrow scalar fallback in `Classes.parseSimple(...)` only after registered parsers fail, preserving parser precedence while keeping the current runtime baseline compatible
 
 - compared local `Classes` exact parser lookup surface with upstream `ch/njol/skript/registrations/Classes#getExactParser`
 - mismatch found: upstream exposes `getExactParser(Class<?>)` to retrieve only the parser registered on the exact classinfo, while the local bridge only exposed broader `getParser(...)` lookup that can resolve subtype and converter-backed parsers
@@ -157,10 +157,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms flagged converters still work in `ParseContext.DEFAULT` but are skipped in `COMMAND` and `PARSE`
-- Repro (before fix): a registered `ClassInfo<String>` parser never ran because `Classes.parseSimple(...)` returned the raw input through the primitive fallback before checking classinfos, while upstream gives the registered parser first shot
+- Repro (before fix): removing the old scalar fallback made `Classes.parseSimple("42", Integer.class, ...)` and similar unregistered baseline literals return `null`, because this port still lacks upstream `JavaClasses` registrations for `String`/`Integer`/`Double`/`Boolean`
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
-- After fix: targeted command passes; regression confirms registered primitive-backed parsers override the fallback coercion path like upstream
+- After fix: targeted command passes; regression confirms registered primitive-backed parsers still win first, while baseline scalar literals retain the temporary compatibility fallback until the upstream class registrations are ported
 - Repro (before fix): `Priority.after(Priority.before(base))` compared equal to `base`, so parser-registry entries with transitive "before" priorities could register after the base entry instead of before it
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests org.skriptlang.skript.registration.SyntaxRegistryServiceTest --rerun-tasks`
