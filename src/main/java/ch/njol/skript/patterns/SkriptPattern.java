@@ -120,6 +120,13 @@ public final class SkriptPattern {
         }
 
         List<Set<Integer>> candidates = collectActiveExpressionIndexSets(first);
+        if (present.isEmpty()) {
+            LinkedHashSet<Integer> all = new LinkedHashSet<>();
+            for (Set<Integer> candidate : candidates) {
+                all.addAll(candidate);
+            }
+            return all;
+        }
         Set<Integer> best = null;
         for (Set<Integer> candidate : candidates) {
             if (!candidate.containsAll(present)) {

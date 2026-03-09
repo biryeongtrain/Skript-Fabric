@@ -18,33 +18,33 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: local `SkriptParser` was missing upstream `validatePattern(...)` support entirely, so parser-side validation for user-defined patterns and its specific diagnostics were unavailable.
-- minimal fix: restored `SkriptParser.validatePattern(...)` with upstream-style bracket/regex/placeholder validation and normalized placeholder type output.
+- mismatch: when an entire optional alternation was omitted and no placeholders were matched anywhere, local active-placeholder tracking could require a default for only the first branch instead of all omitted required placeholders.
+- minimal fix: widened the no-present-expression path to keep all omitted branch placeholders active, matching upstream default-resolution behavior for that narrow case.
 
 ## Regression Added
 
-- `ch.njol.skript.lang.parser.SkriptParserPatternValidationCompatibilityTest`
-  - validates known placeholder normalization and upstream-style pipe-outside-group diagnostics
+- `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
+  - validates that omitting an optional alternation still requires defaults for every required placeholder branch
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
-- `src/main/java/ch/njol/util/NonNullPair.java`
-- `src/test/java/ch/njol/skript/lang/parser/SkriptParserPatternValidationCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
+- `src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests 'ch.njol.skript.lang.parser.SkriptParserPatternValidationCompatibilityTest' --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
+  - `./gradlew test --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest`
 - results: passed
 
 ## Remaining Risks
 
-- this slice restores parser-side pattern validation only; it does not change matcher runtime behavior
-- placeholder-flag and timed-placeholder validation remain aligned to the current local parser surface, not the full upstream parser grammar
+- this narrows one omitted-placeholder/default-value edge case only
+- optional alternation cases that still have matched placeholders elsewhere remain on the existing heuristic path
 
 ## Merge Notes
 
-- conflict surface is limited to `SkriptParser`, one small utility type, one parser compatibility test, and this lane file
-- this slice stays in parser validation and does not touch loader flow or omitted-default selection
+- conflict surface is limited to `SkriptPattern`, one parser compatibility test, and this lane file
+- this slice stays within omitted-placeholder/default-value selection and does not touch loader flow
