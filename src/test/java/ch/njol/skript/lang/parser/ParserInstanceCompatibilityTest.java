@@ -89,6 +89,15 @@ class ParserInstanceCompatibilityTest {
         assertNull(trackingData.lastCurrentEvents);
     }
 
+    @Test
+    void isRegisteredTracksParserDataFactories() {
+        assertFalse(ParserInstance.isRegistered(RegistrationProbeData.class));
+
+        ParserInstance.registerData(RegistrationProbeData.class, RegistrationProbeData::new);
+
+        assertTrue(ParserInstance.isRegistered(RegistrationProbeData.class));
+    }
+
     private static class BaseEvent {
     }
 
@@ -119,6 +128,13 @@ class ParserInstanceCompatibilityTest {
         @Override
         public void onCurrentEventsChange(@Nullable Class<?>[] currentEvents) {
             this.lastCurrentEvents = currentEvents;
+        }
+    }
+
+    private static final class RegistrationProbeData extends ParserInstance.Data {
+
+        private RegistrationProbeData(ParserInstance parserInstance) {
+            super(parserInstance);
         }
     }
 }

@@ -60,6 +60,10 @@ public final class ParserInstance {
         DATA_FACTORIES.put(type, factory);
     }
 
+    public static boolean isRegistered(Class<? extends Data> type) {
+        return DATA_FACTORIES.containsKey(type);
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends Data> T getData(Class<T> type) {
         Data value = data.computeIfAbsent(type, key -> {

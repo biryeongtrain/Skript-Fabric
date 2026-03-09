@@ -9,8 +9,8 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed `ParserInstance` bridge mismatch: `setCurrentEvent(...)` and `deleteCurrentEvent()` now notify registered `ParserInstance.Data` listeners via `onCurrentEventsChange(...)`, matching upstream's parser-data event bridge
-- added focused regression coverage proving a registered parser-data listener sees the current event classes when set and receives `null` when the event context is cleared
+- fixed one upstream-backed `ParserInstance` parser-data mismatch: added `isRegistered(...)`, matching the upstream registration guard used by input-source syntax before calling `registerData(...)`
+- added focused regression coverage proving parser-data registration visibility flips from `false` to `true` once a factory is registered
 
 ## Files Changed
 
@@ -21,13 +21,13 @@ Last updated: 2026-03-09
 ## Verification
 
 - `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
-  - confirmed upstream dispatches current-event updates to registered parser data, while the local bridge did not
+  - confirmed upstream exposes `isRegistered(...)` alongside `registerData(...)`, while the local bridge did not
 - `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest`
   - passed
 
 ## Next Lead
 
-- remaining scoped deltas are either broader parser-lifecycle imports or larger trigger/runtime behavior changes outside this lane's narrow owned bridge surface; avoid widening unless a new reproducer stays inside `InputSource`, `ParserInstance`, `ExprInput`, `TriggerItem`, or `TriggerSection`
+- remaining scoped deltas are broader parser-lifecycle imports or larger trigger/runtime behavior changes outside this lane's narrow owned bridge surface; avoid widening unless a new reproducer stays inside `InputSource`, `ParserInstance`, `ExprInput`, `TriggerItem`, or `TriggerSection`
 
 ## Merge Notes
 
