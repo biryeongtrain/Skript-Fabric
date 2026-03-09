@@ -8,5 +8,5 @@ Current headline:
 - Stage 8 package-local audit: `23 / 214`
 - latest verified runtime baseline: `230 / 230` scheduled Fabric GameTests and `./gradlew build --rerun-tasks` passed on 2026-03-10
 - new immediate priority: reduce the raw `ch/njol/skript` shortfall by closing larger upstream package bundles
-- latest closed core slice: latest verified bundle merge landed, moving the raw `ch/njol/skript` snapshot to `314 / 1189`
+- latest closed core slice: latest verified bundle merge landed, moving the raw `ch/njol/skript` snapshot to `323 / 1189`
 - Codex parallel-session runbook: `docs/porting/CODEX_PARALLEL_WORKFLOW.md`

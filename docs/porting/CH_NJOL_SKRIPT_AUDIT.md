@@ -30,11 +30,12 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `314`
-- local shortfall versus the captured upstream snapshot: `875`
+- local `ch/njol/skript`: `323`
+- local shortfall versus the captured upstream snapshot: `866`
 
 Local top-level packages currently present:
 
+- `aliases`
 - `classes`
 - `conditions`
 - `config`
@@ -55,7 +56,6 @@ Local top-level packages currently present:
 
 Upstream top-level packages currently absent locally:
 
-- `aliases`
 - `bukkitutil`
 - `command`
 - `doc`
@@ -68,20 +68,20 @@ Upstream top-level packages currently absent locally:
 
 | Package | Upstream | Local | Status | Priority | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `aliases` | `12` | `0` | absent | `P2` | likely needed after core parser/type closure; do not replace registry-backed parsing with large hardcoded tables |
+| `aliases` | `12` | `3` | partial shim | `P2` | alias foundation is now present through `MatchQuality`, `InvalidMinecraftIdException`, and package scaffolding, but broader item/runtime alias closure is still open |
 | `bukkitutil` | `26` | `0` | absent | `P3` | Bukkit-specific helpers; audit only when a Fabric replacement path is justified |
-| `classes` | `28` | `17` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores legacy parser/converter wrappers plus the new pure-Java class helper registrations/comparators, but the layer is still far thinner than upstream |
+| `classes` | `28` | `19` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores legacy parser/converter wrappers plus pure-Java default operation/function helpers, but the layer is still far thinner than upstream |
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
 | `conditions` | `135` | `8` | partial shim | `P2` | very large missing surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
 | `config` | `20` | `20` | present but behavior-incomplete | `P1` | count parity is now closed, but broader runtime behavior still needs upstream comparison |
 | `doc` | `18` | `0` | absent | `P3` | low runtime value; defer |
-| `effects` | `123` | `12` | partial shim | `P2` | base package now has a slightly wider verified effect surface through the new entity-state helpers, but most user-visible runtime forms are still missing |
+| `effects` | `123` | `14` | partial shim | `P2` | base package now has a slightly wider verified effect surface through the entity-state helpers plus `continue` / `stop` control-flow effects, but most user-visible runtime forms are still missing |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
 | `events` | `53` | `4` | partial shim | `P2` | base package is present through shared scaffolding, but event classes remain largely absent |
-| `expressions` | `391` | `24` | partial shim | `P2` | larger collection, string, and value helpers are now landing, but the remaining user-visible surface is still very large |
+| `expressions` | `391` | `27` | partial shim | `P2` | larger collection, string, value, and text-character helpers are now landing, but the remaining user-visible surface is still very large |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
-| `lang` | `85` | `85` | present but behavior-incomplete | `P0` | file-count parity is now closed; the remaining gap is foundational behavior, not class presence |
-| `literals` | `16` | `14` | partial shim | `P2` | most low-dependency numeric/special literal helpers are present, but the package is still not fully closed |
+| `lang` | `85` | `86` | present but behavior-incomplete | `P0` | local count now exceeds upstream by one because the legacy `ch/njol/skript/lang/function/FunctionParser` compatibility facade is local-only; the remaining gap is still foundational behavior, not raw presence |
+| `literals` | `16` | `15` | partial shim | `P2` | most low-dependency numeric/special literal helpers are present and `LitEternity` is now landed, but the package is still not fully closed |
 | `localization` | `11` | `11` | present but behavior-incomplete | `P2` | count parity is now closed, but the message stack still needs broader runtime comparison |
 | `log` | `17` | `16` | partial shim | `P1` | parse/runtime diagnostics are now backed by a restored legacy handler stack plus redirecting/testing handlers, but the logging layer is still thinner than upstream |
 | `patterns` | `14` | `14` | present but behavior-incomplete | `P1` | foundational parsing dependency; file-count parity is closed, but matcher behavior still matters more than raw presence |
@@ -91,7 +91,7 @@ Upstream top-level packages currently absent locally:
 | `test` | `42` | `0` | absent | `P3` | low shipping-runtime value; use local test harnesses instead |
 | `timings` | `2` | `0` | absent | `P3` | defer |
 | `update` | `10` | `0` | absent | `P3` | defer |
-| `util` | `57` | `23` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables; time/classinfo compatibility helpers are now present, but `Direction` / `StructureType` and many runtime-facing utilities remain |
+| `util` | `57` | `28` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables; time/classinfo/date/chat compatibility helpers are now present, but `Direction` / `StructureType` and many runtime-facing utilities remain |
 | `variables` | `11` | `6` | partial shim | `P1` | current local store plus `HintManager` now cover a first local-variable hint path, `TypeHints` now restores the legacy compatibility bridge, and `SerializedVariable` is present, but runtime behavior is still far from upstream-complete |
 
 ## `lang` Breakdown
@@ -100,10 +100,10 @@ Upstream top-level packages currently absent locally:
 
 Current counts:
 
-- local `lang` total: `85`
+- local `lang` total: `86`
 - upstream `lang` total: `85`
-- local root files: `47`
-- local `function`: `15`
+- local root files: `48`
+- local `function`: `16`
 - local `parser`: `5`
 - local `simplification`: `2`
 - local `util`: `15`

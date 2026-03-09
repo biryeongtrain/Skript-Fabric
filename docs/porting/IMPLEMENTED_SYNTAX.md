@@ -26,11 +26,10 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - `chance of %number%(1:\%|) [fail:(fails|failed)]`
-  - `[a|%-integer%] random (:integer|number)[s] (from|between) %number% (to|and) %number%`
-  - `using [[the] experiment] <.+>`
-  - adjacent conditional section forms: `else`, `else if`, `parse if`, `if any`, `if all`, `then`, and `then run`
-  - panda rolling forms and strider shivering forms
+  - `[an] eternity`, `forever`, and `[an] (indefinite|infinite) (duration|timespan)`
+  - text-character/codepoint forms: `[(all [[of] the]|the)] [:alphanumeric] characters (between|from) %string% (and|to) %string%`, `[unicode|character] code([ ]point| position)`, and `character (from|at|with) code([ ]point| position) %integer%`
+  - control-flow effect forms: `continue [this loop|[the] [current] loop]`, `continue [the] <integer>(st|nd|rd|th) loop`, `(exit|stop) [trigger]`, and loop/section/conditional stop forms
+  - support-surface additions behind the current registered runtime: pure-Java `DefaultOperations` / `DefaultFunctions`, legacy `FunctionParser` facade, local util chat leaf types, widened `Date`, and alias foundation helpers
 
 ## Stage 8 Audit Snapshot
 
@@ -43,10 +42,10 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `314`
+  - local `ch/njol/skript`: `323`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored Java class helper registrations/converters/comparators, widened `Timespan`, added `StructUsing` plus `SecConditional`, added `CondChance` plus `ExprRandomNumber`, and restored panda/strider state effects
+  - latest shortfall-focused closure restored pure-Java default class-data helpers, local util chat/date helpers, alias/literal foundations, the legacy function-signature parser facade, text-character/codepoint expressions, and control-flow effects
 
 Primary registration sources:
 

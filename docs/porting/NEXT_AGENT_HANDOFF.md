@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `314 / 1189`, shortfall `875`
+- upstream `ch/njol/skript` snapshot: local `323 / 1189`, shortfall `866`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,9 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head merges the new Lane A/B/C/E/F follow-up bundles on top of the existing `lang-core` baseline; Lane D was a no-op
+- current verified head merges the new Lane A/B/C/D/E/F follow-up bundles on top of the existing `lang-core` baseline
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest bundle batch restored Java class helper registrations/converters/comparators, widened `Timespan`, added `StructUsing` plus `SecConditional`, added `CondChance` plus `ExprRandomNumber`, and restored `EffPandaRolling` plus `EffStriderShivering`
+- the latest bundle batch restored pure-Java `DefaultOperations` / `DefaultFunctions`, local util chat/date helpers, `LitEternity` plus alias scaffolding, the legacy function-signature parser facade, text character/codepoint expressions, and control-flow `continue` / `stop` effects
 
 ## Recent Closed Prereqs
 
@@ -46,11 +46,11 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. remaining `variables` + `sections` + `aliases` + `literals` closure after the now-verified `StructUsing` / `SecConditional` follow-up, starting from `Direction`, console-sender, and storage-backend blockers
-2. next `effects` + `events` bundle that builds on the widened entity registry and the small panda/screaming effect surface without new `org/...` runtime edits
-3. next `expressions` + `conditions` bundle after the string/value slice
-4. remaining `classes` / `registrations` follow-up after the registry shims, still avoiding `yggdrasil` or Bukkit data imports where possible
-5. remaining `util` / `log` / `lang` blocker imports, especially `Direction` / `StructureType` and the last `log` gap
+1. remaining `variables` + `sections` + `structures` + `aliases` closure after the now-verified `LitEternity` / alias foundation follow-up, starting from storage-backend, `StructFunction`, `Direction`, and console-sender blockers
+2. next `effects` + `events` bundle after the new control-flow effect slice, still avoiding large new `org/...` runtime edits
+3. next `expressions` + `conditions` bundle after the text-character/codepoint slice
+4. remaining `classes` / `registrations` follow-up after the pure-Java default class-data helpers, still avoiding `yggdrasil` or Bukkit data imports where possible
+5. remaining `util` / `lang` blocker imports, especially `Direction` / `StructureType` and the next parser/runtime closure that unblocks `StructFunction`
 
 ## Parallel Defaults
 

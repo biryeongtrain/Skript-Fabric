@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is reducing the raw `ch/njol/skript` shortfall by closing larger upstream package bundles
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is the current verified bundle merge inside `ch/njol/skript`, bringing the raw snapshot to `314 / 1189`
+- latest closed slice is the current verified bundle merge inside `ch/njol/skript`, bringing the raw snapshot to `323 / 1189`
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

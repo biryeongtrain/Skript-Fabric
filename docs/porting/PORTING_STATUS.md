@@ -38,9 +38,9 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged the verified Lane A/B/C/E/F results on 2026-03-10; Lane D was a no-op
-  - the merged batch restored Java class helper registrations/converters/comparators, widened `Timespan`, added `StructUsing` plus `SecConditional`, added `CondChance` plus `ExprRandomNumber`, and restored `EffPandaRolling` plus `EffStriderShivering`
-  - the raw `ch/njol/skript` local snapshot moved to `314 / 1189`, reducing the measured shortfall to `875`
+  - coordinator merged the verified Lane A/B/C/D/E/F results on 2026-03-10
+  - the merged batch restored pure-Java `DefaultOperations` / `DefaultFunctions`, local util chat/date helpers, `LitEternity` plus alias scaffolding, the legacy function-signature parser facade, text character/codepoint expressions, and control-flow `continue` / `stop` effects
+  - the raw `ch/njol/skript` local snapshot moved to `323 / 1189`, reducing the measured shortfall to `866`
 
 ## Priority Shift On 2026-03-08
 
@@ -62,12 +62,11 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `314` Java files
-- net missing local surface relative to that snapshot: `875` Java files
+- local `src/main/java/ch/njol/skript`: `323` Java files
+- net missing local surface relative to that snapshot: `866` Java files
 
 Top-level upstream packages missing locally entirely:
 
-- `aliases`
 - `bukkitutil`
 - `command`
 - `doc`
@@ -78,11 +77,12 @@ Top-level upstream packages missing locally entirely:
 
 Key local package counts versus upstream:
 
-- `lang`: local `85`, upstream `85`
-- `expressions`: local `24`, upstream `391`
+- `aliases`: local `3`, upstream `12`
+- `lang`: local `86`, upstream `85`
+- `expressions`: local `27`, upstream `391`
 - `conditions`: local `8`, upstream `135`
-- `classes`: local `17`, upstream `28`
-- `util`: local `23`, upstream `57`
+- `classes`: local `19`, upstream `28`
+- `util`: local `28`, upstream `57`
 - `variables`: local `6`, upstream `11`
 - `config`: local `20`, upstream `20`
 - `registrations`: local `10`, upstream `10`
@@ -91,8 +91,8 @@ Key local package counts versus upstream:
 - `sections`: local `3`, upstream `10`
 - `structures`: local `6`, upstream `10`
 - `localization`: local `11`, upstream `11`
-- `literals`: local `14`, upstream `16`
-- `effects`: local `12`, upstream `123`
+- `literals`: local `15`, upstream `16`
+- `effects`: local `14`, upstream `123`
 - `events`: local `4`, upstream `53`
 - `entity`: local `37`, upstream `34`
 
