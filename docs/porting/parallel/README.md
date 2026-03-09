@@ -11,6 +11,7 @@ Rules:
 - Keep lane docs short.
 - Keep numbers exact.
 - Record exact commands and exact results.
+- Keep pushing inside the owned bundle; do not stop after a trivial single-class win unless the bundle is blocked or exhausted.
 - Preferred format:
   - `Scope`
   - `Latest Slice`
@@ -25,3 +26,4 @@ Lane files:
 - `LANE_C_STATUS.md`
 - `LANE_D_STATUS.md`
 - `LANE_E_STATUS.md`
+- `LANE_F_STATUS.md`

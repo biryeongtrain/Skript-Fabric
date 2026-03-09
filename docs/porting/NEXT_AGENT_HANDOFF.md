@@ -50,15 +50,18 @@ These are already closed. Do not reopen without a new reproducer.
 2. `config` + `util` + `localization`
 3. `variables` + `sections` + `structures` + `aliases` + `literals`
 4. remaining `lang` + `log` blocker imports
-5. import-enabling scaffolding for `expressions` + `conditions` + `effects` + `events` + `entity`
+5. larger `expressions` + `conditions` bundle closure
+6. larger `effects` + `events` + `entity` bundle closure
 
 ## Parallel Defaults
 
-- keep `Coordinator + 5 workers`
+- keep `Coordinator + 6 workers`
 - worker reasoning default: `medium`
 - use local upstream snapshot only
 - one primary bundle plus one fallback bundle per lane
+- if both still leave owned work open, continue into the next same-scope sub-bundle before stopping
 - allow multiple commits per lane if they stay inside the owned bundle
+- do not stop after the first small win; aim for roughly `15-40` class-equivalent additions/restorations or `2-4` verifiable commits unless the bundle is blocked or exhausted
 - no web
 - worker docs stay minimal
 - lane split for the current phase:
@@ -66,7 +69,8 @@ These are already closed. Do not reopen without a new reproducer.
   - `Lane B`: `config` + `util` + `localization`
   - `Lane C`: `variables` + `sections` + `structures` + `aliases` + `literals`
   - `Lane D`: `lang` + `log`
-  - `Lane E`: `expressions` + `conditions` + `effects` + `events` + `entity`
+  - `Lane E`: `expressions` + `conditions`
+  - `Lane F`: `effects` + `events` + `entity`
 
 ## Lane Status Format
 

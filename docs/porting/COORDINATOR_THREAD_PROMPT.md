@@ -19,7 +19,7 @@ Current coordinator branch:
 
 Main rules:
 - You are a coordinator, not a feature lane. Do not implement feature slices directly unless doing a narrow integration fix or docs update after worker merges.
-- Use 5 workers total.
+- Use 6 workers total.
 - Worker model: gpt-5.4
 - Worker reasoning: medium
 - Use local upstream snapshots only:
@@ -45,42 +45,22 @@ Current lane split:
 - Lane A: classes + registrations + patterns
 - Lane B: config + util + localization
 - Lane C: variables + sections + structures + aliases + literals
-- Lane D: lang + log
-- Lane E: expressions + conditions + effects + events + entity scaffolding
+- Lane D: lang + log + function/parser dependency closure
+- Lane E: expressions + conditions
+- Lane F: effects + events + entity
 
 Worker policy:
 - Assign one primary bundle and one fallback bundle inside each lane's ownership area.
+- If primary and fallback still leave owned work open, continue into the next same-scope sub-bundle before stopping.
 - A lane may land multiple commits in one batch if they stay inside the owned bundle and remain verifiable.
+- Do not stop after the first small win; aim for roughly 15-40 class-equivalent additions/restorations or 2-4 verifiable commits unless the owned bundle is clearly blocked or exhausted.
 - Prioritize missing upstream classes over polish on already-ported syntax.
-- If a lane finds no real bundle-local work in either primary or fallback, end it as a no-op. Do not force a speculative patch.
+- If a lane finds no real bundle-local work after primary, fallback, and one more same-scope sub-bundle, end it as a no-op. Do not force a speculative patch.
 - Workers own code in their lane scopes and only update their own short status file under docs/porting/parallel/.
 
-Active batch to finish first:
-- batch root: /private/tmp/skript-impl-20260309150545
-- base head before batch: 10a018cd7
-
-Live/partial lane state from the previous coordinator:
-- Lane E already landed in coordinator:
-  - worker commit: 9f4155e45
-  - coordinator cherry-pick: 0f8283c0e
-  - subject: fix(parser): restore parser instance lifecycle helpers
-- Lane B already has a worker commit ready but not yet merged:
-  - worktree: /private/tmp/skript-impl-20260309150545/b
-  - commit: 9cae19c62
-  - subject: feat(condition): import sneaking and flying player checks
-- Lane C has local uncommitted changes in:
-  - /private/tmp/skript-impl-20260309150545/c
-  - expected scope: breeding effects and potion-property effect parity
-- Lane D has local uncommitted changes in:
-  - /private/tmp/skript-impl-20260309150545/d
-  - expected scope: exact player-input and fishing event syntax
-- Lane A may be a no-op:
-  - /private/tmp/skript-impl-20260309150545/a
-  - it was narrowing expression work and might finish clean/no-op
-
 What to do first:
-1. Inspect the active batch worktrees under /private/tmp/skript-impl-20260309150545.
-2. Finish each lane to a real commit or a clear no-op. Do not abandon the batch mid-flight.
+1. Start a fresh six-lane batch from the current coordinator head.
+2. Keep each lane running until it reaches a real owned-bundle stopping point, not just a first trivial fix.
 3. Merge ready worker commits into the coordinator branch.
 4. Run ./gradlew build --rerun-tasks in the coordinator worktree.
 5. If green, update only coordinator-owned docs:
@@ -97,11 +77,12 @@ Merge order:
 3. Lane B
 4. Lane C
 5. Lane E
+6. Lane F
 
 Current known status headline:
 - latest verified runtime baseline: 230 / 230
 - latest successful full verification: ./gradlew build --rerun-tasks
-- upstream ch/njol/skript snapshot: local 140 / 1189, shortfall 1049
+- upstream ch/njol/skript snapshot: local 165 / 1189, shortfall 1024
 - current phase: package-bundle closure inside `ch/njol/skript`
 
 Implementation guardrails:

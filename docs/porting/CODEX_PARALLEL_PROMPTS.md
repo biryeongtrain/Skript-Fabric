@@ -13,8 +13,10 @@ Apply these to every lane:
 - do not browse the web
 - work in a package bundle, not one tiny syntax slice
 - use one primary bundle and one fallback bundle inside the lane's ownership
+- if both still leave owned work open, continue into the next same-scope sub-bundle before stopping
 - land as many upstream-backed classes or closures as the lane can verify without leaving its ownership area
-- if both primary and fallback produce no mergeable work, do a short no-op lane update
+- do not stop after the first small win; aim for roughly `15-40` class-equivalent additions/restorations or `2-4` verifiable commits unless the owned bundle is clearly blocked or exhausted
+- if primary, fallback, and one more same-scope sub-bundle produce no mergeable work, do a short no-op lane update
 - update only your lane status file under `docs/porting/parallel/`
 - commit as many times as needed if code lands
 - use conventional-style commit messages without lane prefixes:
@@ -41,7 +43,7 @@ Read:
 5. docs/porting/CODEX_PARALLEL_WORKFLOW.md
 6. docs/porting/CODEX_PARALLEL_PROMPTS.md
 
-Run 5 workers at medium reasoning.
+Run 6 workers at medium reasoning.
 Use local upstream snapshots only.
 Keep Stage 8 frozen at 23 / 214.
 Priority is reducing the raw `ch/njol/skript` shortfall by closing upstream package bundles.
@@ -53,6 +55,7 @@ Worker merge order:
 3. Lane C
 4. Lane D
 5. Lane E
+6. Lane F
 
 Coordinator owns:
 - merge and integration fixes
@@ -194,16 +197,43 @@ Read:
 Scope only:
 - src/main/java/ch/njol/skript/expressions/**
 - src/main/java/ch/njol/skript/conditions/**
+- tightly matching tests
+
+Target:
+- primary bundle: import larger upstream-backed `expressions` class clusters
+- fallback bundle: continue with larger upstream-backed `conditions` class clusters
+- if both are still moving, keep going into the next same-scope sub-bundle before stopping
+- prefer shared bases, abstract helpers, and common runtime glue before leaf syntax classes
+
+Do not edit canonical docs or files owned by other lanes.
+If code lands, add the narrowest matching regressions, record exact commands/results in LANE_E_STATUS.md, and use conventional commits like `feat(expressions): ...` or `feat(conditions): ...`.
+```
+
+## Lane F Prompt
+
+```text
+You are Lane F.
+Worktree: /Users/qf/IdeaProjects/Skript-Fabric-port-lane-f
+
+Read:
+1. docs/porting/README.md
+2. docs/porting/NEXT_AGENT_HANDOFF.md
+3. docs/porting/CH_NJOL_SKRIPT_AUDIT.md
+4. docs/porting/CODEX_PARALLEL_WORKFLOW.md
+5. docs/porting/parallel/LANE_F_STATUS.md
+
+Scope only:
 - src/main/java/ch/njol/skript/effects/**
 - src/main/java/ch/njol/skript/events/**
 - src/main/java/ch/njol/skript/entity/**
 - tightly matching tests
 
 Target:
-- primary bundle: import shared scaffolding and abstract/common support classes across `expressions` / `conditions` / `effects` / `events` / `entity`
-- fallback bundle: continue with another import-enabling class cluster in the same scope
-- do not spend the lane on leaf syntax polish unless it directly unblocks more missing upstream classes
+- primary bundle: import larger upstream-backed `effects` class clusters
+- fallback bundle: continue with larger upstream-backed `events` or `entity` class clusters
+- if both are still moving, keep going into the next same-scope sub-bundle before stopping
+- prefer shared bases, abstract helpers, event scaffolding, and common runtime glue before leaf syntax classes
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest matching regressions, record exact commands/results in LANE_E_STATUS.md, and use conventional commits like `feat(expressions): ...`, `feat(conditions): ...`, `feat(effects): ...`, or `feat(events): ...`.
+If code lands, add the narrowest matching regressions, record exact commands/results in LANE_F_STATUS.md, and use conventional commits like `feat(effects): ...`, `feat(events): ...`, or `feat(entity): ...`.
 ```

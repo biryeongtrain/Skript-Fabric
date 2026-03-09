@@ -6,7 +6,6 @@ Last updated: 2026-03-09
 
 - `src/main/java/ch/njol/skript/expressions/**`
 - `src/main/java/ch/njol/skript/conditions/**`
-- package scaffolding only in owned `effects` / `events` / `entity`
 
 ## Latest Slice
 
@@ -22,7 +21,7 @@ Last updated: 2026-03-09
 
 ## Next Lead
 
-- next importable Lane E bundle is still blocked on missing cross-lane registration/event-value/entity infrastructure; stay on shared surface helpers or package-local scaffolding that does not require new `registrations`, parser, or Bukkit bridge work
+- next importable Lane E bundle is larger `expressions` / `conditions` closure on top of the shared base helpers that already landed; `effects` / `events` / `entity` moved to Lane F
 
 ## Merge Notes
 
