@@ -30,14 +30,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.toString(Object[], ...)` now returns the upstream null sentinel for empty arrays instead of `""`
-- parser-scoped `DefaultValueData` now requires an exact type match, so omitted `%integer%` placeholders no longer consume a default registered only for `Number.class`
-- `TriggerItem.walk(...)` now catches runtime exceptions and returns `false`, matching the legacy bridge behavior instead of bubbling the exception
+- `Function.execute(Object[][])` now preserves an explicit empty argument slot for an optional parameter instead of replacing it with the parameter default
 - targeted regressions added:
-  - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
-  - [ParserCompatibilityDataAndStackTest.java](../../src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java)
-  - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
-  - [TriggerItemCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java)
+  - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
 
 ## Recent Closed Prereqs
 
@@ -80,7 +75,7 @@ Lane files under `docs/porting/parallel/` should stay short:
 Latest targeted verification:
 
 ```bash
-./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.lang.TriggerItemCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks
 ```
 
 Full verification:

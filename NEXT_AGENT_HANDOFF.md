@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is worker-merged `lang-core` closure for empty-array `Classes.toString(...)`, exact parser default type matching, and `TriggerItem.walk(...)` exception handling
+- latest closed slice is worker-merged `lang-core` closure for explicit empty function arguments not being replaced by defaults
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

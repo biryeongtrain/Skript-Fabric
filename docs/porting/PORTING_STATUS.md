@@ -143,6 +143,7 @@ Landed slices so far:
   - parser-scoped `DefaultValueData` now requires an exact type match, so omitted placeholders only consume defaults registered for their exact type instead of broader assignable defaults
   - `ParserInstance.isCurrentEvent(...)` now only accepts current-event subclasses for an expected type, matching upstream's one-way assignability rule
   - `TriggerItem.walk(...)` now catches runtime exceptions and returns `false`, matching the legacy bridge behavior instead of bubbling them out
+  - `Function.execute(Object[][])` now preserves an explicit empty argument slot for an ordinary optional parameter instead of replacing it with that parameter's default, while keeping the keyed-default special case intact
   - retained parse-failure selection now keeps earlier semantic parse errors over later lower-quality `NOT_AN_EXPRESSION` statement failures again
   - `SkriptParser.parseModern(...)` and `parseStatic(...)` now fail the whole pattern when a required placeholder is omitted through an optional branch and no parser or classinfo default exists, instead of constructing a `null` expression path that upstream rejects
   - the current `Statement` / `ScriptLoader` / `Section` corpus was rerun in a separate lane audit and did not surface another mergeable mismatch in the green suite
