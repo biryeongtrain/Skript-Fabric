@@ -2,14 +2,17 @@ package ch.njol.skript.classes;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.lang.util.common.AnyProvider;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.StringMode;
+import java.util.Iterator;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,15 +60,40 @@ class LegacyWrapperCompatibilityTest {
     @Test
     void patternedParserExposesCombinedPatternsAndParsesThroughClasses() {
         CompassParser parser = new CompassParser();
-        ClassInfo<CompassPoint> info = new ClassInfo<>(CompassPoint.class, "compasspoint");
-        info.setParser(parser);
-        Classes.registerClassInfo(info);
+        ClassInfo<CompassPoint> info = new ClassInfo<>(CompassPoint.class, "compasspoint").parser(parser);
+        Classes.registerClass(info);
 
         CompassPoint parsed = Classes.parse("south", CompassPoint.class, ParseContext.DEFAULT);
 
         assertEquals(new CompassPoint("south"), parsed);
         assertArrayEquals(new String[]{"north", "south"}, parser.getPatterns());
         assertEquals("north, south", parser.getCombinedPatterns());
+    }
+
+    @Test
+    void anyInfoAppendsCustomUserPatternsToGeneratedAnyMatcher() {
+        AnyInfo<NamedThing> info = new AnyInfo<>(NamedThing.class, "named");
+        info.user("special named things?");
+
+        assertTrue(info.matchesUserInput("any named thing"));
+        assertTrue(info.matchesUserInput("named objects"));
+        assertTrue(info.matchesUserInput("special named thing"));
+    }
+
+    @Test
+    void classInfoBuilderStoresSupplierAndChangerCompatibilityHooks() {
+        ClassInfo<LegacyValue> info = new ClassInfo<>(LegacyValue.class, "legacyvalue");
+        Changer changer = new Changer() {
+        };
+        info.supplier(() -> List.of(new LegacyValue(1), new LegacyValue(2)).iterator());
+        info.changer(changer);
+
+        Iterator<LegacyValue> values = info.getSupplier().get();
+
+        assertEquals(new LegacyValue(1), values.next());
+        assertEquals(new LegacyValue(2), values.next());
+        assertFalse(values.hasNext());
+        assertSame(changer, info.getChanger());
     }
 
     @Test
@@ -159,6 +187,9 @@ class LegacyWrapperCompatibilityTest {
     }
 
     private record LegacyTarget(String value) {
+    }
+
+    private record NamedThing() implements AnyProvider {
     }
 
     private static final class LegacyParser extends Parser<LegacyValue> {

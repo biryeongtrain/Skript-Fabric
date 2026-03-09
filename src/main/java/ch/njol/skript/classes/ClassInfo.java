@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Iterator;
+import java.util.function.Supplier;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -26,10 +28,12 @@ public class ClassInfo<T> {
     private final Set<String> literalPatterns = new LinkedHashSet<>();
     private final Set<String> after = new LinkedHashSet<>();
     private @Nullable Set<String> before;
-    private @Nullable Pattern[] userInputPatterns;
+    @Nullable Pattern[] userInputPatterns;
     private @Nullable DefaultExpression<T> defaultExpression;
     private @Nullable Parser<T> parser;
     private @Nullable Cloner<T> cloner;
+    private @Nullable Changer changer;
+    private @Nullable Supplier<Iterator<T>> supplier;
 
     public ClassInfo(Class<T> type) {
         this(type, deriveCodeName(type));
@@ -78,6 +82,12 @@ public class ClassInfo<T> {
         return parser;
     }
 
+    @SuppressWarnings("unchecked")
+    public ClassInfo<T> parser(Parser<? extends T> parser) {
+        this.parser = (Parser<T>) parser;
+        return this;
+    }
+
     public ClassInfo<T> cloner(Cloner<T> cloner) {
         this.cloner = cloner;
         return this;
@@ -89,6 +99,28 @@ public class ClassInfo<T> {
 
     public @Nullable DefaultExpression<T> getDefaultExpression() {
         return defaultExpression;
+    }
+
+    public ClassInfo<T> changer(Changer changer) {
+        this.changer = changer;
+        return this;
+    }
+
+    public @Nullable Changer getChanger() {
+        return changer;
+    }
+
+    public ClassInfo<T> supplier(Supplier<Iterator<T>> supplier) {
+        this.supplier = supplier;
+        return this;
+    }
+
+    public ClassInfo<T> supplier(T... values) {
+        return supplier(() -> java.util.Arrays.asList(values).iterator());
+    }
+
+    public @Nullable Supplier<Iterator<T>> getSupplier() {
+        return supplier;
     }
 
     public void setParser(@Nullable Parser<T> parser) {

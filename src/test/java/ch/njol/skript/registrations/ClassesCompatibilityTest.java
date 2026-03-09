@@ -115,6 +115,54 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void defaultClassesExposeRegisteredExactClassInfos() {
+        ClassInfo<Object> object = new ClassInfo<>(Object.class, "object");
+        ClassInfo<Number> number = new ClassInfo<>(Number.class, "number");
+        ClassInfo<Long> longInfo = new ClassInfo<>(Long.class, "long");
+        ClassInfo<Boolean> booleanInfo = new ClassInfo<>(Boolean.class, "boolean");
+        ClassInfo<String> stringInfo = new ClassInfo<>(String.class, "string");
+        ClassInfo<com.mojang.authlib.GameProfile> offlinePlayer = new ClassInfo<>(com.mojang.authlib.GameProfile.class, "offlineplayer");
+        ClassInfo<org.skriptlang.skript.fabric.compat.FabricLocation> location =
+                new ClassInfo<>(org.skriptlang.skript.fabric.compat.FabricLocation.class, "location");
+        ClassInfo<net.minecraft.world.phys.Vec3> vector = new ClassInfo<>(net.minecraft.world.phys.Vec3.class, "vector");
+        ClassInfo<net.minecraft.server.level.ServerPlayer> player =
+                new ClassInfo<>(net.minecraft.server.level.ServerPlayer.class, "player");
+        ClassInfo<net.minecraft.server.level.ServerLevel> world =
+                new ClassInfo<>(net.minecraft.server.level.ServerLevel.class, "world");
+        ClassInfo<ch.njol.skript.util.Color> color = new ClassInfo<>(ch.njol.skript.util.Color.class, "color");
+        ClassInfo<ch.njol.skript.util.Date> date = new ClassInfo<>(ch.njol.skript.util.Date.class, "date");
+        ClassInfo<ch.njol.skript.util.Timespan> timespan = new ClassInfo<>(ch.njol.skript.util.Timespan.class, "timespan");
+
+        Classes.registerClass(object);
+        Classes.registerClass(number);
+        Classes.registerClass(longInfo);
+        Classes.registerClass(booleanInfo);
+        Classes.registerClass(stringInfo);
+        Classes.registerClass(offlinePlayer);
+        Classes.registerClass(location);
+        Classes.registerClass(vector);
+        Classes.registerClass(player);
+        Classes.registerClass(world);
+        Classes.registerClass(color);
+        Classes.registerClass(date);
+        Classes.registerClass(timespan);
+
+        assertSame(object, DefaultClasses.OBJECT);
+        assertSame(number, DefaultClasses.NUMBER);
+        assertSame(longInfo, DefaultClasses.LONG);
+        assertSame(booleanInfo, DefaultClasses.BOOLEAN);
+        assertSame(stringInfo, DefaultClasses.STRING);
+        assertSame(offlinePlayer, DefaultClasses.OFFLINE_PLAYER);
+        assertSame(location, DefaultClasses.LOCATION);
+        assertSame(vector, DefaultClasses.VECTOR);
+        assertSame(player, DefaultClasses.PLAYER);
+        assertSame(world, DefaultClasses.WORLD);
+        assertSame(color, DefaultClasses.COLOR);
+        assertSame(date, DefaultClasses.DATE);
+        assertSame(timespan, DefaultClasses.TIMESPAN);
+    }
+
+    @Test
     void userInputLookupNormalizesWhitespaceAndPlurality() {
         ClassInfo<FooBarType> info = new ClassInfo<>(FooBarType.class, "foobar");
         Classes.registerClassInfo(info);

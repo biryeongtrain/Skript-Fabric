@@ -95,6 +95,10 @@ public final class Classes {
         SORTED_INFOS = List.of();
     }
 
+    public static <T> void registerClass(ClassInfo<T> info) {
+        registerClassInfo(info);
+    }
+
     public static void clearClassInfos() {
         REGISTERED_INFOS.clear();
         SUPER_CLASS_CACHE.clear();
@@ -102,6 +106,10 @@ public final class Classes {
         REGISTERED_LITERAL_PATTERNS.clear();
         REGISTRATION_ORDER.clear();
         SORTED_INFOS = List.of();
+    }
+
+    public static void onRegistrationsStop() {
+        getSortedClassInfos();
     }
 
     public static List<ClassInfo<?>> getClassInfos() {
