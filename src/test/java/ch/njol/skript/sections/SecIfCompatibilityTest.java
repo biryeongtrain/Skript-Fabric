@@ -456,14 +456,16 @@ class SecIfCompatibilityTest {
     private static final class TestLogAppender extends AbstractAppender implements AutoCloseable {
 
         private final List<String> messages = new ArrayList<>();
-        private final Logger logger = (Logger) LogManager.getRootLogger();
+        private final Logger logger;
 
-        private TestLogAppender() {
+        private TestLogAppender(Logger logger) {
             super("SecIfCompatibilityTest", null, PatternLayout.createDefaultLayout(), false, null);
+            this.logger = logger;
         }
 
         static TestLogAppender attach() {
-            TestLogAppender appender = new TestLogAppender();
+            Logger logger = (Logger) LogManager.getLogger("skript-fabric");
+            TestLogAppender appender = new TestLogAppender(logger);
             appender.start();
             appender.logger.addAppender(appender);
             return appender;
