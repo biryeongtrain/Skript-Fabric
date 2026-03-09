@@ -59,6 +59,20 @@ public final class Classes {
         return info;
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> List<ClassInfo<? super T>> getAllSuperClassInfos(Class<T> type) {
+        if (type == null) {
+            return List.of();
+        }
+        List<ClassInfo<? super T>> matches = new ArrayList<>();
+        for (ClassInfo<?> info : getSortedClassInfos()) {
+            if (info.getC().isAssignableFrom(type)) {
+                matches.add((ClassInfo<? super T>) info);
+            }
+        }
+        return List.copyOf(matches);
+    }
+
     public static void registerClassInfo(ClassInfo<?> info) {
         ClassInfo<?> existingByClass = REGISTERED_INFOS.putIfAbsent(info.getC(), info);
         if (existingByClass != null) {

@@ -147,6 +147,16 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void allSuperClassInfosFollowUpstreamSpecificityOrder() {
+        ClassInfo<ParentType> parent = new ClassInfo<>(ParentType.class, "parent");
+        ClassInfo<ChildType> child = new ClassInfo<>(ChildType.class, "child");
+        Classes.registerClassInfo(parent);
+        Classes.registerClassInfo(child);
+
+        assertEquals(List.of(child, parent), Classes.getAllSuperClassInfos(GrandChildType.class));
+    }
+
+    @Test
     void classInfoOrderHonorsBeforeAndAfterDependencies() {
         ClassInfo<BetaType> beta = new ClassInfo<>(BetaType.class, "beta").after("gamma");
         ClassInfo<AlphaType> alpha = new ClassInfo<>(AlphaType.class, "alpha").before("beta");

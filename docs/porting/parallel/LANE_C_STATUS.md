@@ -23,6 +23,10 @@ Last updated: 2026-03-09
 
 ## Work Log
 
+- compared local `Classes` API surface with upstream `ch/njol/skript/registrations/Classes#getAllSuperClassInfos`
+- mismatch found: upstream exposes `getAllSuperClassInfos(Class<?>)` to return every registered assignable classinfo in specificity order, but the local bridge only exposed the single best `getSuperClassInfo(...)` lookup
+- applied minimal fix: added `Classes.getAllSuperClassInfos(...)` with upstream-compatible ordered results and a focused compatibility regression
+
 - compared local `StructOptions.OptionEntryData` with upstream `ch/njol/skript/structures/StructOptions#init` + `SectionNode#convertToEntries`
 - mismatch found: upstream accepts `options:` entries with empty values such as `blank:`, but the local validator rejected those runtime/simple nodes as invalid because `OptionEntryData.canCreateWith(...)` required at least one character after `:`
 - reproduced via `ScriptLoaderCompatibilityTest` with `options: blank:` and nested `blocks: nested:`
@@ -114,6 +118,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms upstream variable-name fallback prefix parity
+- Repro (before fix): local `Classes` exposed only `getSuperClassInfo(...)`, so callers could not retrieve the full upstream-ordered assignable classinfo list for a subtype such as `GrandChildType`
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms `getAllSuperClassInfos(...)` returns `[child, parent]` for `GrandChildType` like upstream
 - Repro (before fix): `Classes.toString((Object) new Object[]{"alpha", "beta"}, StringMode.MESSAGE)` returned Java array identity text instead of upstream `[alpha, beta]`
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
