@@ -11,18 +11,13 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
-- landed `feat(config): restore validator compatibility helpers`
-- `Config` now restores upstream-style reflective loading for nested `OptionSection` trees, and the local tree now includes `config.validate.{NodeValidator,EntryValidator,ParsedEntryValidator,EnumEntryValidator,SectionValidator}` with focused compatibility coverage
-- landed `feat(localization): restore message compatibility stack`
-- local `localization` now restores `Language`, `LanguageChangeListener`, `Message`, `Noun`, `Adjective`, `ArgsMessage`, `FormattedMessage`, `RegexMessage`, `GeneralWords`, and `PluralizingArgsMessage`, with fallback util support from `ExceptionUtils` and `FileUtils`
-- landed `feat(util): restore time and classinfo compatibility helpers`
-- local `util` now also restores upstream-backed `Time`, `Timeperiod`, `Experience`, `GameruleValue`, and `ClassInfoReference`, adapted to the local tree where the upstream `YggdrasilSerializable` marker is absent
-- added focused compatibility coverage for time parsing/formatting, wrapping time periods, experience/gamerule wrappers, and `ClassInfoReference.wrap(...)` plural-context preservation
-- landed `feat(util): widen timespan compatibility support`
-- `Timespan` now restores local parsing and formatting helpers for natural-language durations, command short forms, clock forms, `fromDuration(...)`, arithmetic helpers, `TemporalAmount` accessors, and `Timespan.infinite()` / localized `forever` handling without adding new lane-external dependencies
-- added focused `TimespanCompatibilityTest` coverage for infinity, localized formatting, arithmetic, temporal conversion, and parsing of natural, short, and clock forms
-- the remaining `Direction` import is still open for Lane B, but it was not landed in this batch because the upstream class is a much wider Bukkit-facing util/parser bridge that needs a larger adapted import than this single util-focused slice
-- fallback follow-up around `Task` / `AsyncEffect` is blocked on missing current-branch surfaces outside Lane B scope: local `ScriptLoader` has no upstream-style executor hook, and there is no local `ch.njol.skript.effects.Delay` or `ch.njol.skript.timings.SkriptTimings`
+- attempted a primary adapted `Direction` / `WeatherType` / `AABB` util import bundle first, but reverted it after a hard branch-local compile blocker: this worktree has no `org.bukkit.*` compile classpath at all, so even trimmed upstream Bukkit util classes cannot land here yet
+- landed `feat(util): restore local chat support leaf types`
+- local `util` now includes upstream-backed `chat.LinkParseMode`, `chat.ChatCode`, `chat.MessageComponent`, `chat.SkriptChatCode`, and `chat.package-info`, adapted to this Fabric branch by storing color metadata as plain strings instead of Bungee chat types
+- added focused `ChatSupportCompatibilityTest` coverage for color/formatting flags, click and hover payloads, metadata helpers, `MessageComponent.copy()`, and the nullable boolean serializer shape
+- landed `feat(util): widen date compatibility helpers`
+- `Date` now restores upstream-style `now()`, `fromJavaDate(...)`, timezone construction, mutable `add(...)` / `subtract(...)`, non-mutating `plus(...)` / `minus(...)`, `difference(...)`, `getTime()` / `setTime(...)`, and the deprecated `getTimestamp()` bridge while keeping the local ISO-style string formatting
+- added focused `DateCompatibilityTest` coverage for Java-date conversion, timezone offset construction, mutating arithmetic, immutable arithmetic, and difference helpers
 
 ## Verification
 
@@ -32,12 +27,16 @@ Last updated: 2026-03-10
 - result: failed at `:compileJava` because upstream `YggdrasilSerializable` is not present locally and `org.bukkit.*` / `TreeType` are not on this branch's compile classpath
 - `./gradlew test --tests ch.njol.skript.util.TimeCompatibilityTest --tests ch.njol.skript.util.ClassInfoReferenceCompatibilityTest --tests ch.njol.skript.util.UtilScaffoldingCompatibilityTest --tests ch.njol.skript.util.EnumUtilsCompatibilityTest --tests ch.njol.skript.util.VersionCompatibilityTest --rerun-tasks` passed
 - `./gradlew test --tests ch.njol.skript.util.TimeCompatibilityTest --tests ch.njol.skript.util.TimespanCompatibilityTest --rerun-tasks` passed
+- attempted `./gradlew test --tests ch.njol.skript.util.DirectionCompatibilityTest --tests ch.njol.skript.util.WeatherTypeCompatibilityTest --tests ch.njol.skript.util.AABBCompatibilityTest --rerun-tasks`
+- result: failed at `:compileJava` because this branch currently has no `org.bukkit.*` classes on the compile classpath, so the primary adapted util bundle was reverted instead of partially landed
+- `./gradlew test --tests ch.njol.skript.util.chat.ChatSupportCompatibilityTest --rerun-tasks` passed
+- `./gradlew test --tests ch.njol.skript.util.chat.ChatSupportCompatibilityTest --tests ch.njol.skript.util.DateCompatibilityTest --rerun-tasks` passed
 
 ## Next Lead
 
-- next highest-value Lane B follow-up is still `Direction`, but that import now needs a deliberate adapted port plan rather than a small helper drop-in; otherwise continue with any remaining fully local config/localization/util helpers that do not require missing `Delay` / `SkriptTimings` / `ScriptLoader` executor surfaces
+- next highest-value Lane B follow-up is still `Direction`, but it is now confirmed blocked on the current branch until either a Bukkit-compat utility layer exists locally or the util import is rewritten around non-Bukkit abstractions; until then prefer more fully local `util/**` leaf bundles and deeper `Date` / `localization` / `config` behavior closure that does not pull `org.bukkit.*`, `Delay`, `SkriptTimings`, or `ScriptLoader` executor hooks
 
 ## Merge Notes
 
 - likely conflict surface: `src/main/java/ch/njol/skript/config/Config.java`, `src/main/java/ch/njol/skript/localization/Message.java`, `src/main/java/ch/njol/skript/localization/Noun.java`
-- new conflicts from this slice should stay isolated to `src/main/java/ch/njol/skript/util/Timespan.java` and `src/test/java/ch/njol/skript/util/TimespanCompatibilityTest.java`
+- new conflicts from this slice should stay isolated to `src/main/java/ch/njol/skript/util/Date.java`, `src/main/java/ch/njol/skript/util/chat/**`, `src/test/java/ch/njol/skript/util/DateCompatibilityTest.java`, and `src/test/java/ch/njol/skript/util/chat/ChatSupportCompatibilityTest.java`
