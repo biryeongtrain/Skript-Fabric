@@ -560,7 +560,7 @@ public class SkriptParser {
             return defaultExpression;
         }
 
-        return Classes.getSuperClassInfo(returnType).getDefaultExpression();
+        return Classes.getDefaultExpression(returnType);
     }
 
     private static String normalizeWhitespace(String value) {

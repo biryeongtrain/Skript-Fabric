@@ -18,35 +18,32 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: parser-scoped omitted-placeholder defaults were resolved through compatible supertype entries in `DefaultValueData`, so a `%integer%` omission could incorrectly consume a `Number.class` parser default. Upstream only uses exact parser-default type matches here.
-- minimal fix in parser data: `DefaultValueData.getDefaultValue(...)` now returns exact-type parser defaults only, so omitted required placeholders no longer succeed through supertype parser defaults.
+- mismatch: omitted required placeholders still resolved class-info defaults through `Classes.getSuperClassInfo(...)`, so `%integer%` could incorrectly consume a `Number.class` default expression. Upstream only uses the placeholder's exact class-info default here.
+- minimal fix in parser default lookup: `SkriptParser.getDefaultValue(...)` now falls back through `Classes.getDefaultExpression(returnType)` instead of superclass class-info lookup, so omitted required placeholders no longer succeed through compatible class-info defaults.
 
 ## Regression Added
 
-- `ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest`
-  - exact-type lookup now asserts `Integer.class` does not inherit `Number.class` or `Object.class` parser defaults
 - `ch.njol.skript.lang.SkriptParserRegistryTest`
-  - omitted `%integer%` no longer consumes a parser default registered only for `Number.class`
+  - omitted `%integer%` no longer consumes a class-info default registered only for `Number.class`
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java`
-- `src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java`
+- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
 - `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests 'ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest' --tests 'ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest' --tests 'ch.njol.skript.lang.SkriptParserRegistryTest' --rerun-tasks`
+  - `./gradlew test --tests 'ch.njol.skript.lang.SkriptParserRegistryTest' --rerun-tasks`
 - results: passed
 
 ## Remaining Risks
 
-- this slice only removes compatible parser-default fallback for omitted placeholders
-- compatible classinfo-default fallback for omitted placeholders is still separate and untouched
+- this slice only removes compatible class-info default fallback for omitted placeholders
+- parser-scoped default lookup remains a separate surface from class-info defaults
 
 ## Merge Notes
 
-- conflict surface is limited to parser default lookup and two parser-facing tests
-- this slice does not touch pattern matching, loader flow, or class registration logic
+- conflict surface is limited to omitted-placeholder default lookup in `SkriptParser` and one parser-facing registry test
+- this slice does not touch pattern compilation, loader flow, or class registration logic

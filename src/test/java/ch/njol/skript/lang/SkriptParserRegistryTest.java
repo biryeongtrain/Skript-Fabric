@@ -253,6 +253,34 @@ class SkriptParserRegistryTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void expressionPatternDoesNotUseCompatibleClassInfoDefaultForOmittedPlaceholderForm() {
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Number.class, "number").defaultExpression(new SimpleLiteral<>(7, true)));
+        Skript.registerExpression(DefaultIntegerValueExpression.class, Number.class, "default integer value [%integer%]");
+
+        try {
+            Expression<? extends Number> omitted = new SkriptParser(
+                    "default integer value",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Number.class});
+            Expression<? extends Number> explicit = new SkriptParser(
+                    "default integer value 5",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Number.class});
+
+            assertNull(omitted);
+            assertNotNull(explicit);
+            assertInstanceOf(DefaultIntegerValueExpression.class, explicit);
+            assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
+        } finally {
+            Classes.clearClassInfos();
+        }
+    }
+
+    @Test
     void statementParseRecognisesFunctionCalls() {
         registerEchoFunction();
 
