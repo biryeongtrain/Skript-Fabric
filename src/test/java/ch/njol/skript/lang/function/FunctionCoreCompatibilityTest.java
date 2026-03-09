@@ -12,6 +12,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.variables.Variables;
 import java.util.Arrays;
 import java.util.List;
 import ch.njol.util.Kleenean;
@@ -52,6 +53,28 @@ class FunctionCoreCompatibilityTest {
         assertNotNull(parameter);
         assertNotNull(parameter.getDefaultExpression());
         assertEquals(9, parameter.getDefaultExpression().getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void parameterParseKeepsCommasInsideQuotedDefaultExpressions() {
+        List<Parameter<?>> parameters = Parameter.parse("message: string = \"a, b\", count: number");
+
+        assertNotNull(parameters);
+        assertEquals(2, parameters.size());
+        assertNotNull(parameters.get(0).getDefaultExpression());
+        assertEquals("a, b", parameters.get(0).getDefaultExpression().getSingle(SkriptEvent.EMPTY));
+        assertEquals("count", parameters.get(1).name());
+    }
+
+    @Test
+    void parameterParseRejectsDuplicateNamesCaseInsensitively() {
+        boolean previous = Variables.caseInsensitiveVariables;
+        Variables.caseInsensitiveVariables = true;
+        try {
+            assertNull(Parameter.parse("Value: number, value: number"));
+        } finally {
+            Variables.caseInsensitiveVariables = previous;
+        }
     }
 
     @Test

@@ -30,12 +30,14 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
+- `Parameter.parse(...)` now keeps commas inside quoted/default subexpressions, rejects duplicate parameter names under case-insensitive variables, and still falls back to basic built-in type names when the local test bootstrap has not registered classinfos yet
 - `Classes.getPatternInfos(...)` now keeps explicit literal-pattern matches in upstream registration order
 - `Function.execute(Object[][])` now matches upstream keyed-default behavior:
   - single omitted default for keyed/plural param -> zip to `KeyedValue[]`
   - multi-value omitted default for keyed/plural param -> keep unkeyed
 - targeted regressions added:
   - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
+  - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
   - [FunctionDefaultKeyedParameterCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionDefaultKeyedParameterCompatibilityTest.java)
 
 ## Recent Closed Prereqs

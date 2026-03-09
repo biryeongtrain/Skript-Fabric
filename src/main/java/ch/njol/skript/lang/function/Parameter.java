@@ -11,6 +11,7 @@ import ch.njol.skript.log.RetainingLogHandler;
 import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
+import ch.njol.skript.variables.Variables;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -164,39 +165,64 @@ public final class Parameter<T> {
         if (args == null) {
             return null;
         }
-        if (args.isBlank()) {
-            return List.of();
-        }
         List<Parameter<?>> params = new ArrayList<>();
-        String[] split = args.split(",");
-        for (int index = 0; index < split.length; index++) {
-            String arg = split[index].trim();
+        boolean caseInsensitive = Variables.caseInsensitiveVariables;
+        int start = 0;
+        while (start <= args.length()) {
+            int index = nextArgumentBoundary(args, start);
+            if (index == -1) {
+                Skript.error("Invalid text/variables/parentheses in the arguments of this function");
+                return null;
+            }
+            if (args.isEmpty()) {
+                break;
+            }
+            String arg = args.substring(start, index);
             Matcher matcher = PARAM_PATTERN.matcher(arg);
             if (!matcher.matches()) {
-                Skript.error("Invalid argument definition near '" + arg + "'. Expected 'name: type' or 'name: type = default value'.");
+                Skript.error("Invalid argument definition near '" + arg.trim()
+                        + "'. Expected 'name: type' or 'name: type = default value'.");
                 return null;
             }
             String paramName = matcher.group(1).trim();
-            String typeName = matcher.group(2).trim();
-            String defaultValue = matcher.group(3);
-
-            boolean single = true;
-            if (typeName.toLowerCase(Locale.ENGLISH).endsWith("s")) {
-                single = false;
-                typeName = typeName.substring(0, typeName.length() - 1).trim();
+            String normalizedParamName = caseInsensitive
+                    ? paramName.toLowerCase(Locale.ENGLISH)
+                    : paramName;
+            for (Parameter<?> parameter : params) {
+                String existingName = caseInsensitive
+                        ? parameter.name.toLowerCase(Locale.ENGLISH)
+                        : parameter.name;
+                if (existingName.equals(normalizedParamName)) {
+                    Skript.error("Each argument's name must be unique, but the name '"
+                            + paramName + "' occurs at least twice.");
+                    return null;
+                }
             }
-
-            ClassInfo<?> classInfo = guessClassInfo(typeName);
+            String typeName = matcher.group(2).trim();
+            ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(typeName);
             if (classInfo == null) {
-                Skript.error("Cannot recognise the type '" + matcher.group(2) + "'");
+                classInfo = guessClassInfo(typeName);
+            }
+            if (classInfo == null) {
+                Skript.error("Cannot recognise the type '" + matcher.group(2).trim() + "'");
                 return null;
             }
 
-            Parameter<?> parameter = newInstance(paramName, classInfo, single, defaultValue);
+            Parameter<?> parameter = newInstance(
+                    paramName,
+                    classInfo,
+                    !isPluralUserInput(typeName, classInfo),
+                    matcher.group(3)
+            );
             if (parameter == null) {
                 return null;
             }
             params.add(parameter);
+
+            if (index == args.length()) {
+                break;
+            }
+            start = index + 1;
         }
         return params;
     }
@@ -221,6 +247,76 @@ public final class Parameter<T> {
             case "object", "value", "any" -> Classes.getSuperClassInfo(Object.class);
             default -> null;
         };
+    }
+
+    private static boolean isPluralUserInput(String typeName, ClassInfo<?> classInfo) {
+        String normalized = typeName.trim().toLowerCase(Locale.ENGLISH);
+        if (normalized.length() <= 1) {
+            return false;
+        }
+        String singularCandidate = null;
+        if (normalized.endsWith("ies")) {
+            singularCandidate = normalized.substring(0, normalized.length() - 3) + "y";
+        } else if (normalized.endsWith("es")) {
+            singularCandidate = normalized.substring(0, normalized.length() - 2);
+        } else if (normalized.endsWith("s")) {
+            singularCandidate = normalized.substring(0, normalized.length() - 1);
+        }
+        if (singularCandidate == null || singularCandidate.equals(normalized)) {
+            return false;
+        }
+        ClassInfo<?> singularInfo = Classes.getClassInfoFromUserInput(singularCandidate);
+        return singularInfo != null && singularInfo.getC() == classInfo.getC();
+    }
+
+    private static int nextArgumentBoundary(String args, int start) {
+        boolean inQuotes = false;
+        int roundDepth = 0;
+        int squareDepth = 0;
+        int curlyDepth = 0;
+        for (int index = start; index < args.length(); index++) {
+            char character = args.charAt(index);
+            if (character == '"' && (index == 0 || args.charAt(index - 1) != '\\')) {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (inQuotes) {
+                continue;
+            }
+            switch (character) {
+                case '(' -> roundDepth++;
+                case ')' -> {
+                    if (roundDepth == 0) {
+                        return -1;
+                    }
+                    roundDepth--;
+                }
+                case '[' -> squareDepth++;
+                case ']' -> {
+                    if (squareDepth == 0) {
+                        return -1;
+                    }
+                    squareDepth--;
+                }
+                case '{' -> curlyDepth++;
+                case '}' -> {
+                    if (curlyDepth == 0) {
+                        return -1;
+                    }
+                    curlyDepth--;
+                }
+                case ',' -> {
+                    if (roundDepth == 0 && squareDepth == 0 && curlyDepth == 0) {
+                        return index;
+                    }
+                }
+                default -> {
+                }
+            }
+        }
+        return inQuotes || roundDepth != 0 || squareDepth != 0 || curlyDepth != 0
+                ? -1
+                : args.length();
     }
 
     @Override
