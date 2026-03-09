@@ -18,16 +18,19 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: when a choice matched a placeholder-free branch, empty-present active-expression selection still unioned every candidate and could incorrectly require defaults from sibling placeholder branches.
-- minimal fix: for empty-present matches, keep only the smallest active-expression candidates and union ties, so placeholder-free choice branches stay self-contained while omitted optional alternations still keep sibling required placeholders active.
+- mismatch: when an alternation branch was selected by literals alone and that branch omitted one of its own placeholders, omitted-default selection still guessed from present expressions only and could incorrectly require defaults from sibling branches.
+- minimal fix: `PatternCompiler` now emits internal branch-activation captures, `SkriptPattern` carries exact matched branch expression indices through `MatchResult`, and `SkriptParser` prefers those exact indices before falling back to pattern-graph inference for omitted-default selection.
 
 ## Regression Added
 
 - `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
-  - validates that matching a placeholder-free alternation branch does not require defaults from sibling placeholder branches, while omitted optional alternations still require defaults for every required branch
+  - validates that a literal-disambiguated optional alternation branch can use only its own omitted placeholder defaults without requiring sibling-branch defaults, while the existing omitted optional alternation cases still require every matched-branch default
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
+- `src/main/java/ch/njol/skript/patterns/MatchResult.java`
+- `src/main/java/ch/njol/skript/patterns/PatternCompiler.java`
 - `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
 - `src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
@@ -35,14 +38,15 @@ Last updated: 2026-03-09
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
+  - `./gradlew test --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
 - results: passed
 
 ## Remaining Risks
 
-- this narrows one active-expression/default-selection edge case only
+- branch activation currently scopes exact omitted-default selection only; broader parser tag/mark parity is still open
 
 ## Merge Notes
 
-- conflict surface is limited to `SkriptPattern`, one parser compatibility test, and this lane file
-- this slice stays within omitted-placeholder/default-value selection and does not touch loader flow
+- conflict surface is `SkriptParser`, `PatternCompiler`, `SkriptPattern`, `MatchResult`, one parser compatibility test, and this lane file
+- this slice stays within parser/pattern omitted-default selection and does not touch loader flow

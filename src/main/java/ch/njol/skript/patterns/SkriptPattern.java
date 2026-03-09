@@ -45,6 +45,8 @@ public final class SkriptPattern {
         List<Expression<?>> expressions = new ArrayList<>();
         List<Matcher> regexes = new ArrayList<>();
         List<String> tags = new ArrayList<>();
+        LinkedHashSet<Integer> activeExpressionIndices = new LinkedHashSet<>();
+        boolean hasExactActiveExpressionIndices = false;
         int mark = 0;
 
         List<PatternCompiler.CaptureSpec> captures = compiled.captures();
@@ -89,10 +91,25 @@ public final class SkriptPattern {
                     }
                     mark ^= capture.mark();
                 }
+                case BRANCH -> {
+                    if (captured == null) {
+                        continue;
+                    }
+                    hasExactActiveExpressionIndices = true;
+                    if (capture.activeExpressionIndices() != null) {
+                        activeExpressionIndices.addAll(capture.activeExpressionIndices());
+                    }
+                }
             }
         }
 
-        return new MatchResult(expressions.toArray(Expression<?>[]::new), regexes, tags, mark);
+        return new MatchResult(
+                expressions.toArray(Expression<?>[]::new),
+                regexes,
+                tags,
+                hasExactActiveExpressionIndices ? Collections.unmodifiableSet(activeExpressionIndices) : null,
+                mark
+        );
     }
 
     public @Nullable MatchResult match(String text) {

@@ -454,7 +454,7 @@ public class SkriptParser {
                 Expression<?>[] withDefaults;
                 try {
                     withDefaults = applyDefaultValues(
-                            matched.expressions(),
+                            matched,
                             compiledPattern,
                             patterns[matchedPattern]
                     );
@@ -531,7 +531,7 @@ public class SkriptParser {
                 Expression<?>[] withDefaults;
                 try {
                     withDefaults = applyDefaultValues(
-                            matched.expressions(),
+                            matched,
                             compiledPattern,
                             patterns[matchedPattern]
                     );
@@ -608,10 +608,11 @@ public class SkriptParser {
     }
 
     private static @Nullable Expression<?>[] applyDefaultValues(
-            Expression<?>[] expressions,
+            MatchResult matched,
             @Nullable SkriptPattern compiledPattern,
             String pattern
     ) {
+        Expression<?>[] expressions = matched.expressions();
         if (compiledPattern == null || expressions.length == 0) {
             return expressions;
         }
@@ -621,7 +622,10 @@ public class SkriptParser {
             return expressions;
         }
         typePatterns.sort(Comparator.comparingInt(TypePatternElement::expressionIndex));
-        Set<Integer> activeExpressionIndices = compiledPattern.getActiveExpressionIndices(expressions);
+        Set<Integer> activeExpressionIndices = matched.activeExpressionIndices();
+        if (activeExpressionIndices == null) {
+            activeExpressionIndices = compiledPattern.getActiveExpressionIndices(expressions);
+        }
 
         DefaultValueData defaultValues = ParserInstance.get().getData(DefaultValueData.class);
         for (TypePatternElement typePattern : typePatterns) {

@@ -85,6 +85,35 @@ class OmittedPlaceholderRequiredDefaultCompatibilityTest {
     }
 
     @Test
+    void literalDisambiguatedChoiceOnlyRequiresDefaultsFromMatchedBranch() {
+        SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
+            NullAcceptingEffect.class,
+            new String[]{"probe [text [%string%]|count %number%]"},
+            NullAcceptingEffect.class.getName()
+        );
+
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number"));
+        Classes.registerClassInfo(new ClassInfo<>(String.class, "string"));
+
+        DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
+        data.addDefaultValue(String.class, new SimpleLiteral<>("fallback", true));
+        try {
+            Effect parsed = SkriptParser.parseModern(
+                    "probe text",
+                    List.of(info).iterator(),
+                    ParseContext.DEFAULT,
+                    null
+            );
+
+            assertNotNull(parsed, "matching a literal-disambiguated branch should not require defaults from sibling branches");
+        } finally {
+            data.removeDefaultValue(String.class);
+            Classes.clearClassInfos();
+        }
+    }
+
+    @Test
     void requiredOmittedPlaceholderRetainsMissingAndInvalidDefaultDiagnostics() {
         SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
             NullAcceptingEffect.class,

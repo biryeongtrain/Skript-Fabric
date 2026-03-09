@@ -4,8 +4,10 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.registrations.Classes;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
@@ -29,16 +31,20 @@ public final class PatternCompiler {
     static CompiledPattern compilePattern(@Nullable String pattern) {
         String source = pattern == null ? "" : pattern;
         String normalizedPattern = normalizePattern(source);
+        AtomicInteger regexExpressionAmount = new AtomicInteger();
         List<CaptureSpec> captures = new ArrayList<>();
-        String regex = compileSequence(normalizedPattern, captures);
-        AtomicInteger expressionAmount = new AtomicInteger();
-        PatternElement first = compileElementSequence(normalizedPattern, expressionAmount);
+        String regex = compileSequence(normalizedPattern, captures, regexExpressionAmount).regex();
+        AtomicInteger elementExpressionAmount = new AtomicInteger();
+        PatternElement first = compileElementSequence(normalizedPattern, elementExpressionAmount);
+        if (regexExpressionAmount.get() != elementExpressionAmount.get()) {
+            throw new IllegalStateException("Expression index mismatch while compiling pattern: " + source);
+        }
         return new CompiledPattern(
                 source,
                 Pattern.compile("^" + regex + "$", Pattern.CASE_INSENSITIVE),
                 List.copyOf(captures),
                 first,
-                expressionAmount.get()
+                regexExpressionAmount.get()
         );
     }
 
@@ -503,15 +509,20 @@ public final class PatternCompiler {
         return current;
     }
 
-    private static String compileSequence(String pattern, List<CaptureSpec> captures) {
+    private static CompiledRegex compileSequence(
+            String pattern,
+            List<CaptureSpec> captures,
+            AtomicInteger expressionIndex
+    ) {
         if (pattern.isEmpty()) {
-            return "";
+            return new CompiledRegex("", Set.of());
         }
         if (pattern.isBlank()) {
-            return "\\s+";
+            return new CompiledRegex("\\s+", Set.of());
         }
         List<String> tokens = splitTopLevelTokens(pattern);
         StringBuilder regex = new StringBuilder();
+        LinkedHashSet<Integer> directExpressionIndices = new LinkedHashSet<>();
         if (Character.isWhitespace(pattern.charAt(0))) {
             regex.append("\\s+");
         }
@@ -523,44 +534,54 @@ public final class PatternCompiler {
                 if (hasRequiredBefore) {
                     regex.append("\\s+");
                 }
-                regex.append(compileToken(token, captures));
+                CompiledRegex compiledToken = compileToken(token, captures, expressionIndex);
+                regex.append(compiledToken.regex());
+                directExpressionIndices.addAll(compiledToken.directExpressionIndices());
                 hasRequiredBefore = true;
                 continue;
             }
 
             String inner = token.substring(1, token.length() - 1);
-            String body = compileGroupContent(inner, captures);
+            CompiledRegex body = compileGroupContent(inner, captures, expressionIndex);
             boolean hasRequiredAfter = hasRequiredTokenAfter(tokens, i + 1);
             if (!hasRequiredBefore) {
-                regex.append("(?:").append(body);
+                regex.append("(?:").append(body.regex());
                 if (hasRequiredAfter) {
                     regex.append("\\s+");
                 }
                 regex.append(")?");
+                directExpressionIndices.addAll(body.directExpressionIndices());
                 continue;
             }
-            regex.append("(?:\\s+").append(body).append(")?");
+            regex.append("(?:\\s+").append(body.regex()).append(")?");
+            directExpressionIndices.addAll(body.directExpressionIndices());
         }
         if (Character.isWhitespace(pattern.charAt(pattern.length() - 1))) {
             regex.append("\\s+");
         }
-        return regex.toString();
+        return new CompiledRegex(regex.toString(), directExpressionIndices);
     }
 
-    private static String compileToken(String token, List<CaptureSpec> captures) {
+    private static CompiledRegex compileToken(
+            String token,
+            List<CaptureSpec> captures,
+            AtomicInteger expressionIndex
+    ) {
         if (token.isBlank()) {
-            return "\\s+";
+            return new CompiledRegex("\\s+", Set.of());
         }
-        String autoTagged = compileLeadingAutoTag(token, captures);
+        CompiledRegex autoTagged = compileLeadingAutoTag(token, captures, expressionIndex);
         if (autoTagged != null) {
             return autoTagged;
         }
         if (isWrappedBy(token, '(', ')')) {
-            return "(?:" + compileAlternatives(token.substring(1, token.length() - 1), captures) + ")";
+            CompiledRegex compiled = compileAlternatives(token.substring(1, token.length() - 1), captures, expressionIndex);
+            return new CompiledRegex("(?:" + compiled.regex() + ")", compiled.directExpressionIndices());
         }
 
         StringBuilder regex = new StringBuilder();
         StringBuilder literal = new StringBuilder();
+        LinkedHashSet<Integer> directExpressionIndices = new LinkedHashSet<>();
         for (int i = 0; i < token.length(); i++) {
             char ch = token.charAt(i);
             if (ch == '\\') {
@@ -584,7 +605,9 @@ public final class PatternCompiler {
                 }
                 String placeholder = token.substring(i + 1, end).trim();
                 regex.append("(.+?)");
-                captures.add(CaptureSpec.expression(buildTypePatternElement(placeholder, -1)));
+                int currentExpressionIndex = expressionIndex.getAndIncrement();
+                captures.add(CaptureSpec.expression(buildTypePatternElement(placeholder, currentExpressionIndex)));
+                directExpressionIndices.add(currentExpressionIndex);
                 i = end;
                 continue;
             }
@@ -606,34 +629,42 @@ public final class PatternCompiler {
             if (ch == '[') {
                 flushLiteral(regex, literal);
                 int end = findMatching(token, i, '[', ']');
+                CompiledRegex compiled = compileGroupContent(token.substring(i + 1, end), captures, expressionIndex);
                 regex.append("(?:")
-                        .append(compileGroupContent(token.substring(i + 1, end), captures))
+                        .append(compiled.regex())
                         .append(")?");
+                directExpressionIndices.addAll(compiled.directExpressionIndices());
                 i = end;
                 continue;
             }
             if (ch == '(') {
                 flushLiteral(regex, literal);
                 int end = findMatching(token, i, '(', ')');
+                CompiledRegex compiled = compileAlternatives(token.substring(i + 1, end), captures, expressionIndex);
                 regex.append("(?:")
-                        .append(compileAlternatives(token.substring(i + 1, end), captures))
+                        .append(compiled.regex())
                         .append(')');
+                directExpressionIndices.addAll(compiled.directExpressionIndices());
                 i = end;
                 continue;
             }
             literal.append(ch);
         }
         flushLiteral(regex, literal);
-        return regex.toString();
+        return new CompiledRegex(regex.toString(), directExpressionIndices);
     }
 
-    private static @Nullable String compileLeadingAutoTag(String token, List<CaptureSpec> captures) {
+    private static @Nullable CompiledRegex compileLeadingAutoTag(
+            String token,
+            List<CaptureSpec> captures,
+            AtomicInteger expressionIndex
+    ) {
         if (token.length() < 2 || token.charAt(0) != ':') {
             return null;
         }
         char next = token.charAt(1);
         if (next == '(' || next == '[') {
-            return compileLeadingAutoTaggedGroup(token, captures);
+            return compileLeadingAutoTaggedGroup(token, captures, expressionIndex);
         }
         String tag = deriveLeadingLiteralTag(token.substring(1));
         if (tag == null) {
@@ -641,11 +672,16 @@ public final class PatternCompiler {
         }
         StringBuilder regex = new StringBuilder("()");
         captures.add(metadataSpec(tag));
-        regex.append(compileToken(token.substring(1), captures));
-        return regex.toString();
+        CompiledRegex body = compileToken(token.substring(1), captures, expressionIndex);
+        regex.append(body.regex());
+        return new CompiledRegex(regex.toString(), body.directExpressionIndices());
     }
 
-    private static @Nullable String compileLeadingAutoTaggedGroup(String token, List<CaptureSpec> captures) {
+    private static @Nullable CompiledRegex compileLeadingAutoTaggedGroup(
+            String token,
+            List<CaptureSpec> captures,
+            AtomicInteger expressionIndex
+    ) {
         char open = token.charAt(1);
         char close = open == '(' ? ')' : ']';
         int end = findMatching(token, 1, open, close);
@@ -666,21 +702,26 @@ public final class PatternCompiler {
                 regex.append('|');
             }
             String branch = branches.get(i);
+            List<CaptureSpec> branchCaptures = new ArrayList<>();
+            CompiledRegex compiledBranch = compileSequence(branch, branchCaptures, expressionIndex);
+            regex.append("()");
+            captures.add(CaptureSpec.branch(compiledBranch.directExpressionIndices()));
             String tag = deriveLeadingLiteralTag(branch);
             if (tag != null) {
                 regex.append("()");
                 captures.add(metadataSpec(tag));
             }
-            regex.append(compileSequence(branch, captures));
+            regex.append(compiledBranch.regex());
+            captures.addAll(branchCaptures);
         }
         regex.append(")");
         if (open == '[') {
             regex.append(")?");
         }
         if (!suffix.isEmpty()) {
-            regex.append(compileToken(suffix, captures));
+            regex.append(compileToken(suffix, captures, expressionIndex).regex());
         }
-        return regex.toString();
+        return new CompiledRegex(regex.toString(), Set.of());
     }
 
     private static @Nullable String deriveLeadingLiteralTag(String value) {
@@ -760,31 +801,41 @@ public final class PatternCompiler {
         return CaptureSpec.metadata(metadata, mark);
     }
 
-    private static String compileAlternatives(String pattern, List<CaptureSpec> captures) {
+    private static CompiledRegex compileAlternatives(
+            String pattern,
+            List<CaptureSpec> captures,
+            AtomicInteger expressionIndex
+    ) {
         List<String> branches = splitTopLevel(pattern, '|');
+        if (branches.size() <= 1) {
+            return compileSequence(pattern, captures, expressionIndex);
+        }
         StringBuilder regex = new StringBuilder();
         for (int i = 0; i < branches.size(); i++) {
             if (i > 0) {
                 regex.append('|');
             }
-            regex.append(compileSequence(branches.get(i), captures));
+            List<CaptureSpec> branchCaptures = new ArrayList<>();
+            CompiledRegex compiledBranch = compileSequence(branches.get(i), branchCaptures, expressionIndex);
+            regex.append("()");
+            captures.add(CaptureSpec.branch(compiledBranch.directExpressionIndices()));
+            regex.append(compiledBranch.regex());
+            captures.addAll(branchCaptures);
         }
-        return regex.toString();
+        return new CompiledRegex(regex.toString(), Set.of());
     }
 
-    private static String compileGroupContent(String pattern, List<CaptureSpec> captures) {
+    private static CompiledRegex compileGroupContent(
+            String pattern,
+            List<CaptureSpec> captures,
+            AtomicInteger expressionIndex
+    ) {
         List<String> branches = splitTopLevel(pattern, '|');
         if (branches.size() > 1) {
-            StringBuilder regex = new StringBuilder();
-            for (int i = 0; i < branches.size(); i++) {
-                if (i > 0) {
-                    regex.append('|');
-                }
-                regex.append(compileSequence(branches.get(i), captures));
-            }
-            return "(?:" + regex + ")";
+            CompiledRegex compiled = compileAlternatives(pattern, captures, expressionIndex);
+            return new CompiledRegex("(?:" + compiled.regex() + ")", Set.of());
         }
-        return compileSequence(pattern, captures);
+        return compileSequence(pattern, captures, expressionIndex);
     }
 
     private static List<String> splitTopLevelTokens(String pattern) {
@@ -976,7 +1027,8 @@ public final class PatternCompiler {
     enum CaptureKind {
         EXPRESSION,
         REGEX,
-        METADATA
+        METADATA,
+        BRANCH
     }
 
     record CaptureSpec(
@@ -984,18 +1036,30 @@ public final class PatternCompiler {
             @Nullable TypePatternElement typePattern,
             @Nullable Pattern regexPattern,
             @Nullable String tag,
+            @Nullable Set<Integer> activeExpressionIndices,
             int mark
     ) {
         static CaptureSpec expression(TypePatternElement typePattern) {
-            return new CaptureSpec(CaptureKind.EXPRESSION, typePattern, null, null, 0);
+            return new CaptureSpec(CaptureKind.EXPRESSION, typePattern, null, null, null, 0);
         }
 
         static CaptureSpec regex(Pattern regexPattern) {
-            return new CaptureSpec(CaptureKind.REGEX, null, regexPattern, null, 0);
+            return new CaptureSpec(CaptureKind.REGEX, null, regexPattern, null, null, 0);
         }
 
         static CaptureSpec metadata(@Nullable String tag, int mark) {
-            return new CaptureSpec(CaptureKind.METADATA, null, null, tag, mark);
+            return new CaptureSpec(CaptureKind.METADATA, null, null, tag, null, mark);
+        }
+
+        static CaptureSpec branch(Set<Integer> activeExpressionIndices) {
+            return new CaptureSpec(
+                    CaptureKind.BRANCH,
+                    null,
+                    null,
+                    null,
+                    Set.copyOf(activeExpressionIndices),
+                    0
+            );
         }
     }
 
@@ -1018,5 +1082,8 @@ public final class PatternCompiler {
     }
 
     private record ResolvedPlaceholderType(Class<?> type, boolean plural, String raw) {
+    }
+
+    private record CompiledRegex(String regex, Set<Integer> directExpressionIndices) {
     }
 }
