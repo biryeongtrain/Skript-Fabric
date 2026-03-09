@@ -325,15 +325,8 @@ public final class Classes {
                 return parsed;
             }
 
-            ClassInfo<T> exactInfo = getExactClassInfo(type);
-            parsed = parseWithClassInfo(text, type, context, exactInfo, log);
-            if (parsed != null) {
-                log.printLog();
-                return parsed;
-            }
-
             for (ClassInfo<?> info : getSortedClassInfos()) {
-                if (info == exactInfo || !type.isAssignableFrom(info.getC())) {
+                if (!type.isAssignableFrom(info.getC())) {
                     continue;
                 }
 

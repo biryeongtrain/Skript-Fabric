@@ -49,6 +49,9 @@ Last updated: 2026-03-09
 - compared local `Classes.toString(Object, StringMode)` array handling with upstream `ch/njol/skript/registrations/Classes#toString(Object, StringMode, ...)`
 - mismatch found: upstream formats object-typed arrays as bracketed element strings, while the local bridge fell through to Java array identity text
 - applied minimal fix: `Classes.toString(Object, StringMode)` now detects arrays up front and recursively formats elements like upstream
+- compared local `Classes.parseSimple(...)` with upstream `ch/njol/skript/registrations/Classes#parseSimple`
+- mismatch found: upstream iterates sorted registered classinfos and therefore prefers the most specific compatible parser first, while the local bridge short-circuited through an exact base-type classinfo before later subtype parsers
+- applied minimal fix: `Classes.parseSimple(...)` now follows sorted classinfo order for registered parsers, so subtype parsers win over broader base-type parsers like upstream
 
 ## Files Changed
 
@@ -89,6 +92,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms object-typed arrays use upstream bracketed element stringification
+- Repro (before fix): parsing `"shared"` as `SpecificBaseType` returned the exact base-type parser result even when a registered `SpecificChildType` parser should win by upstream classinfo specificity ordering
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms `Classes.parseSimple(...)` prefers the most specific registered compatible parser over an earlier exact base-type parser
 
 ## Unresolved Risks
 

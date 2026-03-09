@@ -304,6 +304,39 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void parseSimplePrefersMostSpecificRegisteredParserOverExactBaseType() {
+        ClassInfo<SpecificBaseType> base = new ClassInfo<>(SpecificBaseType.class, "specificbase");
+        base.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public SpecificBaseType parse(String input, ParseContext context) {
+                return "shared".equals(input) ? new SpecificBaseType("base") : null;
+            }
+        });
+        Classes.registerClassInfo(base);
+
+        ClassInfo<SpecificChildType> child = new ClassInfo<>(SpecificChildType.class, "specificchild");
+        child.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public SpecificChildType parse(String input, ParseContext context) {
+                return "shared".equals(input) ? new SpecificChildType("child") : null;
+            }
+        });
+        Classes.registerClassInfo(child);
+
+        assertEquals(new SpecificChildType("child"), Classes.parseSimple("shared", SpecificBaseType.class, ParseContext.DEFAULT));
+    }
+
+    @Test
     void parseClearsFailedDirectErrorsBeforeConverterSuccess() {
         ClassInfo<ConverterFallbackTarget> direct = new ClassInfo<>(ConverterFallbackTarget.class, "converterfallbacktarget");
         direct.setParser(new ClassInfo.Parser<>() {
@@ -451,5 +484,31 @@ class ClassesCompatibilityTest {
     }
 
     private record ConverterFallbackTarget(int value) {
+    }
+
+    private static class SpecificBaseType {
+
+        private final String value;
+
+        private SpecificBaseType(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof SpecificBaseType that && value.equals(that.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return value.hashCode();
+        }
+    }
+
+    private static final class SpecificChildType extends SpecificBaseType {
+
+        private SpecificChildType(String value) {
+            super(value);
+        }
     }
 }
