@@ -29,10 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.clone(...)` no longer reflectively clones arbitrary `Cloneable` values without an explicit classinfo cloner
-- `SkriptPattern` keyword prefiltering now checks raw input before trim normalization, so leading whitespace still blocks literal keywords while trailing whitespace remains accepted
-- `TriggerItem.walk(...)` now rethrows non-`Exception` throwables instead of silently collapsing them into `false`, while keeping `Exception` and `StackOverflowError` handling intact
-- `ScriptLoader.loadItems(...)` now validates skipped non-dispatch nodes before returning, so invalid `EntryNode` lines still emit upstream-style parse diagnostics
+- `Classes.parse(...)` now respects no-command converter contexts again by restoring the missing legacy `ParseContext` variants
+- `SkriptParser.validatePattern(...)` compatibility is back for plural placeholder normalization and upstream-style pipe-outside-group diagnostics
+- `FunctionReference.consign(...)` now keeps primitive arrays as scalar arguments instead of exploding them like object-array plural slots
+- `ParserInstance` now notifies registered parser-data bridges when current events are set or cleared
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs

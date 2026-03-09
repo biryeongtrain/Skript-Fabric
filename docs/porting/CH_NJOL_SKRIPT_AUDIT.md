@@ -148,10 +148,10 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- aligned `Classes.clone(...)` fallback with upstream, so arbitrary `Cloneable` values no longer clone reflectively without an explicit classinfo cloner
-- restored raw-input keyword prefilter parity in `SkriptPattern`, so leading whitespace still blocks literal keyword matches before the later trim-based regex step
-- made `TriggerItem.walk(...)` rethrow non-`Exception` throwables while preserving the existing `Exception` and `StackOverflowError` compatibility behavior
-- validated skipped non-dispatch nodes before `ScriptLoader` returns, so invalid config-only nodes still log the expected parse error
+- restored missing legacy `ParseContext` variants and made `Classes.parse(...)` respect no-command converter contexts again
+- restored `SkriptParser.validatePattern(...)` compatibility, including plural placeholder normalization and the upstream pipe-outside-group parse error
+- made `FunctionReference.consign(...)` keep primitive arrays as scalar arguments instead of treating them as plural object-array payloads
+- made `ParserInstance` notify registered parser-data bridges when current events are set or cleared
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
