@@ -180,6 +180,11 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void variableNameStringFallbackUsesObjectPrefixLikeUpstream() {
+        assertEquals("object:fallback", Classes.toString("fallback", ch.njol.skript.util.StringMode.VARIABLE_NAME));
+    }
+
+    @Test
     void parseFallsBackThroughRegisteredConverters() {
         ClassInfo<ParsedType> parsed = new ClassInfo<>(ParsedType.class, "parsed");
         parsed.setParser(new ClassInfo.Parser<>() {

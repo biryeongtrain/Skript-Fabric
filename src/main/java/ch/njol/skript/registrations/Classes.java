@@ -179,6 +179,9 @@ public final class Classes {
                 return legacyToString(info, legacyParser, value, mode);
             }
         }
+        if (mode == StringMode.VARIABLE_NAME) {
+            return "object:" + value;
+        }
         return value.toString();
     }
 

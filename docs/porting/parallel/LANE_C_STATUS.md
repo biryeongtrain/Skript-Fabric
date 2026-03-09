@@ -34,31 +34,28 @@ Last updated: 2026-03-09
 - mismatch found: upstream routes registered legacy parser types through parser-backed string rendering, while the local bridge always fell back to `Object.toString()` and array joins bypassed parser formatting too
 - reproduced via `LegacyWrapperCompatibilityTest` with a registered legacy `Parser<LegacyValue>` whose message/debug rendering differs from `record` `toString()`
 - applied minimal fix: `Classes.toString(...)` now uses registered legacy parsers for message/debug/variable-name rendering, and `Object[]` joins delegate each element through the same path
+- compared local fallback `Classes.toString(Object, StringMode.VARIABLE_NAME)` with upstream `ch/njol/skript/registrations/Classes#toString(Object, StringMode, ...)`
+- mismatch found: upstream prefixes unparsed fallback values as `object:...`, while the local bridge returned raw `Object.toString()`
+- applied minimal fix: variable-name fallback stringification now returns `object:` + value when no registered parser matches
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/variables/Variables.java`
-- `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/registrations/Classes.java`
 - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
-- `src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
 
-- Java source file count changed in `src/main/java/ch/njol/skript/variables`: `0` added, `1` modified
-- Java test file count changed in `src/test/java/ch/njol/skript/variables`: `0` added, `1` modified
+- Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
 - real `.sk` fixture count changed: `0`
 
 ## Verification
 
-- Repro (before fix): `setVariable("scores::*", null, ...)` left `scores::group` and `scores::group::1` intact instead of deleting the list contents
+- Repro (before fix): `Classes.toString("fallback", StringMode.VARIABLE_NAME)` returned `fallback` instead of upstream `object:fallback`
 - Targeted tests and commands:
-  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.variables.VariablesCompatibilityTest --rerun-tasks`
-- Repro (before fix): `Classes.toString(new LegacyValue(7), StringMode.MESSAGE)` returned `LegacyValue[value=7]` instead of legacy parser output `legacy 7`
-- Targeted tests and commands:
-  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --rerun-tasks`
-- After fix: targeted commands pass; regressions confirm descendant list deletion parity and legacy parser-backed class stringification parity
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms upstream variable-name fallback prefix parity
 
 ## Unresolved Risks
 
@@ -67,6 +64,6 @@ Last updated: 2026-03-09
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/variables/Variables.java`
-  - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/registrations/Classes.java`
+  - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
   - `docs/porting/parallel/LANE_C_STATUS.md`
