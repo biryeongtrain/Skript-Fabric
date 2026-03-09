@@ -147,6 +147,7 @@ Landed slices so far:
   - `Function.execute(Object[][])` now preserves an explicit empty argument slot for an ordinary optional parameter instead of replacing it with that parameter's default, while keeping the keyed-default special case intact
   - `Function.execute(Object[][])` now also lets direct `null` argument slots through the legacy `executeWithNulls` guard, while still rejecting empty-array slots on that path
   - `Parameter.newInstance(...)` now preserves keyed argument metadata for ordinary keyed parameters instead of re-zipping with numeric fallback keys
+  - keyed plural defaults now still follow upstream semantics after that slice: single-value defaults zip to `KeyedValue[]`, while multi-value defaults remain unkeyed
   - `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted function-call literal arguments
   - `ScriptLoader.loadItems(...)` now clears stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line, so successful fallback does not replay an error from the failed section path
   - statement fallback now forces `EffectSection` parsing through statement mode when section-mode init rejects the body, preserving upstream effect-section fallback behavior

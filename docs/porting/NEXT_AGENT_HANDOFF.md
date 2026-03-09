@@ -32,6 +32,7 @@ Use local upstream sources only. Do not browse.
 - `Classes.clone(...)` now honors classinfo cloners instead of falling back to identity copies
 - `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted string literal arguments
 - ordinary keyed function arguments now preserve their keyed metadata across `Parameter.newInstance(...)`
+- keyed plural defaults now keep upstream behavior: single-value defaults zip, multi-value defaults stay unkeyed
 - statement fallback now keeps `EffectSection` parsing in statement mode when section-mode init rejects the body
 - `Classes.toString(...)` now routes legacy parser-backed values through parser stringification instead of raw `Object.toString()`
 - targeted regressions added:
@@ -57,7 +58,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default rule
 2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification and classinfo-cloner slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, and doubled-quote literal cases
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, and doubled-quote literal cases
 4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback
 
 ## Parallel Defaults
