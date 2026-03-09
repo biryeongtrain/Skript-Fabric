@@ -30,8 +30,14 @@ Use local upstream sources only. Do not browse.
 ## Latest Closed Slice
 
 - `Function.execute(Object[][])` now lets direct `null` argument slots through the legacy `executeWithNulls` guard instead of aborting the call
+- `ScriptLoader.loadItems(...)` now drops stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line
+- omitted placeholders now require an exact classinfo default instead of consuming a broader superclass default
+- `TriggerItem.walk(...)` now catches `StackOverflowError` and returns `false`
 - targeted regressions added:
+  - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
+  - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
   - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
+  - [TriggerItemCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java)
 
 ## Recent Closed Prereqs
 
@@ -45,7 +51,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. broader parser default-value and placeholder-omission parity
+1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default rule
 2. broader classinfo/parser registry parity
 3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot and direct-null-slot cases
 4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears
