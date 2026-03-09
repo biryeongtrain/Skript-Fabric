@@ -9,25 +9,25 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed namespace-fallback mismatch in `DynamicFunctionReference.parseFunction(...)` / `resolveFunction(...)`
-- local behavior previously treated an unresolved `from missing.sk` suffix as a real source hint, resolving a global function while retaining the bogus script name in the string form
-- upstream first validates the script source and only keeps the `from ...` namespace when that script actually resolves; otherwise it falls back to the global function without preserving the invalid suffix
+- fixed one upstream-backed overload-resolution mismatch in `FunctionRegistry.resolveRetrieval(...)`
+- local behavior greedily filtered ambiguous overloads one argument position at a time, which could incorrectly pick the overload matching the earliest exact argument even when a later exact argument favored a different overload
+- upstream evaluates non-`Object` exact positions across the whole candidate before narrowing, so split exact matches remain ambiguous instead of collapsing to the first candidate
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionOverloadDisambiguationTest.java`
 
 ## Verification
 
-- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
+- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionRegistry.java`
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- continue upstream diff review for one remaining mergeable mismatch in overload resolution or keyed/default execution semantics that stays inside `lang/function`
+- continue upstream diff review for one remaining mergeable mismatch in keyed/default execution semantics or namespace fallback that stays inside `lang/function`
 
 ## Merge Notes
 
-- low-conflict slice limited to `DynamicFunctionReference.java`, one focused regression, and this lane file
+- low-conflict slice limited to `FunctionRegistry.java`, one focused regression, and this lane file

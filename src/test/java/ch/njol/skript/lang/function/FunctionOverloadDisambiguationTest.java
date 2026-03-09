@@ -1,6 +1,7 @@
 package ch.njol.skript.lang.function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -64,5 +65,45 @@ class FunctionOverloadDisambiguationTest {
         assertTrue(ref.validateFunction(true), "overload should resolve to exact integer overload");
         assertNotNull(ref.getRegisteredSignature());
         assertEquals(intSig, ref.getRegisteredSignature());
+    }
+
+    @Test
+    void keepsAmbiguityWhenDifferentOverloadsOnlyMatchDifferentExactPositions() {
+        ClassInfo<Integer> intInfo = Classes.getSuperClassInfo(Integer.class);
+        ClassInfo<Number> numberInfo = Classes.getSuperClassInfo(Number.class);
+        ClassInfo<String> stringInfo = Classes.getSuperClassInfo(String.class);
+
+        Signature<String> firstExact = new Signature<>(
+                null,
+                "split",
+                new Parameter[]{
+                        new Parameter<>("x", intInfo, true, null),
+                        new Parameter<>("y", numberInfo, true, null)
+                },
+                false,
+                stringInfo,
+                true
+        );
+        Signature<String> secondExact = new Signature<>(
+                null,
+                "split",
+                new Parameter[]{
+                        new Parameter<>("x", numberInfo, true, null),
+                        new Parameter<>("y", intInfo, true, null)
+                },
+                false,
+                stringInfo,
+                true
+        );
+
+        FunctionRegistry.getRegistry().register(null, firstExact);
+        FunctionRegistry.getRegistry().register(null, secondExact);
+
+        FunctionRegistry.Retrieval<Signature<?>> retrieval =
+                FunctionRegistry.getRegistry().getSignature(null, "split", Integer.class, Integer.class);
+
+        assertEquals(FunctionRegistry.RetrievalResult.AMBIGUOUS, retrieval.result());
+        assertNull(retrieval.retrieved());
+        assertNotNull(retrieval.conflictingArgs());
     }
 }

@@ -254,46 +254,44 @@ public final class FunctionRegistry implements Registry<Function<?>> {
             return base;
         }
 
-        // Upstream tie-breaker: if some provided arguments are exact (non-Object),
-        // prefer candidates whose parameter at that position exactly equals the provided type.
-        List<T> filtered = new ArrayList<>(candidates);
-        for (int idx = 0; idx < provided.length; idx++) {
-            final int pos = idx;
-            Class<?> p = provided[pos];
-            if (p == Object.class) {
+        List<T> exactMatches = new ArrayList<>();
+        for (T candidate : candidates) {
+            Class<?>[] candidateArgs = candidateArgs(candidate);
+            if (candidateArgs == null) {
                 continue;
             }
-            Class<?> pComp = component(p);
-            int before = filtered.size();
-            filtered.removeIf(c -> {
-                Class<?>[] candArgs;
-                if (c instanceof Signature<?> s) {
-                    candArgs = Arrays.stream(s.getParameters()).map(Parameter::type).toArray(Class[]::new);
-                } else if (c instanceof Function<?> f) {
-                    candArgs = Arrays.stream(f.getParameters()).map(Parameter::type).toArray(Class[]::new);
-                } else {
-                    return false;
+            boolean exact = true;
+            for (int i = 0; i < provided.length; i++) {
+                if (provided[i] == Object.class) {
+                    continue;
                 }
-                if (pos >= candArgs.length) {
-                    return true;
+                if (i >= candidateArgs.length || component(candidateArgs[i]) != component(provided[i])) {
+                    exact = false;
+                    break;
                 }
-                Class<?> candComp = component(candArgs[pos]);
-                return candComp != pComp;
-            });
-            if (filtered.isEmpty()) {
-                // Over-filtered; revert to original set and continue with next index
-                filtered = new ArrayList<>(candidates);
             }
-            if (filtered.size() == 1) {
-                return new Retrieval<>(RetrievalResult.EXACT, filtered.getFirst(), null);
-            }
-            if (filtered.size() == before) {
-                continue;
+            if (exact) {
+                exactMatches.add(candidate);
             }
         }
 
-        // Still ambiguous; return ambiguity with conflicts for error reporting.
-        return resolveRetrieval(filtered);
+        if (exactMatches.size() == 1) {
+            return new Retrieval<>(RetrievalResult.EXACT, exactMatches.getFirst(), null);
+        }
+        if (!exactMatches.isEmpty()) {
+            return resolveRetrieval(exactMatches);
+        }
+        return base;
+    }
+
+    private static @Nullable Class<?>[] candidateArgs(Object candidate) {
+        if (candidate instanceof Signature<?> signature) {
+            return Arrays.stream(signature.getParameters()).map(Parameter::type).toArray(Class[]::new);
+        }
+        if (candidate instanceof Function<?> function) {
+            return Arrays.stream(function.getParameters()).map(Parameter::type).toArray(Class[]::new);
+        }
+        return null;
     }
 
     private @Nullable Signature<?> getExactSignature(NamespaceIdentifier namespace, FunctionIdentifier identifier) {
