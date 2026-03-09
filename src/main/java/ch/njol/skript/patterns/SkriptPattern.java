@@ -29,14 +29,14 @@ public final class SkriptPattern {
     }
 
     public @Nullable MatchResult match(String text, int flags, ParseContext parseContext) {
-        String normalizedText = PatternCompiler.normalizeInput(text);
-        String lowerExpr = normalizedText.toLowerCase(Locale.ENGLISH);
+        String trimmedText = text == null ? "" : text.trim();
+        String lowerExpr = trimmedText.toLowerCase(Locale.ENGLISH);
         for (Keyword keyword : keywords) {
             if (!keyword.isPresent(lowerExpr)) {
                 return null;
             }
         }
-        Matcher matcher = compiled.regex().matcher(normalizedText);
+        Matcher matcher = compiled.regex().matcher(trimmedText);
         if (!matcher.matches()) {
             return null;
         }

@@ -98,6 +98,20 @@ class SkriptParserRegistryTest {
     }
 
     @Test
+    void effectPatternPreservesQuotedStringLiteralWhitespaceInsidePlaceholder() {
+        Skript.registerEffect(TypedArgsEffect.class, "typed %integer% and %string%");
+
+        Statement parsed = Statement.parse("typed 5 and \"a   b\"", "failed");
+
+        assertNotNull(parsed);
+        assertInstanceOf(TypedArgsEffect.class, parsed);
+        assertNotNull(TypedArgsEffect.lastExpressions);
+        assertEquals(2, TypedArgsEffect.lastExpressions.length);
+        assertEquals(5, TypedArgsEffect.lastExpressions[0].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+        assertEquals("a   b", TypedArgsEffect.lastExpressions[1].getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY));
+    }
+
+    @Test
     void effectPatternPreservesSlashSeparatedPlaceholderUnions() {
         Skript.registerEffect(TypedArgsEffect.class, "union %integer/boolean%");
 
