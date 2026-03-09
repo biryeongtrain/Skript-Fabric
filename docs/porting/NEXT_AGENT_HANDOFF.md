@@ -18,7 +18,7 @@ Last updated: 2026-03-09
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
 - upstream `ch/njol/skript` snapshot: local `140 / 1189`, shortfall `1049`
-- immediate priority: import exact upstream user-visible syntax on the existing Fabric-backed runtime, while keeping one lane on remaining `lang-core` mop-up
+- immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
 
@@ -29,12 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- implementation phase is now active on top of the existing `lang-core` baseline
-- exact upstream interaction-dimensions plural expressions now register on the live Fabric runtime
-- exact upstream responsive/unresponsive interaction condition syntax now registers and is covered by focused runtime tests
-- exact upstream `make %entities% adult` / `make %entities% baby` syntax now registers on the live Fabric runtime
-- `ParserInstance` now restores the upstream parser-delay-state bridge for remaining `lang-core` compatibility callers
-- verification: `./gradlew build --rerun-tasks`
+- current verified head remains on top of the existing `lang-core` baseline
+- latest verified full run remains `./gradlew build --rerun-tasks`
+- next worker wave is no longer syntax-polish-first; it is package-bundle closure inside `ch/njol/skript`
 
 ## Recent Closed Prereqs
 
@@ -49,26 +46,27 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. exact upstream `expressions` imports that already have a live Fabric backend and can be verified with focused runtime tests plus real `.sk` coverage where needed
-2. exact upstream `conditions` imports on the same rule
-3. exact upstream `effects` imports on the same rule
-4. selective `events` imports only for existing Fabric-backed families with payload and cancellation semantics we can verify
-5. keep one mop-up lane on remaining `lang-core` long-tail: parser omitted/default, function runtime/default-parameter, and new loader/statement reproducers only
+1. `classes` + `registrations` + `patterns`
+2. `config` + `util` + `localization`
+3. `variables` + `sections` + `structures` + `aliases` + `literals`
+4. remaining `lang` + `log` blocker imports
+5. import-enabling scaffolding for `expressions` + `conditions` + `effects` + `events` + `entity`
 
 ## Parallel Defaults
 
 - keep `Coordinator + 5 workers`
 - worker reasoning default: `medium`
 - use local upstream snapshot only
-- one primary mismatch plus one fallback mismatch per lane
+- one primary bundle plus one fallback bundle per lane
+- allow multiple commits per lane if they stay inside the owned bundle
 - no web
 - worker docs stay minimal
 - lane split for the current phase:
-  - `Lane A`: expressions
-  - `Lane B`: conditions
-  - `Lane C`: effects
-  - `Lane D`: events
-  - `Lane E`: `lang-core` mop-up
+  - `Lane A`: `classes` + `registrations` + `patterns`
+  - `Lane B`: `config` + `util` + `localization`
+  - `Lane C`: `variables` + `sections` + `structures` + `aliases` + `literals`
+  - `Lane D`: `lang` + `log`
+  - `Lane E`: `expressions` + `conditions` + `effects` + `events` + `entity`
 
 ## Lane Status Format
 
@@ -101,3 +99,9 @@ Keep unrelated dirty files untouched in `/Users/qf/IdeaProjects/Skript-Fabric-po
 - `.codex/environments/environment-2.toml`
 - `.codex/environments/environment.toml`
 - `scripts/`
+
+## Transition Note
+
+- there is an older syntax-import batch under `/private/tmp/skript-impl-20260309150545`
+- do not let that legacy batch define the next phase
+- close or park it cleanly, then relaunch workers under the new package-bundle ownership model

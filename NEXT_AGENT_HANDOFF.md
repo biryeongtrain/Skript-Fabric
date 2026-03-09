@@ -8,9 +8,9 @@ Current headline:
 
 - keep Stage 8 package-local audit state frozen at `23 / 214`
 - do not start the next Bukkit package-local audit slice yet
-- immediate priority is exact upstream user-visible syntax import on the active Fabric runtime, with one lane still reserved for `lang-core` mop-up
+- immediate priority is reducing the raw `ch/njol/skript` shortfall by closing larger upstream package bundles
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is worker-merged implementation for interaction-dimensions plural expressions, responsive interaction condition syntax, and `make adult` / `make baby` effect syntax, plus a small `lang-core` `ParserInstance` delay-state bridge fix
+- latest closed slice is the syntax-import kickoff batch, but the active worker plan is now shifting to package-bundle closure inside `ch/njol/skript`
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

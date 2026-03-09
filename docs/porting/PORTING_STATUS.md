@@ -40,12 +40,14 @@ Last updated: 2026-03-09
 - Latest implementation batch:
   - worker merges on 2026-03-09 imported exact upstream interaction-dimensions plural expressions, responsive/unresponsive interaction condition syntax, and `make %entities% adult` / `make %entities% baby` effect syntax on the active Fabric runtime
   - the same batch also restored the `ParserInstance` delay-state bridge for the remaining `lang-core` track
+  - follow-up worker strategy is now shifting away from syntax-polish slices and toward larger `ch/njol/skript` package-bundle closure
 
 ## Priority Shift On 2026-03-08
 
 Further Stage 8 package-local audit is temporarily deprioritized.
 The immediate priority is now the broader upstream `ch/njol/skript` closure workstream itself.
-Exact missing upstream syntax families remain important, but they now follow the next blocking `Part 1A` / `Part 1B` closure slices instead of leading them.
+Exact missing upstream syntax families remain important, but they no longer lead the worker plan.
+Reduce the raw shortfall first by closing larger upstream package bundles.
 
 Detailed tracking for this workstream lives in [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md).
 
