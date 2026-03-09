@@ -87,10 +87,10 @@ public final class ScriptLoader {
 
     private static @Nullable TriggerItem parseTriggerItem(Node node, List<TriggerItem> triggerItems) {
         String key = node.getKey();
-        if (key == null || key.isBlank()) {
+        if (key == null) {
             return null;
         }
-        String parsedInput = replaceOptions(key.trim());
+        String parsedInput = replaceOptions(key);
         if (!SkriptParser.validateLine(parsedInput)) {
             return null;
         }

@@ -379,6 +379,22 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsLogsWhitespaceOnlySimpleLine() {
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("   ")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.startsWith("Can't understand this condition/effect:")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsLogsUnknownSectionLine() {
         try (TestLogAppender logs = TestLogAppender.attach()) {
             List<TriggerItem> items = ScriptLoader.loadItems(root(

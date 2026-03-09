@@ -31,7 +31,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
             @Nullable SectionNode node,
             @Nullable List<TriggerItem> items
     ) {
-        if (input == null || input.isBlank()) {
+        if (input == null) {
             return null;
         }
         try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
