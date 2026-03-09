@@ -106,4 +106,18 @@ class VariablesCompatibilityTest {
         assertNull(group.get(null));
         assertEquals("gold_block", group.get("1"));
     }
+
+    @Test
+    void deletingListVariableThroughSetVariableRemovesDescendantsButKeepsDirectParentValue() {
+        Variables.setVariable("scores", "lapis_block", SkriptEvent.EMPTY, false);
+        Variables.setVariable("scores::group", "diamond_block", SkriptEvent.EMPTY, false);
+        Variables.setVariable("scores::group::1", "gold_block", SkriptEvent.EMPTY, false);
+
+        Variables.setVariable("scores::*", null, SkriptEvent.EMPTY, false);
+
+        assertEquals("lapis_block", Variables.getVariable("scores", SkriptEvent.EMPTY, false));
+        assertNull(Variables.getVariable("scores::*", SkriptEvent.EMPTY, false));
+        assertNull(Variables.getVariable("scores::group", SkriptEvent.EMPTY, false));
+        assertNull(Variables.getVariable("scores::group::1", SkriptEvent.EMPTY, false));
+    }
 }

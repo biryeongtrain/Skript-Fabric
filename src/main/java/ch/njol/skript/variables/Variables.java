@@ -125,6 +125,10 @@ public final class Variables {
             return;
         }
         String normalized = normalizeName(name);
+        if (normalized.endsWith(Variable.SEPARATOR + "*") && value == null) {
+            removePrefix(normalized.substring(0, normalized.length() - 1), event, local);
+            return;
+        }
         Map<String, Object> map = local ? localMap(event, true) : GLOBAL_VARIABLES;
         if (value == null) {
             map.remove(normalized);
