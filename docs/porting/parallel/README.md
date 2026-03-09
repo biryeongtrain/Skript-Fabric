@@ -8,9 +8,15 @@ Rules:
 
 - Workers update only their own lane file.
 - Coordinator reads all lane files, merges branches, and then updates canonical docs under `docs/porting/`.
-- Do not replace exact counts with prose. Keep numbers exact.
+- Keep lane docs short.
+- Keep numbers exact.
 - Record exact commands and exact results.
-- Keep file lists narrow and explicit.
+- Preferred format:
+  - `Scope`
+  - `Latest Slice`
+  - `Verification`
+  - `Next Lead`
+  - `Merge Notes`
 
 Lane files:
 

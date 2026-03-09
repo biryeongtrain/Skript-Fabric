@@ -76,6 +76,9 @@ Coordinator can stay on the main repo path:
 
 ## Shared Rules
 
+- worker reasoning default is `medium`; raise a lane to `high` only for a confirmed hard blocker
+- compare against local upstream snapshots only (`/tmp/skript-upstream-e6ec744-2`, `/tmp/upstream-skript`)
+- do not browse the web for upstream comparisons
 - Do not edit the canonical docs under `docs/porting/*.md` from worker lanes.
 - Do not edit another lane's status file.
 - Do not change Stage 8 counts unless your lane actually changes that tracked matrix and the coordinator approved the reassignment.
