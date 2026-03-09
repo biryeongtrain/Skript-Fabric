@@ -1,9 +1,12 @@
 package ch.njol.skript.lang.function;
 
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.KeyedValue;
+import ch.njol.skript.registrations.Classes;
 import java.util.Arrays;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 
 /**
  * Legacy function abstraction for script and Java function calls.
@@ -69,7 +72,7 @@ public abstract class Function<T> {
             if ((parameterValue == null || parameterValue.length == 0)
                     && parameter.hasModifier(Parameter.Modifier.KEYED)
                     && parameter.getDefaultExpression() != null) {
-                Object[] defaultValue = parameter.evaluate(parameter.getDefaultExpression(), event.getContext());
+                Object[] defaultValue = evaluateDefault(parameter.getDefaultExpression(), event.getContext());
                 if (defaultValue != null && defaultValue.length == 1) {
                     parameterValue = convertToKeyed(defaultValue);
                 } else {
@@ -95,6 +98,17 @@ public abstract class Function<T> {
             return null;
         }
         return returned;
+    }
+
+    private Object @Nullable [] evaluateDefault(@Nullable Expression<?> expression, SkriptEvent event) {
+        if (expression == null) {
+            return null;
+        }
+        Object[] values = expression.getArray(event);
+        for (int i = 0; i < values.length; i++) {
+            values[i] = Classes.clone(values[i]);
+        }
+        return values;
     }
 
     private KeyedValue<Object> @Nullable [] convertToKeyed(Object[] values) {
