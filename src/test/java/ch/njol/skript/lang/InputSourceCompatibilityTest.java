@@ -3,8 +3,8 @@ package ch.njol.skript.lang;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.expressions.ExprInput;
@@ -118,7 +118,8 @@ class InputSourceCompatibilityTest {
         ParserInstance parser = ParserInstance.get();
         FooValue fooValue = new FooValue();
         DummyInputSource source = new DummyInputSource(fooValue);
-        Classes.registerClassInfo(new ClassInfo<>(FooValue.class, "foo"));
+        ClassInfo<FooValue> fooClassInfo = new ClassInfo<>(FooValue.class, "foo");
+        Classes.registerClassInfo(fooClassInfo);
 
         Expression<?> parsed = source.parseExpression("foo input", parser, SkriptParser.ALL_FLAGS);
 
@@ -126,6 +127,7 @@ class InputSourceCompatibilityTest {
         assertInstanceOf(ExprInput.class, parsed);
         assertSame(fooValue, parsed.getSingle(SkriptEvent.EMPTY));
         assertEquals("foo input", parsed.toString(SkriptEvent.EMPTY, false));
+        assertSame(fooClassInfo, ((ExprInput<?>) parsed).getSpecifiedType());
     }
 
     @Test

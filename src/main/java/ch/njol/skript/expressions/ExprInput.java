@@ -1,8 +1,10 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.InputSource;
 import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Utils;
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -139,6 +141,20 @@ public class ExprInput<T> extends SimpleExpression<T> {
     @Override
     public Class<? extends T>[] possibleReturnTypes() {
         return Arrays.copyOf(types, types.length);
+    }
+
+    public @Nullable ClassInfo<?> getSpecifiedType() {
+        if (specifiedType == null) {
+            return null;
+        }
+        ClassInfo<?> byType = Classes.getExactClassInfo(specifiedType);
+        if (byType != null) {
+            return byType;
+        }
+        if (specifiedTypeName != null) {
+            return Classes.getClassInfoNoError(specifiedTypeName);
+        }
+        return null;
     }
 
     @Override

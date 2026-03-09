@@ -9,6 +9,8 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
+- fixed one upstream-backed `ExprInput` bridge mismatch: restored the upstream `getSpecifiedType()` accessor so typed `input` expressions expose their registered `ClassInfo` again through the compatibility bridge
+- added a narrow regression proving parsed typed inputs retain the exact registered `ClassInfo` on `ExprInput#getSpecifiedType()`
 - fixed one upstream-backed `ParserInstance` parser-data mismatch: `setCurrentScript(...)` now preserves registered `ParserInstance.Data` instances across script-to-script switches and notifies them through upstream-style `onCurrentScriptChange(...)` callbacks before clearing on `null`
 - added focused regression coverage proving registered parser-data survives script swaps, sees the new script config, and is still cleared when the parser is deactivated
 - fixed one upstream-backed `ParserInstance.Data` bridge mismatch: restored the protected `getParser()` accessor alongside the local `parser()` helper so upstream-style parser-data subclasses compile unchanged
@@ -16,12 +18,18 @@ Last updated: 2026-03-09
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/expressions/ExprInput.java`
+- `src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
 - `src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java`
 - `docs/porting/parallel/LANE_E_STATUS.md`
 
 ## Verification
 
+- `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/expressions/ExprInput.java src/main/java/ch/njol/skript/expressions/ExprInput.java`
+  - confirmed upstream still exposes `ExprInput#getSpecifiedType()` while the local compatibility bridge had dropped that accessor when it flattened typed-input metadata to raw class/name fields
+- `./gradlew test --tests ch.njol.skript.lang.InputSourceCompatibilityTest --rerun-tasks`
+  - passed
 - `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
   - confirmed upstream keeps parser-data instances across current-script changes and exposes both `ParserInstance.Data.onCurrentScriptChange(...)` and the protected `getParser()` accessor, while the local bridge only kept the non-upstream `parser()` helper
 - `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest`
@@ -34,6 +42,8 @@ Last updated: 2026-03-09
 ## Merge Notes
 
 - likely conflict surface:
+  - `src/main/java/ch/njol/skript/expressions/ExprInput.java`
+  - `src/test/java/ch/njol/skript/lang/InputSourceCompatibilityTest.java`
   - `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
   - `src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java`
 - no canonical docs touched
