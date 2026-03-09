@@ -25,6 +25,7 @@ import org.skriptlang.skript.bukkit.displays.generic.ExprDisplayGlowOverride;
 import org.skriptlang.skript.bukkit.furnace.elements.ExprFurnaceEventItems;
 import org.skriptlang.skript.bukkit.furnace.elements.ExprFurnaceSlot;
 import org.skriptlang.skript.bukkit.furnace.elements.ExprFurnaceTime;
+import org.skriptlang.skript.bukkit.interactions.elements.expressions.ExprInteractionDimensions;
 import org.skriptlang.skript.bukkit.interactions.elements.expressions.ExprLastInteractionDate;
 import org.skriptlang.skript.bukkit.itemcomponents.ComponentWrapper;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableWrapper;
@@ -190,6 +191,14 @@ final class SkriptFabricAdditionalSyntax {
                 "[the] last (date|time)[s] [that|when] %entities% (were|was) attacked",
                 "[the] last (date|time)[s] [that|when] %entities% (were|was) interacted with",
                 "[the] last (date|time)[s] [that|when] %entities% (were|was) clicked [on]"
+        );
+        Skript.registerExpression(
+                ExprInteractionDimensions.class,
+                Float.class,
+                "[the] interaction widths of %entities%",
+                "%entities%'[s] interaction widths",
+                "[the] interaction heights of %entities%",
+                "%entities%'[s] interaction heights"
         );
         Skript.registerExpression(
                 ExprEquippableComponent.class,
