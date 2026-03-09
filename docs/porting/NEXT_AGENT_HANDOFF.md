@@ -29,7 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `SyntaxRegistryService.register(...)` now preserves `SyntaxInfo.priority()` ordering instead of using plain insertion order, so lower-priority syntax entries sort ahead of later registrations like upstream
+- `Classes.parseSimple(...)` now gives registered class parsers first shot before primitive fallback coercion, so primitive-backed custom parsers behave like upstream
+- omitted optional alternation branches now require defaults for every omitted required placeholder instead of only the first omitted branch
+- `ParserInstance.isRegistered(...)` now exists again, matching the upstream parser-data registration guard used by bridge code
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs

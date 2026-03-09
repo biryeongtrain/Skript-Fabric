@@ -149,6 +149,9 @@ That means the real gap is behavior, not class presence.
 ## Latest Merged Upstream-Core Batch
 
 - restored syntax registration priority ordering in `SyntaxRegistryService`, so lower-priority entries are iterated ahead of later registrations just like upstream
+- made `Classes.parseSimple(...)` consult registered class parsers before primitive fallback coercion, so primitive-backed custom parsers behave like upstream
+- tightened omitted optional-branch default handling so every omitted required placeholder still needs a default
+- restored `ParserInstance.isRegistered(...)` as the upstream parser-data registration guard
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

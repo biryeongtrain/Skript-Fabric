@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - a finisher worker on 2026-03-09 restored syntax registration priority ordering in `SyntaxRegistryService`, so syntax iteration now respects `SyntaxInfo.priority()` rather than raw insertion order
+  - worker merges on 2026-03-09 made `Classes.parseSimple(...)` consult registered class parsers before primitive fallback, required defaults for every omitted required placeholder in optional alternations, and restored `ParserInstance.isRegistered(...)`
 
 ## Priority Shift On 2026-03-08
 
@@ -147,6 +147,9 @@ Landed slices so far:
   - `FunctionReference.consign(...)` now keeps primitive arrays as scalar arguments instead of treating them like plural object-array payloads
   - `ParserInstance` now notifies registered parser-data bridges when current events are set or cleared
   - `SyntaxRegistryService.register(...)` now preserves `SyntaxInfo.priority()` ordering instead of using plain insertion order
+  - `Classes.parseSimple(...)` now prefers registered class parsers over primitive fallback coercion
+  - omitted optional alternation branches now require defaults for every omitted required placeholder
+  - `ParserInstance.isRegistered(...)` now restores the upstream parser-data registration guard
   - explicit literal-pattern matches returned by `Classes.getPatternInfos(...)` now preserve upstream registration order instead of being re-sorted by class-info specificity/dependency order
   - `Classes.getClassInfo(...)` and `getClassInfoNoError(...)` are case-sensitive again, so registry-backed codename probes now match upstream instead of lowercasing arbitrary input
   - `FunctionRegistry` now prefers exact non-`Object` parameter matches over broader assignable overloads, so a literal `Integer` argument no longer makes an exact overload ambiguous with a wider `Number` branch
