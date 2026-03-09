@@ -99,7 +99,7 @@ public final class ParserInstance {
         }
         for (Class<?> expected : eventClasses) {
             for (Class<?> current : currentEventClasses) {
-                if (expected.isAssignableFrom(current) || current.isAssignableFrom(expected)) {
+                if (expected.isAssignableFrom(current)) {
                     return true;
                 }
             }
