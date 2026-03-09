@@ -175,7 +175,7 @@ public final class Classes {
 
     public static String toString(Object[] values, boolean and) {
         if (values == null || values.length == 0) {
-            return "";
+            return toString((Object) null, StringMode.MESSAGE);
         }
         if (values.length == 1) {
             return String.valueOf(values[0]);

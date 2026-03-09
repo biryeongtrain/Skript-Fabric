@@ -175,6 +175,11 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void emptyArrayToStringUsesNullSentinelLikeUpstream() {
+        assertEquals("null", Classes.toString(new Object[0], true));
+    }
+
+    @Test
     void parseFallsBackThroughRegisteredConverters() {
         ClassInfo<ParsedType> parsed = new ClassInfo<>(ParsedType.class, "parsed");
         parsed.setParser(new ClassInfo.Parser<>() {

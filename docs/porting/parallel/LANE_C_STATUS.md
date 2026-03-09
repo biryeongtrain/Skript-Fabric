@@ -27,11 +27,16 @@ Last updated: 2026-03-09
 - mismatch found: upstream treats `setVariable("name::*", null, ...)` as list deletion, but the local flat-map bridge only removed the literal `name::*` key and left descendants intact
 - reproduced via `VariablesCompatibilityTest` with a direct parent value plus nested descendants under `scores::*`
 - applied minimal fix: route `name::*` + `null` through `removePrefix(...)`, which deletes descendants while preserving a direct parent value like upstream `VariablesMap#setVariable(...)`
+- compared local `Classes.toString(Object[], boolean)` with upstream `ch/njol/skript/registrations/Classes#toString(Object[], boolean, ...)`
+- mismatch found: upstream returns the null sentinel for empty arrays, while the local bridge returned an empty string
+- applied minimal fix: empty `Object[]` stringification now delegates to `toString(null, StringMode.MESSAGE)`; added a focused compatibility regression
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/variables/Variables.java`
 - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/registrations/Classes.java`
+- `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
