@@ -373,6 +373,25 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void parseSimplePrefersRegisteredParserOverPrimitiveFallback() {
+        ClassInfo<String> text = new ClassInfo<>(String.class, "text");
+        text.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public String parse(String input, ParseContext context) {
+                return input.startsWith("wrapped-") ? "<" + input.substring(8) + ">" : null;
+            }
+        });
+        Classes.registerClassInfo(text);
+
+        assertEquals("<value>", Classes.parseSimple("wrapped-value", String.class, ParseContext.DEFAULT));
+    }
+
+    @Test
     void parseClearsFailedDirectErrorsBeforeConverterSuccess() {
         ClassInfo<ConverterFallbackTarget> direct = new ClassInfo<>(ConverterFallbackTarget.class, "converterfallbacktarget");
         direct.setParser(new ClassInfo.Parser<>() {

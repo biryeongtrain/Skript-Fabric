@@ -58,6 +58,9 @@ Last updated: 2026-03-09
 - compared local `Classes.parse(...)` converter fallback with upstream `ch/njol/skript/registrations/Classes#parse`
 - mismatch found: upstream skips converters flagged `CONVERTER_NO_COMMAND_ARGUMENTS` in `ParseContext.COMMAND` and `ParseContext.PARSE`, while the local bridge still applied those converters in all contexts
 - applied minimal fix: restored upstream parse-context gating for flagged converters and reintroduced the missing compatibility enum values needed to express those contexts
+- compared local primitive handling in `Classes.parseSimple(...)` with upstream `ch/njol/skript/registrations/Classes#parseSimple`
+- mismatch found: upstream lets registered `ClassInfo` parsers for primitive-backed types run before any fallback coercion, while the local bridge short-circuited `String`/number/boolean parsing first and skipped registered parsers entirely
+- applied minimal fix: `Classes.parseSimple(...)` now consults registered classinfos before the primitive fallback, so custom `String`/numeric parsers behave like upstream
 
 ## Files Changed
 
@@ -112,6 +115,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms flagged converters still work in `ParseContext.DEFAULT` but are skipped in `COMMAND` and `PARSE`
+- Repro (before fix): a registered `ClassInfo<String>` parser never ran because `Classes.parseSimple(...)` returned the raw input through the primitive fallback before checking classinfos, while upstream gives the registered parser first shot
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms registered primitive-backed parsers override the fallback coercion path like upstream
 
 ## Unresolved Risks
 

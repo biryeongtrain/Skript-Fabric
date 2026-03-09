@@ -326,22 +326,22 @@ public final class Classes {
 
     public static <T> @Nullable T parseSimple(String text, Class<T> type, ParseContext context) {
         try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
-            T parsed = parsePrimitive(text, type);
-            if (parsed != null) {
-                log.printLog();
-                return parsed;
-            }
-
             for (ClassInfo<?> info : getSortedClassInfos()) {
                 if (!type.isAssignableFrom(info.getC())) {
                     continue;
                 }
 
-                parsed = parseWithClassInfo(text, type, context, info, log);
+                T parsed = parseWithClassInfo(text, type, context, info, log);
                 if (parsed != null) {
                     log.printLog();
                     return parsed;
                 }
+            }
+
+            T primitive = parsePrimitive(text, type);
+            if (primitive != null) {
+                log.printLog();
+                return primitive;
             }
 
             log.printError();
