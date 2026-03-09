@@ -360,6 +360,21 @@ class ClassesCompatibilityTest {
         assertArrayEquals(new int[]{99, 2}, clonedInner);
     }
 
+    @Test
+    void cloneUsesRegisteredClassInfoClonerBeforeReturningOriginalValue() {
+        ClassInfo<CloneTrackedType> info = new ClassInfo<>(CloneTrackedType.class, "clonetracked")
+                .cloner(value -> new CloneTrackedType(value.value() + 1));
+        Classes.registerClassInfo(info);
+
+        CloneTrackedType original = new CloneTrackedType(5);
+
+        CloneTrackedType clone = Classes.clone(original);
+
+        assertNotSame(original, clone);
+        assertEquals(new CloneTrackedType(6), clone);
+        assertEquals(new CloneTrackedType(5), original);
+    }
+
     private static final class FooType {
     }
 
@@ -394,6 +409,9 @@ class ClassesCompatibilityTest {
     }
 
     private static final class GammaType {
+    }
+
+    private record CloneTrackedType(int value) {
     }
 
     private record ParsedType(int value) {

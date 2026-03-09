@@ -29,6 +29,7 @@ public class ClassInfo<T> {
     private @Nullable Pattern[] userInputPatterns;
     private @Nullable DefaultExpression<T> defaultExpression;
     private @Nullable Parser<T> parser;
+    private @Nullable Cloner<T> cloner;
 
     public ClassInfo(Class<T> type) {
         this(type, deriveCodeName(type));
@@ -75,6 +76,15 @@ public class ClassInfo<T> {
 
     public @Nullable Parser<T> getParser() {
         return parser;
+    }
+
+    public ClassInfo<T> cloner(Cloner<T> cloner) {
+        this.cloner = cloner;
+        return this;
+    }
+
+    public @Nullable Cloner<T> getCloner() {
+        return cloner;
     }
 
     public @Nullable DefaultExpression<T> getDefaultExpression() {
@@ -153,6 +163,10 @@ public class ClassInfo<T> {
 
     public Set<String> after() {
         return after;
+    }
+
+    public T clone(T value) {
+        return cloner == null ? value : cloner.clone(value);
     }
 
     @Override

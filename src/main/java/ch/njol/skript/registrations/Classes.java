@@ -388,6 +388,11 @@ public final class Classes {
             T cast = (T) clone;
             return cast;
         }
+        ClassInfo<T> info = (ClassInfo<T>) getSuperClassInfo((Class<T>) value.getClass());
+        T cloned = info.clone(value);
+        if (cloned != value) {
+            return cloned;
+        }
         if (value instanceof Cloneable) {
             try {
                 return (T) value.getClass().getMethod("clone").invoke(value);
