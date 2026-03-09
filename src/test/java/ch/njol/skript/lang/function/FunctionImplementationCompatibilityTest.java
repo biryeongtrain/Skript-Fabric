@@ -10,6 +10,7 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.variables.Variables;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -127,5 +128,27 @@ class FunctionImplementationCompatibilityTest {
         };
 
         assertNull(function.execute(new Object[][]{{"a"}, {"b"}}));
+    }
+
+    @Test
+    void scriptFunctionStoresUnkeyedPluralParameterValuesUsingOneBasedIndices() {
+        ClassInfo<Integer> intInfo = Classes.getSuperClassInfo(Integer.class);
+        Signature<Integer> signature = new Signature<>(
+                null,
+                "listDefault",
+                new Parameter[]{new Parameter<>("xs", intInfo, false, null)},
+                false,
+                intInfo,
+                false
+        );
+        ScriptFunction<Integer> function = new ScriptFunction<>(signature, new SectionNode("function listDefault:"));
+        FunctionEvent<Integer> event = new FunctionEvent<>(function);
+        SkriptEvent callContext = new SkriptEvent(event, null, null, null);
+
+        function.execute(event, new Object[][]{{1, 7}});
+
+        assertEquals(1, Variables.getVariable("xs::1", callContext, true));
+        assertEquals(7, Variables.getVariable("xs::2", callContext, true));
+        assertNull(Variables.getVariable("xs::0", callContext, true));
     }
 }

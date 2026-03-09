@@ -68,7 +68,7 @@ public class ScriptFunction<T> extends Function<T> implements ReturnHandler<T> {
             } else {
                 for (int i = 0; i < values.length; i++) {
                     Variables.setVariable(
-                            parameter.name() + ch.njol.skript.lang.Variable.SEPARATOR + i,
+                            parameter.name() + ch.njol.skript.lang.Variable.SEPARATOR + (i + 1),
                             values[i],
                             callContext,
                             true
