@@ -29,7 +29,7 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Function.execute(Object[][])` now preserves an explicit empty argument slot for an optional parameter instead of replacing it with the parameter default
+- `Function.execute(Object[][])` now lets direct `null` argument slots through the legacy `executeWithNulls` guard instead of aborting the call
 - targeted regressions added:
   - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
 
@@ -47,7 +47,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 1. broader parser default-value and placeholder-omission parity
 2. broader classinfo/parser registry parity
-3. deeper function runtime/default-parameter semantics
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot and direct-null-slot cases
 4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears
 
 ## Parallel Defaults
