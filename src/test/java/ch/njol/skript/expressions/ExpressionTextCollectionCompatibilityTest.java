@@ -1,0 +1,237 @@
+package ch.njol.skript.expressions;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import ch.njol.skript.Skript;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.KeyedIterableExpression;
+import ch.njol.skript.lang.KeyedValue;
+import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.util.Kleenean;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.registration.SyntaxRegistry;
+
+class ExpressionTextCollectionCompatibilityTest {
+
+    @AfterEach
+    void cleanupRegistry() {
+        Skript.instance().syntaxRegistry().clear(SyntaxRegistry.EXPRESSION);
+        Skript.instance().syntaxRegistry().clear(SyntaxRegistry.CONDITION);
+    }
+
+    @Test
+    void lengthAndCharacterExpressionsMatchUpstreamBehaviors() {
+        ExprLength length = new ExprLength();
+        length.init(new Expression[]{new SimpleLiteral<>(new String[]{"AbC123"}, String.class, true)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(6L, length.getSingle(SkriptEvent.EMPTY));
+
+        ExprNumberOfCharacters uppercase = new ExprNumberOfCharacters();
+        uppercase.init(new Expression[]{new SimpleLiteral<>("AbC123", false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(2L, uppercase.getSingle(SkriptEvent.EMPTY));
+
+        ExprNumberOfCharacters lowercase = new ExprNumberOfCharacters();
+        lowercase.init(new Expression[]{new SimpleLiteral<>("AbC123", false)}, 1, Kleenean.FALSE, parseResult(""));
+        assertEquals(1L, lowercase.getSingle(SkriptEvent.EMPTY));
+
+        ExprNumberOfCharacters digits = new ExprNumberOfCharacters();
+        digits.init(new Expression[]{new SimpleLiteral<>("AbC123", false)}, 2, Kleenean.FALSE, parseResult(""));
+        assertEquals(3L, digits.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void substringSupportsRangesFirstLastAndIndexedSelections() {
+        ExprSubstring range = new ExprSubstring();
+        range.init(new Expression[]{
+                new SimpleLiteral<>("abcdef", false),
+                new SimpleLiteral<>(2, false),
+                new SimpleLiteral<>(4, false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"bcd"}, range.getArray(SkriptEvent.EMPTY));
+
+        ExprSubstring first = new ExprSubstring();
+        SkriptParser.ParseResult firstParse = parseResult("");
+        firstParse.mark = 1;
+        first.init(new Expression[]{
+                new SimpleLiteral<>(3, false),
+                new SimpleLiteral<>("abcdef", false)
+        }, 1, Kleenean.FALSE, firstParse);
+        assertArrayEquals(new String[]{"abc"}, first.getArray(SkriptEvent.EMPTY));
+
+        ExprSubstring last = new ExprSubstring();
+        SkriptParser.ParseResult lastParse = parseResult("");
+        lastParse.mark = 2;
+        last.init(new Expression[]{
+                new SimpleLiteral<>(2, false),
+                new SimpleLiteral<>("abcdef", false)
+        }, 1, Kleenean.FALSE, lastParse);
+        assertArrayEquals(new String[]{"ef"}, last.getArray(SkriptEvent.EMPTY));
+
+        ExprSubstring indexed = new ExprSubstring();
+        indexed.init(new Expression[]{
+                new SimpleLiteral<>(new Number[]{1, 3, 6}, Number.class, true),
+                new SimpleLiteral<>("abcdef", false)
+        }, 3, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"a", "c", "f"}, indexed.getArray(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void alphabeticAndNaturalSortPreserveKeyedIteration() {
+        ExprAlphabetList alphabetic = new ExprAlphabetList();
+        alphabetic.init(new Expression[]{new KeyedStringExpression(
+                new String[]{"beta", "alpha", "gamma"},
+                new String[]{"two", "one", "three"}
+        )}, 0, Kleenean.FALSE, parseResult(""));
+
+        assertArrayEquals(new String[]{"alpha", "beta", "gamma"}, alphabetic.getArray(SkriptEvent.EMPTY));
+        assertArrayEquals(new String[]{"one", "two", "three"}, collectKeys(alphabetic.keyedIterator(SkriptEvent.EMPTY)));
+
+        ExprSortedList sorted = new ExprSortedList();
+        sorted.init(new Expression[]{new KeyedObjectExpression(
+                new Object[]{10, 2, 5},
+                new String[]{"ten", "two", "five"}
+        )}, 0, Kleenean.FALSE, parseResult(""));
+
+        assertArrayEquals(new Object[]{2, 5, 10}, sorted.getArray(SkriptEvent.EMPTY));
+        assertArrayEquals(new String[]{"two", "five", "ten"}, collectKeys(sorted.keyedIterator(SkriptEvent.EMPTY)));
+        assertTrue(sorted.canReturn(Number.class));
+    }
+
+    @Test
+    void randomUuidProducesSingleValueAndWhetherParsesConditionBodies() {
+        ExprRandomUUID randomUuid = new ExprRandomUUID();
+        randomUuid.init(new Expression[0], 0, Kleenean.FALSE, parseResult(""));
+        UUID first = randomUuid.getSingle(SkriptEvent.EMPTY);
+        UUID second = randomUuid.getSingle(SkriptEvent.EMPTY);
+        assertTrue(randomUuid.isSingle());
+        assertNotEquals(first, second);
+
+        Skript.registerCondition(TestCondition.class, "test condition");
+        ExprWhether whether = new ExprWhether();
+        Matcher matcher = Pattern.compile(".+").matcher("test condition");
+        assertTrue(matcher.find());
+        SkriptParser.ParseResult parse = parseResult("");
+        parse.regexes = List.of(matcher);
+
+        assertTrue(whether.init(new Expression[0], 0, Kleenean.FALSE, parse));
+        assertEquals(Boolean.TRUE, whether.getSingle(SkriptEvent.EMPTY));
+        assertEquals("whether test condition", whether.toString(SkriptEvent.EMPTY, false));
+    }
+
+    private static SkriptParser.ParseResult parseResult(String expr) {
+        SkriptParser.ParseResult result = new SkriptParser.ParseResult();
+        result.expr = expr;
+        return result;
+    }
+
+    private static String[] collectKeys(Iterator<? extends KeyedValue<?>> iterator) {
+        List<String> keys = new ArrayList<>();
+        while (iterator.hasNext()) {
+            keys.add(iterator.next().key());
+        }
+        return keys.toArray(String[]::new);
+    }
+
+    private static final class KeyedStringExpression extends SimpleExpression<String> implements KeyedIterableExpression<String> {
+
+        private final String[] values;
+        private final String[] keys;
+
+        private KeyedStringExpression(String[] values, String[] keys) {
+            this.values = values;
+            this.keys = keys;
+        }
+
+        @Override
+        protected String @Nullable [] get(SkriptEvent event) {
+            return values.clone();
+        }
+
+        @Override
+        public boolean canIterateWithKeys() {
+            return true;
+        }
+
+        @Override
+        public Iterator<KeyedValue<String>> keyedIterator(SkriptEvent event) {
+            return List.of(KeyedValue.zip(values, keys)).iterator();
+        }
+
+        @Override
+        public Class<? extends String> getReturnType() {
+            return String.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return false;
+        }
+    }
+
+    private static final class KeyedObjectExpression extends SimpleExpression<Object> implements KeyedIterableExpression<Object> {
+
+        private final Object[] values;
+        private final String[] keys;
+
+        private KeyedObjectExpression(Object[] values, String[] keys) {
+            this.values = values;
+            this.keys = keys;
+        }
+
+        @Override
+        protected Object @Nullable [] get(SkriptEvent event) {
+            return values.clone();
+        }
+
+        @Override
+        public boolean canIterateWithKeys() {
+            return true;
+        }
+
+        @Override
+        public Iterator<KeyedValue<Object>> keyedIterator(SkriptEvent event) {
+            return List.of(KeyedValue.zip(values, keys)).iterator();
+        }
+
+        @Override
+        public Class<? extends Object> getReturnType() {
+            return Number.class;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return false;
+        }
+    }
+
+    public static final class TestCondition extends ch.njol.skript.lang.Condition {
+
+        @Override
+        public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
+            return true;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "test condition";
+        }
+    }
+}
