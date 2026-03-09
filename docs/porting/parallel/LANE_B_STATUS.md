@@ -4,27 +4,25 @@ Last updated: 2026-03-09
 
 ## Scope
 
-- `src/main/java/org/skriptlang/skript/**/conditions/**`
-- `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-- matching condition runtime tests
-- matching gametest `.sk` resources
+- `src/main/java/ch/njol/skript/config/**`
+- `src/main/java/ch/njol/skript/util/**`
+- matching config/util compatibility tests
 
 ## Latest Slice
 
-- primary blocked: the upstream potion-condition family depends on dedicated `%potioneffecttypes%` / tighter potion syntax classes that are not registered on the current Fabric runtime, and adding them would spill into expression/type ownership
-- fallback landed: imported the exact upstream `responsive|unresponsive` condition form on the existing interaction backend
-- `CondIsResponsive` now derives responsive mode from the upstream `:unresponsive` parse tag instead of local matched-pattern counting
-- `SkriptFabricBootstrap` now registers the exact upstream-shaped responsive condition patterns with a shared tagged branch
+- primary landed: restored the upstream-backed config support bundle around `NodeNavigator`, `ConfigReader`, `VoidNode` / `InvalidNode`, and reflective config options via `Option`, `OptionSection`, and legacy `EnumParser`
+- `Config`, `Node`, and `SectionNode` now carry enough upstream navigation/config state for path lookups, config-backed node attachment, and invalid-node error tracking without breaking the current lightweight runtime constructor path
+- fallback landed: restored upstream-style `Utils.parseInt(...)` saturation and added `Version`
 
 ## Verification
 
-- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.ResponsiveSyntaxTest --tests org.skriptlang.skript.fabric.runtime.ConditionBindingTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.config.NodeCompatibilityTest --tests ch.njol.skript.config.SectionNodeCompatibilityTest --tests ch.njol.skript.config.ConfigReaderCompatibilityTest --tests ch.njol.skript.config.ConfigSupportCompatibilityTest --tests ch.njol.skript.util.VersionCompatibilityTest --rerun-tasks` passed
 
 ## Next Lead
 
-- if condition scope stays open, revisit the potion family only after dedicated potion-effect-type syntax registration exists in-lane or is handed off by the coordinator
+- continue inside config/localization with `validate/**` or the localization message stack if it can be imported without widening into non-lane addon/runtime surfaces
 
 ## Merge Notes
 
-- likely conflict surface: `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-- runtime additions are isolated to the responsive interaction condition plus one new condition fixture and two focused runtime tests
+- likely conflict surface: `src/main/java/ch/njol/skript/config/Config.java`, `src/main/java/ch/njol/skript/config/Node.java`, `src/main/java/ch/njol/skript/config/SectionNode.java`, `src/main/java/ch/njol/skript/util/Utils.java`
+- new files are isolated to config support helpers, `Version`, and focused config/util compatibility tests

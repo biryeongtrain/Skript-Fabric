@@ -34,4 +34,15 @@ public final class Utils {
     public static Class<?> getComponentType(Class<?> type) {
         return type != null && type.isArray() ? type.getComponentType() : type;
     }
+
+    public static int parseInt(String value) {
+        if (value == null || !value.matches("-?\\d+")) {
+            throw new IllegalArgumentException("Not an integer: " + value);
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ignored) {
+            return value.startsWith("-") ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        }
+    }
 }
