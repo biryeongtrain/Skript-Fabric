@@ -12,10 +12,12 @@ import java.lang.reflect.Field;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.base.effects.EffFeed;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
+@Tag("isolated-registry")
 final class FeedSyntaxTest {
 
     @BeforeAll

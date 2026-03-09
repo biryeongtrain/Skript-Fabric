@@ -74,7 +74,45 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'isolated-registry'
+    }
+}
+
+def isolatedRegistrySuites = [
+        [
+                taskName: 'isolatedEffectCompatibilityTest',
+                className: 'ch.njol.skript.effects.EffectCompatibilityTest'
+        ],
+        [
+                taskName: 'isolatedEffectSyntaxParsingTest',
+                className: 'org.skriptlang.skript.fabric.runtime.EffectSyntaxParsingTest'
+        ],
+        [
+                taskName: 'isolatedFeedSyntaxTest',
+                className: 'org.skriptlang.skript.fabric.runtime.FeedSyntaxTest'
+        ]
+]
+
+isolatedRegistrySuites.each { suite ->
+    tasks.register(suite.taskName, Test) {
+        useJUnitPlatform()
+        filter {
+            includeTestsMatching suite.className
+        }
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        maxParallelForks = 1
+        shouldRunAfter test
+    }
+}
+
+tasks.register('isolatedRegistryTest') {
+    dependsOn isolatedRegistrySuites.collect { suite -> tasks.named(suite.taskName) }
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('isolatedRegistryTest')
 }
 
 tasks.named('runGameTest', JavaExec).configure {
