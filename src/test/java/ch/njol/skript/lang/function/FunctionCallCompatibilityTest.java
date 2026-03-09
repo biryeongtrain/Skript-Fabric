@@ -236,6 +236,21 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void dynamicLocalFunctionReferenceWithoutTrackedScriptInvalidatesWhenNamespaceClears() {
+        EchoFunction function = registerLocalEchoFunction("local.sk", "orphanedLocal");
+
+        DynamicFunctionReference<?> reference = DynamicFunctionReference.resolveFunction("orphanedLocal", "local.sk");
+
+        assertNotNull(reference);
+        assertTrue(reference.valid());
+
+        Functions.clearFunctions("local.sk");
+
+        assertTrue(!reference.valid());
+        assertNull(reference.execute(SkriptEvent.EMPTY, "after unload"));
+    }
+
+    @Test
     void dynamicLocalFunctionReferenceBuiltFromResolvedFunctionInvalidatesWithTrackedScript() throws Exception {
         File backingFile = Files.createTempFile("tracked-local-direct", ".sk").toFile();
         backingFile.deleteOnExit();

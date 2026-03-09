@@ -109,7 +109,24 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
 
     @Override
     public boolean valid() {
-        return resolved && valid && function.get() != null && (source == null || source.valid());
+        if (!resolved || !valid) {
+            return false;
+        }
+        Function<? extends Result> resolvedFunction = function.get();
+        if (resolvedFunction == null) {
+            return false;
+        }
+        if (source != null) {
+            return source.valid();
+        }
+        if (sourceName != null && !sourceName.isBlank()) {
+            Namespace namespace = Functions.getScriptNamespace(sourceName);
+            if (namespace == null || signature == null) {
+                return false;
+            }
+            return namespace.getFunction(name, signature.isLocal()) == resolvedFunction;
+        }
+        return true;
     }
 
     @Override
