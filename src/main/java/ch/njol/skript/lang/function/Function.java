@@ -81,7 +81,7 @@ public abstract class Function<T> {
                 parameterValue = convertToKeyed(parameterValue);
             }
 
-            if (!executeWithNulls && (parameterValue == null || parameterValue.length == 0)) {
+            if (!executeWithNulls && parameterValue != null && parameterValue.length == 0) {
                 return null;
             }
             values[i] = parameterValue;

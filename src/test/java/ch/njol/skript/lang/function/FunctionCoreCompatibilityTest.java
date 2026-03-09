@@ -136,6 +136,40 @@ class FunctionCoreCompatibilityTest {
     }
 
     @Test
+    void functionExecuteAllowsNullSlotsWhenExecuteWithNullsIsDisabled() {
+        boolean previous = Function.executeWithNulls;
+        Function.executeWithNulls = false;
+        try {
+            Signature<Integer> signature = new Signature<>(
+                    null,
+                    "f",
+                    new Parameter[]{new Parameter<>("x", Classes.getSuperClassInfo(Integer.class), true, null)},
+                    false,
+                    Classes.getSuperClassInfo(Integer.class),
+                    true
+            );
+            Function<Integer> function = new Function<>(signature) {
+                @Override
+                public Integer[] execute(FunctionEvent<?> event, Object[][] params) {
+                    return new Integer[]{params[0] == null ? 7 : 0};
+                }
+
+                @Override
+                public boolean resetReturnValue() {
+                    return true;
+                }
+            };
+
+            Integer[] result = function.execute(new Object[][]{null});
+
+            assertNotNull(result);
+            assertEquals(7, result[0]);
+        } finally {
+            Function.executeWithNulls = previous;
+        }
+    }
+
+    @Test
     void functionRegistryResolvesExactAndAmbiguousFunctions() {
         FunctionRegistry registry = FunctionRegistry.getRegistry();
         registry.clear();

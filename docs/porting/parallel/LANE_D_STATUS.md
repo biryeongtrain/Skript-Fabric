@@ -10,8 +10,8 @@ Last updated: 2026-03-09
 ## Latest Slice
 
 - fixed one upstream-backed runtime mismatch in `Function.execute(Object[][])`
-- local behavior previously treated an explicit empty argument slot (`new Object[0]`) like a missing value and replaced it with a default for ordinary optional parameters
-- upstream only evaluates ordinary parameter defaults for `null` slots; an empty provided array stays empty, with keyed defaults remaining the only special-case empty-slot fallback
+- local behavior previously aborted execution when `executeWithNulls` was disabled and a runtime caller passed a `null` parameter slot directly
+- upstream only aborts that legacy guard for empty arrays; `null` slots still reach the function body unless a default expression fills them first
 
 ## Files Changed
 
@@ -26,7 +26,7 @@ Last updated: 2026-03-09
 
 ## Next Lead
 
-- continue upstream diff review for one remaining mergeable mismatch in overload resolution, namespace fallback, or null-vs-empty runtime edges
+- continue upstream diff review for one remaining mergeable mismatch in overload resolution, namespace fallback, or `DefaultFunction`-specific runtime edges
 
 ## Merge Notes
 
