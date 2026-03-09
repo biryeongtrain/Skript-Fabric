@@ -4,25 +4,32 @@ Last updated: 2026-03-09
 
 ## Scope
 
-- `ch/njol/skript/lang/parser` + `ch/njol/skript/log` shared logging compatibility
+- `ch/njol/skript/lang/function` facade compatibility + missing `package-info.java` files
+- `ch/njol/skript/log` support handlers
 - touched no canonical docs and no files outside lane ownership
 
 ## Latest Slice
 
-- restored upstream-facing parser-owned log handler state through `ParserInstance.getHandlers()` plus new local `HandlerList`
-- `SkriptLogger` now uses the active parser instance handler stack instead of a raw thread-local deque, and now exposes upstream-facing `Verbosity`, node bridge, and tracked logging helpers needed by broader imports
-- added focused regressions for parser-instance handler isolation, parser-bound log routing, verbosity threshold ordering, and node bridge behavior
+- restored upstream-style `ErrorDescLogHandler` and `TimingLogHandler`, plus `ch/njol/skript/log/package-info.java`
+- extended `LogHandlerCompatibilityTest` to cover error/success boundary logging, out-of-order handler stop semantics, and timing handler elapsed-time tracking
+- restored upstream-facing `Functions` facade entry points for `registerFunction(...)`, global `getFunction(...)` / `getSignature(...)`, `getJavaFunctions()`, and no-arg `clearFunctions()`
+- added focused function facade regressions and restored the missing `package-info.java` files under `lang`, `lang/function`, `lang/parser`, and `lang/util`
+- commits:
+  - `01fd00330` `feat(log): restore upstream compatibility handlers`
+  - `9893b6339` `feat(lang): restore function facade entry points`
 
 ## Verification
 
-- upstream reference: compared parser/log API ownership against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/HandlerList.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/Verbosity.java`, and `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/SkriptLogger.java`
-- `./gradlew test --tests ch.njol.skript.log.LogHandlerCompatibilityTest --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks`
+- upstream reference: compared against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/ErrorDescLogHandler.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/TimingLogHandler.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/log/package-info.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Functions.java`, and the matching upstream `package-info.java` files under `lang/**`
+- `./gradlew test --tests ch.njol.skript.log.LogHandlerCompatibilityTest --rerun-tasks`
+  - passed
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- continue upstream diff review for more mergeable `lang/function` runtime/default-parameter gaps, or import another self-contained `log` support class if it stays lane-local and verifiable
+- continue upstream diff review for more mergeable `lang/function` runtime APIs, or import another self-contained `log` helper if it does not drag in Bukkit/test-runner-only dependencies
 
 ## Merge Notes
 
-- likely conflict surface is `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`, `src/main/java/ch/njol/skript/log/SkriptLogger.java`, the two new `log` support classes, and the focused parser/log compatibility tests
+- likely conflict surface is `src/main/java/ch/njol/skript/lang/function/Functions.java`, `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`, `src/test/java/ch/njol/skript/log/LogHandlerCompatibilityTest.java`, and the new `package-info.java` files under `src/main/java/ch/njol/skript/lang/**` plus `src/main/java/ch/njol/skript/log/package-info.java`
