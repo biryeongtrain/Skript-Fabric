@@ -379,6 +379,18 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsSkipsEntryNodesLikeUpstream() {
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    new EntryNode("marker", "emerald_block")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(logs.messages().isEmpty());
+        }
+    }
+
+    @Test
     void loadItemsLogsWhitespaceOnlySimpleLine() {
         try (TestLogAppender logs = TestLogAppender.attach()) {
             List<TriggerItem> items = ScriptLoader.loadItems(root(

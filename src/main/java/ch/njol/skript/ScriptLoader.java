@@ -2,6 +2,7 @@ package ch.njol.skript;
 
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.ExecutionIntent;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.Statement;
@@ -86,6 +87,9 @@ public final class ScriptLoader {
     }
 
     private static @Nullable TriggerItem parseTriggerItem(Node node, List<TriggerItem> triggerItems) {
+        if (!(node instanceof SimpleNode) && !(node instanceof SectionNode)) {
+            return null;
+        }
         String key = node.getKey();
         if (key == null) {
             return null;

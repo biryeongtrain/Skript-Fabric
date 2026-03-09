@@ -4,13 +4,13 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- compared the lane-owned loader/statement diagnostics path against upstream `e6ec744` and found one remaining mismatch on whitespace-only simple nodes: upstream still routes them through `Statement.parse(...)` and emits the generic loader error, while the local shim skipped them before parsing
-- implemented the narrowest fix in `src/main/java/ch/njol/skript/ScriptLoader.java` and `src/main/java/ch/njol/skript/lang/Statement.java` by stopping the pre-parse blank-line suppression for synthetic simple nodes
+- compared the lane-owned loader node dispatch against upstream `e6ec744` and found one remaining mismatch on config-only child nodes: upstream `ScriptLoader.loadItems(...)` only parses `SimpleNode` and `SectionNode`, while the local shim attempted statement parsing for any non-section `Node`, including `EntryNode`
+- implemented the narrowest fix in `src/main/java/ch/njol/skript/ScriptLoader.java` by skipping non-`SimpleNode` non-`SectionNode` children during trigger loading
 - tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
-  - added `loadItemsLogsWhitespaceOnlySimpleLine`
-  - asserts that a whitespace-only simple node now produces the upstream-style `Can't understand this condition/effect:` diagnostic instead of being silently ignored
+  - added `loadItemsSkipsEntryNodesLikeUpstream`
+  - asserts that an `EntryNode` child is ignored without emitting the generic `Can't understand this condition/effect: ...` diagnostic
 - verification:
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsLogsWhitespaceOnlySimpleLine --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsSkipsEntryNodesLikeUpstream --rerun-tasks`
 
 ## Next Lead
 
