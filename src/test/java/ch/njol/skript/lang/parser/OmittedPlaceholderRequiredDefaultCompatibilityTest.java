@@ -1,11 +1,16 @@
 package ch.njol.skript.lang.parser;
 
+import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
+import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.log.ParseLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.lang.ParseContext;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.registrations.Classes;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -59,6 +64,39 @@ class OmittedPlaceholderRequiredDefaultCompatibilityTest {
         );
 
         assertNotNull(parsed, "unmatched choice-branch placeholder must not force a default");
+    }
+
+    @Test
+    void requiredOmittedPlaceholderRetainsMissingAndInvalidDefaultDiagnostics() {
+        SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
+            NullAcceptingEffect.class,
+            new String[]{"probe [%~number/text%]"},
+            NullAcceptingEffect.class.getName()
+        );
+
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number"));
+        Classes.registerClassInfo(new ClassInfo<>(String.class, "text"));
+
+        DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
+        data.addDefaultValue(Integer.class, new SimpleLiteral<>(7, true));
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            Effect parsed = SkriptParser.parseModern(
+                    "probe",
+                    List.of(info).iterator(),
+                    ParseContext.DEFAULT,
+                    null
+            );
+
+            assertNull(parsed);
+            assertTrue(log.hasError());
+            assertNotNull(log.getError());
+            assertTrue(log.getError().getMessage().contains("default expression of 'number' is a literal"));
+            assertTrue(log.getError().getMessage().contains("class 'text' does not provide a default expression"));
+        } finally {
+            data.removeDefaultValue(Integer.class);
+            Classes.clearClassInfos();
+        }
     }
 
     public static final class NullAcceptingEffect extends Effect {

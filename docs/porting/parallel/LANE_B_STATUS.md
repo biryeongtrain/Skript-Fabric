@@ -18,32 +18,32 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: local `SkriptPattern.match(...)` collapsed all input whitespace before matching, so parser placeholders could receive normalized text instead of the user's exact inner spacing. Upstream trims outer whitespace but does not rewrite placeholder contents.
-- minimal fix: matcher input now preserves internal whitespace and only trims the outer edges before keyword prefiltering and regex matching.
+- mismatch: local omitted-placeholder default diagnostics dropped `NOT_FOUND` classinfo failures whenever another default-expression error existed, so mixed union placeholders only reported the invalid default branch. Upstream keeps every failure reason when no default is usable.
+- minimal fix: `SkriptParser.findDefaultValue(...)` now retains missing-default failures in the aggregated upstream-style error message instead of filtering them out.
 
 ## Regression Added
 
-- `ch.njol.skript.lang.SkriptParserRegistryTest`
-  - quoted `%string%` placeholder captures now keep internal repeated spaces instead of collapsing them during pattern matching
+- `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
+  - omitted `%~number/text%` placeholders now report both the invalid literal default for `number` and the missing default for `text`
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
-- `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
+- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
+- `src/test/java/ch/njol/skript/lang/parser/OmittedPlaceholderRequiredDefaultCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests 'ch.njol.skript.lang.SkriptParserRegistryTest' --rerun-tasks`
+  - `./gradlew test --tests 'ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest' --tests 'ch.njol.skript.lang.SkriptParserRegistryTest' --rerun-tasks`
 - results: passed
 
 ## Remaining Risks
 
-- this slice only covers matcher whitespace preservation for parser-fed placeholder text
-- inline literal-space permissiveness and other matcher edge cases remain unchanged
+- this slice only covers aggregated omitted-placeholder default diagnostics for mixed union placeholders
+- default selection order and non-diagnostic parser differences remain unchanged
 
 ## Merge Notes
 
-- conflict surface is limited to `SkriptPattern.match(...)`, one parser registry regression, and this lane file
-- this slice does not touch `SkriptParser`, loader flow, or class/default registry logic
+- conflict surface is limited to `SkriptParser.findDefaultValue(...)`, one omitted-placeholder regression, and this lane file
+- this slice stays within parser default-value behavior and does not touch matcher structure or loader flow

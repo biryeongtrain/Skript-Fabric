@@ -578,10 +578,8 @@ public class SkriptParser {
             DefaultExpressionUtils.DefaultExpressionError error =
                     DefaultExpressionUtils.isValid(defaultExpression, exprInfo, i);
             if (error != null) {
-                if (error != DefaultExpressionUtils.DefaultExpressionError.NOT_FOUND) {
-                    failed.computeIfAbsent(error, ignored -> new ArrayList<>())
-                            .add(getDefaultCodeName(returnTypes[i]));
-                }
+                failed.computeIfAbsent(error, ignored -> new ArrayList<>())
+                        .add(getDefaultCodeName(returnTypes[i]));
                 continue;
             }
             if (defaultExpression == null) {
