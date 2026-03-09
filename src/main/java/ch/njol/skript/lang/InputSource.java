@@ -29,9 +29,12 @@ public interface InputSource {
         InputSource originalSource = inputData.getSource();
         inputData.setSource(this);
         try {
-            @SuppressWarnings({"rawtypes", "unchecked"})
-            Expression<?> mappingExpr = new SkriptParser(expr, flags, ParseContext.DEFAULT)
-                    .parseExpression(new Class[]{Object.class});
+            Expression<?> mappingExpr = ParserInstance.withInstance(parser, () -> {
+                @SuppressWarnings({"rawtypes", "unchecked"})
+                Expression<?> parsed = new SkriptParser(expr, flags, ParseContext.DEFAULT)
+                        .parseExpression(new Class[]{Object.class});
+                return parsed;
+            });
             if (mappingExpr != null && LiteralUtils.hasUnparsedLiteral(mappingExpr)) {
                 mappingExpr = LiteralUtils.defendExpression(mappingExpr);
                 if (!LiteralUtils.canInitSafely(mappingExpr)) {

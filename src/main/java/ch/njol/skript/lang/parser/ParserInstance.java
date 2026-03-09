@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 
@@ -40,6 +41,16 @@ public final class ParserInstance {
 
     public static ParserInstance get() {
         return LOCAL.get();
+    }
+
+    public static <T> T withInstance(ParserInstance parser, Supplier<T> action) {
+        ParserInstance previous = LOCAL.get();
+        LOCAL.set(parser);
+        try {
+            return action.get();
+        } finally {
+            LOCAL.set(previous);
+        }
     }
 
     public static <T extends Data> void registerData(Class<T> type, Function<ParserInstance, T> factory) {

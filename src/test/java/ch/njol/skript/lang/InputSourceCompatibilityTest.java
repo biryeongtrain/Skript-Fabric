@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.expressions.ExprInput;
@@ -35,6 +36,24 @@ class InputSourceCompatibilityTest {
         assertNotNull(parsed);
         assertEquals("anything", parsed.getSingle(SkriptEvent.EMPTY));
         assertSame(previous, inputData.getSource());
+    }
+
+    @Test
+    void parseExpressionUsesPassedParserInsteadOfAmbientThreadLocalParser() {
+        ParserInstance ambientParser = ParserInstance.get();
+        InputSource.InputData ambientInputData = ambientParser.getData(InputSource.InputData.class);
+        DummyInputSource ambientSource = new DummyInputSource("ambient");
+        ambientInputData.setSource(ambientSource);
+
+        ParserInstance parser = new ParserInstance();
+        DummyInputSource source = new DummyInputSource("alpha");
+
+        Expression<?> parsed = source.parseExpression("input", parser, SkriptParser.ALL_FLAGS);
+
+        assertNotNull(parsed);
+        assertEquals("alpha", parsed.getSingle(SkriptEvent.EMPTY));
+        assertSame(ambientSource, ambientInputData.getSource());
+        assertNull(parser.getData(InputSource.InputData.class).getSource());
     }
 
     @Test
