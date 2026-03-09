@@ -129,6 +129,11 @@ Landed slices so far:
   - `ch/njol/skript/variables/TypeHints` now restores the legacy add/get/enter-scope/exit-scope/clear bridge on top of the active hint manager
   - `ch/njol/skript/classes/Parser`, `PatternedParser`, `Converter`, and `ch/njol/skript/registrations/Converters` now restore the missing wrapper and adapter surface expected by older parser/converter paths
 - latest `lang` core closure batch:
+  - `SectionNode` now refreshes mapped parent lookups when a child node key changes, so renamed nodes stay reachable through section lookup like upstream
+  - compiled `SkriptPattern` matching now preserves placeholder whitespace instead of normalizing all inner spacing before capture
+  - `FunctionRegistry` now keeps overload resolution ambiguous when different overloads only satisfy exact-type preference on different argument positions
+  - `ParserInstance.setCurrentScript(...)` now clears transient parser bridge state on script switches so node/event/input-source data does not leak between scripts
+  - retained severe parse-log fallback now uses semantic error quality instead of a generic quality bucket
   - `SkriptParser.parseStatic(...)` now matches legacy `SyntaxElementInfo` patterns with `ALL_FLAGS`, so expression-only placeholders such as `%~integer%` work again through the legacy parse path while placeholder-level masks still control literal versus expression acceptance
   - `Classes.getPatternInfos(...)` now only returns explicitly registered literal-pattern matches, so parser-backed class infos no longer appear as unparsed-literal candidates unless they also declare a literal pattern
   - explicit literal-pattern matches returned by `Classes.getPatternInfos(...)` now preserve upstream registration order instead of being re-sorted by class-info specificity/dependency order
@@ -165,7 +170,7 @@ Landed slices so far:
   - `SkriptParser.parseModern(...)` and `parseStatic(...)` now fail the whole pattern when a required placeholder is omitted through an optional branch and no parser or classinfo default exists, instead of constructing a `null` expression path that upstream rejects
   - `SkriptParser.parseModern(...)` and `parseStatic(...)` now also reject blank trimmed input before fully optional patterns can match
   - the current `Statement` / `ScriptLoader` / `Section` corpus was rerun in a separate lane audit and did not surface another mergeable mismatch in the green suite
-  - focused regression coverage now locks the new registry, function, and parser behaviors in `ClassesCompatibilityTest`, `UnparsedLiteralCompatibilityTest`, `FunctionOverloadDisambiguationTest`, `FunctionCoreCompatibilityTest`, `FunctionImplementationCompatibilityTest`, `FunctionCallCompatibilityTest`, `FunctionDefaultKeyedParameterCompatibilityTest`, `OmittedPlaceholderRequiredDefaultCompatibilityTest`, `SkriptParserBlankInputCompatibilityTest`, `SkriptParserStaticFlagsCompatibilityTest`, `SkriptParserRegistryTest`, `PatternCompilerCompatibilityTest`, `ParserCompatibilityDataAndStackTest`, `ParserInstanceCompatibilityTest`, `TriggerItemCompatibilityTest`, and `ScriptLoaderCompatibilityTest`
+  - focused regression coverage now locks the new registry, function, parser, config, and loader behaviors in `ClassesCompatibilityTest`, `UnparsedLiteralCompatibilityTest`, `FunctionOverloadDisambiguationTest`, `FunctionCoreCompatibilityTest`, `FunctionImplementationCompatibilityTest`, `FunctionCallCompatibilityTest`, `FunctionDefaultKeyedParameterCompatibilityTest`, `OmittedPlaceholderRequiredDefaultCompatibilityTest`, `SkriptParserBlankInputCompatibilityTest`, `SkriptParserStaticFlagsCompatibilityTest`, `SkriptParserRegistryTest`, `PatternCompilerCompatibilityTest`, `ParserCompatibilityDataAndStackTest`, `ParserInstanceCompatibilityTest`, `SectionNodeCompatibilityTest`, `TriggerItemCompatibilityTest`, and `ScriptLoaderCompatibilityTest`
 - input-source parser/runtime closure:
   - `ch/njol/skript/expressions/ExprInput` is no longer only a minimal compatibility stub
   - `ch/njol/skript/lang/SkriptParser` now resolves `input`, typed `%classinfo% input`, and `input index` directly when an `InputSource` context is active

@@ -29,6 +29,11 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
+- `SectionNode` now refreshes parent mapped lookups when a child node key is renamed, so renamed config entries stay addressable through section lookup like upstream
+- compiled pattern matching now preserves placeholder whitespace instead of normalizing all inner spacing before capture, so parser/runtime consumers see the original matched text
+- `FunctionRegistry` now keeps overload resolution ambiguous when different overloads only win exact-type checks on different argument positions, instead of fabricating a single exact winner
+- `ParserInstance.setCurrentScript(...)` now clears transient parser bridge state on script switches, so event/node/input-source data does not leak between scripts
+- retained severe parse-log fallback now uses semantic error quality instead of a generic quality bucket
 - `Classes.toString(..., StringMode.VARIABLE_NAME)` now prefixes parser-less fallback values as `object:...` like upstream
 - `SkriptParser.parseStatic(...)` and `parseModern(...)` now reject blank trimmed input before optional patterns can match
 - `DynamicFunctionReference.parseFunction(...)` now drops unresolved `from missing.sk` suffixes before global fallback
@@ -62,14 +67,15 @@ These are already closed. Do not reopen without a new reproducer.
 - explicit-literal-only `Classes.getPatternInfos(...)` candidate filtering
 - case-sensitive classinfo lookup
 - exact-type overload preference in `FunctionRegistry`
+- split exact-overload ambiguity retention
 - required omitted-placeholder fail-fast parsing
 
 ## Next Targets
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, and invalid-default-diagnostic rules
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, classinfo-cloner, and variable-name fallback slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, local dynamic-reference namespace, and missing-source normalization cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parser-node-root retention, and specific-error-over-fallback retention slices
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, classinfo-cloner, variable-name fallback, and renamed-node map-sync slices
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, local dynamic-reference namespace, missing-source normalization, and split-exact-overload ambiguity cases
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parser-node-root retention, specific-error-over-fallback retention, and semantic fallback-quality slices
 
 ## Parallel Defaults
 

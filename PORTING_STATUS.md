@@ -8,5 +8,5 @@ Current headline:
 - Stage 8 package-local audit: `23 / 214`
 - latest verified runtime baseline: `230 / 230` scheduled Fabric GameTests and `./gradlew build --rerun-tasks` passed on 2026-03-09
 - new immediate priority: upstream `ch/njol/skript` closure first (`140 / 1189` local versus upstream snapshot `e6ec744`), then exact missing user-visible syntax import on top of that closure
-- latest closed core slice: worker-merged classes/loader/parser/runtime/function parity for variable-name fallback prefixing, blank-input parser rejection, missing dynamic-source normalization, and retained specific parse errors over generic fallback
+- latest closed core slice: worker-merged config/parser/function/runtime parity for node-rename map sync, placeholder-whitespace preservation, split exact-overload ambiguity retention, parser-state reset on script switch, and semantic retained fallback errors
 - Codex parallel-session runbook: `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
