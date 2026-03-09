@@ -43,6 +43,11 @@ public abstract class TriggerItem implements Debuggable {
                 }
                 return true;
             });
+        } catch (StackOverflowError err) {
+            if (Skript.debug()) {
+                err.printStackTrace();
+            }
+            return false;
         } catch (Exception ex) {
             if (Skript.debug()) {
                 ex.printStackTrace();

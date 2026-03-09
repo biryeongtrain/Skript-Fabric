@@ -12,6 +12,11 @@ class TriggerItemCompatibilityTest {
         assertFalse(TriggerItem.walk(new ThrowingTriggerItem(), SkriptEvent.EMPTY));
     }
 
+    @Test
+    void walkReturnsFalseWhenRunThrowsStackOverflowError() {
+        assertFalse(TriggerItem.walk(new StackOverflowTriggerItem(), SkriptEvent.EMPTY));
+    }
+
     private static final class ThrowingTriggerItem extends TriggerItem {
 
         @Override
@@ -22,6 +27,19 @@ class TriggerItemCompatibilityTest {
         @Override
         public String toString(SkriptEvent event, boolean debug) {
             return "throwing trigger item";
+        }
+    }
+
+    private static final class StackOverflowTriggerItem extends TriggerItem {
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            throw new StackOverflowError("boom");
+        }
+
+        @Override
+        public String toString(SkriptEvent event, boolean debug) {
+            return "stack overflow trigger item";
         }
     }
 }

@@ -9,9 +9,9 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed `TriggerItem` mismatch: `walk(...)` now catches ordinary trigger-time exceptions and returns `false` instead of throwing through the trigger bridge
-- kept scope narrow to the runtime bridge only; no stack-overflow handling or broader parser/runtime deltas were pulled in
-- added a focused regression proving a throwing trigger item fails closed through `walk(...)`
+- fixed one upstream-backed `TriggerItem` mismatch: `walk(...)` now catches `StackOverflowError` and returns `false` instead of letting the trigger bridge tear through the runtime
+- kept scope narrow to the runtime bridge only; did not pull in upstream's broader admin-broadcast/reporting path
+- extended the focused trigger-bridge regression coverage to prove both ordinary exceptions and direct `StackOverflowError`s fail closed through `walk(...)`
 
 ## Files Changed
 
@@ -22,7 +22,7 @@ Last updated: 2026-03-09
 ## Verification
 
 - `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/TriggerItem.java src/main/java/ch/njol/skript/lang/TriggerItem.java`
-  - confirmed local `walk(...)` no longer matched upstream's catch-and-return-false behavior for ordinary exceptions
+  - confirmed local `walk(...)` still diverged from upstream by rethrowing `StackOverflowError` instead of failing closed
 - `./gradlew test --tests ch.njol.skript.lang.TriggerItemCompatibilityTest --rerun-tasks`
   - passed
 
