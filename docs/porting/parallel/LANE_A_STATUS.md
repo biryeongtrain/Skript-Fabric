@@ -21,6 +21,25 @@ Last updated: 2026-03-09
 
 ## Work Log
 
+### 2026-03-09 Retaining Default-Error Quality Slice
+
+- compared the lane-owned log fallback helpers against upstream `e6ec744` and found one remaining retained-diagnostics mismatch in `RetainingLogHandler`:
+  - upstream `RetainingLogHandler.printErrors(@Nullable String def)` emits the fallback error at semantic parse-error quality
+  - the local shim was still delegating to `ErrorQuality.GENERIC`, which made default retained parse failures weaker than upstream when outer parse-log selection compared them against later failures
+- implemented the narrowest lane-owned fix:
+  - `src/main/java/ch/njol/skript/log/RetainingLogHandler.java`
+    - changed the default `printErrors(def)` path to use `ErrorQuality.SEMANTIC_ERROR`
+- added one focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `retainingLogHandlerDefaultFallbackUsesSemanticErrorQuality`
+  - starts an outer `ParseLogHandler`, prints a default retained error through `RetainingLogHandler`, and asserts the captured error keeps upstream semantic quality
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/log/RetainingLogHandler.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.retainingLogHandlerDefaultFallbackUsesSemanticErrorQuality --rerun-tasks`
+    - passed
+
 ### 2026-03-09 Retained Default-Error Suppression Slice
 
 - compared the lane-owned retained-diagnostics flow against upstream `e6ec744` and found one remaining mismatch around generic fallback emission on plain statement parsing:

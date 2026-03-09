@@ -50,7 +50,7 @@ public class RetainingLogHandler extends LogHandler {
     }
 
     public final boolean printErrors(@Nullable String defaultError) {
-        return printErrors(defaultError, ErrorQuality.GENERIC);
+        return printErrors(defaultError, ErrorQuality.SEMANTIC_ERROR);
     }
 
     public final boolean printErrors(@Nullable String defaultError, ErrorQuality quality) {

@@ -27,6 +27,8 @@ import ch.njol.skript.lang.function.Signature;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.log.ErrorQuality;
 import ch.njol.skript.log.LogEntry;
+import ch.njol.skript.log.ParseLogHandler;
+import ch.njol.skript.log.RetainingLogHandler;
 import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.structures.StructOptions;
@@ -898,6 +900,18 @@ class ScriptLoaderCompatibilityTest {
         assertEquals(1, TestNumberSectionExpression.initCalls);
         assertNull(TestNumberSectionExpression.lastSectionNode);
         assertNull(TestNumberSectionExpression.lastTriggerItems);
+    }
+
+    @Test
+    void retainingLogHandlerDefaultFallbackUsesSemanticErrorQuality() {
+        try (ParseLogHandler outerLog = SkriptLogger.startParseLogHandler();
+             RetainingLogHandler retainingLog = SkriptLogger.startRetainingLog()) {
+            retainingLog.printErrors("retained default error");
+
+            LogEntry error = outerLog.getError();
+            assertEquals("retained default error", error == null ? null : error.getMessage());
+            assertEquals(ErrorQuality.SEMANTIC_ERROR, error == null ? null : error.getQuality());
+        }
     }
 
     private static SectionNode root(Node... children) {
