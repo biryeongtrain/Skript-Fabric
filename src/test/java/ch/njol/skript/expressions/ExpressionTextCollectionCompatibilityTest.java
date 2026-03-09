@@ -94,6 +94,49 @@ class ExpressionTextCollectionCompatibilityTest {
     }
 
     @Test
+    void charactersAndCodepointsFollowLegacyTextSemantics() {
+        ExprCharacters ascending = new ExprCharacters();
+        ascending.init(new Expression[]{
+                new SimpleLiteral<>("a", false),
+                new SimpleLiteral<>("d", false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"a", "b", "c", "d"}, ascending.getArray(SkriptEvent.EMPTY));
+
+        ExprCharacters descendingAlphanumeric = new ExprCharacters();
+        SkriptParser.ParseResult descendingParse = parseResult("");
+        descendingParse.tags.add("alphanumeric");
+        descendingAlphanumeric.init(new Expression[]{
+                new SimpleLiteral<>("d", false),
+                new SimpleLiteral<>("a", false)
+        }, 0, Kleenean.FALSE, descendingParse);
+        assertArrayEquals(new String[]{"d", "c", "b", "a"}, descendingAlphanumeric.getArray(SkriptEvent.EMPTY));
+
+        ExprCharacters alphanumericRange = new ExprCharacters();
+        SkriptParser.ParseResult alphanumericParse = parseResult("");
+        alphanumericParse.tags.add("alphanumeric");
+        alphanumericRange.init(new Expression[]{
+                new SimpleLiteral<>("0", false),
+                new SimpleLiteral<>("C", false)
+        }, 0, Kleenean.FALSE, alphanumericParse);
+        assertArrayEquals(
+                new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"},
+                alphanumericRange.getArray(SkriptEvent.EMPTY)
+        );
+
+        ExprCodepoint codepoint = new ExprCodepoint();
+        codepoint.init(new Expression[]{new SimpleLiteral<>("A", false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(65, codepoint.getSingle(SkriptEvent.EMPTY));
+
+        ExprCodepoint emojiCodepoint = new ExprCodepoint();
+        emojiCodepoint.init(new Expression[]{new SimpleLiteral<>("🙂", false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals("🙂".codePointAt(0), emojiCodepoint.getSingle(SkriptEvent.EMPTY));
+
+        ExprCharacterFromCodepoint fromCodepoint = new ExprCharacterFromCodepoint();
+        fromCodepoint.init(new Expression[]{new SimpleLiteral<>(65, false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals("A", fromCodepoint.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
     void alphabeticAndNaturalSortPreserveKeyedIteration() {
         ExprAlphabetList alphabetic = new ExprAlphabetList();
         alphabetic.init(new Expression[]{new KeyedStringExpression(
