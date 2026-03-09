@@ -22,6 +22,7 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
 
     private final @NotNull String name;
     private final @Nullable Script source;
+    private final @Nullable String sourceName;
     private final Reference<Function<? extends Result>> function;
     private final @Nullable Signature<? extends Result> signature;
     private final Map<Input, Expression<?>> checkedInputs = new HashMap<>();
@@ -34,6 +35,7 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
         this.name = function.getName();
         this.signature = function.getSignature();
         this.source = null;
+        this.sourceName = this.signature.namespace();
     }
 
     public DynamicFunctionReference(@NotNull String name) {
@@ -42,10 +44,15 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
 
     @SuppressWarnings("unchecked")
     public DynamicFunctionReference(@NotNull String name, @Nullable Script source) {
+        this(name, source == null ? null : source.getConfig().getFileName(), source);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DynamicFunctionReference(@NotNull String name, @Nullable String sourceName, @Nullable Script source) {
         this.name = name;
         Function<? extends Result> function;
-        if (source != null) {
-            function = (Function<? extends Result>) Functions.getFunction(name, source.getConfig().getFileName());
+        if (sourceName != null) {
+            function = (Function<? extends Result>) Functions.getFunction(name, sourceName);
         } else {
             function = (Function<? extends Result>) Functions.getFunction(name, null);
         }
@@ -53,6 +60,7 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
         this.function = new WeakReference<>(function);
         this.signature = function != null ? function.getSignature() : null;
         this.source = source;
+        this.sourceName = sourceName != null ? sourceName : (this.signature == null ? null : this.signature.namespace());
     }
 
     public @Nullable Script source() {
@@ -108,6 +116,9 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
     public String toString() {
         if (source != null) {
             return name + "() from " + source.nameAndPath();
+        }
+        if (sourceName != null && !sourceName.isBlank()) {
+            return name + "() from " + sourceName;
         }
         return name + "()";
     }
@@ -169,15 +180,9 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
         if (clean.contains("(") && clean.contains(")")) {
             clean = clean.replaceAll("\\(.*\\).*", "").trim();
         }
-        if (sourceScript == null || sourceScript.isBlank()) {
-            DynamicFunctionReference<Object> reference = new DynamicFunctionReference<>(clean);
-            return reference.valid() ? reference : null;
-        }
-        Function<?> function = Functions.getFunction(clean, sourceScript);
-        if (function == null) {
-            return null;
-        }
-        DynamicFunctionReference<Object> reference = new DynamicFunctionReference<>(function);
+        DynamicFunctionReference<Object> reference = sourceScript == null || sourceScript.isBlank()
+                ? new DynamicFunctionReference<>(clean)
+                : new DynamicFunctionReference<>(clean, sourceScript, null);
         return reference.valid() ? reference : null;
     }
 

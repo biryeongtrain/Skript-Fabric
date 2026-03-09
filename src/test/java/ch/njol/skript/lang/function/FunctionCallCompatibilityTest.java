@@ -176,6 +176,16 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void dynamicLocalFunctionReferenceRetainsSourceScriptInStringForm() {
+        registerLocalEchoFunction("local.sk", "stringifiedLocal");
+
+        DynamicFunctionReference<?> reference = DynamicFunctionReference.resolveFunction("stringifiedLocal", "local.sk");
+
+        assertNotNull(reference);
+        assertEquals("stringifiedLocal() from local.sk", reference.toString());
+    }
+
+    @Test
     void functionReferenceTracksValidatedSignatureCalls() {
         EchoFunction function = registerEchoFunction();
 
