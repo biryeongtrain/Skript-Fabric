@@ -34,11 +34,13 @@ Use local upstream sources only. Do not browse.
 - `TypePatternElement.getCombinations(true)` now keeps literal-only placeholders intact but collapses non-literal placeholders to `%*%` in clean pattern combinations
 - `Function.execute(Object[][])` now also rejects direct over-arity calls even for a single plural parameter; plural argument condensing stays in the call path, not in raw `execute(...)`
 - retained parse-failure selection can now keep an earlier semantic parse error over a later lower-quality `NOT_AN_EXPRESSION` statement failure again
+- `ParserInstance.isCurrentEvent(...)` now matches upstream's one-way subtype rule, so superclass parse contexts no longer satisfy subclass-only event queries
 - targeted regressions added:
   - [VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java)
   - [PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java)
   - [FunctionImplementationCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java)
   - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
+  - [ParserInstanceCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java)
 
 ## Recent Closed Prereqs
 
@@ -81,7 +83,7 @@ Lane files under `docs/porting/parallel/` should stay short:
 Latest targeted verification:
 
 ```bash
-./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks
 ```
 
 Full verification:
