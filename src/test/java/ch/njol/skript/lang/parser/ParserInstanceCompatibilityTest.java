@@ -14,6 +14,7 @@ import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.InputSource;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
+import ch.njol.util.Kleenean;
 import java.io.File;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -178,6 +179,23 @@ class ParserInstanceCompatibilityTest {
         assertThrows(IllegalArgumentException.class, () -> parser.getSections(0, MiddleSection.class));
         assertEquals(List.of(), parser.getSections(1, UnusedSection.class));
         assertEquals(List.of(), parser.getSectionsUntil(inner));
+    }
+
+    @Test
+    void delayStateBridgeResetsAcrossEventAndScriptTransitions() {
+        ParserInstance parser = new ParserInstance();
+        parser.setHasDelayBefore(Kleenean.TRUE);
+
+        parser.setCurrentEvent("base", BaseEvent.class);
+        assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+
+        parser.setHasDelayBefore(Kleenean.UNKNOWN);
+        parser.deleteCurrentEvent();
+        assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+
+        parser.setHasDelayBefore(Kleenean.TRUE);
+        parser.setCurrentScript(new Script(null, List.of()));
+        assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
     }
 
     private static class BaseEvent {

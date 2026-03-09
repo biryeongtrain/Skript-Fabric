@@ -4,6 +4,7 @@ import ch.njol.skript.config.Config;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.TriggerSection;
 import ch.njol.skript.variables.HintManager;
+import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ public final class ParserInstance {
     private @Nullable String currentEventName;
     private Class<?>[] currentEventClasses = new Class<?>[0];
     private List<TriggerSection> currentSections = new ArrayList<>();
+    private Kleenean hasDelayBefore = Kleenean.FALSE;
     private HintManager hintManager = new HintManager(true);
 
     public static ParserInstance get() {
@@ -105,6 +107,7 @@ public final class ParserInstance {
         this.currentEventName = null;
         this.currentEventClasses = new Class<?>[0];
         this.currentSections = new ArrayList<>();
+        this.hasDelayBefore = Kleenean.FALSE;
         this.currentScript = currentScript;
         List<Data> dataInstances = getRegisteredDataInstances();
         Config currentConfig = currentScript != null ? currentScript.getConfig() : null;
@@ -128,11 +131,13 @@ public final class ParserInstance {
     public void setCurrentEvent(String eventName, Class<?>... eventClasses) {
         this.currentEventName = eventName;
         updateCurrentEventClasses(eventClasses);
+        this.hasDelayBefore = Kleenean.FALSE;
     }
 
     public void deleteCurrentEvent() {
         this.currentEventName = null;
         updateCurrentEventClasses(null);
+        this.hasDelayBefore = Kleenean.FALSE;
     }
 
     public boolean isCurrentEvent(Class<?>... eventClasses) {
@@ -240,6 +245,14 @@ public final class ParserInstance {
 
     public HintManager getHintManager() {
         return hintManager;
+    }
+
+    public void setHasDelayBefore(Kleenean hasDelayBefore) {
+        this.hasDelayBefore = hasDelayBefore;
+    }
+
+    public Kleenean getHasDelayBefore() {
+        return hasDelayBefore;
     }
 
     private List<Data> getRegisteredDataInstances() {
