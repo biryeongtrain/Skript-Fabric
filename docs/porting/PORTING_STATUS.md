@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - worker merges on 2026-03-09 restored transitive parser-registry priority ordering, kept omitted optional-choice defaults active across equally-minimal sibling branches, switched plural script-function local indices to one-based storage, preserved parser-data instances across script swaps, and stopped parser fallback inflation from overriding earlier retained statement diagnostics
+  - worker merges on 2026-03-09 restored same-scope local-variable handoff semantics, narrowed empty-choice placeholder activation to the matched minimal branch set, rejected malformed trailing function-call text, restored `ParserInstance.Data#getParser()`, and retained explicit single-line `if` condition diagnostics
 
 ## Priority Shift On 2026-03-08
 

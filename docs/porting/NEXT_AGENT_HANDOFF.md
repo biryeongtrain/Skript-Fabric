@@ -29,11 +29,11 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- parser-registry priorities now use upstream-style transitive relative ordering, so `Priority.after(Priority.before(base))` stays ahead of `base`
-- omitted optional alternation branches now keep every equally-minimal omitted placeholder branch active for default resolution
-- `ScriptFunction.execute(...)` now stores unkeyed plural parameter values at one-based local indices like upstream
-- `ParserInstance.setCurrentScript(...)` now preserves registered parser-data instances across script swaps and notifies `onCurrentScriptChange(...)`
-- `Statement.parse(...)` now keeps registered-statement fallback on a null parser default error so earlier retained effect diagnostics are not inflated away by later parser fallback failures
+- `Variables.withLocalVariables(...)` now matches upstream same-scope local handoff by copying back and clearing locals even when provider and user share the same scope
+- empty-choice placeholder activation now keeps only the smallest compatible branch set active, so placeholder-free matched choices do not spuriously require sibling defaults
+- `FunctionReference.parse(...)` now rejects malformed trailing text after a closing `)` instead of falling back to a bare function name
+- `ParserInstance.Data` again exposes the upstream `getParser()` bridge, with `parser()` delegating through it
+- explicit single-line `if` / `else if` sections now retain the specific `Can't understand this condition: '...'` diagnostic
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs

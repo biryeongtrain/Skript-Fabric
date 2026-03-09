@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is worker-merged `lang-core` closure for transitive parser priorities, omitted optional-choice defaults, one-based plural script param indices, parser-data script-swap callbacks, and retained statement diagnostics
+- latest closed slice is worker-merged `lang-core` closure for same-scope local handoff, minimal empty-choice placeholder activation, malformed trailing function-call rejection, `ParserInstance.Data#getParser()`, and explicit `if` condition diagnostics
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`
