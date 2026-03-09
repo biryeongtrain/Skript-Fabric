@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - worker merges on 2026-03-09 restored ordered superclass-info lookup, exact matched-branch omitted-default activation, function-registry cleanup on script unload, and the `ExprInput#getSpecifiedType()` bridge; the lane-A loader/log sweep ended as a no-op audit
+  - worker merges on 2026-03-09 restored exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, tracked-script invalidation for string-resolved local dynamic function references, the `ParserInstance` current-section helper surface, and retained parse-error tie handling
 
 ## Priority Shift On 2026-03-08
 

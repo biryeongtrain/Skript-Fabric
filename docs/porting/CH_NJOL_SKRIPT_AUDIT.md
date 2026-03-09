@@ -148,11 +148,11 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- restored upstream `Classes.getAllSuperClassInfos(...)`, so callers can retrieve the full ordered assignable-classinfo list instead of only the single best superclass match
-- `PatternCompiler` now emits internal branch-activation captures, `SkriptPattern` carries exact matched branch indices through `MatchResult`, and `SkriptParser` uses them for omitted-default selection so literal-disambiguated branches only require their own omitted defaults
-- `Functions.clearFunctions(script)` now also removes script entries from the compatibility `FunctionRegistry`, so unloaded script functions stop resolving through registry-backed lookups
-- typed `ExprInput` expressions now restore the upstream `getSpecifiedType()` bridge and expose their registered `ClassInfo` again
-- the lane-A loader/log sweep ended as a no-op audit with no new mergeable mismatch in the current green suite
+- restored upstream `Classes.getExactParser(...)`, so exact parser lookup no longer falls through subtype or converter-backed parser resolution
+- `PatternCompiler.compileLeadingAutoTaggedGroup(...)` now carries same-token suffix placeholder indices into exact branch activation, so tagged-branch matches still enforce omitted required defaults from their suffix placeholders
+- string-resolved local `DynamicFunctionReference` instances now retain a tracked `Script` through `Functions.registerSignature(...)` and invalidate correctly after script unload
+- restored the upstream `ParserInstance` current-section helper surface: `getCurrentSection(...)`, filtered `getCurrentSections(...)`, and `isCurrentSection(...)`
+- `ParseLogHandler.printError(default)` now keeps the first retained highest-quality parse error instead of rescanning for a later same-quality replacement
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

@@ -29,11 +29,11 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.getAllSuperClassInfos(...)` now restores the upstream ordered assignable-classinfo lookup instead of only exposing the single best superclass match
-- parser omitted-default selection now keeps exact matched-branch activation indices through `PatternCompiler` / `SkriptPattern` / `MatchResult`, so literal-disambiguated branches only require their own omitted defaults
-- `Functions.clearFunctions(script)` now also removes script signatures and functions from the compatibility `FunctionRegistry`
-- typed `ExprInput` expressions now restore the upstream `getSpecifiedType()` bridge and expose their registered `ClassInfo` again
-- the lane-A retained-diagnostic sweep found no new mergeable mismatch in the current green corpus
+- `Classes.getExactParser(...)` now restores the upstream exact classinfo-parser lookup without drifting to subtype or converter-backed fallbacks
+- leading auto-tagged parser branches now still enforce omitted required defaults from same-token suffix placeholders
+- string-resolved local `DynamicFunctionReference` instances now keep a tracked `Script` and become invalid after script unload
+- `ParserInstance` now restores the upstream current-section helper surface: `getCurrentSection(...)`, filtered `getCurrentSections(...)`, and `isCurrentSection(...)`
+- `ParseLogHandler.printError(default)` now keeps the first retained highest-quality parse error instead of rescanning to replace it with a later same-quality specific error
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
@@ -49,10 +49,10 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, invalid-default-diagnostic, and mixed-default-diagnostic rules
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, empty-option-value handling, specific-parser precedence, classinfo-cloner, variable-name fallback, renamed-node map-sync, and transitive priority-ordering slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, one-based plural local indexing, doubled-quote literal, blank-default rejection, lazy global-reference execution, local dynamic-reference namespace, missing-source normalization, and split-exact-overload ambiguity cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, whitespace-only-line diagnostics, config-only-node skip behavior, stale-section-warning drop, specific-error-over-fallback retention, semantic fallback-quality slices, and parser-fallback inflation slice
+1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, invalid-default-diagnostic, mixed-default-diagnostic, and tagged-branch suffix-default rules
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, exact-parser lookup, empty-option-value handling, specific-parser precedence, classinfo-cloner, variable-name fallback, renamed-node map-sync, and transitive priority-ordering slices
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, one-based plural local indexing, doubled-quote literal, blank-default rejection, lazy global-reference execution, local dynamic-reference namespace, missing-source normalization, split-exact-overload ambiguity cases, and tracked-script unload for dynamic local references
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, whitespace-only-line diagnostics, config-only-node skip behavior, stale-section-warning drop, specific-error-over-fallback retention, semantic fallback-quality slices, parser-fallback inflation slice, and retained parse-error tie handling
 
 ## Parallel Defaults
 
