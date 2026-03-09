@@ -148,11 +148,11 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- restored upstream same-scope local-variable handoff, so `Variables.withLocalVariables(...)` now copies back and clears locals even when provider and user share the same scope
-- narrowed empty-choice active-placeholder selection to the minimal matched branch set, so placeholder-free matched choices no longer force sibling defaults
-- made `FunctionReference.parse(...)` reject malformed trailing text after a closing call parenthesis instead of falling back to a bare function name
-- restored the protected `ParserInstance.Data#getParser()` bridge and routed `parser()` through it again
-- explicit single-line `if` / `else if` sections now retain the specific `Can't understand this condition: '...'` diagnostic instead of collapsing to a generic section failure
+- restored upstream `Classes.getAllSuperClassInfos(...)`, so callers can retrieve the full ordered assignable-classinfo list instead of only the single best superclass match
+- `PatternCompiler` now emits internal branch-activation captures, `SkriptPattern` carries exact matched branch indices through `MatchResult`, and `SkriptParser` uses them for omitted-default selection so literal-disambiguated branches only require their own omitted defaults
+- `Functions.clearFunctions(script)` now also removes script entries from the compatibility `FunctionRegistry`, so unloaded script functions stop resolving through registry-backed lookups
+- typed `ExprInput` expressions now restore the upstream `getSpecifiedType()` bridge and expose their registered `ClassInfo` again
+- the lane-A loader/log sweep ended as a no-op audit with no new mergeable mismatch in the current green suite
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

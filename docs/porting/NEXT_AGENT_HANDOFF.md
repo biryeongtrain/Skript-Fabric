@@ -29,11 +29,11 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Variables.withLocalVariables(...)` now matches upstream same-scope local handoff by copying back and clearing locals even when provider and user share the same scope
-- empty-choice placeholder activation now keeps only the smallest compatible branch set active, so placeholder-free matched choices do not spuriously require sibling defaults
-- `FunctionReference.parse(...)` now rejects malformed trailing text after a closing `)` instead of falling back to a bare function name
-- `ParserInstance.Data` again exposes the upstream `getParser()` bridge, with `parser()` delegating through it
-- explicit single-line `if` / `else if` sections now retain the specific `Can't understand this condition: '...'` diagnostic
+- `Classes.getAllSuperClassInfos(...)` now restores the upstream ordered assignable-classinfo lookup instead of only exposing the single best superclass match
+- parser omitted-default selection now keeps exact matched-branch activation indices through `PatternCompiler` / `SkriptPattern` / `MatchResult`, so literal-disambiguated branches only require their own omitted defaults
+- `Functions.clearFunctions(script)` now also removes script signatures and functions from the compatibility `FunctionRegistry`
+- typed `ExprInput` expressions now restore the upstream `getSpecifiedType()` bridge and expose their registered `ClassInfo` again
+- the lane-A retained-diagnostic sweep found no new mergeable mismatch in the current green corpus
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs

@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - worker merges on 2026-03-09 restored same-scope local-variable handoff semantics, narrowed empty-choice placeholder activation to the matched minimal branch set, rejected malformed trailing function-call text, restored `ParserInstance.Data#getParser()`, and retained explicit single-line `if` condition diagnostics
+  - worker merges on 2026-03-09 restored ordered superclass-info lookup, exact matched-branch omitted-default activation, function-registry cleanup on script unload, and the `ExprInput#getSpecifiedType()` bridge; the lane-A loader/log sweep ended as a no-op audit
 
 ## Priority Shift On 2026-03-08
 
