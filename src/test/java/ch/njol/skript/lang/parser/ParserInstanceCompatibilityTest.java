@@ -1,5 +1,6 @@
 package ch.njol.skript.lang.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -10,11 +11,14 @@ import ch.njol.skript.config.Config;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.InputSource;
+import ch.njol.skript.lang.TriggerItem;
+import ch.njol.skript.lang.TriggerSection;
 import java.io.File;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.lang.script.Script;
 
 class ParserInstanceCompatibilityTest {
@@ -130,6 +134,22 @@ class ParserInstanceCompatibilityTest {
         assertSame(parser, data.parserFromUpstreamAccessor());
     }
 
+    @Test
+    void currentSectionHelpersReturnInnermostMatchAndFilteredCopies() {
+        ParserInstance parser = new ParserInstance();
+        OuterSection outer = new OuterSection();
+        MiddleSection middle = new MiddleSection();
+        InnerSection inner = new InnerSection();
+        parser.setCurrentSections(List.of(outer, middle, inner));
+
+        assertSame(inner, parser.getCurrentSection(TriggerSection.class));
+        assertSame(inner, parser.getCurrentSection(MiddleSection.class));
+        assertTrue(parser.isCurrentSection(OuterSection.class, InnerSection.class));
+        assertFalse(parser.isCurrentSection(UnusedSection.class));
+        assertEquals(List.of(outer, middle, inner), parser.getCurrentSections(TriggerSection.class));
+        assertEquals(List.of(middle, inner), parser.getCurrentSections(MiddleSection.class));
+    }
+
     private static class BaseEvent {
     }
 
@@ -186,5 +206,30 @@ class ParserInstanceCompatibilityTest {
         public void onCurrentScriptChange(@Nullable Config currentScript) {
             this.lastCurrentScript = currentScript;
         }
+    }
+
+    private abstract static class BaseSection extends TriggerSection {
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return getNext();
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return getClass().getSimpleName();
+        }
+    }
+
+    private static final class OuterSection extends BaseSection {
+    }
+
+    private static class MiddleSection extends BaseSection {
+    }
+
+    private static final class InnerSection extends MiddleSection {
+    }
+
+    private static final class UnusedSection extends BaseSection {
     }
 }

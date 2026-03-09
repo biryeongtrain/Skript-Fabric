@@ -172,6 +172,45 @@ public final class ParserInstance {
         return currentSections;
     }
 
+    public <T extends TriggerSection> @Nullable T getCurrentSection(Class<T> sectionClass) {
+        for (int i = currentSections.size() - 1; i >= 0; i--) {
+            TriggerSection triggerSection = currentSections.get(i);
+            if (sectionClass.isInstance(triggerSection)) {
+                return sectionClass.cast(triggerSection);
+            }
+        }
+        return null;
+    }
+
+    public <T extends TriggerSection> List<T> getCurrentSections(Class<T> sectionClass) {
+        List<T> sections = new ArrayList<>();
+        for (TriggerSection triggerSection : currentSections) {
+            if (sectionClass.isInstance(triggerSection)) {
+                sections.add(sectionClass.cast(triggerSection));
+            }
+        }
+        return sections;
+    }
+
+    public boolean isCurrentSection(Class<? extends TriggerSection> sectionClass) {
+        for (TriggerSection triggerSection : currentSections) {
+            if (sectionClass.isInstance(triggerSection)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SafeVarargs
+    public final boolean isCurrentSection(Class<? extends TriggerSection>... sectionClasses) {
+        for (Class<? extends TriggerSection> sectionClass : sectionClasses) {
+            if (isCurrentSection(sectionClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public HintManager getHintManager() {
         return hintManager;
     }
