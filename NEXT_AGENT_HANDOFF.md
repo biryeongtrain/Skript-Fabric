@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is `lang` / registry / function closure for explicit-literal registration-order parity in `Classes.getPatternInfos(...)` plus upstream keyed-default behavior in `Function.execute(...)`
+- latest closed slice is worker-merged `lang-core` closure for list-deletion parity in `Variables.setVariable(...)`, clean placeholder combinations, direct over-arity rejection in `Function.execute(...)`, and semantic parse-error quality retention
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

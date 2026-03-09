@@ -30,15 +30,15 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Parameter.parse(...)` now keeps commas inside quoted/default subexpressions, rejects duplicate parameter names under case-insensitive variables, and still falls back to basic built-in type names when the local test bootstrap has not registered classinfos yet
-- `Classes.getPatternInfos(...)` now keeps explicit literal-pattern matches in upstream registration order
-- `Function.execute(Object[][])` now matches upstream keyed-default behavior:
-  - single omitted default for keyed/plural param -> zip to `KeyedValue[]`
-  - multi-value omitted default for keyed/plural param -> keep unkeyed
+- `Variables.setVariable("name::*", null, ...)` now deletes list descendants like upstream while preserving a direct parent value such as `scores`
+- `TypePatternElement.getCombinations(true)` now keeps literal-only placeholders intact but collapses non-literal placeholders to `%*%` in clean pattern combinations
+- `Function.execute(Object[][])` now also rejects direct over-arity calls even for a single plural parameter; plural argument condensing stays in the call path, not in raw `execute(...)`
+- retained parse-failure selection can now keep an earlier semantic parse error over a later lower-quality `NOT_AN_EXPRESSION` statement failure again
 - targeted regressions added:
-  - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
-  - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
-  - [FunctionDefaultKeyedParameterCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionDefaultKeyedParameterCompatibilityTest.java)
+  - [VariablesCompatibilityTest.java](../../src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java)
+  - [PatternCompilerCompatibilityTest.java](../../src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java)
+  - [FunctionImplementationCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java)
+  - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
 
 ## Recent Closed Prereqs
 
@@ -81,8 +81,7 @@ Lane files under `docs/porting/parallel/` should stay short:
 Latest targeted verification:
 
 ```bash
-./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest --tests ch.njol.skript.lang.function.FunctionDefaultKeyedParameterCompatibilityTest --rerun-tasks
-./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.parser.SkriptParserStaticFlagsCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
 ```
 
 Full verification:
