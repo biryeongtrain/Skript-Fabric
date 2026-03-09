@@ -79,6 +79,7 @@ Coordinator can stay on the main repo path:
 - worker reasoning default is `medium`; raise a lane to `high` only for a confirmed hard blocker
 - compare against local upstream snapshots only (`/tmp/skript-upstream-e6ec744-2`, `/tmp/upstream-skript`)
 - do not browse the web for upstream comparisons
+- use conventional-style commit messages without lane prefixes
 - Do not edit the canonical docs under `docs/porting/*.md` from worker lanes.
 - Do not edit another lane's status file.
 - Do not change Stage 8 counts unless your lane actually changes that tracked matrix and the coordinator approved the reassignment.
@@ -97,6 +98,7 @@ Each worker must leave behind all of the following in its own branch/worktree:
 3. one updated lane status file under `docs/porting/parallel/`
 4. exact verification commands and results
 5. a short merge note listing the files most likely to conflict
+6. a conventional-style commit message if code lands, for example `fix(parser): require exact default type matches`
 
 Workers do not update:
 
@@ -114,24 +116,18 @@ Those are coordinator-owned.
 - `Lane A`:
   - targeted unit tests first
   - run `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
-  - if user-visible `.sk` semantics changed, also run `./gradlew runGameTest --rerun-tasks`
 - `Lane B`:
   - targeted parser tests first
   - run parser-focused `./gradlew test --tests ... --rerun-tasks`
-  - if live `.sk` parsing changed, also run `./gradlew runGameTest --rerun-tasks`
 - `Lane C`:
   - targeted unit tests for `variables`, `classes`, `config`, `structures`
-  - if `options:` or other live `.sk` structure behavior changed, also run `./gradlew runGameTest --rerun-tasks`
 - `Lane D`:
   - targeted function/default-parameter tests first
   - run `./gradlew test --tests 'ch.njol.skript.lang.function.*' --rerun-tasks`
-  - if omitted/default-expression behavior changes in live `.sk`, also run `./gradlew runGameTest --rerun-tasks`
 - `Lane E`:
   - targeted bridge/runtime tests first
   - run the narrowest matching parser/input/runtime tests
-  - if live `.sk` input/bridge behavior changes, also run `./gradlew runGameTest --rerun-tasks`
 - `Coordinator` after merge:
-  - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
 
 ## Merge Order

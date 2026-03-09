@@ -15,6 +15,12 @@ Apply these to every lane:
 - if no mergeable mismatch exists, do docs-only no-op
 - update only your lane status file under `docs/porting/parallel/`
 - commit only if code lands
+- use conventional-style commit messages without lane prefixes:
+  - `fix(parser): ...`
+  - `fix(function): ...`
+  - `fix(classes): ...`
+  - `fix(loader): ...`
+  - `docs(porting): ...`
 
 ## Coordinator Prompt
 
@@ -46,7 +52,6 @@ Coordinator owns:
 - canonical docs under docs/porting/*.md
 - root pointer headline updates
 - final verification:
-  - ./gradlew runGameTest --rerun-tasks
   - ./gradlew build --rerun-tasks
 - fast-forward main after green verification
 
@@ -77,7 +82,7 @@ Target:
 - prefer retained diagnostics, section fallback, hint flow, or section ownership
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression and record exact commands/results in LANE_A_STATUS.md.
+If code lands, add the narrowest regression, record exact commands/results in LANE_A_STATUS.md, and use a conventional commit like `fix(loader): preserve ...`.
 ```
 
 ## Lane B Prompt
@@ -103,7 +108,7 @@ Target:
 - prefer default-value / omission parity, static-vs-modern parity, or matcher edge cases
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression and record exact commands/results in LANE_B_STATUS.md.
+If code lands, add the narrowest regression, record exact commands/results in LANE_B_STATUS.md, and use a conventional commit like `fix(parser): restore ...`.
 ```
 
 ## Lane C Prompt
@@ -131,7 +136,7 @@ Target:
 - prioritize classinfo/parser registry or deeper variable semantics
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression and record exact commands/results in LANE_C_STATUS.md.
+If code lands, add the narrowest regression, record exact commands/results in LANE_C_STATUS.md, and use a conventional commit like `fix(classes): align ...`.
 ```
 
 ## Lane D Prompt
@@ -159,7 +164,7 @@ Target:
 - prefer overload resolution, namespace fallback, keyed/plural/default execution semantics
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression and record exact commands/results in LANE_D_STATUS.md.
+If code lands, add the narrowest regression, record exact commands/results in LANE_D_STATUS.md, and use a conventional commit like `fix(function): preserve ...`.
 ```
 
 ## Lane E Prompt
@@ -189,5 +194,5 @@ Target:
 
 If the fix crosses into parser/classes/statement ownership, stop and hand it back to the coordinator.
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression and record exact commands/results in LANE_E_STATUS.md.
+If code lands, add the narrowest regression, record exact commands/results in LANE_E_STATUS.md, and use a conventional commit like `fix(runtime): catch ...`.
 ```

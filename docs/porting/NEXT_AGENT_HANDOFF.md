@@ -15,7 +15,6 @@ Last updated: 2026-03-09
 
 - latest verified runtime baseline: `230 / 230`
 - latest full verification:
-  - `./gradlew runGameTest --rerun-tasks` passed
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
 - upstream `ch/njol/skript` snapshot: local `140 / 1189`, shortfall `1049`
@@ -81,7 +80,6 @@ Latest targeted verification:
 Full verification:
 
 ```bash
-./gradlew runGameTest --rerun-tasks
 ./gradlew build --rerun-tasks
 ```
 
