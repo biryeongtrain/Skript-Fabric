@@ -35,13 +35,20 @@ public abstract class TriggerItem implements Debuggable {
     protected abstract boolean run(SkriptEvent event);
 
     public static boolean walk(TriggerItem start, SkriptEvent event) {
-        return CurrentSkriptEvent.with(event, () -> {
-            TriggerItem current = start;
-            while (current != null) {
-                current = current.walk(event);
+        try {
+            return CurrentSkriptEvent.with(event, () -> {
+                TriggerItem current = start;
+                while (current != null) {
+                    current = current.walk(event);
+                }
+                return true;
+            });
+        } catch (Exception ex) {
+            if (Skript.debug()) {
+                ex.printStackTrace();
             }
-            return true;
-        });
+            return false;
+        }
     }
 
     protected @Nullable ExecutionIntent executionIntent() {
