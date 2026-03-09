@@ -148,16 +148,12 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- synced `SectionNode` mapped lookups after child-node rename, so renamed config entries stay addressable through parent section lookup like upstream
-- preserved placeholder whitespace in compiled pattern matches instead of normalizing all inner spacing before capture
-- kept overload resolution ambiguous when different `FunctionRegistry` candidates only win exact-type preference on different argument positions
-- cleared transient parser bridge state on `ParserInstance.setCurrentScript(...)`, so node/event/input-source data does not leak across script switches
-- restored semantic error quality for retained severe fallback errors
-- restored legacy `parseStatic(...)` parser flags in `SkriptParser`, so expression-only placeholders such as `%~integer%` work again through legacy `SyntaxElementInfo` parsing while placeholder-level masks still enforce literal versus expression restrictions
-- restored explicit-literal-only `getPatternInfos(...)` parity in `Classes`, so parser-backed class infos no longer appear as unparsed-literal candidates unless they also register literal patterns
-- restored upstream registration-order parity for explicit literal-pattern matches in `Classes.getPatternInfos(...)`, so literal aliases are no longer re-sorted by local class-info ordering rules
-- restored upstream keyed-default execution behavior in `Function.execute(...)`, so plural/keyed parameters only zip omitted defaults when the default produces a single value and leave multi-value defaults unkeyed
-- reran the current `Statement` / `ScriptLoader` / `Section` corpus in a separate lane audit and did not find another mergeable mismatch in the current green suite
+- formatted object-typed arrays through `Classes.toString((Object) array, ...)` like upstream instead of emitting Java identity text
+- kept mixed omitted-placeholder default diagnostics in `SkriptParser`, including the `NOT_FOUND` classinfo failure path
+- rejected blank default parameter expressions in `Parameter.newInstance(...)`
+- normalized parentless parser root nodes to `null` in `ParserInstance.setNode(...)` while keeping child-node tracking intact
+- dropped stale section warnings when `ScriptLoader.loadItems(...)` succeeds through statement fallback after section parse failure
+- aligned registry coverage with the normalized parentless-root behavior during coordinator integration
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

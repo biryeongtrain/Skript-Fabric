@@ -37,6 +37,8 @@ Last updated: 2026-03-09
   - `./gradlew build --rerun-tasks` passed on 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
+- Latest `lang-core` batch:
+  - object-array stringification, mixed omitted-default diagnostics, blank default-parameter rejection, parentless parser-root normalization, and stale section-warning cleanup all landed through worker merges on 2026-03-09
 
 ## Priority Shift On 2026-03-08
 

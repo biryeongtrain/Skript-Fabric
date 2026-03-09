@@ -29,35 +29,12 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `SectionNode` now refreshes parent mapped lookups when a child node key is renamed, so renamed config entries stay addressable through section lookup like upstream
-- compiled pattern matching now preserves placeholder whitespace instead of normalizing all inner spacing before capture, so parser/runtime consumers see the original matched text
-- `FunctionRegistry` now keeps overload resolution ambiguous when different overloads only win exact-type checks on different argument positions, instead of fabricating a single exact winner
-- `ParserInstance.setCurrentScript(...)` now clears transient parser bridge state on script switches, so event/node/input-source data does not leak between scripts
-- retained severe parse-log fallback now uses semantic error quality instead of a generic quality bucket
-- `Classes.toString(..., StringMode.VARIABLE_NAME)` now prefixes parser-less fallback values as `object:...` like upstream
-- `SkriptParser.parseStatic(...)` and `parseModern(...)` now reject blank trimmed input before optional patterns can match
-- `DynamicFunctionReference.parseFunction(...)` now drops unresolved `from missing.sk` suffixes before global fallback
-- `Statement.parse(...)`, `ParseLogHandler`, and default severe `LogEntry` quality now preserve a specific retained parse error over the generic `Can't understand this condition/effect: ...` fallback
-- `Classes.clone(...)` now honors classinfo cloners instead of falling back to identity copies
-- `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted string literal arguments
-- ordinary keyed function arguments now preserve their keyed metadata across `Parameter.newInstance(...)`
-- keyed plural defaults now keep upstream behavior: single-value defaults zip, multi-value defaults stay unkeyed
-- `DynamicFunctionReference.resolveFunction(...)` now preserves `from local.sk` for local dynamic references
-- omitted placeholder defaults now ignore placeholders on inactive choice branches instead of treating them like omitted active placeholders
-- invalid required omitted-placeholder defaults now retain the upstream-style default-expression parse error instead of failing silently
-- statement fallback now keeps `EffectSection` parsing in statement mode when section-mode init rejects the body
-- `ScriptLoader.loadItems(...)` now leaves `ParserInstance.getNode()` at the loaded section root instead of restoring an unrelated prior node
-- `Classes.toString(...)` now routes legacy parser-backed values through parser stringification instead of raw `Object.toString()`
-- legacy parser-backed debug strings now wrap as `[codename:debug text]`
-- targeted regressions added:
-  - [LegacyWrapperCompatibilityTest.java](../../src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java)
-  - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
-  - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
-  - [SkriptParserBlankInputCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/SkriptParserBlankInputCompatibilityTest.java)
-  - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
-  - [FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
-  - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
-  - [TriggerItemCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java)
+- `Classes.toString((Object) array, ...)` now formats object arrays like upstream instead of falling through to Java identity text
+- mixed omitted-placeholder defaults now retain invalid-default diagnostics instead of dropping the `NOT_FOUND` classinfo failure path
+- `Parameter.newInstance(...)` now rejects blank default expressions instead of treating whitespace as "no default"
+- `ParserInstance.setNode(...)` now drops parentless root nodes while still keeping child-node tracking, and registry coverage now matches that normalization
+- `ScriptLoader.loadItems(...)` now drops stale section warnings when section parse fails but statement fallback succeeds on the same line
+- verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
 
@@ -72,10 +49,10 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, and invalid-default-diagnostic rules
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, classinfo-cloner, variable-name fallback, and renamed-node map-sync slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, local dynamic-reference namespace, missing-source normalization, and split-exact-overload ambiguity cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parser-node-root retention, specific-error-over-fallback retention, and semantic fallback-quality slices
+1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, invalid-default-diagnostic, and mixed-default-diagnostic rules
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, classinfo-cloner, variable-name fallback, and renamed-node map-sync slices
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, blank-default rejection, local dynamic-reference namespace, missing-source normalization, and split-exact-overload ambiguity cases
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, stale-section-warning drop, specific-error-over-fallback retention, and semantic fallback-quality slices
 
 ## Parallel Defaults
 
