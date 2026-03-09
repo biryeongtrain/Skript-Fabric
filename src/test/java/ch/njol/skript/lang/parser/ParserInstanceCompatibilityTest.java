@@ -71,6 +71,61 @@ class ParserInstanceCompatibilityTest {
     }
 
     @Test
+    void resetClearsTransientParserStateButKeepsCurrentScript() {
+        ParserInstance parser = new ParserInstance();
+        Script script = new Script(new Config("reset", "reset.sk", new File("reset.sk")), List.of());
+        SectionNode root = new SectionNode("root");
+        SimpleNode child = new SimpleNode("child");
+        root.add(child);
+
+        parser.setCurrentScript(script);
+        parser.setNode(child);
+        parser.setCurrentEvent("sub", SubEvent.class);
+        parser.setCurrentSections(List.of(new OuterSection(), new InnerSection()));
+        parser.setHasDelayBefore(Kleenean.TRUE);
+        parser.getHintManager().enterScope(false);
+        parser.getHintManager().set("value", Integer.class);
+        parser.getData(InputSource.InputData.class).setSource(new DummyInputSource());
+
+        parser.reset();
+
+        assertSame(script, parser.getCurrentScript());
+        assertNull(parser.getNode());
+        assertNull(parser.getCurrentEventName());
+        assertEquals(0, parser.getCurrentEventClasses().length);
+        assertEquals(List.of(), parser.getCurrentSections());
+        assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+        assertTrue(parser.getHintManager().get("value").isEmpty());
+        assertNull(parser.getData(InputSource.InputData.class).getSource());
+    }
+
+    @Test
+    void setActiveAndSetInactiveRestoreUpstreamLifecycleHelpers() {
+        ParserInstance parser = new ParserInstance();
+        Script script = new Script(new Config("active", "active.sk", new File("active.sk")), List.of());
+
+        parser.setCurrentEvent("sub", SubEvent.class);
+        parser.setCurrentSections(List.of(new OuterSection()));
+        parser.setHasDelayBefore(Kleenean.TRUE);
+        parser.setActive(script);
+
+        assertSame(script, parser.getCurrentScript());
+        assertNull(parser.getCurrentEventName());
+        assertEquals(List.of(), parser.getCurrentSections());
+        assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+
+        parser.setCurrentEvent("sub", SubEvent.class);
+        parser.setHasDelayBefore(Kleenean.UNKNOWN);
+        parser.setInactive();
+
+        assertNull(parser.getCurrentScript());
+        assertNull(parser.getCurrentEventName());
+        assertEquals(0, parser.getCurrentEventClasses().length);
+        assertEquals(List.of(), parser.getCurrentSections());
+        assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+    }
+
+    @Test
     void setCurrentScriptKeepsRegisteredParserDataAcrossScriptSwitchesAndNotifiesChanges() {
         ParserInstance.registerData(ScriptTrackingData.class, ScriptTrackingData::new);
 

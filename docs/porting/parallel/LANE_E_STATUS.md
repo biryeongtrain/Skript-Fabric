@@ -9,6 +9,8 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
+- fixed one upstream-backed `ParserInstance` lifecycle bridge omission: restored `reset()`, `setActive(Script)`, and `setInactive()` so compatibility callers can clear transient parser state or toggle parser activation through the legacy helper surface again
+- added focused regression coverage proving `reset()` preserves the current script while clearing transient node/event/section/delay/data state, and proving `setActive(...)` / `setInactive()` reset the same transient state around script activation/deactivation
 - fixed one upstream-backed `ParserInstance` parser/runtime bridge mismatch: restored the delay-state API through `setHasDelayBefore(...)` and `getHasDelayBefore()`, and now reset that state on current-event and current-script transitions just like upstream
 - added focused regression coverage proving the restored delay-state bridge clears back to `Kleenean.FALSE` when the parser switches events, deletes the current event, or swaps scripts
 - fixed one upstream-backed `ParserInstance` section-slice bridge mismatch: restored `getSectionsUntil(...)`, `getSections(int)`, and `getSections(int, Class<? extends TriggerSection>)` so compatibility callers can recover the upstream current-section window helpers again
@@ -50,6 +52,10 @@ Last updated: 2026-03-09
   - passed
 - `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
   - confirmed the local bridge still lacked the upstream delay-state surface (`setHasDelayBefore(...)` / `getHasDelayBefore()`) and the matching reset-to-`Kleenean.FALSE` event/script transitions
+- `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks`
+  - passed
+- `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
+  - confirmed the local bridge still lacked the upstream lifecycle helper surface (`reset()`, `setActive(Script)`, and `setInactive()`) even after the earlier parser-data and section-state closures
 - `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks`
   - passed
 

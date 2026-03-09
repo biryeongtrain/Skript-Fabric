@@ -99,6 +99,27 @@ public final class ParserInstance {
         return currentScript;
     }
 
+    public void setInactive() {
+        reset();
+        setCurrentScript(null);
+    }
+
+    public void setActive(Script script) {
+        reset();
+        this.hintManager.setActive(true);
+        setCurrentScript(script);
+    }
+
+    public void reset() {
+        this.node = null;
+        this.currentEventName = null;
+        this.currentEventClasses = new Class<?>[0];
+        this.currentSections = new ArrayList<>();
+        this.hasDelayBefore = Kleenean.FALSE;
+        this.hintManager = new HintManager(this.hintManager.isActive());
+        this.data.clear();
+    }
+
     public void setCurrentScript(@Nullable Script currentScript) {
         if (this.currentScript == currentScript) {
             return;
