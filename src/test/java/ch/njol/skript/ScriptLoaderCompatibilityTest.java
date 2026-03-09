@@ -391,6 +391,22 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsValidatesEntryNodeLineBeforeSkippingIt() {
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    new EntryNode("set {value} to \"unterminated", "ignored")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Unmatched double quotes in line: set {value} to \"unterminated")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsLogsWhitespaceOnlySimpleLine() {
         try (TestLogAppender logs = TestLogAppender.attach()) {
             List<TriggerItem> items = ScriptLoader.loadItems(root(

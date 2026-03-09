@@ -87,15 +87,15 @@ public final class ScriptLoader {
     }
 
     private static @Nullable TriggerItem parseTriggerItem(Node node, List<TriggerItem> triggerItems) {
-        if (!(node instanceof SimpleNode) && !(node instanceof SectionNode)) {
-            return null;
-        }
         String key = node.getKey();
         if (key == null) {
             return null;
         }
         String parsedInput = replaceOptions(key);
         if (!SkriptParser.validateLine(parsedInput)) {
+            return null;
+        }
+        if (!(node instanceof SimpleNode) && !(node instanceof SectionNode)) {
             return null;
         }
         if (node instanceof SectionNode sectionNode) {

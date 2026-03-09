@@ -4,13 +4,14 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- compared the lane-owned loader node dispatch against upstream `e6ec744` and found one remaining mismatch on config-only child nodes: upstream `ScriptLoader.loadItems(...)` only parses `SimpleNode` and `SectionNode`, while the local shim attempted statement parsing for any non-section `Node`, including `EntryNode`
-- implemented the narrowest fix in `src/main/java/ch/njol/skript/ScriptLoader.java` by skipping non-`SimpleNode` non-`SectionNode` children during trigger loading
+- compared the lane-owned loader node dispatch against upstream `e6ec744` and found one remaining mismatch on retained config-style child nodes: upstream still runs `validateLine(...)` on the child key before skipping non-`SimpleNode` / non-`SectionNode` nodes, while the local shim returned early and dropped malformed-line diagnostics
+- implemented the narrowest fix in `src/main/java/ch/njol/skript/ScriptLoader.java` by validating the node key before the non-trigger-node early return
 - tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
-  - added `loadItemsSkipsEntryNodesLikeUpstream`
-  - asserts that an `EntryNode` child is ignored without emitting the generic `Can't understand this condition/effect: ...` diagnostic
+  - kept `loadItemsSkipsEntryNodesLikeUpstream`
+  - added `loadItemsValidatesEntryNodeLineBeforeSkippingIt`
+  - asserts that a retained `EntryNode` with malformed quotes still emits the upstream `validateLine(...)` diagnostic before being skipped
 - verification:
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsSkipsEntryNodesLikeUpstream --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsSkipsEntryNodesLikeUpstream --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsValidatesEntryNodeLineBeforeSkippingIt --rerun-tasks`
 
 ## Next Lead
 
