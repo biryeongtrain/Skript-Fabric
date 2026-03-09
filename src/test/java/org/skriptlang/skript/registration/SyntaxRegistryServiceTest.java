@@ -42,4 +42,30 @@ class SyntaxRegistryServiceTest {
 
         assertEquals(List.of(first, middle, last), registered);
     }
+
+    @Test
+    void registerKeepsTransitiveBeforePrioritiesAheadOfBaseEntries() {
+        SyntaxRegistryService registry = new SyntaxRegistryService();
+        Priority base = Priority.base();
+        SyntaxInfo<SyntaxElement> middle = new SyntaxInfo<>(
+                SyntaxElement.class,
+                new String[]{"middle"},
+                "middle",
+                base
+        );
+        SyntaxInfo<SyntaxElement> beforeMiddle = new SyntaxInfo<>(
+                SyntaxElement.class,
+                new String[]{"before-middle"},
+                "before-middle",
+                Priority.after(Priority.before(base))
+        );
+
+        registry.register("test", middle);
+        registry.register("test", beforeMiddle);
+
+        List<SyntaxInfo<?>> registered = new ArrayList<>();
+        registry.syntaxes("test").forEach(registered::add);
+
+        assertEquals(List.of(beforeMiddle, middle), registered);
+    }
 }

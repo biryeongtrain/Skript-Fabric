@@ -1,47 +1,30 @@
 package org.skriptlang.skript.util;
 
-public final class Priority implements Comparable<Priority> {
+import java.util.Collection;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Unmodifiable;
 
-    private final int value;
+/**
+ * Priorities are used for things like ordering syntax and loading structures in a specific order.
+ */
+public interface Priority extends Comparable<Priority> {
 
-    private Priority(int value) {
-        this.value = value;
+    @Contract("-> new")
+    static Priority base() {
+        return new PriorityImpl();
     }
 
-    public static Priority base() {
-        return new Priority(1000);
+    @Contract("_ -> new")
+    static Priority before(Priority priority) {
+        return new PriorityImpl(priority, true);
     }
 
-    public static Priority before(Priority other) {
-        return new Priority(other.value - 1);
+    @Contract("_ -> new")
+    static Priority after(Priority priority) {
+        return new PriorityImpl(priority, false);
     }
 
-    public static Priority after(Priority other) {
-        return new Priority(other.value + 1);
-    }
+    @Unmodifiable Collection<Priority> after();
 
-    public int value() {
-        return value;
-    }
-
-    @Override
-    public int compareTo(Priority other) {
-        return Integer.compare(this.value, other.value);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof Priority other)) {
-            return false;
-        }
-        return value == other.value;
-    }
-
-    @Override
-    public int hashCode() {
-        return Integer.hashCode(value);
-    }
+    @Unmodifiable Collection<Priority> before();
 }

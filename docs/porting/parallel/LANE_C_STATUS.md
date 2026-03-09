@@ -61,6 +61,9 @@ Last updated: 2026-03-09
 - compared local primitive handling in `Classes.parseSimple(...)` with upstream `ch/njol/skript/registrations/Classes#parseSimple`
 - mismatch found: upstream lets registered `ClassInfo` parsers for primitive-backed types run before any fallback coercion, while the local bridge short-circuited `String`/number/boolean parsing first and skipped registered parsers entirely
 - applied minimal fix: `Classes.parseSimple(...)` now consults registered classinfos before the primitive fallback, so custom `String`/numeric parsers behave like upstream
+- compared local parser-registry `org.skriptlang.skript.util.Priority` ordering with upstream `Priority` / `PriorityImpl`
+- mismatch found: upstream preserves transitive relative ordering like `Priority.after(Priority.before(base)) < base`, while the local integer-backed priority model collapsed that value back to the base priority and let parser-registry insertion order drift
+- applied minimal fix: replaced the collapsed integer priority with the upstream relationship-based implementation so transitive parser-registry ordering compares like upstream again
 
 ## Files Changed
 
@@ -72,6 +75,9 @@ Last updated: 2026-03-09
 - `src/test/java/ch/njol/skript/config/SectionNodeCompatibilityTest.java`
 - `src/main/java/ch/njol/skript/registrations/Classes.java`
 - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+- `src/main/java/org/skriptlang/skript/util/Priority.java`
+- `src/main/java/org/skriptlang/skript/util/PriorityImpl.java`
+- `src/test/java/org/skriptlang/skript/registration/SyntaxRegistryServiceTest.java`
 - `docs/porting/parallel/LANE_C_STATUS.md`
 
 ## Exact Counts Changed
@@ -83,6 +89,8 @@ Last updated: 2026-03-09
 - Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/ch/njol/skript/lang`: `0` added, `1` modified
 - Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
+- Java source file count changed in `src/main/java/org/skriptlang/skript/util`: `1` added, `1` modified
+- Java test file count changed in `src/test/java/org/skriptlang/skript/registration`: `0` added, `1` modified
 - real `.sk` fixture count changed: `0`
 
 ## Verification
@@ -119,6 +127,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms registered primitive-backed parsers override the fallback coercion path like upstream
+- Repro (before fix): `Priority.after(Priority.before(base))` compared equal to `base`, so parser-registry entries with transitive "before" priorities could register after the base entry instead of before it
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests org.skriptlang.skript.registration.SyntaxRegistryServiceTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms transitive relative priorities stay ordered before their base parser-registry entries like upstream
 
 ## Unresolved Risks
 
@@ -130,4 +142,6 @@ Last updated: 2026-03-09
   - `src/main/java/ch/njol/skript/lang/ParseContext.java`
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - `src/main/java/org/skriptlang/skript/util/Priority.java`
+  - `src/test/java/org/skriptlang/skript/registration/SyntaxRegistryServiceTest.java`
   - `docs/porting/parallel/LANE_C_STATUS.md`
