@@ -4,14 +4,12 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- compared the lane-owned loader node dispatch against upstream `e6ec744` and found one remaining mismatch on retained config-style child nodes: upstream still runs `validateLine(...)` on the child key before skipping non-`SimpleNode` / non-`SectionNode` nodes, while the local shim returned early and dropped malformed-line diagnostics
-- implemented the narrowest fix in `src/main/java/ch/njol/skript/ScriptLoader.java` by validating the node key before the non-trigger-node early return
-- tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
-  - kept `loadItemsSkipsEntryNodesLikeUpstream`
-  - added `loadItemsValidatesEntryNodeLineBeforeSkippingIt`
-  - asserts that a retained `EntryNode` with malformed quotes still emits the upstream `validateLine(...)` diagnostic before being skipped
+- compared the lane-owned retained-diagnostic ordering against upstream `e6ec744` and found one remaining long-tail mismatch in `Statement.parse(...)`: the registered-statement pass still fed the generic loader fallback into `SkriptParser.parseModern(...)`, which let that parser-level default artificially raise later statement failures over earlier retained effect diagnostics
+- implemented the narrowest fix in `src/main/java/ch/njol/skript/lang/Statement.java` by keeping the registered-statement parse on a null default error so the outer retained-failure selection remains the only source of `Can't understand this condition/effect: ...`
+- tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java` with `loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError`, which proves an earlier generic effect rejection still wins even when a later plain statement also fails and would otherwise pick up the parser fallback
 - verification:
-  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsSkipsEntryNodesLikeUpstream --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsValidatesEntryNodeLineBeforeSkippingIt --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsHigherQualityEffectErrorWhenLaterStatementAlsoFails --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError --rerun-tasks`
 
 ## Next Lead
 
@@ -39,6 +37,28 @@ Last updated: 2026-03-09
 - Keep Lane A focused on `ch/njol/skript/log/**` compatibility slices unless the coordinator explicitly reassigns `Statement` / `ScriptLoader`.
 
 ## Work Log
+
+### 2026-03-09 Statement Default-Fallback Inflation Slice
+
+- compared the lane-owned retained-diagnostic path against upstream `e6ec744` and found one remaining `Statement.parse(...)` mismatch on long-tail statement failures:
+  - the local registered-statement parse still passed the generic loader fallback into `SkriptParser.parseModern(...)`
+  - when a later statement candidate logged only generic-specific failures, that parser-level default could still become the retained statement log's top-quality error and incorrectly outrank an earlier retained effect diagnostic
+- implemented the narrowest lane-owned fix:
+  - `src/main/java/ch/njol/skript/lang/Statement.java`
+    - stopped feeding the generic loader fallback into the registered-statement parser path so later statement failures are compared on their real retained diagnostics only
+- added one focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError`
+  - the harness uses an earlier effect that logs an explicit `GENERIC` rejection and a later plain statement that also logs only a `GENERIC` rejection on the same line
+  - assertions prove the earlier effect diagnostic still wins and neither the later statement diagnostic nor the generic `Can't understand this condition/effect: ...` fallback leaks
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/lang/Statement.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError --rerun-tasks`
+    - passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsHigherQualityEffectErrorWhenLaterStatementAlsoFails --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsDefaultSpecificEffectErrorWhenLaterNotExpressionStatementAlsoFails --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError --rerun-tasks`
+    - passed
 
 ### 2026-03-09 Retaining Default-Error Quality Slice
 

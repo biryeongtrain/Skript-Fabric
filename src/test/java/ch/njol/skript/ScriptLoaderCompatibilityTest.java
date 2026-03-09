@@ -663,6 +663,35 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsKeepsEarlierGenericEffectErrorWhenLaterStatementOnlyAddsGenericSpecificError() {
+        Skript.registerEffect(GenericRejectingAmbiguousEffect.class, "generic statement priority syntax");
+        Skript.registerStatement(LowerQualityRejectingAmbiguousStatement.class, "generic statement priority syntax");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("generic statement priority syntax")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("generic ambiguous effect rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("lower-quality ambiguous statement rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition/effect: generic statement priority syntax")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsWarnsWhenLaterLineIsUnreachable() {
         registerExecutionIntentStatements();
         ParserInstance parser = ParserInstance.get();
@@ -1515,6 +1544,33 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "default-quality ambiguous effect";
+        }
+    }
+
+    public static final class GenericRejectingAmbiguousEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.GENERIC,
+                    "generic ambiguous effect rejected"
+            ));
+            return false;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "generic ambiguous effect";
         }
     }
 

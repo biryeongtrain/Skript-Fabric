@@ -87,7 +87,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
         }
         resetParseLog(log);
 
-        Statement statement = parseRegisteredStatement(expression, defaultError, node, items, sectionContext);
+        Statement statement = parseRegisteredStatement(expression, node, items, sectionContext);
         if (statement != null) {
             log.printLog();
             return statement;
@@ -148,7 +148,6 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
 
     private static @Nullable Statement parseRegisteredStatement(
             String expression,
-            @Nullable String defaultError,
             @Nullable SectionNode node,
             @Nullable List<TriggerItem> items,
             Section.SectionContext sectionContext
