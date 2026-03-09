@@ -20,8 +20,8 @@ public final class CondIsResponsive extends Condition {
             return false;
         }
         entities = expressions[0];
-        responsive = matchedPattern < 2;
-        setNegated((matchedPattern % 2) == 1);
+        responsive = !parseResult.hasTag("unresponsive");
+        setNegated(matchedPattern == 1);
         return true;
     }
 

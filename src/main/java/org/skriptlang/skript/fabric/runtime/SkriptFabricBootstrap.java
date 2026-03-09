@@ -315,10 +315,8 @@ public final class SkriptFabricBootstrap {
                 );
                 Skript.registerCondition(
                         CondIsResponsive.class,
-                        "%entities% (is|are) responsive",
-                        "%entities% (isn't|is not|aren't|are not) responsive",
-                        "%entities% (is|are) unresponsive",
-                        "%entities% (isn't|is not|aren't|are not) unresponsive"
+                        "%entities% (is|are) (responsive|:unresponsive)",
+                        "%entities% (isn't|is not|aren't|are not) (responsive|:unresponsive)"
                 );
                 Skript.registerCondition(
                         CondHasLootTable.class,
