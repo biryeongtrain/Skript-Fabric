@@ -1,6 +1,6 @@
 # Implemented Syntax Inventory
 
-Last updated: 2026-03-08
+Last updated: 2026-03-10
 
 This document is a maintenance readme for the currently active Skript-on-Fabric syntax surface.
 
@@ -23,15 +23,14 @@ It is not:
 - Source-level effect port: `24 / 24`
 - Verified Fabric GameTests: `230 / 230`
 - Latest full verification:
-  - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
-- Recent exact upstream imports:
-  - `%entities% (is|are) (burning|ignited|on fire)`
-  - `%livingentities% (is|are) (invisible|visible)`
-  - `%livingentities% (has|have) (ai|artificial intelligence)`
-  - `%players% (is|are) sprinting`
-  - exact sprinting start/stop effect forms
-  - glowing property expression: `[the] glowing of %entities%`, `%entities%'[s] glowing` (settable)
+  - build path executed `runGameTest`
+- Recent verified additions:
+  - `chance of %number%(1:\%|) [fail:(fails|failed)]`
+  - `[a|%-integer%] random (:integer|number)[s] (from|between) %number% (to|and) %number%`
+  - `using [[the] experiment] <.+>`
+  - adjacent conditional section forms: `else`, `else if`, `parse if`, `if any`, `if all`, `then`, and `then run`
+  - panda rolling forms and strider shivering forms
 
 ## Stage 8 Audit Snapshot
 
@@ -44,10 +43,10 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `140`
+  - local `ch/njol/skript`: `314`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored local function-first registry fallback, section-scope hint clearing, effect-candidate section ownership reset, and retained section diagnostics on statement fallback success
+  - latest shortfall-focused closure restored Java class helper registrations/converters/comparators, widened `Timespan`, added `StructUsing` plus `SecConditional`, added `CondChance` plus `ExprRandomNumber`, and restored panda/strider state effects
 
 Primary registration sources:
 
@@ -117,6 +116,7 @@ None in the current Fabric registration set.
 - exact built-in `set {_value} to ...` lines now publish parse-time local-variable hints for later sibling lines through `EffChange`
 - omitted non-optional placeholders can now fall back to exact `ClassInfo` default expressions when the parser did not register a narrower default
 - `Classes` now also exposes exact registered default expressions through `getDefaultExpression(String)` and `getDefaultExpression(Class<?>)`
+- the legacy Java class-info compatibility path now restores `object`, numeric wrappers/primitives, `boolean`, `string`, and `uuid` parsing without Bukkit or Yggdrasil dependencies
 - variables default to case-insensitive storage and lookup
 - list-variable `set` copies keyed list sources into reindexed numeric target slots instead of preserving source keys
 - prefix/list iteration now uses natural numeric ordering, so numeric-like keys such as `2` and `10` no longer sort lexically during list reads or list-to-list `set`
@@ -124,6 +124,7 @@ None in the current Fabric registration set.
 - list variables now expose the legacy loop aliases `index`, `var`, `variable`, and `value`
 - list-variable predicate checks now use upstream-style all-values `getAnd()` semantics instead of collapsing back to a single-value/default-expression path
 - quoted string literals remain strings in generic `%object%` contexts during live script loading
+- `%timespan%` parsing now accepts natural durations, command short forms such as `1.5h`, clock forms such as `1:02:03`, and localized `forever` / `eternity` values on the active compatibility path
 - exact Patbox-style placeholders such as `%player:name%` now resolve through Patbox `TextPlaceholderAPI` on active message/name string paths when live event context exists
 - `FunctionRegistry` now prefers local script signatures and functions before global fallback, so compatible global overloads no longer make valid local calls ambiguous
 - statement fallback now keeps earlier higher-quality parse diagnostics instead of replacing them with lower-quality later plain-statement failures on the same syntax line
@@ -176,6 +177,8 @@ None in the current Fabric registration set.
   - representative forms: `%entities% are silent`, `%entities% are not silent`
 - `is invulnerable`
   - representative forms: `%entities% are invulnerable`, `%entities% are invincible`, `%entities% are vulnerable`
+- chance condition
+  - representative forms: `chance of 50%`, `chance of 0.25`, `chance of 25% failed`
 - generic comparison
   - representative forms: `%objects% is %objects%`
   - current audit note: ambiguous bare item-id equality is not parity-complete yet
@@ -268,6 +271,8 @@ The list below groups the active syntax by domain and calls out the representati
   - timespan
   - quaternion
   - `%material%` / `%materials%` now resolve again through user-pattern classinfo aliases on the active compatibility path
+- random-number helpers
+  - representative forms: `a random integer between 1 and 3`, `5 random numbers from 0 to 1`
 
 ### Breeding
 
@@ -451,6 +456,10 @@ The list below groups the active syntax by domain and calls out the representati
   - `make %livingentities% not visible`
   - `make %livingentities% visible`
   - `make %livingentities% not invisible`
+- panda rolling toggle
+  - representative forms: `make %livingentities% start rolling`, `force %livingentities% to stop rolling`
+- strider shivering toggle
+  - representative forms: `make %livingentities% start shivering`, `force %livingentities% to stop shivering`
 - fishing approach-angle setter
 
 ### Breeding
@@ -513,14 +522,27 @@ There is no large separate user-facing statement inventory being tracked here be
 The notable helper syntax that behaves like a builder/context entry point today is:
 
 - `a loot context at %locations%`
+- `using [[the] experiment] <name>`
 
 The currently supported control-flow section syntax is:
 
 - `if <condition>:`
+- `else if <condition>:`
+- `else:`
+- `parse if <condition>:`
+- `else parse if <condition>:`
+- `if any:`
+- `if all:`
+- `else if any:`
+- `else if all:`
+- `then:`
+- `then run:`
+- implicit `%condition%:` section headers
 
 The current loader/runtime also supports:
 
 - generic registered `Section` parsing for section-backed trigger items
+- shared registered conditional-section loading through `SecIf` plus the adjacent `SecConditional` compatibility path
 
 ## What This Document Does Not Guarantee
 
