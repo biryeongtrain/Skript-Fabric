@@ -29,11 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.getExactParser(...)` now restores the upstream exact classinfo-parser lookup without drifting to subtype or converter-backed fallbacks
-- baseline scalar `Classes.parseSimple(...)` fallback is kept temporarily after registered parsers, because the local port still lacks upstream `JavaClasses` scalar registrations
-- leading auto-tagged parser branches now still enforce omitted required defaults from same-token suffix placeholders
-- direct resolved local `DynamicFunctionReference` instances now keep a tracked `Script` and become invalid after script unload
-- `ParserInstance` now restores the upstream section-slice helper surface: `getSectionsUntil(...)`, `getSections(int)`, and `getSections(int, Class<? extends TriggerSection>)`
+- `HintManager` now restores the upstream snapshot/rollback API through `backup()` and `restore(...)`, so parse-time local hint mutations can roll back cleanly
+- local `DynamicFunctionReference` instances that only retain a source namespace string now also invalidate when `Functions.clearFunctions(...)` removes that namespace entry
+- previously closed parser/classinfo baseline still stands: exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, parser section-slice helpers, and the temporary scalar `Classes.parseSimple(...)` fallback after registered parsers
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
@@ -51,7 +49,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, invalid-default-diagnostic, mixed-default-diagnostic, and tagged-branch suffix-default rules
 2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, exact-parser lookup, empty-option-value handling, specific-parser precedence, classinfo-cloner, variable-name fallback, renamed-node map-sync, and transitive priority-ordering slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, one-based plural local indexing, doubled-quote literal, blank-default rejection, lazy global-reference execution, local dynamic-reference namespace, missing-source normalization, split-exact-overload ambiguity cases, and tracked-script unload for dynamic local references
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, one-based plural local indexing, doubled-quote literal, blank-default rejection, lazy global-reference execution, local dynamic-reference namespace, missing-source normalization, split-exact-overload ambiguity cases, tracked-script unload, and untracked local-reference unload for dynamic function references
 4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, whitespace-only-line diagnostics, config-only-node skip behavior, stale-section-warning drop, specific-error-over-fallback retention, semantic fallback-quality slices, parser-fallback inflation slice, and retained parse-error tie handling
 
 ## Parallel Defaults

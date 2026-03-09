@@ -38,8 +38,8 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - worker merges on 2026-03-09 restored exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, tracked-script invalidation for resolved local dynamic function references, and the `ParserInstance` section-slice helper surface
-  - coordinator integration fixed `Classes.parseSimple(...)` by keeping the temporary baseline scalar fallback after registered parsers until upstream `JavaClasses` scalar registrations are ported
+  - worker merges on 2026-03-09 restored `HintManager.backup()` / `restore(...)` rollback semantics and invalidation of namespace-only local dynamic function references after `Functions.clearFunctions(...)`
+  - the prior parser/classinfo baseline still stands, including exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, parser section-slice helpers, and the temporary scalar `Classes.parseSimple(...)` fallback after registered parsers until upstream `JavaClasses` scalar registrations are ported
 
 ## Priority Shift On 2026-03-08
 

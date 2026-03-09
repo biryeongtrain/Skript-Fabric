@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is worker-merged `lang-core` closure for exact parser lookup, tagged-branch suffix omitted-default enforcement, tracked-script dynamic references, parser section-slice helpers, plus the coordinator integration fix that restored the temporary baseline scalar `Classes.parseSimple(...)` fallback
+- latest closed slice is worker-merged `lang-core` closure for `HintManager` backup/restore rollback and untracked local dynamic-reference invalidation, on top of the existing exact parser lookup, tagged-branch suffix omitted-default enforcement, parser section-slice helpers, and temporary baseline scalar `Classes.parseSimple(...)` fallback
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`
