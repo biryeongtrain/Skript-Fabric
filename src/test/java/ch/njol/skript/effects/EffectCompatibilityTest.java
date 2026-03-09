@@ -110,11 +110,23 @@ final class EffectCompatibilityTest {
                 "force %livingentities% to (:start|stop) sneezing"
         );
         Skript.registerEffect(
+                EffPandaRolling.class,
+                "make %livingentities% (start:(start rolling|roll)|stop rolling)",
+                "force %livingentities% to (:start|stop) rolling"
+        );
+        Skript.registerEffect(
                 EffScreaming.class,
                 "make %livingentities% (start screaming|scream)",
                 "force %livingentities% to (start screaming|scream)",
                 "make %livingentities% stop screaming",
                 "force %livingentities% to stop screaming"
+        );
+        Skript.registerEffect(
+                EffStriderShivering.class,
+                "make %livingentities% start shivering",
+                "force %livingentities% to start shivering",
+                "make %livingentities% stop shivering",
+                "force %livingentities% to stop shivering"
         );
     }
 
@@ -195,12 +207,30 @@ final class EffectCompatibilityTest {
     }
 
     @Test
+    void pandaRollingEffectTracksStartTag() throws Exception {
+        EffPandaRolling start = parseEffect("make lane-f-test-livingentity roll", EffPandaRolling.class);
+        EffPandaRolling stop = parseEffect("force lane-f-test-livingentity to stop rolling", EffPandaRolling.class);
+
+        assertTrue(readBoolean(start, "start"));
+        assertFalse(readBoolean(stop, "start"));
+    }
+
+    @Test
     void screamingEffectTracksStartAndStopPatterns() throws Exception {
         EffScreaming start = parseEffect("make lane-f-test-livingentity scream", EffScreaming.class);
         EffScreaming stop = parseEffect("force lane-f-test-livingentity to stop screaming", EffScreaming.class);
 
         assertTrue(readBoolean(start, "scream"));
         assertFalse(readBoolean(stop, "scream"));
+    }
+
+    @Test
+    void striderShiveringEffectTracksStartAndStopPatterns() throws Exception {
+        EffStriderShivering start = parseEffect("make lane-f-test-livingentity start shivering", EffStriderShivering.class);
+        EffStriderShivering stop = parseEffect("force lane-f-test-livingentity to stop shivering", EffStriderShivering.class);
+
+        assertTrue(readBoolean(start, "start"));
+        assertFalse(readBoolean(stop, "start"));
     }
 
     private <T> T parseEffect(String input, Class<T> type) {

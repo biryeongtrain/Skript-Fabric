@@ -1,6 +1,6 @@
 # Lane F Status
 
-Last updated: 2026-03-09
+Last updated: 2026-03-10
 
 ## Scope
 
@@ -10,28 +10,31 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- finished the remaining requested entity leaf bundle with a mixed exact/class-backed import that fits the current Fabric entity registry shape
-- added `ClassEntityData` plus restored `BoatData`, `BoatChestData`, `DroppedItemData`, `FallingBlockData`, `MinecartData`, `MooshroomData`, `StriderData`, `ThrownPotionData`, and `XpOrbData`
-- widened `EntityDataRegistry.fromClass(...)` so lane-owned custom entity wrappers win over broad `SimpleEntityData` supertypes when the class matches exactly
-- tightened `EntityCompatibilityTest` so parser and class-based lookup now cover the newly restored entity names and wrappers
-- used the fallback bundle on a small effects cluster that binds to existing mapped entity handles only: `EffPandaOnBack`, `EffPandaSneezing`, and `EffScreaming`
-- tightened `EffectCompatibilityTest` so those fallback effects prove their parse-mode/tag handling without needing new runtime bridge work
+- continued the requested low-risk entity-state effects cluster on the current mapped entity handles with `EffPandaRolling` and `EffStriderShivering`
+- mapped the upstream panda roll toggle onto Mojang's current `Panda.roll(boolean)` handle and the upstream strider shiver toggle onto `Strider.setSuffocating(boolean)`
+- extended `EffectCompatibilityTest` so the new effects prove their parse-mode/tag handling alongside the prior panda/screaming slice
+- confirmed the next adjacent goat/enderman follow-ups are not clean on the current shared handles:
+  - `EffGoatHorns` cannot be imported exactly because Mojang exposes only `addHorns()` / `removeHorns()` rather than per-side horn setters
+  - `EffEndermanTeleport` is blocked because `EnderMan.teleport()` is `protected` and `teleportTowards(...)` is package-private on the current mapped class
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.entity.EntityCompatibilityTest --rerun-tasks`
+- `./gradlew testClasses --rerun-tasks`
   - passed
-- `./gradlew test --tests ch.njol.skript.entity.EntityCompatibilityTest --tests ch.njol.skript.effects.EffectCompatibilityTest --rerun-tasks`
+- `./gradlew isolatedEffectCompatibilityTest --rerun-tasks`
   - passed
+- attempted but not used:
+  - `./gradlew test --tests 'ch.njol.skript.effects.EffectCompatibilityTest' --rerun-tasks`
+    - failed because the default `test` task excludes the class's `isolated-registry` tag
+  - `./gradlew test --tests '*EffectCompatibilityTest.*' --rerun-tasks`
+    - failed for the same reason
 
 ## Next Lead
 
-- next importable Lane F bundle is whichever additional `events` or `effects` cluster can bind to existing mapped entity/world handles without new `org/...` bridge edits; likely follow-ups are more low-argument entity-state effects or event classes that only need current shared event scaffolding
+- next importable Lane F bundle is whichever additional `effects` or `events` cluster binds to existing mapped handles without new `org/...` bridge edits; goat/enderman state follow-ups are currently blocked on the mapped API shape, so the safer continuation is a small event or effect cluster that only uses existing shared scaffolding
 
 ## Merge Notes
 
 - likely conflicts:
-  - `src/main/java/ch/njol/skript/entity/*`
   - `src/main/java/ch/njol/skript/effects/Eff*.java`
-  - `src/test/java/ch/njol/skript/entity/EntityCompatibilityTest.java`
   - `src/test/java/ch/njol/skript/effects/EffectCompatibilityTest.java`
