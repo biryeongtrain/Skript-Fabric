@@ -18,33 +18,35 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: `TypePatternElement.getCombinations(true)` always returned the raw placeholder text locally, but upstream collapses any non-literal placeholder to `%*%` when building clean pattern combinations. That clean-form parity matters for upstream-style conflict/comparison surfaces.
-- minimal fix in patterns: keep literal-only placeholders (`%*type%`) intact for clean combinations, but collapse all other placeholder combinations to `%*%`, matching upstream.
+- mismatch: parser-scoped omitted-placeholder defaults were resolved through compatible supertype entries in `DefaultValueData`, so a `%integer%` omission could incorrectly consume a `Number.class` parser default. Upstream only uses exact parser-default type matches here.
+- minimal fix in parser data: `DefaultValueData.getDefaultValue(...)` now returns exact-type parser defaults only, so omitted required placeholders no longer succeed through supertype parser defaults.
 
 ## Regression Added
 
-- `ch.njol.skript.patterns.PatternCompilerCompatibilityTest`
-  - added a focused assertion that clean combinations preserve `%-*integer%`
-  - added a focused assertion that clean combinations collapse `%strings@1%` to `%*%`
+- `ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest`
+  - exact-type lookup now asserts `Integer.class` does not inherit `Number.class` or `Object.class` parser defaults
+- `ch.njol.skript.lang.SkriptParserRegistryTest`
+  - omitted `%integer%` no longer consumes a parser default registered only for `Number.class`
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/patterns/TypePatternElement.java`
-- `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java`
+- `src/test/java/ch/njol/skript/lang/parser/ParserCompatibilityDataAndStackTest.java`
+- `src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests 'ch.njol.skript.patterns.PatternCompilerCompatibilityTest' --rerun-tasks`
+  - `./gradlew test --tests 'ch.njol.skript.lang.parser.ParserCompatibilityDataAndStackTest' --tests 'ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest' --tests 'ch.njol.skript.lang.SkriptParserRegistryTest' --rerun-tasks`
 - results: passed
 
 ## Remaining Risks
 
-- this slice only covers clean combination parity for placeholder pattern elements
-- broader matcher/runtime parity in `SkriptParser` and deeper `patterns` backtracking behavior is still open
+- this slice only removes compatible parser-default fallback for omitted placeholders
+- compatible classinfo-default fallback for omitted placeholders is still separate and untouched
 
 ## Merge Notes
 
-- conflict surface is limited to `TypePatternElement` and the pattern compatibility test
-- this slice does not touch loader flow, `InputSource`, or `Classes`
+- conflict surface is limited to parser default lookup and two parser-facing tests
+- this slice does not touch pattern matching, loader flow, or class registration logic

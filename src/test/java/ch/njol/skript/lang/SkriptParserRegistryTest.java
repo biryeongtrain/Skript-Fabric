@@ -224,29 +224,14 @@ class SkriptParserRegistryTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void expressionPatternUsesCompatibleParserAndClassInfoDefaultsForOmittedPlaceholderForm() {
+    void expressionPatternDoesNotUseCompatibleParserDefaultForOmittedPlaceholderForm() {
         Classes.clearClassInfos();
-        Classes.registerClassInfo(new ClassInfo<>(Number.class, "numeric").defaultExpression(new SimpleLiteral<>(11, true)));
         Skript.registerExpression(DefaultIntegerValueExpression.class, Number.class, "default integer value [%integer%]");
 
         DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
         data.addDefaultValue(Number.class, new SimpleLiteral<>(7, true));
         try {
-            Expression<? extends Number> parserDefault = new SkriptParser(
-                    "default integer value",
-                    SkriptParser.ALL_FLAGS,
-                    ParseContext.DEFAULT
-            ).parseExpression(new Class[]{Number.class});
-
-            assertNotNull(parserDefault);
-            assertInstanceOf(DefaultIntegerValueExpression.class, parserDefault);
-            assertEquals(7, parserDefault.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
-        } finally {
-            data.removeDefaultValue(Number.class);
-        }
-
-        try {
-            Expression<? extends Number> classInfoDefault = new SkriptParser(
+            Expression<? extends Number> omitted = new SkriptParser(
                     "default integer value",
                     SkriptParser.ALL_FLAGS,
                     ParseContext.DEFAULT
@@ -257,14 +242,12 @@ class SkriptParserRegistryTest {
                     ParseContext.DEFAULT
             ).parseExpression(new Class[]{Number.class});
 
-            assertNotNull(classInfoDefault);
-            assertInstanceOf(DefaultIntegerValueExpression.class, classInfoDefault);
-            assertEquals(11, classInfoDefault.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
-
+            assertNull(omitted);
             assertNotNull(explicit);
             assertInstanceOf(DefaultIntegerValueExpression.class, explicit);
             assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
         } finally {
+            data.removeDefaultValue(Number.class);
             Classes.clearClassInfos();
         }
     }

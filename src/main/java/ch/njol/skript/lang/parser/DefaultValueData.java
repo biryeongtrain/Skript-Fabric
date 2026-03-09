@@ -25,24 +25,7 @@ public class DefaultValueData extends ParserInstance.Data {
     public <T> @Nullable DefaultExpression<T> getDefaultValue(Class<T> type) {
         Deque<DefaultExpression<?>> stack = defaults.get(type);
         if (stack == null || stack.isEmpty()) {
-            Class<?> bestMatch = null;
-            for (Map.Entry<Class<?>, Deque<DefaultExpression<?>>> entry : defaults.entrySet()) {
-                Deque<DefaultExpression<?>> candidateStack = entry.getValue();
-                if (candidateStack.isEmpty()) {
-                    continue;
-                }
-                Class<?> candidateType = entry.getKey();
-                if (!candidateType.isAssignableFrom(type)) {
-                    continue;
-                }
-                if (bestMatch == null || bestMatch.isAssignableFrom(candidateType)) {
-                    bestMatch = candidateType;
-                    stack = candidateStack;
-                }
-            }
-            if (stack == null || stack.isEmpty()) {
-                return null;
-            }
+            return null;
         }
         @SuppressWarnings("unchecked")
         DefaultExpression<T> value = (DefaultExpression<T>) stack.peek();

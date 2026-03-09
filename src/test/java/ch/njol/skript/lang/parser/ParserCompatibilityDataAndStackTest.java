@@ -44,7 +44,7 @@ class ParserCompatibilityDataAndStackTest {
     }
 
     @Test
-    void defaultValueDataUsesMostSpecificCompatibleTypeWhenExactMissing() {
+    void defaultValueDataRequiresExactTypeMatch() {
         ParserInstance parser = new ParserInstance();
         DefaultValueData data = new DefaultValueData(parser);
 
@@ -54,13 +54,13 @@ class ParserCompatibilityDataAndStackTest {
 
         data.addDefaultValue(Object.class, objectDefault);
         data.addDefaultValue(Number.class, numberDefault);
-        assertEquals(numberDefault, data.getDefaultValue(Integer.class));
+        assertNull(data.getDefaultValue(Integer.class));
 
         data.addDefaultValue(Integer.class, integerDefault);
         assertEquals(integerDefault, data.getDefaultValue(Integer.class));
 
         data.removeDefaultValue(Integer.class);
-        assertEquals(numberDefault, data.getDefaultValue(Integer.class));
+        assertNull(data.getDefaultValue(Integer.class));
     }
 
     @Test
