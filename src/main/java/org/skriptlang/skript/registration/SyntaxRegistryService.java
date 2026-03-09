@@ -24,7 +24,15 @@ public class SyntaxRegistryService {
     }
 
     public <E extends SyntaxElement> void register(String key, SyntaxInfo<? extends E> info) {
-        syntaxesByKey.computeIfAbsent(key, unused -> new ArrayList<>()).add(info);
+        List<SyntaxInfo<?>> syntaxes = syntaxesByKey.computeIfAbsent(key, unused -> new ArrayList<>());
+        int insertionIndex = syntaxes.size();
+        for (int index = 0; index < syntaxes.size(); index++) {
+            if (info.priority().compareTo(syntaxes.get(index).priority()) < 0) {
+                insertionIndex = index;
+                break;
+            }
+        }
+        syntaxes.add(insertionIndex, info);
     }
 
     public <E extends SyntaxElement> void register(String key, Class<? extends E> syntaxClass, String... patterns) {
