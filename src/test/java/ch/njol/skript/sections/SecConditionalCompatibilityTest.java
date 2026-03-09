@@ -1,0 +1,229 @@
+package ch.njol.skript.sections;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import ch.njol.skript.ScriptLoader;
+import ch.njol.skript.Skript;
+import ch.njol.skript.config.Node;
+import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.lang.Condition;
+import ch.njol.skript.lang.Effect;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.TriggerItem;
+import ch.njol.util.Kleenean;
+import java.util.ArrayList;
+import java.util.List;
+import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.event.SkriptEvent;
+
+class SecConditionalCompatibilityTest {
+
+    @BeforeEach
+    void registerSyntax() {
+        Skript.instance().syntaxRegistry().clearAll();
+        MarkEffect.executed.clear();
+        TrackingEffect.reset();
+        SecConditional.register();
+        Skript.registerCondition(TrueCondition.class, "always true");
+        Skript.registerCondition(FalseCondition.class, "always false");
+        Skript.registerEffect(
+                MarkEffect.class,
+                "mark if",
+                "mark else if",
+                "mark else",
+                "mark after"
+        );
+        Skript.registerEffect(TrackingEffect.class, "track body");
+    }
+
+    @AfterEach
+    void cleanup() {
+        Skript.instance().syntaxRegistry().clearAll();
+        MarkEffect.executed.clear();
+        TrackingEffect.reset();
+    }
+
+    @Test
+    void elseIfBranchRunsWhenPriorIfFails() {
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("if always false", line("mark if")),
+                section("else if always true", line("mark else if")),
+                section("else", line("mark else")),
+                line("mark after")
+        ));
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+
+        assertEquals(List.of("else if", "after"), MarkEffect.executed);
+        assertTrue(items.get(0) instanceof SecConditional);
+        assertTrue(items.get(1) instanceof SecConditional);
+        assertTrue(items.get(2) instanceof SecConditional);
+    }
+
+    @Test
+    void parseIfFalseSkipsBodyInitialization() {
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("parse if always false", line("track body")),
+                line("mark after")
+        ));
+
+        assertEquals(2, items.size());
+        assertEquals(0, TrackingEffect.initCount);
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+
+        assertEquals(0, TrackingEffect.executeCount);
+        assertEquals(List.of("after"), MarkEffect.executed);
+    }
+
+    @Test
+    void ifAnyRunsThenSectionWhenAnyConditionMatches() {
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("if any", line("always false"), line("always true")),
+                section("then", line("track body")),
+                section("else", line("mark else")),
+                line("mark after")
+        ));
+
+        assertEquals(4, items.size());
+        assertEquals(1, TrackingEffect.initCount);
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+
+        assertEquals(1, TrackingEffect.executeCount);
+        assertEquals(List.of("after"), MarkEffect.executed);
+        assertTrue(items.get(0) instanceof SecConditional);
+        assertTrue(items.get(1) instanceof SecConditional);
+    }
+
+    @Test
+    void implicitConditionalRunsAsIfSection() {
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("always true", line("track body")),
+                section("else", line("mark else")),
+                line("mark after")
+        ));
+
+        assertEquals(3, items.size());
+        assertEquals(1, TrackingEffect.initCount);
+
+        TriggerItem.walk(items.getFirst(), SkriptEvent.EMPTY);
+
+        assertEquals(1, TrackingEffect.executeCount);
+        assertEquals(List.of("after"), MarkEffect.executed);
+        assertTrue(items.get(0) instanceof SecConditional);
+    }
+
+    private static SectionNode root(Node... children) {
+        SectionNode root = new SectionNode("root");
+        for (Node child : children) {
+            root.add(child);
+        }
+        return root;
+    }
+
+    private static SectionNode section(String key, Node... children) {
+        SectionNode sectionNode = new SectionNode(key);
+        for (Node child : children) {
+            sectionNode.add(child);
+        }
+        return sectionNode;
+    }
+
+    private static SimpleNode line(String key) {
+        return new SimpleNode(key);
+    }
+
+    public static final class TrueCondition extends Condition {
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+            return true;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "always true";
+        }
+    }
+
+    public static final class FalseCondition extends Condition {
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+            return true;
+        }
+
+        @Override
+        public boolean check(SkriptEvent event) {
+            return false;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "always false";
+        }
+    }
+
+    public static final class MarkEffect extends Effect {
+
+        private static final List<String> MARKERS = List.of("if", "else if", "else", "after");
+        private static final List<String> executed = new ArrayList<>();
+
+        private String marker = "unknown";
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+            marker = MARKERS.get(matchedPattern);
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+            executed.add(marker);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "mark " + marker;
+        }
+    }
+
+    public static final class TrackingEffect extends Effect {
+
+        private static int initCount;
+        private static int executeCount;
+
+        static void reset() {
+            initCount = 0;
+            executeCount = 0;
+        }
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+            initCount++;
+            return true;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+            executeCount++;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "track body";
+        }
+    }
+}
