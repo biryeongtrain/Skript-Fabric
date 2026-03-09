@@ -37,9 +37,9 @@ Last updated: 2026-03-09
   - `./gradlew build --rerun-tasks` passed on 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
-- Latest `lang-core` batch:
-  - worker merges on 2026-03-09 restored `HintManager.backup()` / `restore(...)` rollback semantics and invalidation of namespace-only local dynamic function references after `Functions.clearFunctions(...)`
-  - the prior parser/classinfo baseline still stands, including exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, parser section-slice helpers, and the temporary scalar `Classes.parseSimple(...)` fallback after registered parsers until upstream `JavaClasses` scalar registrations are ported
+- Latest implementation batch:
+  - worker merges on 2026-03-09 imported exact upstream interaction-dimensions plural expressions, responsive/unresponsive interaction condition syntax, and `make %entities% adult` / `make %entities% baby` effect syntax on the active Fabric runtime
+  - the same batch also restored the `ParserInstance` delay-state bridge for the remaining `lang-core` track
 
 ## Priority Shift On 2026-03-08
 

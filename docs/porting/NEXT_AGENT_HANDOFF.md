@@ -29,9 +29,11 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `HintManager` now restores the upstream snapshot/rollback API through `backup()` and `restore(...)`, so parse-time local hint mutations can roll back cleanly
-- local `DynamicFunctionReference` instances that only retain a source namespace string now also invalidate when `Functions.clearFunctions(...)` removes that namespace entry
-- previously closed parser/classinfo baseline still stands: exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, parser section-slice helpers, and the temporary scalar `Classes.parseSimple(...)` fallback after registered parsers
+- implementation phase is now active on top of the existing `lang-core` baseline
+- exact upstream interaction-dimensions plural expressions now register on the live Fabric runtime
+- exact upstream responsive/unresponsive interaction condition syntax now registers and is covered by focused runtime tests
+- exact upstream `make %entities% adult` / `make %entities% baby` syntax now registers on the live Fabric runtime
+- `ParserInstance` now restores the upstream parser-delay-state bridge for remaining `lang-core` compatibility callers
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
