@@ -185,6 +185,14 @@ class PatternCompilerCompatibilityTest {
     }
 
     @Test
+    void compiledPatternKeywordPrefilterUsesRawInputBeforeTrimming() {
+        SkriptPattern pattern = PatternCompiler.compile("name");
+
+        assertNull(pattern.match(" name"));
+        assertNotNull(pattern.match("name "));
+    }
+
+    @Test
     void compiledPatternKeywordPrefilterKeepsGroupedChoiceMatchesWithTrailingLiteral() {
         SkriptPattern pattern = PatternCompiler.compile("(alpha|beta) gamma");
 
