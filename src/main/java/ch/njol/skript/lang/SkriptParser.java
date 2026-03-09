@@ -16,17 +16,21 @@ import ch.njol.skript.patterns.PatternCompiler;
 import ch.njol.skript.patterns.SkriptPattern;
 import ch.njol.skript.patterns.TypePatternElement;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.util.NonNullPair;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.EnumMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -118,6 +122,86 @@ public class SkriptParser {
             return false;
         }
         return true;
+    }
+
+    public static @Nullable NonNullPair<String, NonNullPair<ClassInfo<?>, Boolean>[]> validatePattern(String pattern) {
+        List<NonNullPair<ClassInfo<?>, Boolean>> pairs = new ArrayList<>();
+        int groupLevel = 0;
+        int optionalLevel = 0;
+        Deque<Character> groups = new LinkedList<>();
+        StringBuilder normalized = new StringBuilder(pattern == null ? 0 : pattern.length());
+        int last = 0;
+        String source = pattern == null ? "" : pattern;
+        for (int index = 0; index < source.length(); index++) {
+            char character = source.charAt(index);
+            if (character == '(') {
+                groupLevel++;
+                groups.addLast(character);
+            } else if (character == '|') {
+                if (groupLevel == 0 || (groups.peekLast() != '(' && groups.peekLast() != '|')) {
+                    return patternError("Cannot use the pipe character '|' outside of groups. Escape it if you want to match a literal pipe: '\\|'");
+                }
+                groups.removeLast();
+                groups.addLast(character);
+            } else if (character == ')') {
+                if (groupLevel == 0 || (groups.peekLast() != '(' && groups.peekLast() != '|')) {
+                    return patternError("Unexpected closing group bracket ')'. Escape it if you want to match a literal bracket: '\\)'");
+                }
+                if (groups.peekLast() == '(') {
+                    return patternError("(...|...) groups have to contain at least one pipe character '|' to separate it into parts. Escape the brackets if you want to match literal brackets: \"\\(not a group\\)\"");
+                }
+                groupLevel--;
+                groups.removeLast();
+            } else if (character == '[') {
+                optionalLevel++;
+                groups.addLast(character);
+            } else if (character == ']') {
+                if (optionalLevel == 0 || groups.peekLast() != '[') {
+                    return patternError("Unexpected closing optional bracket ']'. Escape it if you want to match a literal bracket: '\\]'");
+                }
+                optionalLevel--;
+                groups.removeLast();
+            } else if (character == '<') {
+                int closing = source.indexOf('>', index + 1);
+                if (closing == -1) {
+                    return patternError("Missing closing regex bracket '>'. Escape the '<' if you want to match a literal bracket: '\\<'");
+                }
+                try {
+                    Pattern.compile(source.substring(index + 1, closing));
+                } catch (PatternSyntaxException exception) {
+                    return patternError("Invalid Regular Expression '" + source.substring(index + 1, closing) + "': "
+                            + exception.getLocalizedMessage());
+                }
+                index = closing;
+            } else if (character == '>') {
+                return patternError("Unexpected closing regex bracket '>'. Escape it if you want to match a literal bracket: '\\>'");
+            } else if (character == '%') {
+                int closing = source.indexOf('%', index + 1);
+                if (closing == -1) {
+                    return patternError("Missing end sign '%' of expression. Escape the percent sign to match a literal '%': '\\%'");
+                }
+                String rawType = source.substring(index + 1, closing);
+                ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(rawType);
+                if (classInfo == null) {
+                    return patternError("The type '" + rawType + "' could not be found. Please check your spelling or escape the percent signs if you want to match literal %s: \"\\%not an expression\\%\"");
+                }
+                boolean plural = Classes.isPluralClassInfoUserInput(rawType, classInfo);
+                pairs.add(new NonNullPair<>(classInfo, plural));
+                normalized.append(source, last, index + 1);
+                normalized.append(toEnglishPlural(classInfo.getCodeName(), plural));
+                last = closing;
+                index = closing;
+            } else if (character == '\\') {
+                if (index == source.length() - 1) {
+                    return patternError("Pattern must not end in an unescaped backslash. Add another backslash to escape it, or remove it altogether.");
+                }
+                index++;
+            }
+        }
+        normalized.append(source.substring(last));
+        @SuppressWarnings("unchecked")
+        NonNullPair<ClassInfo<?>, Boolean>[] array = pairs.toArray(new NonNullPair[0]);
+        return new NonNullPair<>(normalized.toString(), array);
     }
 
     @SuppressWarnings("unchecked")
@@ -702,5 +786,27 @@ public class SkriptParser {
         return (open == '(' && close == ')')
                 || (open == '[' && close == ']')
                 || (open == '{' && close == '}');
+    }
+
+    private static String toEnglishPlural(String value, boolean plural) {
+        if (!plural || value == null || value.isBlank()) {
+            return value;
+        }
+        if (value.endsWith("y") && value.length() > 1) {
+            char previous = value.charAt(value.length() - 2);
+            if ("aeiou".indexOf(Character.toLowerCase(previous)) == -1) {
+                return value.substring(0, value.length() - 1) + "ies";
+            }
+        }
+        if (value.endsWith("s") || value.endsWith("x") || value.endsWith("z")
+                || value.endsWith("ch") || value.endsWith("sh")) {
+            return value + "es";
+        }
+        return value + "s";
+    }
+
+    private static <T> @Nullable T patternError(String error) {
+        Skript.error("Invalid pattern: " + error);
+        return null;
     }
 }

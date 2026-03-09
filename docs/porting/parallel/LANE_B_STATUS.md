@@ -18,32 +18,33 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: local `SkriptPattern.match(...)` trimmed input before keyword prefiltering, so direct compiled-pattern matches accepted leading-whitespace forms that upstream rejects because keywords are checked against the raw input first.
-- minimal fix: `SkriptPattern.match(...)` now runs keyword prefiltering on the raw input and only trims once the regex matcher runs, restoring upstream's direct matcher behavior.
+- mismatch: local `SkriptParser` was missing upstream `validatePattern(...)` support entirely, so parser-side validation for user-defined patterns and its specific diagnostics were unavailable.
+- minimal fix: restored `SkriptParser.validatePattern(...)` with upstream-style bracket/regex/placeholder validation and normalized placeholder type output.
 
 ## Regression Added
 
-- `ch.njol.skript.patterns.PatternCompilerCompatibilityTest`
-  - direct compiled-pattern matches now reject leading-whitespace inputs at keyword prefilter time while still accepting trailing whitespace after trim
+- `ch.njol.skript.lang.parser.SkriptParserPatternValidationCompatibilityTest`
+  - validates known placeholder normalization and upstream-style pipe-outside-group diagnostics
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/patterns/SkriptPattern.java`
-- `src/test/java/ch/njol/skript/patterns/PatternCompilerCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/SkriptParser.java`
+- `src/main/java/ch/njol/util/NonNullPair.java`
+- `src/test/java/ch/njol/skript/lang/parser/SkriptParserPatternValidationCompatibilityTest.java`
 - `docs/porting/parallel/LANE_B_STATUS.md`
 
 ## Exact Commands And Results
 
 - targeted tests:
-  - `./gradlew test --tests 'ch.njol.skript.patterns.PatternCompilerCompatibilityTest' --tests 'ch.njol.skript.lang.SkriptParserRegistryTest' --rerun-tasks`
+  - `./gradlew test --tests 'ch.njol.skript.lang.parser.SkriptParserPatternValidationCompatibilityTest' --rerun-tasks`
 - results: passed
 
 ## Remaining Risks
 
-- this slice only covers direct compiled-pattern keyword prefiltering on raw versus trimmed input
-- broader matcher and omitted-default parity remain unchanged
+- this slice restores parser-side pattern validation only; it does not change matcher runtime behavior
+- placeholder-flag and timed-placeholder validation remain aligned to the current local parser surface, not the full upstream parser grammar
 
 ## Merge Notes
 
-- conflict surface is limited to `SkriptPattern.match(...)`, one pattern regression, and this lane file
-- this slice stays within parser matcher behavior and does not touch loader flow or omitted-default selection
+- conflict surface is limited to `SkriptParser`, one small utility type, one parser compatibility test, and this lane file
+- this slice stays in parser validation and does not touch loader flow or omitted-default selection
