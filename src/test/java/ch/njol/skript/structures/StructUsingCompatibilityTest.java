@@ -47,13 +47,14 @@ class StructUsingCompatibilityTest {
 
     @Test
     void usingStructureAddsRegisteredExperimentToCurrentScript() {
+        String featureName = "struct-using-test-feature";
         Experiment queues = Skript.experiments().register(
                 Skript.getAddonInstance(),
-                "queues",
+                featureName,
                 LifeCycle.EXPERIMENTAL
         );
 
-        Structure structure = Structure.parse("using queues", new SimpleNode("using queues"), null);
+        Structure structure = Structure.parse("using " + featureName, new SimpleNode("using " + featureName), null);
 
         assertNotNull(structure);
         StructUsing parsed = assertInstanceOf(StructUsing.class, structure);
@@ -61,8 +62,8 @@ class StructUsingCompatibilityTest {
         assertTrue(parsed.load());
         ExperimentSet enabled = ParserInstance.get().getCurrentScript().getData(ExperimentSet.class);
         assertNotNull(enabled);
-        assertTrue(enabled.hasExperiment(queues));
-        assertEquals("using queues", parsed.toString(null, false));
+        assertTrue(enabled.hasExperiment(featureName));
+        assertEquals("using " + featureName, parsed.toString(null, false));
     }
 
     @Test
