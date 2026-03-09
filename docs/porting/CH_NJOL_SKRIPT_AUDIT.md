@@ -148,10 +148,11 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- restored syntax registration priority ordering in `SyntaxRegistryService`, so lower-priority entries are iterated ahead of later registrations just like upstream
-- made `Classes.parseSimple(...)` consult registered class parsers before primitive fallback coercion, so primitive-backed custom parsers behave like upstream
-- tightened omitted optional-branch default handling so every omitted required placeholder still needs a default
-- restored `ParserInstance.isRegistered(...)` as the upstream parser-data registration guard
+- restored transitive parser-registry priority ordering in `Priority` / `SyntaxRegistryService`, so relative-before priorities stay ahead of their base entries instead of collapsing to insertion order
+- tightened omitted optional-choice default handling so equally minimal sibling branches all stay active for default resolution after an earlier placeholder already matched
+- made `ScriptFunction.execute(...)` store unkeyed plural parameter values at one-based local indices
+- preserved registered `ParserInstance.Data` instances across script swaps and added upstream-style `onCurrentScriptChange(...)` notifications
+- kept registered-statement fallback parsing off the generic loader default error so earlier retained effect diagnostics survive later parser fallback failures
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

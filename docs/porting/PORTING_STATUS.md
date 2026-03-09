@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - worker merges on 2026-03-09 made `Classes.parseSimple(...)` consult registered class parsers before primitive fallback, required defaults for every omitted required placeholder in optional alternations, and restored `ParserInstance.isRegistered(...)`
+  - worker merges on 2026-03-09 restored transitive parser-registry priority ordering, kept omitted optional-choice defaults active across equally-minimal sibling branches, switched plural script-function local indices to one-based storage, preserved parser-data instances across script swaps, and stopped parser fallback inflation from overriding earlier retained statement diagnostics
 
 ## Priority Shift On 2026-03-08
 
