@@ -11,6 +11,8 @@ Last updated: 2026-03-09
 
 - fixed one upstream-backed `ParserInstance` parser-data mismatch: `setCurrentScript(...)` now preserves registered `ParserInstance.Data` instances across script-to-script switches and notifies them through upstream-style `onCurrentScriptChange(...)` callbacks before clearing on `null`
 - added focused regression coverage proving registered parser-data survives script swaps, sees the new script config, and is still cleared when the parser is deactivated
+- fixed one upstream-backed `ParserInstance.Data` bridge mismatch: restored the protected `getParser()` accessor alongside the local `parser()` helper so upstream-style parser-data subclasses compile unchanged
+- added a narrow regression proving parser-data subclasses can still reach their owning parser through `getParser()`
 
 ## Files Changed
 
@@ -21,7 +23,7 @@ Last updated: 2026-03-09
 ## Verification
 
 - `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
-  - confirmed upstream keeps parser-data instances across current-script changes and exposes `ParserInstance.Data.onCurrentScriptChange(...)`, while the local bridge cleared parser-data on every script swap
+  - confirmed upstream keeps parser-data instances across current-script changes and exposes both `ParserInstance.Data.onCurrentScriptChange(...)` and the protected `getParser()` accessor, while the local bridge only kept the non-upstream `parser()` helper
 - `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest`
   - passed
 

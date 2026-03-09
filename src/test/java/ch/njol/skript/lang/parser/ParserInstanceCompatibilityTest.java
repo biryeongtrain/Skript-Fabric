@@ -122,6 +122,14 @@ class ParserInstanceCompatibilityTest {
         assertTrue(ParserInstance.isRegistered(RegistrationProbeData.class));
     }
 
+    @Test
+    void parserDataExposesUpstreamGetParserAccessor() {
+        ParserInstance parser = new ParserInstance();
+        RegistrationProbeData data = new RegistrationProbeData(parser);
+
+        assertSame(parser, data.parserFromUpstreamAccessor());
+    }
+
     private static class BaseEvent {
     }
 
@@ -159,6 +167,10 @@ class ParserInstanceCompatibilityTest {
 
         private RegistrationProbeData(ParserInstance parserInstance) {
             super(parserInstance);
+        }
+
+        private ParserInstance parserFromUpstreamAccessor() {
+            return getParser();
         }
     }
 

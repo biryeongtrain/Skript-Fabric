@@ -26,8 +26,12 @@ public final class ParserInstance {
             this.parserInstance = parserInstance;
         }
 
-        public ParserInstance parser() {
+        protected final ParserInstance getParser() {
             return parserInstance;
+        }
+
+        public ParserInstance parser() {
+            return getParser();
         }
 
         @Deprecated(since = "2.11.0", forRemoval = true)
