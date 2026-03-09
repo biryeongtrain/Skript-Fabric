@@ -150,8 +150,11 @@ That means the real gap is behavior, not class presence.
 
 - restored legacy `parseStatic(...)` parser flags in `SkriptParser`, so expression-only placeholders such as `%~integer%` work again through legacy `SyntaxElementInfo` parsing while placeholder-level masks still enforce literal versus expression restrictions
 - restored explicit-literal-only `getPatternInfos(...)` parity in `Classes`, so parser-backed class infos no longer appear as unparsed-literal candidates unless they also register literal patterns
+- restored upstream registration-order parity for explicit literal-pattern matches in `Classes.getPatternInfos(...)`, so literal aliases are no longer re-sorted by local class-info ordering rules
+- restored upstream keyed-default execution behavior in `Function.execute(...)`, so plural/keyed parameters only zip omitted defaults when the default produces a single value and leave multi-value defaults unkeyed
 - reran the current `Statement` / `ScriptLoader` / `Section` corpus in a separate lane audit and did not find another mergeable mismatch in the current green suite
 - merged verification on 2026-03-09:
+  - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest --tests ch.njol.skript.lang.function.FunctionDefaultKeyedParameterCompatibilityTest --rerun-tasks`
   - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.lang.UnparsedLiteralCompatibilityTest --tests ch.njol.skript.lang.parser.SkriptParserStaticFlagsCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
@@ -239,7 +242,7 @@ That means the real gap is behavior, not class presence.
   - `Classes` now sorts class infos by assignable-type specificity plus explicit `before(...)` / `after(...)` dependencies instead of raw registration order
   - `ClassesCompatibilityTest` now covers most-specific superclass lookup and dependency ordering
   - real base `.sk` GameTests now also cover loader unreachable-code warnings and stop-trigger short-circuiting through `unreachable_code_warning_stop_test_block.sk`
-  - shared literal-pattern matches now also follow that stable class-info ordering when multiple class infos register the same alias
+  - explicit shared literal-pattern matches now preserve upstream registration order instead of the earlier local class-info-sorted order
   - `Variables.getVariable("name::*", ...)` now reconstructs upstream-style nested `TreeMap` list values, including `null` sentinel parent entries when a direct parent value and descendants coexist
   - `SkriptParser` now recognizes the upstream-prefixed variable forms `var {x}`, `variable {x}`, and `the variable {x}`
   - `Statement.selectRetainedFailure(...)` now keeps earlier higher-quality effect/condition parse errors over later lower-quality plain-statement failures on the same syntax line
