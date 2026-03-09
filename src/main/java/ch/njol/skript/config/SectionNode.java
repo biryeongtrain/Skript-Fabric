@@ -119,6 +119,14 @@ public class SectionNode extends Node implements Iterable<Node> {
         nodeMap().put(node);
     }
 
+    void renamed(Node node, @Nullable String oldKey) {
+        if (!children.contains(node)) {
+            throw new IllegalArgumentException("node is not part of this section");
+        }
+        nodeMap().remove(oldKey);
+        nodeMap().put(node);
+    }
+
     public boolean isEmpty() {
         return children.isEmpty();
     }

@@ -21,7 +21,12 @@ public class Node {
     }
 
     public void setKey(String key) {
+        String previousKey = this.key;
         this.key = key;
+        SectionNode currentParent = parent;
+        if (currentParent != null) {
+            currentParent.renamed(this, previousKey);
+        }
     }
 
     public int getLine() {

@@ -68,6 +68,19 @@ class SectionNodeCompatibilityTest {
     }
 
     @Test
+    void renamingMappedNodeRefreshesLookupKeyLikeUpstream() {
+        SectionNode node = new SectionNode("root");
+        EntryNode entry = new EntryNode("Marker", "emerald_block");
+        node.add(entry);
+
+        entry.setKey("Beacon");
+
+        assertNull(node.get("marker"));
+        assertSame(entry, node.get("beacon"));
+        assertEquals("emerald_block", node.getValue("BEACON"));
+    }
+
+    @Test
     void convertToEntriesUpdatesMappedLookups() {
         SectionNode node = new SectionNode("root");
         node.add(new SimpleNode("Marker: emerald_block"));
