@@ -1,6 +1,7 @@
 package ch.njol.skript.lang;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.expressions.ExprInput;
 import ch.njol.skript.lang.function.ExprFunctionCall;
@@ -18,6 +19,7 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -359,10 +361,17 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.source = compiledPattern;
-                Expression<?>[] withDefaults = applyDefaultValues(
-                        matched.expressions(),
-                        compiledPattern
-                );
+                Expression<?>[] withDefaults;
+                try {
+                    withDefaults = applyDefaultValues(
+                            matched.expressions(),
+                            compiledPattern,
+                            patterns[matchedPattern]
+                    );
+                } catch (SkriptAPIException exception) {
+                    Skript.error(exception.getMessage());
+                    continue;
+                }
                 if (withDefaults == null) {
                     // Required placeholder omitted and no default available: pattern fails.
                     continue;
@@ -423,10 +432,17 @@ public class SkriptParser {
                 ParseResult parseResult = new ParseResult();
                 parseResult.expr = input;
                 parseResult.source = compiledPattern;
-                Expression<?>[] withDefaults = applyDefaultValues(
-                        matched.expressions(),
-                        compiledPattern
-                );
+                Expression<?>[] withDefaults;
+                try {
+                    withDefaults = applyDefaultValues(
+                            matched.expressions(),
+                            compiledPattern,
+                            patterns[matchedPattern]
+                    );
+                } catch (SkriptAPIException exception) {
+                    Skript.error(exception.getMessage());
+                    continue;
+                }
                 if (withDefaults == null) {
                     // Required placeholder omitted and no default available: pattern fails.
                     continue;
@@ -497,7 +513,8 @@ public class SkriptParser {
 
     private static @Nullable Expression<?>[] applyDefaultValues(
             Expression<?>[] expressions,
-            @Nullable SkriptPattern compiledPattern
+            @Nullable SkriptPattern compiledPattern,
+            String pattern
     ) {
         if (compiledPattern == null || expressions.length == 0) {
             return expressions;
@@ -519,7 +536,7 @@ public class SkriptParser {
                     || typePattern.isOptional()) {
                 continue;
             }
-            DefaultExpression<?> defaultExpression = findDefaultValue(defaultValues, typePattern);
+            DefaultExpression<?> defaultExpression = findDefaultValue(defaultValues, typePattern, pattern);
             if (defaultExpression != null) {
                 expressions[expressionIndex] = defaultExpression;
                 continue;
@@ -533,7 +550,8 @@ public class SkriptParser {
 
     private static @Nullable DefaultExpression<?> findDefaultValue(
             DefaultValueData defaultValues,
-            TypePatternElement typePattern
+            TypePatternElement typePattern,
+            String pattern
     ) {
         ExprInfo exprInfo = new ExprInfo();
         exprInfo.flagMask = typePattern.flagMask();
@@ -541,9 +559,17 @@ public class SkriptParser {
         exprInfo.time = typePattern.time();
 
         Class<?>[] returnTypes = typePattern.returnTypes();
+        EnumMap<DefaultExpressionUtils.DefaultExpressionError, List<String>> failed =
+                new EnumMap<>(DefaultExpressionUtils.DefaultExpressionError.class);
         for (int i = 0; i < returnTypes.length; i++) {
             DefaultExpression<?> defaultExpression = getDefaultValue(defaultValues, returnTypes[i]);
-            if (DefaultExpressionUtils.isValid(defaultExpression, exprInfo, i) != null) {
+            DefaultExpressionUtils.DefaultExpressionError error =
+                    DefaultExpressionUtils.isValid(defaultExpression, exprInfo, i);
+            if (error != null) {
+                if (error != DefaultExpressionUtils.DefaultExpressionError.NOT_FOUND) {
+                    failed.computeIfAbsent(error, ignored -> new ArrayList<>())
+                            .add(getDefaultCodeName(returnTypes[i]));
+                }
                 continue;
             }
             if (defaultExpression == null) {
@@ -553,7 +579,22 @@ public class SkriptParser {
                 return defaultExpression;
             }
         }
+        if (!failed.isEmpty()) {
+            List<String> errors = new ArrayList<>();
+            for (Map.Entry<DefaultExpressionUtils.DefaultExpressionError, List<String>> entry : failed.entrySet()) {
+                errors.add(entry.getKey().getError(entry.getValue(), pattern));
+            }
+            throw new SkriptAPIException(String.join("\n", errors));
+        }
         return null;
+    }
+
+    private static String getDefaultCodeName(Class<?> returnType) {
+        ClassInfo<?> classInfo = Classes.getExactClassInfo(returnType);
+        if (classInfo != null) {
+            return classInfo.getCodeName();
+        }
+        return returnType.getSimpleName().toLowerCase(Locale.ENGLISH);
     }
 
     private static @Nullable DefaultExpression<?> getDefaultValue(

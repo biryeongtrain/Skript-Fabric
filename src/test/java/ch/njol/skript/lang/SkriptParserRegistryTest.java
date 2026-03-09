@@ -12,6 +12,8 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.log.ParseLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.function.Function;
 import ch.njol.skript.lang.function.FunctionEvent;
@@ -276,6 +278,32 @@ class SkriptParserRegistryTest {
             assertInstanceOf(DefaultIntegerValueExpression.class, explicit);
             assertEquals(5, explicit.getSingle(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY).intValue());
         } finally {
+            Classes.clearClassInfos();
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void expressionPatternLogsSpecificErrorForInvalidOmittedPlaceholderDefault() {
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(Integer.class, "number"));
+        Skript.registerExpression(DefaultNumberExpression.class, Integer.class, "strict default [%~number%]");
+
+        DefaultValueData data = ParserInstance.get().getData(DefaultValueData.class);
+        data.addDefaultValue(Integer.class, new SimpleLiteral<>(7, true));
+        try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {
+            Expression<? extends Integer> omitted = new SkriptParser(
+                    "strict default",
+                    SkriptParser.ALL_FLAGS,
+                    ParseContext.DEFAULT
+            ).parseExpression(new Class[]{Integer.class});
+
+            assertNull(omitted);
+            assertTrue(log.hasError());
+            assertNotNull(log.getError());
+            assertTrue(log.getError().getMessage().contains("default expression of 'number' is a literal"));
+        } finally {
+            data.removeDefaultValue(Integer.class);
             Classes.clearClassInfos();
         }
     }
