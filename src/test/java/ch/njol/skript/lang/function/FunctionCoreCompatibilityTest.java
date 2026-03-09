@@ -116,6 +116,26 @@ class FunctionCoreCompatibilityTest {
     }
 
     @Test
+    void functionExecuteDoesNotReplaceExplicitEmptyArgumentWithDefault() {
+        Parameter<Integer> optional = new Parameter<>("x", Classes.getSuperClassInfo(Integer.class), true, new ch.njol.skript.lang.util.SimpleLiteral<>(3, true));
+        Signature<Integer> signature = new Signature<>(
+                null,
+                "f",
+                new Parameter[]{optional},
+                false,
+                Classes.getSuperClassInfo(Integer.class),
+                true
+        );
+        RecordingFunction function = new RecordingFunction(signature);
+
+        Integer[] result = function.execute(new Object[][]{new Object[0]});
+
+        assertNull(result);
+        assertNotNull(function.lastParams);
+        assertEquals(0, function.lastParams[0].length);
+    }
+
+    @Test
     void functionRegistryResolvesExactAndAmbiguousFunctions() {
         FunctionRegistry registry = FunctionRegistry.getRegistry();
         registry.clear();

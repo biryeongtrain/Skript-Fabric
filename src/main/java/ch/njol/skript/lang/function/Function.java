@@ -66,19 +66,17 @@ public abstract class Function<T> {
             //   zip that single value into a KeyedValue[] (key "1").
             // - If it yields multiple values, leave them unkeyed.
             // - For provided arguments (non-default path), convert keyed parameters to KeyedValue[].
-            if (parameterValue == null || parameterValue.length == 0) {
-                if (parameter.getDefaultExpression() != null) {
-                    Object[] defaultValue = parameter.evaluate(parameter.getDefaultExpression(), event.getContext());
-                    if (parameter.hasModifier(Parameter.Modifier.KEYED)) {
-                        if (defaultValue != null && defaultValue.length == 1) {
-                            parameterValue = convertToKeyed(defaultValue);
-                        } else {
-                            parameterValue = defaultValue;
-                        }
-                    } else {
-                        parameterValue = defaultValue;
-                    }
+            if ((parameterValue == null || parameterValue.length == 0)
+                    && parameter.hasModifier(Parameter.Modifier.KEYED)
+                    && parameter.getDefaultExpression() != null) {
+                Object[] defaultValue = parameter.evaluate(parameter.getDefaultExpression(), event.getContext());
+                if (defaultValue != null && defaultValue.length == 1) {
+                    parameterValue = convertToKeyed(defaultValue);
+                } else {
+                    parameterValue = defaultValue;
                 }
+            } else if (parameterValue == null && parameter.getDefaultExpression() != null) {
+                parameterValue = parameter.evaluate(parameter.getDefaultExpression(), event.getContext());
             } else if (parameter.hasModifier(Parameter.Modifier.KEYED)) {
                 parameterValue = convertToKeyed(parameterValue);
             }
