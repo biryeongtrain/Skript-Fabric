@@ -29,15 +29,17 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Function.execute(Object[][])` now lets direct `null` argument slots through the legacy `executeWithNulls` guard instead of aborting the call
-- `ScriptLoader.loadItems(...)` now drops stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line
-- omitted placeholders now require an exact classinfo default instead of consuming a broader superclass default
-- `TriggerItem.walk(...)` now catches `StackOverflowError` and returns `false`
+- `Classes.clone(...)` now honors classinfo cloners instead of falling back to identity copies
+- `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted string literal arguments
+- ordinary keyed function arguments now preserve their keyed metadata across `Parameter.newInstance(...)`
+- statement fallback now keeps `EffectSection` parsing in statement mode when section-mode init rejects the body
 - `Classes.toString(...)` now routes legacy parser-backed values through parser stringification instead of raw `Object.toString()`
 - targeted regressions added:
   - [LegacyWrapperCompatibilityTest.java](../../src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java)
+  - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
   - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
   - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
+  - [FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
   - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
   - [TriggerItemCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java)
 
@@ -54,9 +56,9 @@ These are already closed. Do not reopen without a new reproducer.
 ## Next Targets
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default rule
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification slice
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot and direct-null-slot cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification and classinfo-cloner slices
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, and doubled-quote literal cases
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback
 
 ## Parallel Defaults
 

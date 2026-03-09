@@ -10,7 +10,7 @@ Current headline:
 - do not start the next Bukkit package-local audit slice yet
 - immediate priority is upstream `ch/njol/skript` implementation closure first, then exact missing user-visible syntax import on top of that
 - latest verified runtime baseline is `230 / 230`
-- latest closed slice is worker-merged `lang-core` closure for legacy parser stringification, loader fallback errors, exact omitted-default typing, trigger fail-closed overflow handling, and direct null function arguments surviving the legacy execute-with-nulls guard
+- latest closed slice is worker-merged `lang-core` closure for classinfo cloners, doubled-quote function literals, keyed argument metadata, statement-mode effect-section fallback, legacy parser stringification, loader fallback errors, exact omitted-default typing, trigger fail-closed overflow handling, and direct null function arguments surviving the legacy execute-with-nulls guard
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

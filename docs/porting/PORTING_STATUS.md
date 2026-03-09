@@ -146,9 +146,13 @@ Landed slices so far:
   - `TriggerItem.walk(...)` now also catches `StackOverflowError` and returns `false`, matching upstream's fail-closed trigger bridge behavior
   - `Function.execute(Object[][])` now preserves an explicit empty argument slot for an ordinary optional parameter instead of replacing it with that parameter's default, while keeping the keyed-default special case intact
   - `Function.execute(Object[][])` now also lets direct `null` argument slots through the legacy `executeWithNulls` guard, while still rejecting empty-array slots on that path
+  - `Parameter.newInstance(...)` now preserves keyed argument metadata for ordinary keyed parameters instead of re-zipping with numeric fallback keys
+  - `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted function-call literal arguments
   - `ScriptLoader.loadItems(...)` now clears stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line, so successful fallback does not replay an error from the failed section path
+  - statement fallback now forces `EffectSection` parsing through statement mode when section-mode init rejects the body, preserving upstream effect-section fallback behavior
   - omitted placeholders now consume only exact classinfo defaults instead of broader superclass defaults
   - `Classes.toString(...)` now uses registered legacy parser stringification for scalar and array values instead of falling back straight to raw `Object.toString()`
+  - `Classes.clone(...)` now respects registered classinfo cloners instead of returning the original object when no array clone path applies
   - retained parse-failure selection now keeps earlier semantic parse errors over later lower-quality `NOT_AN_EXPRESSION` statement failures again
   - `SkriptParser.parseModern(...)` and `parseStatic(...)` now fail the whole pattern when a required placeholder is omitted through an optional branch and no parser or classinfo default exists, instead of constructing a `null` expression path that upstream rejects
   - the current `Statement` / `ScriptLoader` / `Section` corpus was rerun in a separate lane audit and did not surface another mergeable mismatch in the green suite
