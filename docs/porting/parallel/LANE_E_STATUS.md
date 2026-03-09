@@ -9,8 +9,8 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed `ParserInstance` parser-data mismatch: added `isRegistered(...)`, matching the upstream registration guard used by input-source syntax before calling `registerData(...)`
-- added focused regression coverage proving parser-data registration visibility flips from `false` to `true` once a factory is registered
+- fixed one upstream-backed `ParserInstance` parser-data mismatch: `setCurrentScript(...)` now preserves registered `ParserInstance.Data` instances across script-to-script switches and notifies them through upstream-style `onCurrentScriptChange(...)` callbacks before clearing on `null`
+- added focused regression coverage proving registered parser-data survives script swaps, sees the new script config, and is still cleared when the parser is deactivated
 
 ## Files Changed
 
@@ -21,7 +21,7 @@ Last updated: 2026-03-09
 ## Verification
 
 - `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
-  - confirmed upstream exposes `isRegistered(...)` alongside `registerData(...)`, while the local bridge did not
+  - confirmed upstream keeps parser-data instances across current-script changes and exposes `ParserInstance.Data.onCurrentScriptChange(...)`, while the local bridge cleared parser-data on every script swap
 - `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest`
   - passed
 

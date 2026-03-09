@@ -1,5 +1,6 @@
 package ch.njol.skript.lang.parser;
 
+import ch.njol.skript.config.Config;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.TriggerSection;
 import ch.njol.skript.variables.HintManager;
@@ -27,6 +28,10 @@ public final class ParserInstance {
 
         public ParserInstance parser() {
             return parserInstance;
+        }
+
+        @Deprecated(since = "2.11.0", forRemoval = true)
+        public void onCurrentScriptChange(@Nullable Config currentScript) {
         }
 
         public void onCurrentEventsChange(@Nullable Class<?>[] currentEvents) {
@@ -96,8 +101,15 @@ public final class ParserInstance {
         this.currentEventName = null;
         this.currentEventClasses = new Class<?>[0];
         this.currentSections = new ArrayList<>();
-        this.data.clear();
         this.currentScript = currentScript;
+        List<Data> dataInstances = getRegisteredDataInstances();
+        Config currentConfig = currentScript != null ? currentScript.getConfig() : null;
+        for (Data dataInstance : dataInstances) {
+            dataInstance.onCurrentScriptChange(currentConfig);
+        }
+        if (currentScript == null) {
+            this.data.clear();
+        }
         this.hintManager = new HintManager(currentScript != null);
     }
 

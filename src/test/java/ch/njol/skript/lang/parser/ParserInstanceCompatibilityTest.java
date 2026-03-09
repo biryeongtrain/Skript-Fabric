@@ -2,12 +2,15 @@ package ch.njol.skript.lang.parser;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.config.Config;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.InputSource;
+import java.io.File;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +62,27 @@ class ParserInstanceCompatibilityTest {
 
         assertSame(script, parser.getCurrentScript());
         assertTrue(parser.getHintManager().get("value").contains(Integer.class));
+    }
+
+    @Test
+    void setCurrentScriptKeepsRegisteredParserDataAcrossScriptSwitchesAndNotifiesChanges() {
+        ParserInstance.registerData(ScriptTrackingData.class, ScriptTrackingData::new);
+
+        ParserInstance parser = new ParserInstance();
+        ScriptTrackingData trackingData = parser.getData(ScriptTrackingData.class);
+        Script firstScript = new Script(new Config("first", "first.sk", new File("first.sk")), List.of());
+        Script secondScript = new Script(new Config("second", "second.sk", new File("second.sk")), List.of());
+
+        parser.setCurrentScript(firstScript);
+        assertSame(firstScript.getConfig(), trackingData.lastCurrentScript);
+
+        parser.setCurrentScript(secondScript);
+        assertSame(trackingData, parser.getData(ScriptTrackingData.class));
+        assertSame(secondScript.getConfig(), trackingData.lastCurrentScript);
+
+        parser.setCurrentScript(null);
+        assertNull(trackingData.lastCurrentScript);
+        assertNotSame(trackingData, parser.getData(ScriptTrackingData.class));
     }
 
     @Test
@@ -135,6 +159,20 @@ class ParserInstanceCompatibilityTest {
 
         private RegistrationProbeData(ParserInstance parserInstance) {
             super(parserInstance);
+        }
+    }
+
+    private static final class ScriptTrackingData extends ParserInstance.Data {
+
+        private @Nullable Config lastCurrentScript;
+
+        private ScriptTrackingData(ParserInstance parserInstance) {
+            super(parserInstance);
+        }
+
+        @Override
+        public void onCurrentScriptChange(@Nullable Config currentScript) {
+            this.lastCurrentScript = currentScript;
         }
     }
 }
