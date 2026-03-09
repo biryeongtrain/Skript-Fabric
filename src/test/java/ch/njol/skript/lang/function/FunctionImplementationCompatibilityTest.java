@@ -107,4 +107,25 @@ class FunctionImplementationCompatibilityTest {
         assertNull(function.returnedKeys());
         assertTrue(function.resetReturnValue());
     }
+
+    @Test
+    void functionExecuteRejectsOverArityEvenForSinglePluralParameter() {
+        ClassInfo<String> stringInfo = Classes.getSuperClassInfo(String.class);
+        Signature<String> signature = new Signature<>(
+                null,
+                "collect",
+                new Parameter[]{new Parameter<>("value", stringInfo, false, null)},
+                false,
+                stringInfo,
+                false
+        );
+        SimpleJavaFunction<String> function = new SimpleJavaFunction<>(signature) {
+            @Override
+            public String[] executeSimple(Object[][] params) {
+                return (String[]) params[0];
+            }
+        };
+
+        assertNull(function.execute(new Object[][]{{"a"}, {"b"}}));
+    }
 }

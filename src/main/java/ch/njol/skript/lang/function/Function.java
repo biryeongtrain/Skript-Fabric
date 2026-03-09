@@ -52,7 +52,7 @@ public abstract class Function<T> {
     public final T @Nullable [] execute(Object[][] params) {
         FunctionEvent<? extends T> event = new FunctionEvent<>(this);
         Parameter<?>[] parameters = signature.getParameters();
-        if (params.length > parameters.length && parameters.length != 1) {
+        if (params.length > parameters.length) {
             return null;
         }
 
