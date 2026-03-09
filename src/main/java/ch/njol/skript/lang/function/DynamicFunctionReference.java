@@ -34,8 +34,8 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
         this.function = new WeakReference<>(function);
         this.name = function.getName();
         this.signature = function.getSignature();
-        this.source = null;
         this.sourceName = this.signature.namespace();
+        this.source = this.sourceName == null ? null : Functions.getScript(this.sourceName);
     }
 
     public DynamicFunctionReference(@NotNull String name) {

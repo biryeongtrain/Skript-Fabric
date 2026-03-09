@@ -236,6 +236,25 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void dynamicLocalFunctionReferenceBuiltFromResolvedFunctionInvalidatesWithTrackedScript() throws Exception {
+        File backingFile = Files.createTempFile("tracked-local-direct", ".sk").toFile();
+        backingFile.deleteOnExit();
+        Script script = new Script(new Config("local", "local.sk", backingFile), java.util.List.of());
+        ParserInstance.get().setCurrentScript(script);
+        EchoFunction function = registerLocalEchoFunction("local.sk", "trackedLocalDirect");
+
+        DynamicFunctionReference<?> reference = new DynamicFunctionReference<>(function);
+
+        assertTrue(reference.valid());
+        assertEquals("trackedLocalDirect() from local", reference.toString());
+
+        script.invalidate();
+
+        assertTrue(!reference.valid());
+        assertNull(reference.execute(SkriptEvent.EMPTY, "after unload"));
+    }
+
+    @Test
     void consignKeepsPrimitiveArraysAsSingleArguments() {
         int[] primitiveArray = new int[]{1, 2, 3};
 

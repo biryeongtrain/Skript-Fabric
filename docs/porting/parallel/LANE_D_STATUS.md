@@ -9,28 +9,28 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one dynamic local-function unload edge in `DynamicFunctionReference.resolveFunction(...)`
-- local string-resolved local references kept only the script name, so they could not retain the upstream-style `Script` validity guard and stayed callable as long as the function object itself was still reachable
-- `Functions.registerSignature(...)` now records the active script object for the matching namespace, and `DynamicFunctionReference.resolveFunction(...)` reattaches that tracked `Script` when resolving `name ... from script.sk`
-- added one narrow regression proving a string-resolved local dynamic reference becomes invalid and stops executing after its tracked script is invalidated
+- primary diff review did not expose a new mergeable overload/default-parameter mismatch beyond the already-closed slices in this lane
+- fixed one fallback dynamic-reference unload edge in `DynamicFunctionReference(Function<?>)`
+- locally, a resolved local function wrapped directly into `new DynamicFunctionReference<>(function)` dropped the tracked source `Script`, so it stayed valid after script invalidation unlike upstream
+- `DynamicFunctionReference(Function<?>)` now reattaches the registered source script through `Functions.getScript(signature.namespace())`
+- added one narrow regression proving a direct-function local dynamic reference becomes invalid and stops executing after its tracked script is invalidated
 
 ## Files Changed
 
 - `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
-- `src/main/java/ch/njol/skript/lang/function/Functions.java`
 - `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Verification
 
-- upstream reference: compared local `DynamicFunctionReference` source-tracking/unload behavior against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`; local compatibility needed the same script-backed validity path for string-resolved local references
+- upstream reference: compared local constructor-time source-tracking/unload behavior against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`; upstream resolves the source `Script` even for already-resolved function objects, while local only did so for string-resolved references
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- continue upstream diff review for one remaining mergeable primary mismatch in overload selection or default-parameter execution semantics; if none remain, keep narrowing namespace/dynamic-reference edges inside `lang/function`
+- continue upstream diff review for one remaining mergeable primary mismatch in overload selection or default-parameter execution semantics; if none remain, keep narrowing namespace/dynamic-reference unload edges inside `lang/function`
 
 ## Merge Notes
 
-- low-conflict slice limited to `DynamicFunctionReference.java`, `Functions.java`, one focused regression in `FunctionCallCompatibilityTest`, and this lane file
+- low-conflict slice limited to `DynamicFunctionReference.java`, one focused regression in `FunctionCallCompatibilityTest`, and this lane file
