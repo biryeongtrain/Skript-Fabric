@@ -3,6 +3,8 @@ package ch.njol.skript.lang.function;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.KeyProviderExpression;
+import ch.njol.skript.lang.KeyedValue;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
@@ -231,10 +233,22 @@ public final class Parameter<T> {
         if (expression == null) {
             return null;
         }
+        Object[] values;
         if (expression instanceof Literal<?> literal) {
-            return literal.getArray(event);
+            values = literal.getArray(event);
+        } else {
+            values = expression.getArray(event);
         }
-        return expression.getArray(event);
+        for (int i = 0; i < values.length; i++) {
+            values[i] = Classes.clone(values[i]);
+        }
+        if (!hasModifier(Modifier.KEYED)) {
+            return values;
+        }
+        String[] keys = KeyProviderExpression.areKeysRecommended(expression)
+                ? ((KeyProviderExpression<?>) expression).getArrayKeys(event)
+                : null;
+        return KeyedValue.zip(values, keys);
     }
 
     private static @Nullable ClassInfo<?> guessClassInfo(String typeName) {

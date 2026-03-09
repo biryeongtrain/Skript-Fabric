@@ -233,6 +233,27 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void keyedFunctionArgumentsPreserveProvidedKeysOutsideSingleListShortcut() {
+        registerPluralAndSingleEchoFunction("collectKeysWithSuffix");
+
+        FunctionReference<String> reference = new FunctionReference<>(
+                "collectKeysWithSuffix",
+                null,
+                null,
+                new Expression[]{
+                        new FixedKeyExpression(new String[]{"x", "y"}, new String[]{"k1", "k2"}),
+                        new SimpleLiteral<>("tail", false)
+                }
+        );
+
+        assertTrue(reference.validateFunction(true));
+        ExprFunctionCall<String> expression = new ExprFunctionCall<>(reference);
+
+        assertArrayEquals(new String[]{"x", "y"}, expression.getArray(SkriptEvent.EMPTY));
+        assertArrayEquals(new String[]{"k1", "k2"}, expression.getArrayKeys(SkriptEvent.EMPTY));
+    }
+
+    @Test
     void keyedFunctionArgumentsReceiveClonedArrayValues() {
         ArrayMutatingFunction function = registerArrayMutatingFunction("mutateArrays");
         int[] original = {1, 2};
@@ -263,6 +284,24 @@ class FunctionCallCompatibilityTest {
                 true
         );
         EchoFunction function = new EchoFunction(signature);
+        Functions.register(function);
+        return function;
+    }
+
+    private static ListEchoFunction registerPluralAndSingleEchoFunction(String name) {
+        ClassInfo<String> stringInfo = Classes.getSuperClassInfo(String.class);
+        Signature<String> signature = new Signature<>(
+                null,
+                name,
+                new Parameter[]{
+                        new Parameter<>("values", stringInfo, false, null),
+                        new Parameter<>("suffix", stringInfo, true, null)
+                },
+                false,
+                stringInfo,
+                false
+        );
+        ListEchoFunction function = new ListEchoFunction(signature);
         Functions.register(function);
         return function;
     }
