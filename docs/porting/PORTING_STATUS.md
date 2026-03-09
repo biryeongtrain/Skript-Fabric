@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - empty option-value handling, lazy global-function binding, same-script parser-hint preservation, and whitespace-only loader diagnostics all landed through worker merges on 2026-03-09
+  - specific parser precedence in `Classes.parseSimple(...)`, explicit-parser binding in `InputSource.parseExpression(...)`, and config-only node skipping in `ScriptLoader.loadItems(...)` all landed through worker merges on 2026-03-09
 
 ## Priority Shift On 2026-03-08
 

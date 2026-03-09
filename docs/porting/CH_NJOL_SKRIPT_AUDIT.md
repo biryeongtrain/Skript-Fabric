@@ -148,10 +148,9 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- accepted empty option values in `StructOptions`, so `options:` lines like `blank:` and nested empty entries now load instead of being rejected as invalid
-- restored lazy first-call execution for unresolved global `FunctionReference` instances by validating them as first-use calls during `execute(...)`
-- treated same-script `ParserInstance.setCurrentScript(...)` assignments as no-ops, preserving existing `HintManager` state
-- restored generic loader diagnostics for whitespace-only simple nodes instead of silently skipping them before statement parsing
+- made `Classes.parseSimple(...)` follow sorted classinfo order for registered parsers, so more specific subtype parsers win over broader base-type parsers
+- bound `InputSource.parseExpression(...)` to the explicit parser instance, so nested `input` parsing no longer leaks through the ambient thread-local parser
+- skipped config-only child nodes such as `EntryNode` during `ScriptLoader.loadItems(...)`, matching upstream's trigger-item dispatch surface
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
