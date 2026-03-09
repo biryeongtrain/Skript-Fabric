@@ -1,6 +1,6 @@
 # Lane A Status
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 
 ## Scope
 
@@ -20,6 +20,26 @@ Last updated: 2026-03-08
 - Keep Lane A focused on `ch/njol/skript/log/**` compatibility slices unless the coordinator explicitly reassigns `Statement` / `ScriptLoader`.
 
 ## Work Log
+
+### 2026-03-09 Section-Fallback Error Replay Slice
+
+- compared the lane-owned section fallback flow against upstream `ScriptLoader.loadItems(...)` in `/tmp/skript-upstream-e6ec744-2` and found one remaining mismatch on the successful section-to-statement fallback path:
+  - upstream clears the failed section parse log before the statement fallback and does not replay that stale section error after the statement succeeds
+  - the local `restoreSpecificSectionDiagnostics(...)` helper was replaying all non-default section diagnostics, including `SEVERE` errors, so a successful fallback statement could still emit the earlier rejected-section error
+- implemented the narrowest loader fix in `src/main/java/ch/njol/skript/ScriptLoader.java`:
+  - successful statement fallback now replays only non-error section diagnostics; stale section errors stay dropped
+  - the earlier warning-retention compatibility slice remains intact
+- added a focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `loadItemsDoesNotReplaySectionErrorWhenStatementFallbackSucceeds`
+  - `RejectingErrorSection` logs a specific section error and fails, while `DirectClaimFallbackStatement` succeeds on the same section line
+  - assertions prove the fallback statement still loads and neither the specific section error nor the generic `Can't understand this section: ...` message leaks
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/ScriptLoader.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - passed
 
 ### 2026-03-09 Semantic Parse-Error Quality Retention Slice
 

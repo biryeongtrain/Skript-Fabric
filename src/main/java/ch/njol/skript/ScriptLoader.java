@@ -160,7 +160,8 @@ public final class ScriptLoader {
             String sectionError
     ) {
         for (LogEntry entry : sectionLog.getLogEntries()) {
-            if (!sectionError.equals(entry.getMessage())) {
+            if (entry.getLevel().intValue() < java.util.logging.Level.SEVERE.intValue()
+                    && !sectionError.equals(entry.getMessage())) {
                 log.log(entry);
             }
         }
