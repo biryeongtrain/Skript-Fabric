@@ -44,7 +44,6 @@ public final class ScriptLoader {
     public static List<TriggerItem> loadItems(SectionNode node) {
         List<TriggerItem> items = new ArrayList<>();
         ParserInstance parser = ParserInstance.get();
-        Node previousNode = parser.getNode();
         TriggerItem previousItem = null;
         boolean executionStops = false;
         boolean freezeScope = false;
@@ -77,7 +76,7 @@ public final class ScriptLoader {
                 parser.getHintManager().clearScope(0, false);
             }
             parser.getHintManager().exitScope();
-            parser.setNode(previousNode);
+            parser.setNode(node);
         }
         return items;
     }
