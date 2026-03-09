@@ -21,6 +21,27 @@ Last updated: 2026-03-08
 
 ## Work Log
 
+### 2026-03-09 Semantic Parse-Error Quality Retention Slice
+
+- compared the lane-owned parse-log surface against upstream `e6ec744` and found one retained-diagnostics mismatch in `ch/njol/skript/log/ErrorQuality`:
+  - upstream keeps a third parse-error tier, `SEMANTIC_ERROR`, above `NOT_AN_EXPRESSION`
+  - the local enum only had `GENERIC` and `NOT_AN_EXPRESSION`, so retained-failure selection in `Statement.parse(...)` could not preserve a stronger semantic parse failure over a later lower-quality `NOT_AN_EXPRESSION` failure
+- implemented the smallest lane-owned fix in `src/main/java/ch/njol/skript/log/ErrorQuality.java`:
+  - added `SEMANTIC_ERROR(2)` without changing existing local call sites
+- added a focused regression in `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - `loadItemsKeepsSemanticEffectErrorWhenLaterNotExpressionStatementAlsoFails`
+  - the harness registers an effect that fails with `ErrorQuality.SEMANTIC_ERROR` and a later statement candidate that fails with `ErrorQuality.NOT_AN_EXPRESSION` on the same syntax
+  - assertions prove the loader keeps the semantic effect diagnostic, suppresses the later lower-quality statement diagnostic, and does not fall back to the generic `Can't understand this condition/effect: ...` message
+- changed files in this slice:
+  - `src/main/java/ch/njol/skript/log/ErrorQuality.java`
+  - `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_A_STATUS.md`
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsKeepsSemanticEffectErrorWhenLaterNotExpressionStatementAlsoFails --rerun-tasks`
+    - passed
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+    - passed
+
 ### 2026-03-08 Condition Candidate Section-Ownership Reset Slice
 
 - compared the lane-local section-line parsing path after the already-landed `Effect.parse(...)` candidate-reset fix and found one matching remaining gap on the condition side:

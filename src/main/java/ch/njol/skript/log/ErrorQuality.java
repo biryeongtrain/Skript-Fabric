@@ -2,7 +2,8 @@ package ch.njol.skript.log;
 
 public enum ErrorQuality {
     GENERIC(0),
-    NOT_AN_EXPRESSION(1);
+    NOT_AN_EXPRESSION(1),
+    SEMANTIC_ERROR(2);
 
     private final int priority;
 

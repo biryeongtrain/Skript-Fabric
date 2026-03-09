@@ -539,6 +539,35 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsKeepsSemanticEffectErrorWhenLaterNotExpressionStatementAlsoFails() {
+        Skript.registerEffect(SemanticRejectingAmbiguousEffect.class, "semantic statement priority syntax");
+        Skript.registerStatement(NotExpressionRejectingAmbiguousStatement.class, "semantic statement priority syntax");
+
+        try (TestLogAppender logs = TestLogAppender.attach()) {
+            List<TriggerItem> items = ScriptLoader.loadItems(root(
+                    line("semantic statement priority syntax")
+            ));
+
+            assertTrue(items.isEmpty());
+            assertTrue(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("semantic ambiguous effect rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("not-expression ambiguous statement rejected")
+                    )
+            );
+            assertFalse(
+                    logs.messages().stream().anyMatch(message ->
+                            message.contains("Can't understand this condition/effect: semantic statement priority syntax")
+                    )
+            );
+        }
+    }
+
+    @Test
     void loadItemsWarnsWhenLaterLineIsUnreachable() {
         registerExecutionIntentStatements();
         ParserInstance parser = ParserInstance.get();
@@ -1282,6 +1311,61 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "lower-quality ambiguous statement";
+        }
+    }
+
+    public static final class SemanticRejectingAmbiguousEffect extends ch.njol.skript.lang.Effect {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.SEMANTIC_ERROR,
+                    "semantic ambiguous effect rejected"
+            ));
+            return false;
+        }
+
+        @Override
+        protected void execute(SkriptEvent event) {
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "semantic ambiguous effect";
+        }
+    }
+
+    public static final class NotExpressionRejectingAmbiguousStatement extends Statement {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult
+        ) {
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.NOT_AN_EXPRESSION,
+                    "not-expression ambiguous statement rejected"
+            ));
+            return false;
+        }
+
+        @Override
+        protected boolean run(SkriptEvent event) {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "not-expression ambiguous statement";
         }
     }
 
