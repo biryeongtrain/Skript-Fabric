@@ -9,6 +9,9 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
+- fixed one function-reference parsing edge in `FunctionReference.parse(...)`
+- local parsing accepted non-whitespace trailing text after the closing `)` and still built a function call, which could misclassify malformed statements/effects as valid function calls
+- local parsing now rejects trailing garbage and only accepts the exact call text plus optional surrounding whitespace, matching upstream parser strictness
 - fixed one upstream-backed default-parameter execution mismatch in `ScriptFunction.execute(...)`
 - local behavior stored unkeyed plural parameter values at `name::0`, `name::1`, ... inside function-local scope
 - upstream-visible list semantics are one-based, and this broke the `8220 function has list default value` shape when a plural parameter fell back to a multi-value default
@@ -31,6 +34,9 @@ Last updated: 2026-03-09
 
 - upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/ScriptFunction.java` against `/tmp/skript-upstream-e6ec744-2/src/test/skript/tests/regressions/8220-function-list-default-value.sk`
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionDefaultKeyedParameterCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest`
+  - passed
+- upstream reference: aligned local `FunctionReference.parse(...)` with upstream parser strictness for malformed call text instead of accepting trailing garbage after `)`
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 - upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/FunctionReference.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`

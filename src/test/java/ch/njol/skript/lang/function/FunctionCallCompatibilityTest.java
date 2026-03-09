@@ -83,6 +83,19 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void functionReferenceParseRejectsTrailingGarbageAfterCall() {
+        registerEchoFunction();
+
+        FunctionReference<?> reference = FunctionReference.parse(
+                "echo(\"abc\") trailing",
+                null,
+                new Class[]{String.class}
+        );
+
+        assertNull(reference);
+    }
+
+    @Test
     void dynamicFunctionReferenceResolvesAndExecutes() {
         registerEchoFunction();
 

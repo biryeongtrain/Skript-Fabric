@@ -252,10 +252,13 @@ public class FunctionReference<T> {
         int close = expression.lastIndexOf(')');
         String name;
         String argsPart;
-        if (open < 0 || close < open) {
+        if (open < 0 && close < 0) {
             name = expression;
             argsPart = "";
         } else {
+            if (open < 0 || close < open || !expression.substring(close + 1).trim().isEmpty()) {
+                return null;
+            }
             name = expression.substring(0, open).trim();
             argsPart = expression.substring(open + 1, close).trim();
         }
