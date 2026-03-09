@@ -11,6 +11,7 @@ import ch.njol.skript.lang.InputSource;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 
 class ParserInstanceCompatibilityTest {
@@ -74,6 +75,20 @@ class ParserInstanceCompatibilityTest {
         assertSame(child, parser.getNode());
     }
 
+    @Test
+    void setCurrentEventNotifiesRegisteredParserDataWhenSetAndCleared() {
+        ParserInstance.registerData(EventTrackingData.class, EventTrackingData::new);
+
+        ParserInstance parser = new ParserInstance();
+        EventTrackingData trackingData = parser.getData(EventTrackingData.class);
+
+        parser.setCurrentEvent("sub", SubEvent.class);
+        assertSame(SubEvent.class, trackingData.lastCurrentEvents[0]);
+
+        parser.deleteCurrentEvent();
+        assertNull(trackingData.lastCurrentEvents);
+    }
+
     private static class BaseEvent {
     }
 
@@ -90,6 +105,20 @@ class ParserInstanceCompatibilityTest {
         @Override
         public Object getCurrentValue() {
             return "value";
+        }
+    }
+
+    private static final class EventTrackingData extends ParserInstance.Data {
+
+        private @Nullable Class<?>[] lastCurrentEvents;
+
+        private EventTrackingData(ParserInstance parserInstance) {
+            super(parserInstance);
+        }
+
+        @Override
+        public void onCurrentEventsChange(@Nullable Class<?>[] currentEvents) {
+            this.lastCurrentEvents = currentEvents;
         }
     }
 }

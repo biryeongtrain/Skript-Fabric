@@ -9,21 +9,20 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- primary `ParserInstance` / `InputSource` bridge review found no second mergeable owned mismatch after the already-landed parser-binding fix, so the lane switched to the allowed fallback
-- fixed one upstream-backed `TriggerItem` bridge mismatch: `TriggerItem.walk(...)` now rethrows non-`Exception` `Throwable`s instead of silently collapsing them into a `false` return path
-- added a focused regression proving `AssertionError` escapes `TriggerItem.walk(...)` while `Exception` and `StackOverflowError` keep their current compatibility handling
+- fixed one upstream-backed `ParserInstance` bridge mismatch: `setCurrentEvent(...)` and `deleteCurrentEvent()` now notify registered `ParserInstance.Data` listeners via `onCurrentEventsChange(...)`, matching upstream's parser-data event bridge
+- added focused regression coverage proving a registered parser-data listener sees the current event classes when set and receives `null` when the event context is cleared
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/TriggerItem.java`
-- `src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
+- `src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java`
 - `docs/porting/parallel/LANE_E_STATUS.md`
 
 ## Verification
 
-- `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/TriggerItem.java src/main/java/ch/njol/skript/lang/TriggerItem.java`
-  - confirmed the local fallback path no longer matched upstream's distinct handling for `Exception` versus other `Throwable`s
-- `./gradlew test --tests ch.njol.skript.lang.TriggerItemCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+- `diff -u /tmp/upstream-skript/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
+  - confirmed upstream dispatches current-event updates to registered parser data, while the local bridge did not
+- `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest`
   - passed
 
 ## Next Lead
@@ -33,6 +32,6 @@ Last updated: 2026-03-09
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/lang/TriggerItem.java`
-  - `src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
+  - `src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java`
 - no canonical docs touched

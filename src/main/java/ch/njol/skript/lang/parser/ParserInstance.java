@@ -28,6 +28,9 @@ public final class ParserInstance {
         public ParserInstance parser() {
             return parserInstance;
         }
+
+        public void onCurrentEventsChange(@Nullable Class<?>[] currentEvents) {
+        }
     }
 
     private final Map<Class<? extends Data>, Data> data = new ConcurrentHashMap<>();
@@ -104,12 +107,12 @@ public final class ParserInstance {
 
     public void setCurrentEvent(String eventName, Class<?>... eventClasses) {
         this.currentEventName = eventName;
-        this.currentEventClasses = eventClasses == null ? new Class<?>[0] : eventClasses;
+        updateCurrentEventClasses(eventClasses);
     }
 
     public void deleteCurrentEvent() {
         this.currentEventName = null;
-        this.currentEventClasses = new Class<?>[0];
+        updateCurrentEventClasses(null);
     }
 
     public boolean isCurrentEvent(Class<?>... eventClasses) {
@@ -134,6 +137,13 @@ public final class ParserInstance {
         return currentEventClasses;
     }
 
+    private void updateCurrentEventClasses(@Nullable Class<?>[] eventClasses) {
+        this.currentEventClasses = eventClasses == null ? new Class<?>[0] : eventClasses;
+        for (Data dataInstance : getRegisteredDataInstances()) {
+            dataInstance.onCurrentEventsChange(eventClasses);
+        }
+    }
+
     public void setCurrentSections(List<TriggerSection> currentSections) {
         this.currentSections = currentSections == null ? new ArrayList<>() : currentSections;
     }
@@ -144,6 +154,14 @@ public final class ParserInstance {
 
     public HintManager getHintManager() {
         return hintManager;
+    }
+
+    private List<Data> getRegisteredDataInstances() {
+        List<Data> instances = new ArrayList<>(DATA_FACTORIES.size());
+        for (Class<? extends Data> type : DATA_FACTORIES.keySet()) {
+            instances.add(getData(type));
+        }
+        return instances;
     }
 
     /**
