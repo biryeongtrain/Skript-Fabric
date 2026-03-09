@@ -9,6 +9,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.util.Timespan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -64,6 +65,15 @@ class LiteralsCompatibilityTest {
         assertInstanceOf(LitNewLine.class, newline);
     }
 
+    @Test
+    void eternityLiteralParsesToInfiniteTimespan() {
+        LitEternity.register();
+
+        assertTimespanLiteral("an eternity");
+        assertTimespanLiteral("forever");
+        assertTimespanLiteral("an infinite timespan");
+    }
+
     private static <T> void assertLiteralValue(
             String input,
             Class<T> type,
@@ -73,6 +83,12 @@ class LiteralsCompatibilityTest {
         Expression<? extends T> parsed = parse(input, type);
         assertEquals(expected, parsed.getSingle(SkriptEvent.EMPTY));
         assertInstanceOf(implementation, parsed);
+    }
+
+    private static void assertTimespanLiteral(String input) {
+        Expression<? extends Timespan> parsed = parse(input, Timespan.class);
+        assertEquals(Timespan.infinite(), parsed.getSingle(SkriptEvent.EMPTY));
+        assertInstanceOf(LitEternity.class, parsed);
     }
 
     @SuppressWarnings("unchecked")
