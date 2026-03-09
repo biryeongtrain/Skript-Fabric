@@ -9,17 +9,18 @@ doc-count drift, or unverifiable parity claims.
 
 This workflow is specifically for the current priority workstream:
 
-- upstream `ch/njol/skript` closure first
+- exact upstream user-visible syntax import on the existing Fabric-backed runtime
+- one remaining mop-up lane for `lang-core`
 - Stage 8 package-local Bukkit audit frozen unless explicitly reassigned
 
 ## Required Roles
 
 - `Coordinator`: owns planning, lane assignment, merge order, canonical doc updates, and final verification
-- `Lane A`: owns `Statement` / `ScriptLoader` / parse-log orchestration
-- `Lane B`: owns `SkriptParser` / `patterns` / parser tag-mark parity
-- `Lane C`: owns `Variables` / `Classes` / `config` / `structures`
-- `Lane D`: owns `lang/function` runtime and default-parameter parity
-- `Lane E`: owns parser/runtime bridge triage, `InputSource` / `ParserInstance` parity, and upstream diff-driven reproductions that stay outside A-D ownership
+- `Lane A`: owns exact upstream `expressions` imports on existing Fabric-backed runtime paths
+- `Lane B`: owns exact upstream `conditions` imports on existing Fabric-backed runtime paths
+- `Lane C`: owns exact upstream `effects` imports on existing Fabric-backed runtime paths
+- `Lane D`: owns selective exact upstream `events` imports plus tightly coupled event payload adapters
+- `Lane E`: owns remaining `lang-core` mop-up, parser/runtime bridge parity, and upstream diff-driven reproductions that stay outside A-D ownership
 
 Recommended operating shape is `Coordinator + 5 workers`.
 
@@ -67,11 +68,11 @@ Coordinator can stay on the main repo path:
 
 | Lane | Primary Scope | Allowed Core Files | Avoid Touching | Lane Status File |
 | --- | --- | --- | --- | --- |
-| `Lane A` | statement loading, script loading, parse-log flow | `src/main/java/ch/njol/skript/lang/Statement.java`, `src/main/java/ch/njol/skript/ScriptLoader.java`, `src/main/java/ch/njol/skript/log/**`, `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java` | `SkriptParser.java`, `Variables.java`, `Classes.java`, canonical docs | `docs/porting/parallel/LANE_A_STATUS.md` |
-| `Lane B` | parser flow, marks/tags, pattern handling | `src/main/java/ch/njol/skript/lang/SkriptParser.java`, `src/main/java/ch/njol/skript/patterns/**`, parser-facing tests | `Statement.java`, `ScriptLoader.java`, `Variables.java`, canonical docs | `docs/porting/parallel/LANE_B_STATUS.md` |
-| `Lane C` | variables, classes, config, structures | `src/main/java/ch/njol/skript/variables/**`, `src/main/java/ch/njol/skript/registrations/Classes.java`, `src/main/java/ch/njol/skript/config/**`, `src/main/java/ch/njol/skript/structures/**`, matching tests | `Statement.java`, `SkriptParser.java`, canonical docs | `docs/porting/parallel/LANE_C_STATUS.md` |
-| `Lane D` | function runtime, overload/default-parameter parity | `src/main/java/ch/njol/skript/lang/function/**`, `src/main/java/ch/njol/skript/lang/DefaultExpression.java`, `src/main/java/ch/njol/skript/lang/DefaultExpressionUtils.java`, `src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java`, matching function/parser-default tests | `SkriptParser.java`, `Statement.java`, `ScriptLoader.java`, `Variables.java`, canonical docs | `docs/porting/parallel/LANE_D_STATUS.md` |
-| `Lane E` | parser/runtime bridges and upstream diff-driven reproductions | `src/main/java/ch/njol/skript/lang/InputSource.java`, `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`, `src/main/java/ch/njol/skript/expressions/ExprInput.java`, `src/main/java/ch/njol/skript/lang/TriggerItem.java`, `src/main/java/ch/njol/skript/lang/TriggerSection.java`, tightly matching tests | `Statement.java`, `SkriptParser.java`, `Variables.java`, `Classes.java`, canonical docs | `docs/porting/parallel/LANE_E_STATUS.md` |
+| `Lane A` | expressions import | `src/main/java/org/skriptlang/skript/**/expressions/**`, `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java`, matching expression runtime tests and `.sk` resources | conditions, effects, events, canonical docs | `docs/porting/parallel/LANE_A_STATUS.md` |
+| `Lane B` | conditions import | `src/main/java/org/skriptlang/skript/**/conditions/**`, `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`, `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java`, matching condition runtime tests and `.sk` resources | expressions, effects, events, canonical docs | `docs/porting/parallel/LANE_B_STATUS.md` |
+| `Lane C` | effects import | `src/main/java/org/skriptlang/skript/**/effects/**`, `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`, `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalEffects.java`, matching effect runtime tests and `.sk` resources | expressions, conditions, events, canonical docs | `docs/porting/parallel/LANE_C_STATUS.md` |
+| `Lane D` | events import and event payload adapters | `src/main/java/org/skriptlang/skript/fabric/syntax/event/**`, tightly coupled event payload expressions, `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`, matching event runtime tests and `.sk` resources | broader expressions, conditions, effects, canonical docs | `docs/porting/parallel/LANE_D_STATUS.md` |
+| `Lane E` | lang-core mop-up and parser/runtime bridge parity | `src/main/java/ch/njol/skript/lang/**`, `src/main/java/ch/njol/skript/log/**`, `src/main/java/ch/njol/skript/variables/**`, `src/main/java/ch/njol/skript/registrations/Classes.java`, tightly matching tests | implementation-lane runtime syntax files, canonical docs | `docs/porting/parallel/LANE_E_STATUS.md` |
 | `Coordinator` | merge, reconciliation, canonical docs, final verification | `docs/porting/*.md`, root pointer docs, integration fixes after merge | lane-owned feature work while workers are active | n/a |
 
 ## Shared Rules
@@ -85,7 +86,9 @@ Coordinator can stay on the main repo path:
 - Do not change Stage 8 counts unless your lane actually changes that tracked matrix and the coordinator approved the reassignment.
 - Do not revert unrelated dirty changes.
 - Do not claim parity complete unless it is verified.
-- If user-visible `.sk` behavior changes, add or update real `.sk` coverage and run GameTest coverage appropriate to the change.
+- If user-visible `.sk` behavior changes, add or update real `.sk` coverage and run the narrowest matching runtime tests; coordinator handles final `./gradlew build --rerun-tasks`.
+- Implementation lanes must import exact upstream syntax forms, not approximate rewrites.
+- Event lanes must stop if the backend payload or cancellation semantics are not already reproducible on Fabric.
 - Record exact commands and exact counts in the lane status file.
 - If a lane needs a file owned by another lane, stop and hand it back to the coordinator instead of freelancing into overlap.
 
@@ -114,19 +117,15 @@ Those are coordinator-owned.
 ## Suggested Validation Split
 
 - `Lane A`:
-  - targeted unit tests first
-  - run `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
+  - targeted expression runtime tests first
 - `Lane B`:
-  - targeted parser tests first
-  - run parser-focused `./gradlew test --tests ... --rerun-tasks`
+  - targeted condition runtime tests first
 - `Lane C`:
-  - targeted unit tests for `variables`, `classes`, `config`, `structures`
+  - targeted effect runtime tests first
 - `Lane D`:
-  - targeted function/default-parameter tests first
-  - run `./gradlew test --tests 'ch.njol.skript.lang.function.*' --rerun-tasks`
+  - targeted event runtime tests first
 - `Lane E`:
-  - targeted bridge/runtime tests first
-  - run the narrowest matching parser/input/runtime tests
+  - targeted lang-core compatibility tests first
 - `Coordinator` after merge:
   - `./gradlew build --rerun-tasks`
 
@@ -134,22 +133,21 @@ Those are coordinator-owned.
 
 Use this merge order unless the actual diff dictates otherwise:
 
-1. `Lane C`
-2. `Lane B`
-3. `Lane D`
-4. `Lane E`
-5. `Lane A`
+1. `Lane D`
+2. `Lane A`
+3. `Lane B`
+4. `Lane C`
+5. `Lane E`
 6. coordinator integration fixes
 7. canonical doc update
 8. final verification
 
 Reasoning:
 
-- `Lane C` tends to touch lower-level config / structure helpers
-- `Lane B` tends to sit above that in parser flow
-- `Lane D` depends on parser/class behavior but normally avoids statement/loading overlap
-- `Lane E` is intentionally narrow and should merge after parser/class/function slices have settled
-- `Lane A` tends to consume parser, function, and config behavior in final statement/loading orchestration
+- `Lane D` can define event payload surfaces that expressions/conditions/effects consume
+- `Lane A` often adds event-facing or entity-facing expressions used by later syntax slices
+- `Lane B` and `Lane C` mostly stay in separate condition/effect families
+- `Lane E` should merge last because it is cleanup and regression-guard work
 
 ## Coordinator Checklist
 
@@ -173,8 +171,8 @@ A worker should stop and return to the coordinator if any of the following happe
 
 ## Current Recommended Lane Assignment
 
-- `Lane A`: continue `Part 1A` on `Statement` / `ScriptLoader` orchestration and loader hint flow
-- `Lane B`: continue `Part 1A` on richer `SkriptParser` tag / mark / pattern parity
-- `Lane C`: continue `Part 1B` on `Variables`, `Classes`, and the remaining `config` / `structures` behavior gaps
-- `Lane D`: continue `Part 1A` on `lang/function` runtime, overload, and default-parameter parity
-- `Lane E`: continue upstream diff-driven reproductions in parser/runtime bridge files that stay outside A-D ownership
+- `Lane A`: import exact upstream expressions backed by existing Fabric runtime data
+- `Lane B`: import exact upstream conditions backed by existing Fabric runtime data
+- `Lane C`: import exact upstream effects backed by existing Fabric runtime data
+- `Lane D`: import exact upstream events for existing Fabric-backed event families and their payload adapters
+- `Lane E`: keep closing remaining `lang-core` and parser/runtime bridge long-tail mismatches

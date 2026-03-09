@@ -38,14 +38,15 @@ Read:
 Run 5 workers at medium reasoning.
 Use local upstream snapshots only.
 Keep Stage 8 frozen at 23 / 214.
-Priority is upstream ch/njol/skript closure first.
+Priority is exact upstream user-visible syntax import on the existing Fabric-backed runtime.
+Keep one lane on lang-core mop-up.
 
 Worker merge order:
-1. Lane C
-2. Lane B
-3. Lane D
-4. Lane E
-5. Lane A
+1. Lane D
+2. Lane A
+3. Lane B
+4. Lane C
+5. Lane E
 
 Coordinator owns:
 - merge and integration fixes
@@ -72,17 +73,17 @@ Read:
 5. docs/porting/parallel/LANE_A_STATUS.md
 
 Scope only:
-- src/main/java/ch/njol/skript/lang/Statement.java
-- src/main/java/ch/njol/skript/ScriptLoader.java
-- src/main/java/ch/njol/skript/log/**
-- src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java
+- src/main/java/org/skriptlang/skript/**/expressions/**
+- src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java
+- matching expression runtime tests and .sk resources
 
 Target:
-- one concrete upstream-backed Statement/ScriptLoader/log mismatch
-- prefer retained diagnostics, section fallback, hint flow, or section ownership
+- one exact upstream expression import backed by the current Fabric runtime
+- primary: expression family with existing event/entity/backend data
+- fallback: another exact expression family in the same owned files
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression, record exact commands/results in LANE_A_STATUS.md, and use a conventional commit like `fix(loader): preserve ...`.
+If code lands, add the narrowest regression, record exact commands/results in LANE_A_STATUS.md, and use a conventional commit like `feat(expression): import ...`.
 ```
 
 ## Lane B Prompt
@@ -99,16 +100,18 @@ Read:
 5. docs/porting/parallel/LANE_B_STATUS.md
 
 Scope only:
-- src/main/java/ch/njol/skript/lang/SkriptParser.java
-- src/main/java/ch/njol/skript/patterns/**
-- parser-facing tests
+- src/main/java/org/skriptlang/skript/**/conditions/**
+- src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java
+- src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java
+- matching condition runtime tests and .sk resources
 
 Target:
-- one concrete upstream-backed parser mismatch
-- prefer default-value / omission parity, static-vs-modern parity, or matcher edge cases
+- one exact upstream condition import backed by the current Fabric runtime
+- primary: condition family with existing backend state access
+- fallback: another exact condition family in the same owned files
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression, record exact commands/results in LANE_B_STATUS.md, and use a conventional commit like `fix(parser): restore ...`.
+If code lands, add the narrowest regression, record exact commands/results in LANE_B_STATUS.md, and use a conventional commit like `feat(condition): import ...`.
 ```
 
 ## Lane C Prompt
@@ -125,18 +128,18 @@ Read:
 5. docs/porting/parallel/LANE_C_STATUS.md
 
 Scope only:
-- src/main/java/ch/njol/skript/variables/**
-- src/main/java/ch/njol/skript/registrations/Classes.java
-- src/main/java/ch/njol/skript/config/**
-- src/main/java/ch/njol/skript/structures/**
-- matching tests
+- src/main/java/org/skriptlang/skript/**/effects/**
+- src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java
+- src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalEffects.java
+- matching effect runtime tests and .sk resources
 
 Target:
-- one concrete upstream-backed Variables / Classes / config / structures mismatch
-- prioritize classinfo/parser registry or deeper variable semantics
+- one exact upstream effect import backed by the current Fabric runtime
+- primary: effect family with existing mutable runtime target
+- fallback: another exact effect family in the same owned files
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression, record exact commands/results in LANE_C_STATUS.md, and use a conventional commit like `fix(classes): align ...`.
+If code lands, add the narrowest regression, record exact commands/results in LANE_C_STATUS.md, and use a conventional commit like `feat(effect): import ...`.
 ```
 
 ## Lane D Prompt
@@ -153,18 +156,18 @@ Read:
 5. docs/porting/parallel/LANE_D_STATUS.md
 
 Scope only:
-- src/main/java/ch/njol/skript/lang/function/**
-- src/main/java/ch/njol/skript/lang/DefaultExpression.java
-- src/main/java/ch/njol/skript/lang/DefaultExpressionUtils.java
-- src/main/java/ch/njol/skript/lang/parser/DefaultValueData.java
-- matching tests
+- src/main/java/org/skriptlang/skript/fabric/syntax/event/**
+- tightly coupled event payload expressions and event registration files
+- src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java
+- matching event runtime tests and .sk resources
 
 Target:
-- one concrete upstream-backed function runtime or default-parameter mismatch
-- prefer overload resolution, namespace fallback, keyed/plural/default execution semantics
+- one exact upstream event import for an already Fabric-backed event family
+- primary: event family with verifiable payload semantics
+- fallback: tightly coupled event payload adapter needed by that family
 
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression, record exact commands/results in LANE_D_STATUS.md, and use a conventional commit like `fix(function): preserve ...`.
+If code lands, add the narrowest regression, record exact commands/results in LANE_D_STATUS.md, and use a conventional commit like `feat(event): import ...`.
 ```
 
 ## Lane E Prompt
@@ -181,18 +184,17 @@ Read:
 5. docs/porting/parallel/LANE_E_STATUS.md
 
 Scope only:
-- src/main/java/ch/njol/skript/lang/InputSource.java
-- src/main/java/ch/njol/skript/lang/parser/ParserInstance.java
-- src/main/java/ch/njol/skript/expressions/ExprInput.java
-- src/main/java/ch/njol/skript/lang/TriggerItem.java
-- src/main/java/ch/njol/skript/lang/TriggerSection.java
+- src/main/java/ch/njol/skript/lang/**
+- src/main/java/ch/njol/skript/log/**
+- src/main/java/ch/njol/skript/variables/**
+- src/main/java/ch/njol/skript/registrations/Classes.java
 - tightly matching tests
 
 Target:
-- one concrete upstream-backed bridge mismatch
-- prefer InputSource, ParserInstance, ExprInput, or TriggerItem/TriggerSection behavior
+- one concrete upstream-backed lang-core or parser/runtime bridge mismatch
+- primary: parser omitted/default, function runtime long-tail, or loader/statement reproducer
+- fallback: bridge mismatch in InputSource, ParserInstance, ExprInput, TriggerItem, or classes/variables parity
 
-If the fix crosses into parser/classes/statement ownership, stop and hand it back to the coordinator.
 Do not edit canonical docs or files owned by other lanes.
-If code lands, add the narrowest regression, record exact commands/results in LANE_E_STATUS.md, and use a conventional commit like `fix(runtime): catch ...`.
+If code lands, add the narrowest regression, record exact commands/results in LANE_E_STATUS.md, and use a conventional commit like `fix(parser): restore ...`.
 ```

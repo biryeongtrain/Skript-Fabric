@@ -18,7 +18,7 @@ Last updated: 2026-03-09
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
 - upstream `ch/njol/skript` snapshot: local `140 / 1189`, shortfall `1049`
-- immediate priority: close upstream `ch/njol/skript` gaps first, then import exact missing user-visible syntax
+- immediate priority: import exact upstream user-visible syntax on the existing Fabric-backed runtime, while keeping one lane on remaining `lang-core` mop-up
 
 ## Local Upstream Reference
 
@@ -47,10 +47,11 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, invalid-default-diagnostic, mixed-default-diagnostic, and tagged-branch suffix-default rules
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, exact-parser lookup, empty-option-value handling, specific-parser precedence, classinfo-cloner, variable-name fallback, renamed-node map-sync, and transitive priority-ordering slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, one-based plural local indexing, doubled-quote literal, blank-default rejection, lazy global-reference execution, local dynamic-reference namespace, missing-source normalization, split-exact-overload ambiguity cases, tracked-script unload, and untracked local-reference unload for dynamic function references
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, whitespace-only-line diagnostics, config-only-node skip behavior, stale-section-warning drop, specific-error-over-fallback retention, semantic fallback-quality slices, parser-fallback inflation slice, and retained parse-error tie handling
+1. exact upstream `expressions` imports that already have a live Fabric backend and can be verified with focused runtime tests plus real `.sk` coverage where needed
+2. exact upstream `conditions` imports on the same rule
+3. exact upstream `effects` imports on the same rule
+4. selective `events` imports only for existing Fabric-backed families with payload and cancellation semantics we can verify
+5. keep one mop-up lane on remaining `lang-core` long-tail: parser omitted/default, function runtime/default-parameter, and new loader/statement reproducers only
 
 ## Parallel Defaults
 
@@ -60,6 +61,12 @@ These are already closed. Do not reopen without a new reproducer.
 - one primary mismatch plus one fallback mismatch per lane
 - no web
 - worker docs stay minimal
+- lane split for the current phase:
+  - `Lane A`: expressions
+  - `Lane B`: conditions
+  - `Lane C`: effects
+  - `Lane D`: events
+  - `Lane E`: `lang-core` mop-up
 
 ## Lane Status Format
 
