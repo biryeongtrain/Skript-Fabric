@@ -66,7 +66,7 @@ public abstract class Statement extends TriggerItem implements SyntaxElement {
         log.clear();
 
         ParseLogHandler effectFailure = null;
-        Effect effect = Effect.parse(expression, null, node, items);
+        Effect effect = Effect.parse(expression, null, node, items, node == null);
         if (effect != null) {
             log.printLog();
             return effect;

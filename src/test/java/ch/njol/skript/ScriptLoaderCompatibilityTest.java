@@ -825,6 +825,24 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
+    void loadItemsFallsBackToEffectSectionStatementModeWhenSectionModeRejectsBody() {
+        StatementModeClaimingEffectSection.lastHasSection = null;
+        Skript.registerExpression(ClaimingIntegerSectionExpression.class, Integer.class, "claiming effect-section value");
+        Skript.registerSection(
+                StatementModeClaimingEffectSection.class,
+                "statement-only effect section %integer%"
+        );
+
+        List<TriggerItem> items = ScriptLoader.loadItems(root(
+                section("statement-only effect section claiming effect-section value", line("ignored child"))
+        ));
+
+        assertEquals(1, items.size());
+        assertTrue(items.getFirst() instanceof ch.njol.skript.lang.EffectSectionEffect);
+        assertEquals(Boolean.FALSE, StatementModeClaimingEffectSection.lastHasSection);
+    }
+
+    @Test
     void plainStatementParseClearsOuterExpressionSectionOwnershipForFunctionArguments() {
         Skript.registerExpression(TestNumberSectionExpression.class, Integer.class, "a test number");
 
@@ -1636,6 +1654,72 @@ class ScriptLoaderCompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "error then fallback";
+        }
+    }
+
+    public static final class StatementModeClaimingEffectSection extends ch.njol.skript.lang.EffectSection {
+
+        private static @Nullable Boolean lastHasSection;
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int matchedPattern,
+                Kleenean isDelayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode sectionNode,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            if (sectionNode != null) {
+                return false;
+            }
+            lastHasSection = hasSection();
+            return true;
+        }
+
+        @Override
+        protected @Nullable TriggerItem walk(SkriptEvent event) {
+            return walk(event, false);
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "statement-only effect section";
+        }
+    }
+
+    public static final class ClaimingIntegerSectionExpression extends SectionExpression<Integer> {
+
+        @Override
+        public boolean init(
+                Expression<?>[] expressions,
+                int pattern,
+                Kleenean delayed,
+                ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                @Nullable SectionNode node,
+                @Nullable List<TriggerItem> triggerItems
+        ) {
+            return true;
+        }
+
+        @Override
+        protected Integer @Nullable [] get(SkriptEvent event) {
+            return new Integer[]{1};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends Integer> getReturnType() {
+            return Integer.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "claiming effect-section value";
         }
     }
 

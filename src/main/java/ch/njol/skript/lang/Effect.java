@@ -29,12 +29,28 @@ public abstract class Effect extends Statement {
             @Nullable SectionNode sectionNode,
             @Nullable List<TriggerItem> triggerItems
     ) {
+        return parse(input, defaultError, sectionNode, triggerItems, true);
+    }
+
+    static @Nullable Effect parse(
+            String input,
+            @Nullable String defaultError,
+            @Nullable SectionNode sectionNode,
+            @Nullable List<TriggerItem> triggerItems,
+            boolean allowEffectSectionClaim
+    ) {
         if (input == null || input.isBlank()) {
             return null;
         }
         String expression = input.trim();
 
-        EffectSection section = EffectSection.parse(expression, defaultError, sectionNode, triggerItems);
+        EffectSection section = EffectSection.parse(
+                expression,
+                defaultError,
+                sectionNode,
+                allowEffectSectionClaim,
+                triggerItems
+        );
         if (section != null) {
             return new EffectSectionEffect(section);
         }
