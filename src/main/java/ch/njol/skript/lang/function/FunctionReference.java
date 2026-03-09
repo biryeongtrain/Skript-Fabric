@@ -120,7 +120,7 @@ public class FunctionReference<T> {
     }
 
     public @Nullable T[] execute(SkriptEvent event) {
-        if (function == null && !validateFunction(false)) {
+        if (function == null && !validateFunction(script == null)) {
             return null;
         }
         Function<? extends T> bound = function;

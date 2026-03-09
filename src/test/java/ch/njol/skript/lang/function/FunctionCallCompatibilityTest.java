@@ -234,6 +234,26 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void unvalidatedGlobalFunctionReferenceExecutesOnFirstCall() {
+        EchoFunction function = registerEchoFunction();
+
+        FunctionReference<String> reference = new FunctionReference<>(
+                "echo",
+                null,
+                new Class[]{String.class},
+                new Expression[]{new SimpleLiteral<>("lazy", false)}
+        );
+
+        String[] values = reference.execute(SkriptEvent.EMPTY);
+
+        assertNotNull(values);
+        assertArrayEquals(new String[]{"lazy"}, values);
+        assertEquals(1, function.calls.get());
+        assertNotNull(reference.function());
+        assertNotNull(reference.signature());
+    }
+
+    @Test
     void exprFunctionCallPreservesKeysForSinglePluralParameter() {
         registerPluralEchoFunction("collectKeys");
 
@@ -510,6 +530,7 @@ class FunctionCallCompatibilityTest {
             return String.class;
         }
     }
+
 
     private static final class PluralStringExpression extends SimpleExpression<String> {
 
