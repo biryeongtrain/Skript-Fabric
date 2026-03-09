@@ -2,6 +2,24 @@
 
 Last updated: 2026-03-09
 
+## Latest Slice
+
+- compared the lane-owned section fallback path against upstream `e6ec744` and found one remaining `ScriptLoader.loadItems(...)` mismatch: when a section parse fails but statement fallback succeeds, upstream drops the failed section log entirely, while the local shim still replayed section warnings
+- implemented the narrowest fix in `src/main/java/ch/njol/skript/ScriptLoader.java` by stopping successful statement fallback from restoring failed-section diagnostics
+- tightened `src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java`:
+  - renamed the fallback-warning regression to `loadItemsDoesNotReplaySectionWarningWhenStatementFallbackSucceeds`
+  - now asserts both the stale section warning and the generic section fallback stay suppressed after the statement loads
+- verification:
+  - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsDoesNotReplaySectionWarningWhenStatementFallbackSucceeds --tests ch.njol.skript.ScriptLoaderCompatibilityTest.loadItemsDoesNotReplaySectionErrorWhenStatementFallbackSucceeds --rerun-tasks`
+
+## Next Lead
+
+- re-check only new concrete `Statement` / `ScriptLoader` / log orchestration mismatches that are not already closed in `docs/porting/NEXT_AGENT_HANDOFF.md`
+
+## Merge Notes
+
+- preserve the upstream-style rule that successful section-to-statement fallback drops the failed section parse log, including warnings
+
 ## Scope
 
 - `Statement`

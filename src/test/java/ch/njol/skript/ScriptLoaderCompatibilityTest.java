@@ -806,7 +806,7 @@ class ScriptLoaderCompatibilityTest {
     }
 
     @Test
-    void loadItemsKeepsSpecificSectionWarningWhenStatementFallbackSucceeds() {
+    void loadItemsDoesNotReplaySectionWarningWhenStatementFallbackSucceeds() {
         Skript.registerSection(RejectingWarningSection.class, "warn then fallback");
         Skript.registerStatement(DirectClaimFallbackStatement.class, "warn then fallback");
 
@@ -817,7 +817,7 @@ class ScriptLoaderCompatibilityTest {
 
             assertEquals(1, items.size());
             assertTrue(items.getFirst() instanceof DirectClaimFallbackStatement);
-            assertTrue(
+            assertFalse(
                     logs.messages().stream().anyMatch(message ->
                             message.contains("specific section warning before fallback")
                     )
