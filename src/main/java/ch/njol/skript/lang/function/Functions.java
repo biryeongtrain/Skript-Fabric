@@ -149,7 +149,9 @@ public abstract class Functions {
             return 0;
         }
         globalFunctions.values().removeIf(candidate -> candidate == namespace);
+        FunctionRegistry registry = FunctionRegistry.getRegistry();
         for (Signature<?> signature : namespace.getSignatures()) {
+            registry.remove(signature);
             for (Object call : signature.calls()) {
                 if (call instanceof FunctionReference<?> reference && !script.equals(reference.namespace())) {
                     toValidate.add(reference);

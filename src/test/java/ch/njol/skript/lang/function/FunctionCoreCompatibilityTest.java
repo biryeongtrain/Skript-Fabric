@@ -284,6 +284,36 @@ class FunctionCoreCompatibilityTest {
     }
 
     @Test
+    void clearFunctionsRemovesScriptEntriesFromFunctionRegistry() {
+        Functions.clear();
+
+        Signature<Integer> localSignature = new Signature<>(
+                "script.sk",
+                "clearedLocal",
+                new Parameter[]{new Parameter<>("x", Classes.getSuperClassInfo(Integer.class), true, null)},
+                true,
+                Classes.getSuperClassInfo(Integer.class),
+                true
+        );
+        RecordingFunction localFunction = new RecordingFunction(localSignature);
+        assertSame(localSignature, Functions.registerSignature(localSignature));
+        Namespace namespace = Functions.getScriptNamespace("script.sk");
+        assertNotNull(namespace);
+        namespace.addFunction(localFunction);
+        FunctionRegistry.getRegistry().register("script.sk", localFunction);
+
+        assertEquals(1, Functions.clearFunctions("script.sk"));
+        assertEquals(
+                FunctionRegistry.RetrievalResult.NOT_REGISTERED,
+                FunctionRegistry.getRegistry().getSignature("script.sk", "clearedLocal", Integer.class).result()
+        );
+        assertEquals(
+                FunctionRegistry.RetrievalResult.NOT_REGISTERED,
+                FunctionRegistry.getRegistry().getFunction("script.sk", "clearedLocal", Integer.class).result()
+        );
+    }
+
+    @Test
     void functionsFacadeRegistersGlobalAndLocalSignature() {
         Functions.clear();
 

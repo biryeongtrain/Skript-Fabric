@@ -9,43 +9,28 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one function-reference parsing edge in `FunctionReference.parse(...)`
-- local parsing accepted non-whitespace trailing text after the closing `)` and still built a function call, which could misclassify malformed statements/effects as valid function calls
-- local parsing now rejects trailing garbage and only accepts the exact call text plus optional surrounding whitespace, matching upstream parser strictness
-- fixed one upstream-backed default-parameter execution mismatch in `ScriptFunction.execute(...)`
-- local behavior stored unkeyed plural parameter values at `name::0`, `name::1`, ... inside function-local scope
-- upstream-visible list semantics are one-based, and this broke the `8220 function has list default value` shape when a plural parameter fell back to a multi-value default
-- `ScriptFunction.execute(...)` now stores unkeyed plural values at `name::1`, `name::2`, ...
-- fixed one upstream-backed function runtime mismatch in `FunctionReference.execute(...)`
-- local behavior tried to revalidate unresolved references through the reload-only `validateFunction(false)` path, so fresh global references with `script == null` returned `null` instead of lazily binding and executing
-- upstream allows those global references to resolve on first execution, so the local path now validates them as first-use calls and binds the function/signature before running
-- fixed one execution long-tail mismatch in `FunctionReference.consign(...)`
-- local behavior treated any Java array as `Object[]`, which throws on primitive arrays during direct function execution helpers; upstream only unwraps `Object[]` and keeps primitive arrays as single scalar arguments
+- fixed one function namespace/runtime mismatch in `Functions.clearFunctions(...)`
+- local behavior removed script namespaces from the legacy `Functions` maps but left the same signatures/functions registered in the compatibility `FunctionRegistry`
+- that let cleared local functions continue to resolve through registry-backed lookups after unload, diverging from the expected post-clear state
+- `Functions.clearFunctions(...)` now removes each cleared signature from `FunctionRegistry` before queuing cross-script call revalidation
+- added one narrow regression proving `clearFunctions("script.sk")` leaves both signature and function retrieval as `NOT_REGISTERED`
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/function/ScriptFunction.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionImplementationCompatibilityTest.java`
-- `src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/function/Functions.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Verification
 
-- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/ScriptFunction.java` against `/tmp/skript-upstream-e6ec744-2/src/test/skript/tests/regressions/8220-function-list-default-value.sk`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionDefaultKeyedParameterCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionOverloadDisambiguationTest`
-  - passed
-- upstream reference: aligned local `FunctionReference.parse(...)` with upstream parser strictness for malformed call text instead of accepting trailing garbage after `)`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
-  - passed
-- upstream reference: compared local `src/main/java/ch/njol/skript/lang/function/FunctionReference.java` against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/FunctionReference.java`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
+- upstream reference: compared local `Functions.clearFunctions(...)` unload flow against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Functions.java`; local compatibility needed the same unload effect to reach `FunctionRegistry`
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- continue upstream diff review for one remaining mergeable mismatch in overload selection, keyed/plural execution semantics, or namespace fallback that stays inside `lang/function`
+- continue upstream diff review for one remaining mergeable primary mismatch in overload selection or default-parameter execution semantics; if none remain, keep narrowing namespace/dynamic-reference edges inside `lang/function`
 
 ## Merge Notes
 
-- low-conflict slice limited to `FunctionReference.java`, one focused regression, and this lane file
+- low-conflict slice limited to `Functions.java`, one focused regression in `FunctionCoreCompatibilityTest`, and this lane file
