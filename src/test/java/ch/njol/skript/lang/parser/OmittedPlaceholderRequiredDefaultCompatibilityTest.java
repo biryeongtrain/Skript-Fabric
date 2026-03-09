@@ -67,6 +67,24 @@ class OmittedPlaceholderRequiredDefaultCompatibilityTest {
     }
 
     @Test
+    void chosenPlaceholderFreeChoiceBranchDoesNotRequireSiblingDefaults() {
+        SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
+            NullAcceptingEffect.class,
+            new String[]{"probe (nothing|text %string%)"},
+            NullAcceptingEffect.class.getName()
+        );
+
+        Effect parsed = SkriptParser.parseModern(
+                "probe nothing",
+                List.of(info).iterator(),
+                ParseContext.DEFAULT,
+                null
+        );
+
+        assertNotNull(parsed, "matching a placeholder-free choice branch must not require defaults from sibling branches");
+    }
+
+    @Test
     void requiredOmittedPlaceholderRetainsMissingAndInvalidDefaultDiagnostics() {
         SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
             NullAcceptingEffect.class,

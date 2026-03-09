@@ -121,11 +121,20 @@ public final class SkriptPattern {
 
         List<Set<Integer>> candidates = collectActiveExpressionIndexSets(first);
         if (present.isEmpty()) {
-            LinkedHashSet<Integer> all = new LinkedHashSet<>();
+            int bestSize = Integer.MAX_VALUE;
+            LinkedHashSet<Integer> best = new LinkedHashSet<>();
             for (Set<Integer> candidate : candidates) {
-                all.addAll(candidate);
+                if (candidate.size() < bestSize) {
+                    bestSize = candidate.size();
+                    best.clear();
+                    best.addAll(candidate);
+                    continue;
+                }
+                if (candidate.size() == bestSize) {
+                    best.addAll(candidate);
+                }
             }
-            return all;
+            return best;
         }
         int bestSize = Integer.MAX_VALUE;
         LinkedHashSet<Integer> best = new LinkedHashSet<>();

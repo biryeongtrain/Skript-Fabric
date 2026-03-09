@@ -18,13 +18,13 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- mismatch: when an omitted optional alternation followed an already-matched placeholder, local active-placeholder selection still collapsed to one smallest branch and could skip required defaults from sibling omitted branches.
-- minimal fix: when multiple equally small active-placeholder candidates fit the matched expressions, union them instead of picking the first branch so omitted optional alternations keep every required sibling placeholder active.
+- mismatch: when a choice matched a placeholder-free branch, empty-present active-expression selection still unioned every candidate and could incorrectly require defaults from sibling placeholder branches.
+- minimal fix: for empty-present matches, keep only the smallest active-expression candidates and union ties, so placeholder-free choice branches stay self-contained while omitted optional alternations still keep sibling required placeholders active.
 
 ## Regression Added
 
 - `ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
-  - validates that omitting an optional alternation still requires defaults for every required placeholder branch, including when an earlier placeholder already matched
+  - validates that matching a placeholder-free alternation branch does not require defaults from sibling placeholder branches, while omitted optional alternations still require defaults for every required branch
 
 ## Files Changed
 
@@ -36,12 +36,11 @@ Last updated: 2026-03-09
 
 - targeted tests:
   - `./gradlew test --tests ch.njol.skript.lang.parser.OmittedPlaceholderRequiredDefaultCompatibilityTest`
-  - `./gradlew test --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest`
 - results: passed
 
 ## Remaining Risks
 
-- this narrows one omitted-placeholder/default-value edge case only
+- this narrows one active-expression/default-selection edge case only
 
 ## Merge Notes
 
