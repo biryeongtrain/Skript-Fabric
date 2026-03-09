@@ -114,6 +114,31 @@ class OmittedPlaceholderRequiredDefaultCompatibilityTest {
     }
 
     @Test
+    void taggedBranchMatchStillRequiresDefaultsFromOmittedSuffixPlaceholders() {
+        SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
+            NullAcceptingEffect.class,
+            new String[]{"probe :(text|count)[ %string%]"},
+            NullAcceptingEffect.class.getName()
+        );
+
+        Classes.clearClassInfos();
+        Classes.registerClassInfo(new ClassInfo<>(String.class, "string"));
+
+        try {
+            Effect parsed = SkriptParser.parseModern(
+                    "probe text",
+                    List.of(info).iterator(),
+                    ParseContext.DEFAULT,
+                    null
+            );
+
+            assertNull(parsed, "matched tagged branches must still enforce omitted required defaults in the token suffix");
+        } finally {
+            Classes.clearClassInfos();
+        }
+    }
+
+    @Test
     void requiredOmittedPlaceholderRetainsMissingAndInvalidDefaultDiagnostics() {
         SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
             NullAcceptingEffect.class,

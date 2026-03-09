@@ -692,7 +692,11 @@ public final class PatternCompiler {
         }
 
         String suffix = token.substring(end + 1);
+        CompiledRegex compiledSuffix = suffix.isEmpty()
+                ? new CompiledRegex("", Set.of())
+                : compileToken(suffix, captures, expressionIndex);
         StringBuilder regex = new StringBuilder();
+        LinkedHashSet<Integer> directExpressionIndices = new LinkedHashSet<>(compiledSuffix.directExpressionIndices());
         if (open == '[') {
             regex.append("(?:");
         }
@@ -704,8 +708,10 @@ public final class PatternCompiler {
             String branch = branches.get(i);
             List<CaptureSpec> branchCaptures = new ArrayList<>();
             CompiledRegex compiledBranch = compileSequence(branch, branchCaptures, expressionIndex);
+            LinkedHashSet<Integer> branchExpressionIndices = new LinkedHashSet<>(compiledBranch.directExpressionIndices());
+            branchExpressionIndices.addAll(compiledSuffix.directExpressionIndices());
             regex.append("()");
-            captures.add(CaptureSpec.branch(compiledBranch.directExpressionIndices()));
+            captures.add(CaptureSpec.branch(branchExpressionIndices));
             String tag = deriveLeadingLiteralTag(branch);
             if (tag != null) {
                 regex.append("()");
@@ -718,10 +724,8 @@ public final class PatternCompiler {
         if (open == '[') {
             regex.append(")?");
         }
-        if (!suffix.isEmpty()) {
-            regex.append(compileToken(suffix, captures, expressionIndex).regex());
-        }
-        return new CompiledRegex(regex.toString(), Set.of());
+        regex.append(compiledSuffix.regex());
+        return new CompiledRegex(regex.toString(), directExpressionIndices);
     }
 
     private static @Nullable String deriveLeadingLiteralTag(String value) {
