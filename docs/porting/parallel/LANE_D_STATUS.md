@@ -16,7 +16,7 @@ Last updated: 2026-03-10
 - commits:
   - `01fd00330` `feat(log): restore upstream compatibility handlers`
   - `9893b6339` `feat(lang): restore function facade entry points`
-  - pending `feat(lang): restore function signature parser facade`
+  - `d83d69015` `feat(lang): restore function signature parser facade`
 
 ## Verification
 
