@@ -9,22 +9,22 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one function namespace/runtime mismatch in `Functions.clearFunctions(...)`
-- local behavior removed script namespaces from the legacy `Functions` maps but left the same signatures/functions registered in the compatibility `FunctionRegistry`
-- that let cleared local functions continue to resolve through registry-backed lookups after unload, diverging from the expected post-clear state
-- `Functions.clearFunctions(...)` now removes each cleared signature from `FunctionRegistry` before queuing cross-script call revalidation
-- added one narrow regression proving `clearFunctions("script.sk")` leaves both signature and function retrieval as `NOT_REGISTERED`
+- fixed one dynamic local-function unload edge in `DynamicFunctionReference.resolveFunction(...)`
+- local string-resolved local references kept only the script name, so they could not retain the upstream-style `Script` validity guard and stayed callable as long as the function object itself was still reachable
+- `Functions.registerSignature(...)` now records the active script object for the matching namespace, and `DynamicFunctionReference.resolveFunction(...)` reattaches that tracked `Script` when resolving `name ... from script.sk`
+- added one narrow regression proving a string-resolved local dynamic reference becomes invalid and stops executing after its tracked script is invalidated
 
 ## Files Changed
 
+- `src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`
 - `src/main/java/ch/njol/skript/lang/function/Functions.java`
-- `src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java`
+- `src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java`
 - `docs/porting/parallel/LANE_D_STATUS.md`
 
 ## Verification
 
-- upstream reference: compared local `Functions.clearFunctions(...)` unload flow against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/Functions.java`; local compatibility needed the same unload effect to reach `FunctionRegistry`
-- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
+- upstream reference: compared local `DynamicFunctionReference` source-tracking/unload behavior against `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/DynamicFunctionReference.java`; local compatibility needed the same script-backed validity path for string-resolved local references
+- `./gradlew test --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
@@ -33,4 +33,4 @@ Last updated: 2026-03-09
 
 ## Merge Notes
 
-- low-conflict slice limited to `Functions.java`, one focused regression in `FunctionCoreCompatibilityTest`, and this lane file
+- low-conflict slice limited to `DynamicFunctionReference.java`, `Functions.java`, one focused regression in `FunctionCallCompatibilityTest`, and this lane file

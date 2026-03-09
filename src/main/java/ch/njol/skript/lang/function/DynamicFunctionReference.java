@@ -181,9 +181,10 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
             clean = clean.replaceAll("\\(.*\\).*", "").trim();
         }
         String resolvedSource = normalizeSourceScript(sourceScript);
+        Script source = getScript(resolvedSource);
         DynamicFunctionReference<Object> reference = resolvedSource == null
                 ? new DynamicFunctionReference<>(clean)
-                : new DynamicFunctionReference<>(clean, resolvedSource, null);
+                : new DynamicFunctionReference<>(clean, resolvedSource, source);
         return reference.valid() ? reference : null;
     }
 
@@ -192,6 +193,13 @@ public class DynamicFunctionReference<Result> implements AnyNamed, Validated {
             return null;
         }
         return Functions.getScriptNamespace(sourceScript) != null ? sourceScript : null;
+    }
+
+    private static @Nullable Script getScript(@Nullable String sourceScript) {
+        if (sourceScript == null || sourceScript.isBlank()) {
+            return null;
+        }
+        return Functions.getScript(sourceScript);
     }
 
     public static final class Input {

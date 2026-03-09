@@ -2,12 +2,15 @@ package ch.njol.skript.lang.function;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptAPIException;
+import ch.njol.skript.lang.parser.ParserInstance;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.script.Script;
 
 /**
  * Static function utilities and global namespace access.
@@ -22,6 +25,7 @@ public abstract class Functions {
     private static final Map<Namespace.Key, Namespace> namespaces = new HashMap<>();
     private static final Namespace javaNamespace;
     private static final Map<String, Namespace> globalFunctions = new HashMap<>();
+    private static final Map<String, WeakReference<Script>> scriptsByName = new HashMap<>();
     private static final Collection<FunctionReference<?>> toValidate = new ArrayList<>();
 
     public static boolean callFunctionEvents = false;
@@ -47,6 +51,7 @@ public abstract class Functions {
     }
 
     public static @Nullable Signature<?> registerSignature(Signature<?> signature) {
+        rememberScript(signature.namespace());
         Parameter<?>[] parameters = signature.getParameters();
         Class<?>[] types = new Class<?>[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
@@ -133,6 +138,11 @@ public abstract class Functions {
         return namespaces.get(new Namespace.Key(Namespace.Origin.SCRIPT, script));
     }
 
+    public static @Nullable Script getScript(String script) {
+        WeakReference<Script> reference = scriptsByName.get(script);
+        return reference == null ? null : reference.get();
+    }
+
     public static boolean unregisterSignature(Signature<?> signature) {
         Namespace namespace = signature.isLocal()
                 ? getScriptNamespace(signature.namespace())
@@ -148,6 +158,7 @@ public abstract class Functions {
         if (namespace == null) {
             return 0;
         }
+        scriptsByName.remove(script);
         globalFunctions.values().removeIf(candidate -> candidate == namespace);
         FunctionRegistry registry = FunctionRegistry.getRegistry();
         for (Signature<?> signature : namespace.getSignatures()) {
@@ -200,10 +211,25 @@ public abstract class Functions {
     public static void clear() {
         namespaces.clear();
         globalFunctions.clear();
+        scriptsByName.clear();
         toValidate.clear();
         javaNamespace.signatures.clear();
         javaNamespace.functions.clear();
         FunctionRegistry.getRegistry().clear();
         namespaces.put(new Namespace.Key(Namespace.Origin.JAVA, "unknown"), javaNamespace);
+    }
+
+    private static void rememberScript(@Nullable String scriptName) {
+        if (scriptName == null || scriptName.isBlank()) {
+            return;
+        }
+        Script currentScript = ParserInstance.get().getCurrentScript();
+        if (currentScript == null || currentScript.getConfig() == null) {
+            return;
+        }
+        String currentScriptName = currentScript.getConfig().getFileName();
+        if (scriptName.equals(currentScriptName)) {
+            scriptsByName.put(scriptName, new WeakReference<>(currentScript));
+        }
     }
 }

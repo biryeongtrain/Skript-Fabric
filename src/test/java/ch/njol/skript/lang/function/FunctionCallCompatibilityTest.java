@@ -9,21 +9,27 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.config.Config;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.KeyProviderExpression;
 import ch.njol.skript.lang.KeyedValue;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.lang.script.Script;
 
 class FunctionCallCompatibilityTest {
 
     @AfterEach
     void cleanup() {
+        ParserInstance.get().setCurrentScript(null);
         FunctionRegistry.getRegistry().clear();
         Functions.clear();
     }
@@ -207,6 +213,26 @@ class FunctionCallCompatibilityTest {
 
         assertNotNull(reference);
         assertEquals("stringifiedLocal() from local.sk", reference.toString());
+    }
+
+    @Test
+    void dynamicLocalFunctionReferenceResolvedFromSourceStringInvalidatesWithTrackedScript() throws Exception {
+        File backingFile = Files.createTempFile("tracked-local", ".sk").toFile();
+        backingFile.deleteOnExit();
+        Script script = new Script(new Config("local", "local.sk", backingFile), java.util.List.of());
+        ParserInstance.get().setCurrentScript(script);
+        registerLocalEchoFunction("local.sk", "trackedLocal");
+
+        DynamicFunctionReference<?> reference = DynamicFunctionReference.resolveFunction("trackedLocal", "local.sk");
+
+        assertNotNull(reference);
+        assertTrue(reference.valid());
+        assertEquals("trackedLocal() from local", reference.toString());
+
+        script.invalidate();
+
+        assertTrue(!reference.valid());
+        assertNull(reference.execute(SkriptEvent.EMPTY, "after unload"));
     }
 
     @Test
