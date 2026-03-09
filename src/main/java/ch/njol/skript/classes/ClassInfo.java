@@ -1,6 +1,7 @@
 package ch.njol.skript.classes;
 
 import ch.njol.skript.lang.DefaultExpression;
+import ch.njol.skript.localization.Noun;
 import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -16,6 +17,8 @@ import org.skriptlang.skript.lang.properties.handlers.base.PropertyHandler;
 
 public class ClassInfo<T> {
 
+    public static final String NO_DOC = new String();
+
     public interface Parser<T> {
         boolean canParse(ch.njol.skript.lang.ParseContext context);
 
@@ -24,6 +27,7 @@ public class ClassInfo<T> {
 
     private final Class<T> type;
     private final String codeName;
+    private final Noun name;
     private final Map<Property<?>, Property.PropertyInfo<?>> properties = new ConcurrentHashMap<>();
     private final Set<String> literalPatterns = new LinkedHashSet<>();
     private final Set<String> after = new LinkedHashSet<>();
@@ -34,6 +38,13 @@ public class ClassInfo<T> {
     private @Nullable Cloner<T> cloner;
     private @Nullable Changer changer;
     private @Nullable Supplier<Iterator<T>> supplier;
+    private @Nullable String docName;
+    private @Nullable String[] description;
+    private @Nullable String[] usage;
+    private @Nullable String[] examples;
+    private @Nullable String since;
+    private @Nullable String[] requiredPlugins;
+    private @Nullable String documentationId;
 
     public ClassInfo(Class<T> type) {
         this(type, deriveCodeName(type));
@@ -45,6 +56,7 @@ public class ClassInfo<T> {
             throw new IllegalArgumentException("Code names for classes must be lowercase latin letters and numbers only");
         }
         this.codeName = codeName;
+        this.name = new Noun("types." + codeName);
     }
 
     public Class<T> getC() {
@@ -53,6 +65,10 @@ public class ClassInfo<T> {
 
     public String getCodeName() {
         return codeName;
+    }
+
+    public Noun getName() {
+        return name;
     }
 
     public ClassInfo<T> defaultExpression(DefaultExpression<T> defaultExpression) {
@@ -120,7 +136,77 @@ public class ClassInfo<T> {
     }
 
     public @Nullable Supplier<Iterator<T>> getSupplier() {
+        if (supplier == null && type.isEnum()) {
+            supplier = () -> java.util.Arrays.asList(type.getEnumConstants()).iterator();
+        }
         return supplier;
+    }
+
+    public ClassInfo<T> name(String name) {
+        this.docName = name;
+        return this;
+    }
+
+    public ClassInfo<T> description(String... description) {
+        this.description = description;
+        return this;
+    }
+
+    public ClassInfo<T> usage(String... usage) {
+        this.usage = usage;
+        return this;
+    }
+
+    public ClassInfo<T> examples(String... examples) {
+        this.examples = examples;
+        return this;
+    }
+
+    public ClassInfo<T> since(String since) {
+        this.since = since;
+        return this;
+    }
+
+    public ClassInfo<T> requiredPlugins(String... requiredPlugins) {
+        this.requiredPlugins = requiredPlugins;
+        return this;
+    }
+
+    public ClassInfo<T> documentationId(String documentationId) {
+        this.documentationId = documentationId;
+        return this;
+    }
+
+    public @Nullable String getDocName() {
+        return docName;
+    }
+
+    public @Nullable String[] getDescription() {
+        return description == null ? null : description.clone();
+    }
+
+    public @Nullable String[] getUsage() {
+        return usage == null ? null : usage.clone();
+    }
+
+    public @Nullable String[] getExamples() {
+        return examples == null ? null : examples.clone();
+    }
+
+    public @Nullable String getSince() {
+        return since;
+    }
+
+    public @Nullable String[] getRequiredPlugins() {
+        return requiredPlugins == null ? null : requiredPlugins.clone();
+    }
+
+    public @Nullable String getDocumentationID() {
+        return documentationId;
+    }
+
+    public boolean hasDocs() {
+        return docName != null && !NO_DOC.equals(docName);
     }
 
     public void setParser(@Nullable Parser<T> parser) {

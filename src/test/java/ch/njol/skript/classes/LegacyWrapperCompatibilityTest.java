@@ -3,19 +3,23 @@ package ch.njol.skript.classes;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.lang.DefaultExpression;
 import ch.njol.skript.lang.util.common.AnyProvider;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.util.StringMode;
 import java.util.Iterator;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.comparator.Relation;
 import org.skriptlang.skript.lang.converter.ConverterInfo;
 
 @SuppressWarnings("removal")
@@ -94,6 +98,105 @@ class LegacyWrapperCompatibilityTest {
         assertEquals(new LegacyValue(2), values.next());
         assertFalse(values.hasNext());
         assertSame(changer, info.getChanger());
+    }
+
+    @Test
+    void classInfoStoresLegacyDocumentationHooks() {
+        ClassInfo<LegacyValue> info = new ClassInfo<>(LegacyValue.class, "legacyvalue")
+                .name("Legacy value")
+                .description("Primary description", "Secondary description")
+                .usage("legacy value", "legacy values")
+                .examples("set {_x} to legacy value")
+                .since("2.10")
+                .requiredPlugins("ExamplePlugin")
+                .documentationId("legacy-value");
+
+        assertEquals("types.legacyvalue", info.getName().toString());
+        assertTrue(info.hasDocs());
+        assertEquals("Legacy value", info.getDocName());
+        assertArrayEquals(new String[]{"Primary description", "Secondary description"}, info.getDescription());
+        assertArrayEquals(new String[]{"legacy value", "legacy values"}, info.getUsage());
+        assertArrayEquals(new String[]{"set {_x} to legacy value"}, info.getExamples());
+        assertEquals("2.10", info.getSince());
+        assertArrayEquals(new String[]{"ExamplePlugin"}, info.getRequiredPlugins());
+        assertEquals("legacy-value", info.getDocumentationID());
+    }
+
+    @Test
+    void classInfoAutoSuppliesEnumConstantsWhenNoSupplierIsRegistered() {
+        ClassInfo<Direction> info = new ClassInfo<>(Direction.class, "direction");
+
+        Iterator<Direction> values = info.getSupplier().get();
+
+        assertEquals(Direction.NORTH, values.next());
+        assertEquals(Direction.SOUTH_WEST, values.next());
+        assertFalse(values.hasNext());
+    }
+
+    @Test
+    void enumParserUsesNormalizedEnumConstantNames() {
+        EnumParser<Direction> parser = new EnumParser<>(Direction.class, "direction");
+
+        assertEquals(Direction.NORTH, parser.parse("north", ParseContext.DEFAULT));
+        assertEquals(Direction.SOUTH_WEST, parser.parse("south west", ParseContext.DEFAULT));
+        assertEquals(Direction.SOUTH_WEST, parser.parse("direction south west", ParseContext.DEFAULT));
+        assertEquals(Direction.SOUTH_WEST, parser.convert("south_west"));
+        assertEquals("south west", parser.toString(Direction.SOUTH_WEST, 0));
+        assertEquals("south_west", parser.toVariableNameString(Direction.SOUTH_WEST));
+        assertTrue(List.of(parser.getPatterns()).contains("south west"));
+    }
+
+    @Test
+    void enumClassInfoWiresUsageSupplierParserAndComparatorBridge() {
+        DefaultExpression<Direction> defaultDirection = new SimpleLiteral<>(Direction.NORTH, true);
+        EnumClassInfo<Direction> info = new EnumClassInfo<>(
+                Direction.class,
+                "direction",
+                "direction",
+                defaultDirection,
+                true
+        );
+        Classes.registerClass(info);
+
+        Iterator<Direction> values = info.getSupplier().get();
+
+        assertEquals(Direction.NORTH, Classes.parse("north", Direction.class, ParseContext.DEFAULT));
+        assertSame(defaultDirection, info.getDefaultExpression());
+        assertInstanceOf(EnumParser.class, info.getParser());
+        assertNotNull(info.getUsage());
+        assertEquals(1, info.getUsage().length);
+        assertTrue(info.getUsage()[0].contains("north"));
+        assertEquals(Direction.NORTH, values.next());
+        assertEquals(Direction.SOUTH_WEST, values.next());
+        assertFalse(values.hasNext());
+        assertTrue(ch.njol.skript.registrations.Comparators.exactComparatorExists(Direction.class, Direction.class));
+        assertEquals(Relation.SMALLER, ch.njol.skript.registrations.Comparators.compare(Direction.NORTH, Direction.SOUTH_WEST));
+    }
+
+    @Test
+    void comparatorBridgeDelegatesToCurrentComparatorRegistry() {
+        ch.njol.skript.registrations.Comparators.registerComparator(
+                RankedLow.class,
+                RankedHigh.class,
+                (left, right) -> Relation.get(Integer.compare(left.rank(), right.rank()))
+        );
+
+        assertTrue(ch.njol.skript.registrations.Comparators.exactComparatorExists(RankedLow.class, RankedHigh.class));
+        assertTrue(ch.njol.skript.registrations.Comparators.comparatorExists(RankedLow.class, RankedHigh.class));
+        assertEquals(Relation.SMALLER, ch.njol.skript.registrations.Comparators.compare(new RankedLow(1), new RankedHigh(4)));
+        assertNotNull(ch.njol.skript.registrations.Comparators.getComparator(RankedLow.class, RankedHigh.class));
+        assertNotNull(ch.njol.skript.registrations.Comparators.getComparatorInfo(RankedLow.class, RankedHigh.class));
+        assertTrue(ch.njol.skript.registrations.Comparators.getComparators().stream().anyMatch(info ->
+                info.getFirstType() == RankedLow.class && info.getSecondType() == RankedHigh.class
+        ));
+    }
+
+    @Test
+    void serializableCheckerActsAsLegacyPredicateAlias() {
+        SerializableChecker<String> checker = value -> value.length() > 3;
+
+        assertTrue(checker.test("lane"));
+        assertFalse(checker.test("a"));
     }
 
     @Test
@@ -190,6 +293,17 @@ class LegacyWrapperCompatibilityTest {
     }
 
     private record NamedThing() implements AnyProvider {
+    }
+
+    private enum Direction {
+        NORTH,
+        SOUTH_WEST
+    }
+
+    private record RankedLow(int rank) {
+    }
+
+    private record RankedHigh(int rank) {
     }
 
     private static final class LegacyParser extends Parser<LegacyValue> {
