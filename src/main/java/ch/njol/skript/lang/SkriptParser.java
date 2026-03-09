@@ -330,6 +330,12 @@ public class SkriptParser {
             @Nullable String defaultError
     ) {
         String input = expr == null ? "" : expr.trim();
+        if (input.isEmpty()) {
+            if (defaultError != null && !defaultError.isBlank()) {
+                Skript.error(defaultError);
+            }
+            return null;
+        }
         ParsingStack parsingStack = ParserInstance.get().getParsingStack();
         while (iterator.hasNext()) {
             SyntaxElementInfo<? extends E> info = iterator.next();
@@ -403,6 +409,12 @@ public class SkriptParser {
             @Nullable String defaultError
     ) {
         String input = expr == null ? "" : expr.trim();
+        if (input.isEmpty()) {
+            if (defaultError != null && !defaultError.isBlank()) {
+                Skript.error(defaultError);
+            }
+            return null;
+        }
         ParsingStack parsingStack = ParserInstance.get().getParsingStack();
         while (iterator.hasNext()) {
             SyntaxInfo<? extends E> info = iterator.next();
