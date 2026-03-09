@@ -29,6 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
+- `Classes.toString(..., StringMode.VARIABLE_NAME)` now prefixes parser-less fallback values as `object:...` like upstream
+- `SkriptParser.parseStatic(...)` and `parseModern(...)` now reject blank trimmed input before optional patterns can match
+- `DynamicFunctionReference.parseFunction(...)` now drops unresolved `from missing.sk` suffixes before global fallback
+- `Statement.parse(...)`, `ParseLogHandler`, and default severe `LogEntry` quality now preserve a specific retained parse error over the generic `Can't understand this condition/effect: ...` fallback
 - `Classes.clone(...)` now honors classinfo cloners instead of falling back to identity copies
 - `FunctionReference.parse(...)` now unescapes doubled quotes inside quoted string literal arguments
 - ordinary keyed function arguments now preserve their keyed metadata across `Parameter.newInstance(...)`
@@ -44,6 +48,7 @@ Use local upstream sources only. Do not browse.
   - [LegacyWrapperCompatibilityTest.java](../../src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java)
   - [ClassesCompatibilityTest.java](../../src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java)
   - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
+  - [SkriptParserBlankInputCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/parser/SkriptParserBlankInputCompatibilityTest.java)
   - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
   - [FunctionCallCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCallCompatibilityTest.java)
   - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
@@ -62,9 +67,9 @@ These are already closed. Do not reopen without a new reproducer.
 ## Next Targets
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, and invalid-default-diagnostic rules
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification and classinfo-cloner slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, and local dynamic-reference namespace cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback and parser-node-root retention
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, classinfo-cloner, and variable-name fallback slices
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, local dynamic-reference namespace, and missing-source normalization cases
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parser-node-root retention, and specific-error-over-fallback retention slices
 
 ## Parallel Defaults
 
@@ -90,7 +95,7 @@ Lane files under `docs/porting/parallel/` should stay short:
 Latest targeted verification:
 
 ```bash
-./gradlew test --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks
+./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
 ```
 
 Full verification:
