@@ -71,13 +71,14 @@ public final class ParserInstance {
     }
 
     public void setCurrentScript(@Nullable Script currentScript) {
-        if (this.currentScript != currentScript) {
-            this.node = null;
-            this.currentEventName = null;
-            this.currentEventClasses = new Class<?>[0];
-            this.currentSections = new ArrayList<>();
-            this.data.clear();
+        if (this.currentScript == currentScript) {
+            return;
         }
+        this.node = null;
+        this.currentEventName = null;
+        this.currentEventClasses = new Class<?>[0];
+        this.currentSections = new ArrayList<>();
+        this.data.clear();
         this.currentScript = currentScript;
         this.hintManager = new HintManager(currentScript != null);
     }

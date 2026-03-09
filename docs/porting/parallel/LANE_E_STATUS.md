@@ -9,8 +9,8 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one more upstream-backed `ParserInstance` bridge mismatch: `setNode(...)` now drops parentless root nodes instead of retaining them as the current parser node
-- added a focused regression proving root nodes normalize to `null` while child nodes remain addressable
+- fixed one more upstream-backed `ParserInstance` bridge mismatch: `setCurrentScript(...)` now treats reapplying the same script as a no-op instead of recreating parser hint state
+- added a focused regression proving same-script reassignment preserves existing `HintManager` hints
 
 ## Files Changed
 
@@ -21,7 +21,7 @@ Last updated: 2026-03-09
 ## Verification
 
 - `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
-  - confirmed local `setNode(...)` lacked upstream's parentless-root normalization
+  - confirmed upstream returns early when `setCurrentScript(...)` receives the current script, while local still recreated `HintManager`
 - `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks`
   - passed
 

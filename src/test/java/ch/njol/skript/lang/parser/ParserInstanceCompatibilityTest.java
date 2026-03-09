@@ -47,6 +47,20 @@ class ParserInstanceCompatibilityTest {
     }
 
     @Test
+    void setCurrentScriptDoesNothingWhenReapplyingSameScript() {
+        ParserInstance parser = ParserInstance.get();
+        Script script = new Script(null, List.of());
+        parser.setCurrentScript(script);
+        parser.getHintManager().enterScope(false);
+        parser.getHintManager().set("value", Integer.class);
+
+        parser.setCurrentScript(script);
+
+        assertSame(script, parser.getCurrentScript());
+        assertTrue(parser.getHintManager().get("value").contains(Integer.class));
+    }
+
+    @Test
     void setNodeDropsParentlessRootNodesButKeepsChildNodes() {
         ParserInstance parser = ParserInstance.get();
         SectionNode root = new SectionNode("root");
