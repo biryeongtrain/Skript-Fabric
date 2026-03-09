@@ -148,10 +148,7 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- restored missing legacy `ParseContext` variants and made `Classes.parse(...)` respect no-command converter contexts again
-- restored `SkriptParser.validatePattern(...)` compatibility, including plural placeholder normalization and the upstream pipe-outside-group parse error
-- made `FunctionReference.consign(...)` keep primitive arrays as scalar arguments instead of treating them as plural object-array payloads
-- made `ParserInstance` notify registered parser-data bridges when current events are set or cleared
+- restored syntax registration priority ordering in `SyntaxRegistryService`, so lower-priority entries are iterated ahead of later registrations just like upstream
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

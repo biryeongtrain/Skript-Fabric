@@ -29,10 +29,7 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.parse(...)` now respects no-command converter contexts again by restoring the missing legacy `ParseContext` variants
-- `SkriptParser.validatePattern(...)` compatibility is back for plural placeholder normalization and upstream-style pipe-outside-group diagnostics
-- `FunctionReference.consign(...)` now keeps primitive arrays as scalar arguments instead of exploding them like object-array plural slots
-- `ParserInstance` now notifies registered parser-data bridges when current events are set or cleared
+- `SyntaxRegistryService.register(...)` now preserves `SyntaxInfo.priority()` ordering instead of using plain insertion order, so lower-priority syntax entries sort ahead of later registrations like upstream
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
