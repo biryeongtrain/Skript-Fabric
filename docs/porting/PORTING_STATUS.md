@@ -38,7 +38,8 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - worker merges on 2026-03-09 restored exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, tracked-script invalidation for string-resolved local dynamic function references, the `ParserInstance` current-section helper surface, and retained parse-error tie handling
+  - worker merges on 2026-03-09 restored exact classinfo-parser lookup, tagged-branch suffix omitted-default enforcement, tracked-script invalidation for resolved local dynamic function references, and the `ParserInstance` section-slice helper surface
+  - coordinator integration fixed `Classes.parseSimple(...)` by keeping the temporary baseline scalar fallback after registered parsers until upstream `JavaClasses` scalar registrations are ported
 
 ## Priority Shift On 2026-03-08
 

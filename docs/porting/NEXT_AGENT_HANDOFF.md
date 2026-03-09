@@ -30,10 +30,10 @@ Use local upstream sources only. Do not browse.
 ## Latest Closed Slice
 
 - `Classes.getExactParser(...)` now restores the upstream exact classinfo-parser lookup without drifting to subtype or converter-backed fallbacks
+- baseline scalar `Classes.parseSimple(...)` fallback is kept temporarily after registered parsers, because the local port still lacks upstream `JavaClasses` scalar registrations
 - leading auto-tagged parser branches now still enforce omitted required defaults from same-token suffix placeholders
-- string-resolved local `DynamicFunctionReference` instances now keep a tracked `Script` and become invalid after script unload
-- `ParserInstance` now restores the upstream current-section helper surface: `getCurrentSection(...)`, filtered `getCurrentSections(...)`, and `isCurrentSection(...)`
-- `ParseLogHandler.printError(default)` now keeps the first retained highest-quality parse error instead of rescanning to replace it with a later same-quality specific error
+- direct resolved local `DynamicFunctionReference` instances now keep a tracked `Script` and become invalid after script unload
+- `ParserInstance` now restores the upstream section-slice helper surface: `getSectionsUntil(...)`, `getSections(int)`, and `getSections(int, Class<? extends TriggerSection>)`
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs

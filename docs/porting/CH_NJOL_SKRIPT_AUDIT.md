@@ -149,10 +149,10 @@ That means the real gap is behavior, not class presence.
 ## Latest Merged Upstream-Core Batch
 
 - restored upstream `Classes.getExactParser(...)`, so exact parser lookup no longer falls through subtype or converter-backed parser resolution
+- local `Classes.parseSimple(...)` keeps a temporary scalar fallback after registered parsers, because the upstream `JavaClasses` scalar registrations are not ported yet and removing that fallback regressed the verified runtime baseline
 - `PatternCompiler.compileLeadingAutoTaggedGroup(...)` now carries same-token suffix placeholder indices into exact branch activation, so tagged-branch matches still enforce omitted required defaults from their suffix placeholders
-- string-resolved local `DynamicFunctionReference` instances now retain a tracked `Script` through `Functions.registerSignature(...)` and invalidate correctly after script unload
-- restored the upstream `ParserInstance` current-section helper surface: `getCurrentSection(...)`, filtered `getCurrentSections(...)`, and `isCurrentSection(...)`
-- `ParseLogHandler.printError(default)` now keeps the first retained highest-quality parse error instead of rescanning for a later same-quality replacement
+- resolved local `DynamicFunctionReference` instances now retain a tracked `Script` and invalidate correctly after script unload
+- restored the upstream `ParserInstance` section-slice helper surface: `getSectionsUntil(...)`, `getSections(int)`, and `getSections(int, Class<? extends TriggerSection>)`
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
