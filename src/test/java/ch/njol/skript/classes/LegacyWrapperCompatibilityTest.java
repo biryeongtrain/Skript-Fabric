@@ -49,7 +49,8 @@ class LegacyWrapperCompatibilityTest {
         LegacyValue value = new LegacyValue(7);
 
         assertEquals("legacy 7", Classes.toString(value, StringMode.MESSAGE));
-        assertEquals("debug legacy 7", Classes.toString(value, StringMode.DEBUG));
+        assertEquals("[legacyvalue:debug legacy 7]", Classes.toString(value, StringMode.DEBUG));
+        assertEquals("legacy-7", Classes.toString(value, StringMode.VARIABLE_NAME));
         assertEquals("legacy 7 and legacy 8", Classes.toString(new Object[]{value, new LegacyValue(8)}, true));
     }
 

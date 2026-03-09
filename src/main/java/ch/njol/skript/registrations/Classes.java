@@ -176,7 +176,7 @@ public final class Classes {
         for (ClassInfo<?> info : getSortedClassInfos()) {
             ClassInfo.Parser<?> parser = info.getParser();
             if (parser instanceof ch.njol.skript.classes.Parser<?> legacyParser && info.getC().isInstance(value)) {
-                return legacyToString(legacyParser, value, mode);
+                return legacyToString(info, legacyParser, value, mode);
             }
         }
         return value.toString();
@@ -209,8 +209,17 @@ public final class Classes {
     }
 
     @SuppressWarnings("unchecked")
-    private static String legacyToString(ch.njol.skript.classes.Parser<?> parser, Object value, StringMode mode) {
-        return ((ch.njol.skript.classes.Parser<Object>) parser).toString(value, mode);
+    private static String legacyToString(
+            ClassInfo<?> info,
+            ch.njol.skript.classes.Parser<?> parser,
+            Object value,
+            StringMode mode
+    ) {
+        String text = ((ch.njol.skript.classes.Parser<Object>) parser).toString(value, mode);
+        if (mode == StringMode.DEBUG) {
+            return "[" + info.getCodeName() + ":" + text + "]";
+        }
+        return text;
     }
 
     public static @Nullable List<ClassInfo<?>> getPatternInfos(String text) {
