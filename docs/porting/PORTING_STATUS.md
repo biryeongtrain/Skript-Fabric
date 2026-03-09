@@ -152,6 +152,7 @@ Landed slices so far:
   - `ScriptLoader.loadItems(...)` now clears stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line, so successful fallback does not replay an error from the failed section path
   - statement fallback now forces `EffectSection` parsing through statement mode when section-mode init rejects the body, preserving upstream effect-section fallback behavior
   - omitted placeholders now consume only exact classinfo defaults instead of broader superclass defaults
+  - omitted placeholder default lookup now ignores placeholders on inactive alternation branches instead of forcing defaults or parse failure for expressions that were never selected
   - `Classes.toString(...)` now uses registered legacy parser stringification for scalar and array values instead of falling back straight to raw `Object.toString()`
   - `Classes.clone(...)` now respects registered classinfo cloners instead of returning the original object when no array clone path applies
   - retained parse-failure selection now keeps earlier semantic parse errors over later lower-quality `NOT_AN_EXPRESSION` statement failures again
