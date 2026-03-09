@@ -33,7 +33,9 @@ Use local upstream sources only. Do not browse.
 - `ScriptLoader.loadItems(...)` now drops stale section `SEVERE` diagnostics when a later statement fallback succeeds on the same section line
 - omitted placeholders now require an exact classinfo default instead of consuming a broader superclass default
 - `TriggerItem.walk(...)` now catches `StackOverflowError` and returns `false`
+- `Classes.toString(...)` now routes legacy parser-backed values through parser stringification instead of raw `Object.toString()`
 - targeted regressions added:
+  - [LegacyWrapperCompatibilityTest.java](../../src/test/java/ch/njol/skript/classes/LegacyWrapperCompatibilityTest.java)
   - [ScriptLoaderCompatibilityTest.java](../../src/test/java/ch/njol/skript/ScriptLoaderCompatibilityTest.java)
   - [SkriptParserRegistryTest.java](../../src/test/java/ch/njol/skript/lang/SkriptParserRegistryTest.java)
   - [FunctionCoreCompatibilityTest.java](../../src/test/java/ch/njol/skript/lang/function/FunctionCoreCompatibilityTest.java)
@@ -52,7 +54,7 @@ These are already closed. Do not reopen without a new reproducer.
 ## Next Targets
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default rule
-2. broader classinfo/parser registry parity
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification slice
 3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot and direct-null-slot cases
 4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears
 
