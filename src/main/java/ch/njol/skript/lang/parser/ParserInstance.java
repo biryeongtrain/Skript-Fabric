@@ -87,7 +87,7 @@ public final class ParserInstance {
     }
 
     public void setNode(@Nullable Node node) {
-        this.node = node;
+        this.node = node == null || node.getParent() == null ? null : node;
     }
 
     public void setCurrentEvent(String eventName, Class<?>... eventClasses) {

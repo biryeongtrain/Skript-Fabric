@@ -2,8 +2,11 @@ package ch.njol.skript.lang.parser;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.InputSource;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -41,6 +44,20 @@ class ParserInstanceCompatibilityTest {
         parser.setCurrentScript(null);
 
         assertNull(parser.getData(InputSource.InputData.class).getSource());
+    }
+
+    @Test
+    void setNodeDropsParentlessRootNodesButKeepsChildNodes() {
+        ParserInstance parser = ParserInstance.get();
+        SectionNode root = new SectionNode("root");
+        SimpleNode child = new SimpleNode("child");
+        root.add(child);
+
+        parser.setNode(root);
+        assertNull(parser.getNode());
+
+        parser.setNode(child);
+        assertSame(child, parser.getNode());
     }
 
     private static class BaseEvent {

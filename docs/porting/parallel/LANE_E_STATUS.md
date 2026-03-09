@@ -9,9 +9,8 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed `ParserInstance` bridge mismatch: switching or clearing the current script now clears transient parser state and parser-scoped data, so stale `InputSource.InputData` does not leak across loads
-- kept the slice inside lane-owned bridge state only; did not pull in upstream's broader parser lifecycle, structure, or logging APIs
-- added a focused regression proving an active parser's input-source data is dropped when the current script is deactivated
+- fixed one more upstream-backed `ParserInstance` bridge mismatch: `setNode(...)` now drops parentless root nodes instead of retaining them as the current parser node
+- added a focused regression proving root nodes normalize to `null` while child nodes remain addressable
 
 ## Files Changed
 
@@ -22,13 +21,13 @@ Last updated: 2026-03-09
 ## Verification
 
 - `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
-  - confirmed the local parser bridge lacked upstream-style transient-state reset around script lifecycle changes
-- `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --rerun-tasks`
+  - confirmed local `setNode(...)` lacked upstream's parentless-root normalization
+- `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- remaining scoped deltas are either larger parser-lifecycle imports or already-covered bridge gaps; avoid widening this slice unless a new self-contained reproducer stays inside `InputSource`, `ParserInstance`, `ExprInput`, or trigger bridge ownership
+- remaining scoped deltas are either larger parser-lifecycle imports or less isolated variable/input bridge questions; avoid widening this slice unless a new self-contained reproducer stays inside `InputSource`, `ParserInstance`, variables, or trigger bridge ownership
 
 ## Merge Notes
 
