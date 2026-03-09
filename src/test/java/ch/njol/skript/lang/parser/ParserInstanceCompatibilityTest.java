@@ -2,6 +2,7 @@ package ch.njol.skript.lang.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -148,6 +149,35 @@ class ParserInstanceCompatibilityTest {
         assertFalse(parser.isCurrentSection(UnusedSection.class));
         assertEquals(List.of(outer, middle, inner), parser.getCurrentSections(TriggerSection.class));
         assertEquals(List.of(middle, inner), parser.getCurrentSections(MiddleSection.class));
+    }
+
+    @Test
+    void sectionSliceHelpersFollowUpstreamInclusiveDepthRules() {
+        ParserInstance parser = new ParserInstance();
+        OuterSection outer = new OuterSection();
+        MiddleSection middle = new MiddleSection();
+        InnerSection inner = new InnerSection();
+        parser.setCurrentSections(List.of(outer, middle, inner));
+
+        assertEquals(List.of(middle, inner), parser.getSectionsUntil(outer));
+        assertEquals(List.of(inner), parser.getSectionsUntil(middle));
+        assertEquals(List.of(middle, inner), parser.getSections(2));
+        assertEquals(List.of(inner), parser.getSections(1, MiddleSection.class));
+        assertEquals(List.of(outer, middle, inner), parser.getSections(2, OuterSection.class));
+    }
+
+    @Test
+    void sectionSliceHelpersRejectNonPositiveDepthAndReturnEmptyWhenNoMatchExists() {
+        ParserInstance parser = new ParserInstance();
+        OuterSection outer = new OuterSection();
+        MiddleSection middle = new MiddleSection();
+        InnerSection inner = new InnerSection();
+        parser.setCurrentSections(List.of(outer, middle, inner));
+
+        assertThrows(IllegalArgumentException.class, () -> parser.getSections(0));
+        assertThrows(IllegalArgumentException.class, () -> parser.getSections(0, MiddleSection.class));
+        assertEquals(List.of(), parser.getSections(1, UnusedSection.class));
+        assertEquals(List.of(), parser.getSectionsUntil(inner));
     }
 
     private static class BaseEvent {

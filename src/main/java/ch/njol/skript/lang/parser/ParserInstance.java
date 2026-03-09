@@ -192,6 +192,33 @@ public final class ParserInstance {
         return sections;
     }
 
+    public List<TriggerSection> getSectionsUntil(TriggerSection section) {
+        int index = currentSections.indexOf(section);
+        if (index < 0 || index + 1 >= currentSections.size()) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(currentSections.subList(index + 1, currentSections.size()));
+    }
+
+    public List<TriggerSection> getSections(int levels) {
+        if (levels < 1) {
+            throw new IllegalArgumentException("Depth must be at least 1");
+        }
+        return new ArrayList<>(currentSections.subList(Math.max(currentSections.size() - levels, 0), currentSections.size()));
+    }
+
+    public List<TriggerSection> getSections(int levels, Class<? extends TriggerSection> type) {
+        if (levels < 1) {
+            throw new IllegalArgumentException("Depth must be at least 1");
+        }
+        List<? extends TriggerSection> sections = getCurrentSections(type);
+        if (sections.isEmpty()) {
+            return new ArrayList<>();
+        }
+        TriggerSection section = sections.get(Math.max(sections.size() - levels, 0));
+        return new ArrayList<>(currentSections.subList(currentSections.indexOf(section), currentSections.size()));
+    }
+
     public boolean isCurrentSection(Class<? extends TriggerSection> sectionClass) {
         for (TriggerSection triggerSection : currentSections) {
             if (sectionClass.isInstance(triggerSection)) {
