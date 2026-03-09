@@ -148,12 +148,10 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- formatted object-typed arrays through `Classes.toString((Object) array, ...)` like upstream instead of emitting Java identity text
-- kept mixed omitted-placeholder default diagnostics in `SkriptParser`, including the `NOT_FOUND` classinfo failure path
-- rejected blank default parameter expressions in `Parameter.newInstance(...)`
-- normalized parentless parser root nodes to `null` in `ParserInstance.setNode(...)` while keeping child-node tracking intact
-- dropped stale section warnings when `ScriptLoader.loadItems(...)` succeeds through statement fallback after section parse failure
-- aligned registry coverage with the normalized parentless-root behavior during coordinator integration
+- accepted empty option values in `StructOptions`, so `options:` lines like `blank:` and nested empty entries now load instead of being rejected as invalid
+- restored lazy first-call execution for unresolved global `FunctionReference` instances by validating them as first-use calls during `execute(...)`
+- treated same-script `ParserInstance.setCurrentScript(...)` assignments as no-ops, preserving existing `HintManager` state
+- restored generic loader diagnostics for whitespace-only simple nodes instead of silently skipping them before statement parsing
 - merged verification on 2026-03-09:
   - `./gradlew build --rerun-tasks`
 - current verified Fabric runtime baseline after that merge: `230 / 230`

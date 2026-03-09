@@ -29,11 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- `Classes.toString((Object) array, ...)` now formats object arrays like upstream instead of falling through to Java identity text
-- mixed omitted-placeholder defaults now retain invalid-default diagnostics instead of dropping the `NOT_FOUND` classinfo failure path
-- `Parameter.newInstance(...)` now rejects blank default expressions instead of treating whitespace as "no default"
-- `ParserInstance.setNode(...)` now drops parentless root nodes while still keeping child-node tracking, and registry coverage now matches that normalization
-- `ScriptLoader.loadItems(...)` now drops stale section warnings when section parse fails but statement fallback succeeds on the same line
+- `StructOptions` now accepts empty option values like upstream, so `blank:` and nested empty option entries both load through the validator path
+- unresolved global `FunctionReference.execute(...)` calls now lazily bind fresh global references instead of failing through the reload-only validation path
+- `ParserInstance.setCurrentScript(...)` now treats reapplying the same script as a no-op, preserving existing parse-time hint state
+- whitespace-only simple nodes now flow through loader/statement diagnostics and emit the generic upstream-style parse error instead of being silently ignored
 - verification: `./gradlew build --rerun-tasks`
 
 ## Recent Closed Prereqs
@@ -50,9 +49,9 @@ These are already closed. Do not reopen without a new reproducer.
 ## Next Targets
 
 1. broader parser default-value and placeholder-omission parity beyond the now-closed exact classinfo-default, inactive-choice-placeholder, invalid-default-diagnostic, and mixed-default-diagnostic rules
-2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, classinfo-cloner, variable-name fallback, and renamed-node map-sync slices
-3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, blank-default rejection, local dynamic-reference namespace, missing-source normalization, and split-exact-overload ambiguity cases
-4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, stale-section-warning drop, specific-error-over-fallback retention, and semantic fallback-quality slices
+2. broader classinfo/parser registry parity beyond the now-closed legacy parser stringification, object-array stringification, empty-option-value handling, classinfo-cloner, variable-name fallback, and renamed-node map-sync slices
+3. deeper function runtime/default-parameter semantics beyond the now-closed explicit-empty-slot, direct-null-slot, keyed-metadata, keyed-default plural compatibility, doubled-quote literal, blank-default rejection, lazy global-reference execution, local dynamic-reference namespace, missing-source normalization, and split-exact-overload ambiguity cases
+4. `Statement` / `ScriptLoader` only if a new concrete reproducer appears beyond the now-closed effect-section statement-mode fallback, parentless-root node normalization, whitespace-only-line diagnostics, stale-section-warning drop, specific-error-over-fallback retention, and semantic fallback-quality slices
 
 ## Parallel Defaults
 

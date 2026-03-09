@@ -38,7 +38,7 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest `lang-core` batch:
-  - object-array stringification, mixed omitted-default diagnostics, blank default-parameter rejection, parentless parser-root normalization, and stale section-warning cleanup all landed through worker merges on 2026-03-09
+  - empty option-value handling, lazy global-function binding, same-script parser-hint preservation, and whitespace-only loader diagnostics all landed through worker merges on 2026-03-09
 
 ## Priority Shift On 2026-03-08
 
