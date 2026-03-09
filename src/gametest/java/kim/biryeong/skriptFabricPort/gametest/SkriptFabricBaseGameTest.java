@@ -1318,7 +1318,11 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
                 Kleenean isDelayed,
                 SkriptParser.ParseResult parseResult
         ) {
-            Skript.error("lower-quality gametest statement rejected");
+            SkriptLogger.log(new LogEntry(
+                    Level.SEVERE,
+                    ErrorQuality.GENERIC,
+                    "lower-quality gametest statement rejected"
+            ));
             return false;
         }
 
