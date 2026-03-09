@@ -9,25 +9,28 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- landed a follow-up collection/arithmetic expression bundle on top of the earlier shared base helpers
-- restored `ExprAnyOf`, `ExprDifference`, `ExprExcept`, `ExprReversedList`, and `ExprShuffledList`
-- expanded `ExpressionTextCollectionCompatibilityTest` to cover single-item narrowing, exclusion, reverse keyed iteration, shuffle keyed iteration, and arithmetic difference lookup
+- landed the next low-dependency string/value bundle on top of the shared expression helpers
+- restored `ExprJoinSplit`, `ExprIndicesOfValue`, `ExprDefaultValue`, and `CondAlphanumeric`
+- expanded `ExpressionTextCollectionCompatibilityTest` to cover join/split behavior, default-value fallback, string/list position lookup, and keyed index lookup
+- expanded `ConditionBundleCompatibilityTest` to cover positive and negated alphanumeric checks
 
 ## Verification
 
 - `./gradlew test --tests ch.njol.skript.expressions.ExpressionTextCollectionCompatibilityTest --rerun-tasks`
   - passed
+- `./gradlew test --tests ch.njol.skript.expressions.ExpressionTextCollectionCompatibilityTest --tests ch.njol.skript.conditions.ConditionBundleCompatibilityTest --rerun-tasks`
+  - passed
 
 ## Next Lead
 
-- next importable Lane E bundle is the next low-dependency `expressions` / `conditions` cluster that rides on the shared base helpers without crossing into Lane F runtime/event ownership; arithmetic-heavy imports now look more reachable but still need careful registry overlap review
+- next importable Lane E bundle is the remaining low-dependency collection/string/value cluster that still avoids new runtime ownership crossings; `CondContains` still looks worse than adjacent expression imports because it drags aliases/inventory/container surface back into scope
 
 ## Merge Notes
 
 - likely conflicts:
-  - `src/main/java/ch/njol/skript/expressions/ExprAnyOf.java`
-  - `src/main/java/ch/njol/skript/expressions/ExprDifference.java`
-  - `src/main/java/ch/njol/skript/expressions/ExprExcept.java`
-  - `src/main/java/ch/njol/skript/expressions/ExprReversedList.java`
-  - `src/main/java/ch/njol/skript/expressions/ExprShuffledList.java`
+  - `src/main/java/ch/njol/skript/conditions/CondAlphanumeric.java`
+  - `src/main/java/ch/njol/skript/expressions/ExprDefaultValue.java`
+  - `src/main/java/ch/njol/skript/expressions/ExprIndicesOfValue.java`
+  - `src/main/java/ch/njol/skript/expressions/ExprJoinSplit.java`
   - `src/test/java/ch/njol/skript/expressions/ExpressionTextCollectionCompatibilityTest.java`
+  - `src/test/java/ch/njol/skript/conditions/ConditionBundleCompatibilityTest.java`

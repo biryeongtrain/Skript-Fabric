@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.lang.script.Script;
+import org.skriptlang.skript.lang.structure.Structure;
+import org.skriptlang.skript.lang.entry.EntryContainer;
 
 class ParserInstanceCompatibilityTest {
 
@@ -82,6 +84,7 @@ class ParserInstanceCompatibilityTest {
         root.add(child);
 
         parser.setCurrentScript(script);
+        parser.setCurrentStructure(new DummyStructure("dummy"));
         parser.setNode(child);
         parser.setCurrentEvent("sub", SubEvent.class);
         parser.setCurrentSections(List.of(new OuterSection(), new InnerSection()));
@@ -93,6 +96,7 @@ class ParserInstanceCompatibilityTest {
         parser.reset();
 
         assertSame(script, parser.getCurrentScript());
+        assertNull(parser.getCurrentStructure());
         assertNull(parser.getNode());
         assertNull(parser.getCurrentEventName());
         assertEquals(0, parser.getCurrentEventClasses().length);
@@ -108,11 +112,13 @@ class ParserInstanceCompatibilityTest {
         Script script = new Script(new Config("active", "active.sk", new File("active.sk")), List.of());
 
         parser.setCurrentEvent("sub", SubEvent.class);
+        parser.setCurrentStructure(new DummyStructure("active"));
         parser.setCurrentSections(List.of(new OuterSection()));
         parser.setHasDelayBefore(Kleenean.TRUE);
         parser.setActive(script);
 
         assertSame(script, parser.getCurrentScript());
+        assertNull(parser.getCurrentStructure());
         assertNull(parser.getCurrentEventName());
         assertEquals(List.of(), parser.getCurrentSections());
         assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
@@ -122,10 +128,28 @@ class ParserInstanceCompatibilityTest {
         parser.setInactive();
 
         assertNull(parser.getCurrentScript());
+        assertNull(parser.getCurrentStructure());
         assertNull(parser.getCurrentEventName());
         assertEquals(0, parser.getCurrentEventClasses().length);
         assertEquals(List.of(), parser.getCurrentSections());
         assertSame(Kleenean.FALSE, parser.getHasDelayBefore());
+    }
+
+    @Test
+    void currentStructureBridgeStoresAndClearsAcrossScriptTransitions() {
+        ParserInstance parser = new ParserInstance();
+        DummyStructure structure = new DummyStructure("structure");
+        Script script = new Script(new Config("structure", "structure.sk", new File("structure.sk")), List.of());
+
+        parser.setCurrentStructure(structure);
+        assertSame(structure, parser.getCurrentStructure());
+
+        parser.setCurrentScript(script);
+        assertNull(parser.getCurrentStructure());
+
+        parser.setCurrentStructure(structure);
+        parser.setCurrentScript(null);
+        assertNull(parser.getCurrentStructure());
     }
 
     @Test
@@ -365,5 +389,31 @@ class ParserInstanceCompatibilityTest {
     }
 
     private static final class UnusedSection extends BaseSection {
+    }
+
+    private static final class DummyStructure extends Structure {
+
+        private final String name;
+
+        private DummyStructure(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean init(ch.njol.skript.lang.Literal<?>[] args, int matchedPattern,
+                            ch.njol.skript.lang.SkriptParser.ParseResult parseResult,
+                            @Nullable EntryContainer entryContainer) {
+            return true;
+        }
+
+        @Override
+        public boolean load() {
+            return true;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return name;
+        }
     }
 }

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ExpressionList;
+import ch.njol.skript.lang.KeyProviderExpression;
 import ch.njol.skript.lang.KeyedIterableExpression;
 import ch.njol.skript.lang.KeyedValue;
 import ch.njol.skript.lang.SkriptParser;
@@ -157,6 +158,74 @@ class ExpressionTextCollectionCompatibilityTest {
     }
 
     @Test
+    void joinSplitDefaultValueAndIndicesMatchLegacyBehaviors() {
+        ExprJoinSplit join = new ExprJoinSplit();
+        join.init(new Expression[]{
+                new SimpleLiteral<>(new String[]{"alpha", "beta", "gamma"}, String.class, true),
+                new SimpleLiteral<>(" | ", false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"alpha | beta | gamma"}, join.getArray(SkriptEvent.EMPTY));
+
+        ExprJoinSplit split = new ExprJoinSplit();
+        split.init(new Expression[]{
+                new SimpleLiteral<>("Alpha--beta--", false),
+                new SimpleLiteral<>("--", false)
+        }, 1, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"Alpha", "beta", ""}, split.getArray(SkriptEvent.EMPTY));
+
+        ExprJoinSplit caseInsensitiveSplit = new ExprJoinSplit();
+        caseInsensitiveSplit.init(new Expression[]{
+                new SimpleLiteral<>("oneXtwoxtHree", false),
+                new SimpleLiteral<>("x", false)
+        }, 1, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"one", "two", "tHree"}, caseInsensitiveSplit.getArray(SkriptEvent.EMPTY));
+
+        ExprJoinSplit regexSplit = new ExprJoinSplit();
+        SkriptParser.ParseResult regexParse = parseResult("");
+        regexParse.tags.add("trailing");
+        regexSplit.init(new Expression[]{
+                new SimpleLiteral<>("1,  2,3,", false),
+                new SimpleLiteral<>(",\\s*", false)
+        }, 3, Kleenean.FALSE, regexParse);
+        assertArrayEquals(new String[]{"1", "2", "3"}, regexSplit.getArray(SkriptEvent.EMPTY));
+
+        ExprDefaultValue defaultValue = new ExprDefaultValue();
+        defaultValue.init(new Expression[]{
+                new SimpleLiteral<>(new Object[0], Object.class, true),
+                new SimpleLiteral<>("fallback", false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals("fallback", defaultValue.getSingle(SkriptEvent.EMPTY));
+        assertEquals(Object.class, defaultValue.getReturnType());
+
+        ExprIndicesOfValue firstStringPosition = new ExprIndicesOfValue();
+        SkriptParser.ParseResult firstParse = parseResult("");
+        firstParse.mark = 1;
+        firstStringPosition.init(new Expression[]{
+                new SimpleLiteral<>("abc", false),
+                new SimpleLiteral<>("abcabcABC", false)
+        }, 0, Kleenean.FALSE, firstParse);
+        assertArrayEquals(new Long[]{1L}, firstStringPosition.getArray(SkriptEvent.EMPTY));
+
+        ExprIndicesOfValue allListPositions = new ExprIndicesOfValue();
+        SkriptParser.ParseResult allPositionsParse = parseResult("");
+        allPositionsParse.mark = 3;
+        allListPositions.init(new Expression[]{
+                new SimpleLiteral<>("beta", false),
+                new SimpleLiteral<>(new String[]{"alpha", "beta", "gamma", "beta"}, String.class, true)
+        }, 1, Kleenean.FALSE, allPositionsParse);
+        assertArrayEquals(new Long[]{2L, 4L}, allListPositions.getArray(SkriptEvent.EMPTY));
+
+        ExprIndicesOfValue keyedIndices = new ExprIndicesOfValue();
+        SkriptParser.ParseResult keyedIndicesParse = parseResult("");
+        keyedIndicesParse.mark = 3;
+        keyedIndices.init(new Expression[]{
+                new SimpleLiteral<>(100, false),
+                new KeyedProviderExpression(new Object[]{100, "skip", 100}, new String[]{"first", "second", "third"})
+        }, 2, Kleenean.FALSE, keyedIndicesParse);
+        assertArrayEquals(new String[]{"first", "third"}, keyedIndices.getArray(SkriptEvent.EMPTY));
+    }
+
+    @Test
     void randomUuidProducesSingleValueAndWhetherParsesConditionBodies() {
         ExprRandomUUID randomUuid = new ExprRandomUUID();
         randomUuid.init(new Expression[0], 0, Kleenean.FALSE, parseResult(""));
@@ -260,6 +329,32 @@ class ExpressionTextCollectionCompatibilityTest {
         @Override
         public boolean isSingle() {
             return false;
+        }
+    }
+
+    private static final class KeyedProviderExpression extends SimpleExpression<Object> implements KeyProviderExpression<Object> {
+
+        private final Object[] values;
+        private final String[] keys;
+
+        private KeyedProviderExpression(Object[] values, String[] keys) {
+            this.values = values;
+            this.keys = keys;
+        }
+
+        @Override
+        protected Object @Nullable [] get(SkriptEvent event) {
+            return values.clone();
+        }
+
+        @Override
+        public String[] getArrayKeys(SkriptEvent event) {
+            return keys.clone();
+        }
+
+        @Override
+        public Class<? extends Object> getReturnType() {
+            return Object.class;
         }
     }
 

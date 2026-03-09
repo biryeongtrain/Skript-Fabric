@@ -33,4 +33,8 @@ public final class LogEntry {
     public String getMessage() {
         return message;
     }
+
+    public String toFormattedString() {
+        return message;
+    }
 }

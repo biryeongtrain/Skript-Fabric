@@ -4,14 +4,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.parser.ParserInstance;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.lang.script.Script;
+import ch.njol.skript.test.runner.EvtTestCase;
+import ch.njol.skript.test.runner.TestTracker;
 
 class LogHandlerCompatibilityTest {
 
@@ -179,6 +186,53 @@ class LogHandlerCompatibilityTest {
     }
 
     @Test
+    void redirectingLogHandlerSendsPrefixedMessagesAndIgnoresSelectedRecipient() {
+        List<String> firstMessages = new CopyOnWriteArrayList<>();
+        List<String> secondMessages = new CopyOnWriteArrayList<>();
+        Object first = messageRecipient(firstMessages);
+        Object second = messageRecipient(secondMessages);
+        RedirectingLogHandler handler = new RedirectingLogHandler(List.of(first, second), "[prefix] ");
+
+        assertEquals(LogHandler.LogResult.DO_NOT_LOG, handler.log(new LogEntry(Level.WARNING, "warn"), second));
+        assertEquals(0, secondMessages.size());
+        assertEquals(List.of("[prefix] warn"), firstMessages);
+
+        handler.log(new LogEntry(Level.SEVERE, "boom"));
+
+        assertEquals(List.of("[prefix] boom"), secondMessages);
+        assertEquals(1, handler.numErrors());
+    }
+
+    @Test
+    void testingLogHandlerCountsMessagesAndReportsThroughOptionalTrackerHooks() {
+        ParserInstance parser = new ParserInstance();
+        Script script = new Script(null, List.of());
+        SectionNode root = new SectionNode("root");
+        SimpleNode child = new SimpleNode("child");
+        root.add(child);
+        TestTracker.reset();
+
+        ParserInstance.withInstance(parser, () -> {
+            parser.setCurrentScript(script);
+            parser.setCurrentStructure(new EvtTestCase("example test"));
+            parser.setNode(child);
+            try (TestingLogHandler handler = new TestingLogHandler(Level.WARNING).start()) {
+                assertEquals(LogHandler.LogResult.LOG, handler.log(new LogEntry(Level.INFO, "ignored")));
+                assertEquals(LogHandler.LogResult.LOG, handler.log(new LogEntry(Level.SEVERE, "failed")));
+                assertEquals(1, handler.getCount());
+            }
+            return null;
+        });
+
+        assertEquals("example test", TestTracker.lastParsingStarted());
+        assertEquals(1, TestTracker.failures().size());
+        TestTracker.Failure failure = TestTracker.failures().get(0);
+        assertEquals("failed", failure.message());
+        assertSame(script, failure.script());
+        assertEquals(child.getLine(), failure.line());
+    }
+
+    @Test
     void verbosityBridgeMatchesUpstreamThresholdOrdering() {
         SkriptLogger.setVerbosity(Verbosity.HIGH);
 
@@ -208,5 +262,48 @@ class LogHandlerCompatibilityTest {
             assertEquals(child, SkriptLogger.getNode());
             return null;
         });
+    }
+
+    private Object messageRecipient(List<String> messages) {
+        return Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[]{MessageRecipient.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("sendMessage") && args != null && args.length > 0) {
+                        messages.add(String.valueOf(args[0]));
+                        return null;
+                    }
+                    Class<?> returnType = method.getReturnType();
+                    if (returnType == boolean.class) {
+                        return false;
+                    }
+                    if (returnType == byte.class) {
+                        return (byte) 0;
+                    }
+                    if (returnType == short.class) {
+                        return (short) 0;
+                    }
+                    if (returnType == int.class) {
+                        return 0;
+                    }
+                    if (returnType == long.class) {
+                        return 0L;
+                    }
+                    if (returnType == float.class) {
+                        return 0F;
+                    }
+                    if (returnType == double.class) {
+                        return 0D;
+                    }
+                    if (returnType == char.class) {
+                        return '\0';
+                    }
+                    return null;
+                }
+        );
+    }
+
+    interface MessageRecipient {
+        void sendMessage(String message);
     }
 }

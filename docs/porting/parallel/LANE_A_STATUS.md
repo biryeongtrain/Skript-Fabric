@@ -8,27 +8,27 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- restored an upstream-backed registration bundle on top of the earlier enum/doc helper surface
-- added `ch/njol/skript/registrations/EventConverter` and `EventValues` against the local event abstraction
-- expanded `Feature` into the real experiment-backed compatibility enum and added the owned `registrations/experiments` interfaces `QueueExperimentSyntax` and `ReflectionExperimentSyntax`
-- added focused coverage in `EventValuesCompatibilityTest` for exact lookup, conversion-backed lookup, exclude handling, and feature registration wiring
+- added a Fabric-backed registry compatibility shim under `ch/njol/skript/classes/registry`
+- restored `RegistryParser` on top of `net.minecraft.core.Registry`, `Language`, and `MinecraftRegistryLookup`
+- restored `RegistryClassInfo` with supplier/parser/default-expression/comparator wiring that stays inside the current local class-registry abstraction
+- added a lightweight `RegistrySerializer` id round-trip helper without pulling in `ch.njol.yggdrasil/**`
+- added focused coverage in `RegistryCompatibilityTest` for localized lookup, namespaced-id lookup, comparator wiring, and serializer round-trips against built-in item registry entries
 
 ## Verification
 
-- `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.registrations.EventValuesCompatibilityTest --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.classes.registry.RegistryCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- Lane A safe imports are now mostly blocked on non-owned dependencies:
-  - `Serializer`, `EnumSerializer`, `YggdrasilSerializer`, and `ConfigurationSerializer` need `ch.njol.yggdrasil/**`
-  - `classes/data/**` is a larger bootstrap bundle that pulls in non-owned runtime and registration dependencies
-- next safe Lane A follow-up is whichever remaining `classes` or `registrations` bundle can stay on the local event/runtime abstractions without reopening Bukkit-only registry surface
+- Lane A now has the registry class-info surface, but the remaining serializer classes are still blocked on non-owned `ch.njol.yggdrasil/**`
+- `classes/data/**` remains a larger bootstrap bundle that pulls in non-owned runtime and registration dependencies
+- next safe Lane A follow-up is a self-contained `classes`/`registrations` helper import that consumes the new registry shim without requiring the old serializer stack
 
 ## Merge Notes
 
 - likely conflict files:
-  - `src/main/java/ch/njol/skript/registrations/Feature.java`
-  - `src/main/java/ch/njol/skript/registrations/EventValues.java`
-  - `src/main/java/ch/njol/skript/registrations/EventConverter.java`
-  - `src/test/java/ch/njol/skript/registrations/EventValuesCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/classes/registry/RegistryClassInfo.java`
+  - `src/main/java/ch/njol/skript/classes/registry/RegistryParser.java`
+  - `src/main/java/ch/njol/skript/classes/registry/RegistrySerializer.java`
+  - `src/test/java/ch/njol/skript/classes/registry/RegistryCompatibilityTest.java`

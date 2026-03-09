@@ -38,9 +38,9 @@ Last updated: 2026-03-09
   - build path executed `runGameTest` successfully on 2026-03-09
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged Lane A, B, D, E, and F results on 2026-03-09, while Lane C stayed out because its targeted structure slice did not verify cleanly
-  - the merged batch restored `registrations` event-value compatibility, lightweight `config` / `util` / `localization` helpers, function-loading hints, collection-difference expressions, and a larger exact-entity data bundle
-  - the raw `ch/njol/skript` local snapshot moved to `276 / 1189`, reducing the measured shortfall to `913`
+  - coordinator merged all six lane results on 2026-03-09
+  - the merged batch restored Fabric-backed registry class shims, time/classinfo util helpers, the previously blocked `StructEvent` / `StructExample` slice, redirecting/testing log handlers plus the parser current-structure bridge, the next string/value expression bundle, and the remaining entity leaf bundle plus a small entity-state effect slice
+  - the raw `ch/njol/skript` local snapshot moved to `305 / 1189`, reducing the measured shortfall to `884`
 
 ## Priority Shift On 2026-03-08
 
@@ -62,8 +62,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `276` Java files
-- net missing local surface relative to that snapshot: `913` Java files
+- local `src/main/java/ch/njol/skript`: `305` Java files
+- net missing local surface relative to that snapshot: `884` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -79,22 +79,22 @@ Top-level upstream packages missing locally entirely:
 Key local package counts versus upstream:
 
 - `lang`: local `85`, upstream `85`
-- `expressions`: local `20`, upstream `391`
-- `conditions`: local `6`, upstream `135`
-- `classes`: local `11`, upstream `28`
-- `util`: local `18`, upstream `57`
+- `expressions`: local `23`, upstream `391`
+- `conditions`: local `7`, upstream `135`
+- `classes`: local `14`, upstream `28`
+- `util`: local `23`, upstream `57`
 - `variables`: local `6`, upstream `11`
 - `config`: local `20`, upstream `20`
 - `registrations`: local `10`, upstream `10`
 - `patterns`: local `14`, upstream `14`
-- `log`: local `14`, upstream `17`
+- `log`: local `16`, upstream `17`
 - `sections`: local `2`, upstream `10`
-- `structures`: local `3`, upstream `10`
+- `structures`: local `5`, upstream `10`
 - `localization`: local `11`, upstream `11`
 - `literals`: local `14`, upstream `16`
-- `effects`: local `7`, upstream `123`
+- `effects`: local `10`, upstream `123`
 - `events`: local `4`, upstream `53`
-- `entity`: local `27`, upstream `34`
+- `entity`: local `37`, upstream `34`
 
 ## Why `lang` Goes First
 

@@ -17,7 +17,7 @@ Last updated: 2026-03-09
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `276 / 1189`, shortfall `913`
+- upstream `ch/njol/skript` snapshot: local `305 / 1189`, shortfall `884`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,9 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head merges Lane A, B, D, E, and F follow-up bundles on top of the existing `lang-core` baseline
+- current verified head merges Lane A through F follow-up bundles on top of the existing `lang-core` baseline
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest bundle batch restored `registrations` event-value helpers, lightweight `config` / `util` / `localization` scaffolding, function-loading hints, collection-difference expressions, and a broader exact-entity data bundle
+- the latest bundle batch restored registry class shims, time/classinfo util helpers, the previously blocked `StructEvent` / `StructExample` slice, redirecting/testing log handlers plus parser current-structure state, the next string/value expression bundle, and the remaining entity leaf bundle plus a small entity-state effect slice
 
 ## Recent Closed Prereqs
 
@@ -46,11 +46,11 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. remaining `variables` + `sections` + `structures` + `aliases` + `literals` closure, starting from the failed `StructEvent` / `StructExample` slice
-2. next `effects` + `events` bundle that builds on the widened exact-entity registry without new `org/...` runtime edits
-3. next `expressions` + `conditions` bundle after the collection-difference slice
-4. remaining `classes` / `registrations` follow-up that stays on local event abstractions
-5. remaining `util` / `log` / `lang` blocker imports that still unlock broader package closure
+1. remaining `variables` + `sections` + `aliases` + `literals` closure after the now-verified `StructEvent` / `StructExample` slice, starting from `Direction`, `Timespan.infinite()`, console-sender, and storage-backend blockers
+2. next `effects` + `events` bundle that builds on the widened entity registry and the small panda/screaming effect surface without new `org/...` runtime edits
+3. next `expressions` + `conditions` bundle after the string/value slice
+4. remaining `classes` / `registrations` follow-up after the registry shims, still avoiding `yggdrasil` or Bukkit data imports where possible
+5. remaining `util` / `log` / `lang` blocker imports, especially `Direction` / `StructureType` and the last `log` gap
 
 ## Parallel Defaults
 

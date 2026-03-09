@@ -99,6 +99,23 @@ final class EffectCompatibilityTest {
                 "make %players% (stop sprinting|not sprint)",
                 "force %players% to (stop sprinting|not sprint)"
         );
+        Skript.registerEffect(
+                EffPandaOnBack.class,
+                "make %livingentities% get (:on|off) (its|their) back[s]",
+                "force %livingentities% to get (:on|off) (its|their) back[s]"
+        );
+        Skript.registerEffect(
+                EffPandaSneezing.class,
+                "make %livingentities% (start:(start sneezing|sneeze)|stop sneezing)",
+                "force %livingentities% to (:start|stop) sneezing"
+        );
+        Skript.registerEffect(
+                EffScreaming.class,
+                "make %livingentities% (start screaming|scream)",
+                "force %livingentities% to (start screaming|scream)",
+                "make %livingentities% stop screaming",
+                "force %livingentities% to stop screaming"
+        );
     }
 
     private static <T> void registerClassInfo(Class<T> type, String codeName) {
@@ -157,6 +174,33 @@ final class EffectCompatibilityTest {
 
         assertTrue(readBoolean(start, "sprint"));
         assertFalse(readBoolean(stop, "sprint"));
+    }
+
+    @Test
+    void pandaOnBackEffectTracksOnAndOffTags() throws Exception {
+        EffPandaOnBack on = parseEffect("make lane-f-test-livingentity get on its back", EffPandaOnBack.class);
+        EffPandaOnBack off = parseEffect("force lane-f-test-livingentity to get off their backs", EffPandaOnBack.class);
+
+        assertTrue(readBoolean(on, "getOn"));
+        assertFalse(readBoolean(off, "getOn"));
+    }
+
+    @Test
+    void pandaSneezingEffectTracksStartTag() throws Exception {
+        EffPandaSneezing start = parseEffect("make lane-f-test-livingentity sneeze", EffPandaSneezing.class);
+        EffPandaSneezing stop = parseEffect("force lane-f-test-livingentity to stop sneezing", EffPandaSneezing.class);
+
+        assertTrue(readBoolean(start, "start"));
+        assertFalse(readBoolean(stop, "start"));
+    }
+
+    @Test
+    void screamingEffectTracksStartAndStopPatterns() throws Exception {
+        EffScreaming start = parseEffect("make lane-f-test-livingentity scream", EffScreaming.class);
+        EffScreaming stop = parseEffect("force lane-f-test-livingentity to stop screaming", EffScreaming.class);
+
+        assertTrue(readBoolean(start, "scream"));
+        assertFalse(readBoolean(stop, "scream"));
     }
 
     private <T> T parseEffect(String input, Class<T> type) {

@@ -117,10 +117,7 @@ final class EntityDataRegistry {
     static @Nullable EntityData<?> fromClass(Class<? extends Entity> entityClass) {
         ensureInitialized();
         for (EntityData<?> data : ALL) {
-            if (data instanceof SimpleEntityData simple && simple.isExactType() && data.getType() == entityClass) {
-                return data;
-            }
-            if (data instanceof ExactEntityData<?> && data.getType() == entityClass) {
+            if (data.getType() == entityClass && !(data instanceof SimpleEntityData simple && !simple.isExactType())) {
                 return data;
             }
         }
@@ -166,24 +163,33 @@ final class EntityDataRegistry {
     private static void registerSpecificExacts() {
         register(new AxolotlData());
         register(new BeeData());
+        register(new BoatChestData());
+        register(new BoatData());
         register(new CatData());
         register(new ChickenData());
         register(new CowData());
         register(new CreeperData());
+        register(new DroppedItemData());
         register(new EndermanData());
+        register(new FallingBlockData());
         register(new FoxData());
         register(new FrogData());
         register(new GoatData());
         register(new LlamaData());
+        register(new MinecartData());
+        register(new MooshroomData());
         register(new PandaData());
         register(new ParrotData());
         register(new PigData());
         register(new RabbitData());
         register(new SalmonData());
         register(new SheepData());
+        register(new StriderData());
+        register(new ThrownPotionData());
         register(new TropicalFishData());
         register(new VillagerData());
         register(new WolfData());
+        register(new XpOrbData());
         register(new ZombieVillagerData());
     }
 

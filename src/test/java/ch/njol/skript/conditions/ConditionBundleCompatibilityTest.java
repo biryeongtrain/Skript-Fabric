@@ -88,6 +88,19 @@ class ConditionBundleCompatibilityTest {
         assertTrue(negated.check(SkriptEvent.EMPTY));
         assertEquals("none", negated.getExpectedMessage(SkriptEvent.EMPTY));
     }
+
+    @Test
+    void alphanumericSupportsPositiveAndNegatedChecks() {
+        CondAlphanumeric positive = new CondAlphanumeric();
+        positive.init(new Expression[]{new SimpleLiteral<>("LaneE123", false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertTrue(positive.check(SkriptEvent.EMPTY));
+        assertEquals("[LaneE123] is alphanumeric", positive.toString(SkriptEvent.EMPTY, false));
+
+        CondAlphanumeric negated = new CondAlphanumeric();
+        negated.init(new Expression[]{new SimpleLiteral<>("lane-e", false)}, 1, Kleenean.FALSE, parseResult(""));
+        assertTrue(negated.check(SkriptEvent.EMPTY));
+    }
+
     private static SkriptParser.ParseResult parseResult(String expr) {
         SkriptParser.ParseResult result = new SkriptParser.ParseResult();
         result.expr = expr;

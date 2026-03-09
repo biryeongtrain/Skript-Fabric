@@ -4,6 +4,7 @@ import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.log.LogHandler.LogResult;
 import java.util.Collection;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,5 +107,18 @@ public final class SkriptLogger {
 
     public static void logTracked(Level level, String message, ErrorQuality quality) {
         log(new LogEntry(level, quality, message));
+    }
+
+    public static void sendFormatted(Object commandSender, String message) {
+        if (commandSender == null || message == null) {
+            return;
+        }
+        for (String line : message.split("\\R", -1)) {
+            try {
+                commandSender.getClass().getMethod("sendMessage", String.class).invoke(commandSender, line);
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
+                return;
+            }
+        }
     }
 }

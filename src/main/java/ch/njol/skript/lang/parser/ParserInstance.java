@@ -14,6 +14,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
+import org.skriptlang.skript.lang.structure.Structure;
 
 public final class ParserInstance {
 
@@ -47,6 +48,7 @@ public final class ParserInstance {
     private final Map<Class<? extends Data>, Data> data = new ConcurrentHashMap<>();
     private final ParsingStack parsingStack = new ParsingStack();
     private @Nullable Script currentScript;
+    private @Nullable Structure currentStructure;
     private @Nullable Node node;
     private @Nullable String currentEventName;
     private Class<?>[] currentEventClasses = new Class<?>[0];
@@ -114,6 +116,7 @@ public final class ParserInstance {
 
     public void reset() {
         this.node = null;
+        this.currentStructure = null;
         this.currentEventName = null;
         this.currentEventClasses = new Class<?>[0];
         this.currentSections = new ArrayList<>();
@@ -127,6 +130,7 @@ public final class ParserInstance {
             return;
         }
         this.node = null;
+        this.currentStructure = null;
         this.currentEventName = null;
         this.currentEventClasses = new Class<?>[0];
         this.currentSections = new ArrayList<>();
@@ -145,6 +149,14 @@ public final class ParserInstance {
 
     public @Nullable Node getNode() {
         return node;
+    }
+
+    public void setCurrentStructure(@Nullable Structure currentStructure) {
+        this.currentStructure = currentStructure;
+    }
+
+    public @Nullable Structure getCurrentStructure() {
+        return currentStructure;
     }
 
     public void setNode(@Nullable Node node) {

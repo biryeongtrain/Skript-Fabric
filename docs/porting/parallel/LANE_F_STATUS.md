@@ -10,23 +10,28 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- landed a larger upstream-backed entity leaf bundle on top of the existing Lane F scaffolding
-- added shared exact-type runtime glue in `ExactEntityData` and widened `EntityDataRegistry` / `EntityData` suppliers to track non-`SimpleEntityData` entries
-- restored `AxolotlData`, `BeeData`, `CatData`, `ChickenData`, `CowData`, `CreeperData`, `EndermanData`, `FoxData`, `FrogData`, `GoatData`, `LlamaData`, `PandaData`, `ParrotData`, `PigData`, `RabbitData`, `SalmonData`, `SheepData`, `TropicalFishData`, `VillagerData`, `WolfData`, and `ZombieVillagerData`
-- tightened `EntityCompatibilityTest` so parser/classinfo/class-based lookup now proves the imported exact wrappers are returned and plural names like `zombie villagers` still normalize correctly
+- finished the remaining requested entity leaf bundle with a mixed exact/class-backed import that fits the current Fabric entity registry shape
+- added `ClassEntityData` plus restored `BoatData`, `BoatChestData`, `DroppedItemData`, `FallingBlockData`, `MinecartData`, `MooshroomData`, `StriderData`, `ThrownPotionData`, and `XpOrbData`
+- widened `EntityDataRegistry.fromClass(...)` so lane-owned custom entity wrappers win over broad `SimpleEntityData` supertypes when the class matches exactly
+- tightened `EntityCompatibilityTest` so parser and class-based lookup now cover the newly restored entity names and wrappers
+- used the fallback bundle on a small effects cluster that binds to existing mapped entity handles only: `EffPandaOnBack`, `EffPandaSneezing`, and `EffScreaming`
+- tightened `EffectCompatibilityTest` so those fallback effects prove their parse-mode/tag handling without needing new runtime bridge work
 
 ## Verification
 
 - `./gradlew test --tests ch.njol.skript.entity.EntityCompatibilityTest --rerun-tasks`
   - passed
+- `./gradlew test --tests ch.njol.skript.entity.EntityCompatibilityTest --tests ch.njol.skript.effects.EffectCompatibilityTest --rerun-tasks`
+  - passed
 
 ## Next Lead
 
-- next importable Lane F bundle is whichever additional upstream `events` or `effects` cluster can bind to the existing Fabric handles without requiring new `org/...` runtime bridge edits or Lane E parser/expression overlap; the entity leaf registry itself now has a broader exact-type base to build on
+- next importable Lane F bundle is whichever additional `events` or `effects` cluster can bind to existing mapped entity/world handles without new `org/...` bridge edits; likely follow-ups are more low-argument entity-state effects or event classes that only need current shared event scaffolding
 
 ## Merge Notes
 
 - likely conflicts:
   - `src/main/java/ch/njol/skript/entity/*`
-  - `src/main/java/ch/njol/skript/events/Evt*.java`
   - `src/main/java/ch/njol/skript/effects/Eff*.java`
+  - `src/test/java/ch/njol/skript/entity/EntityCompatibilityTest.java`
+  - `src/test/java/ch/njol/skript/effects/EffectCompatibilityTest.java`
