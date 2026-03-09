@@ -303,6 +303,48 @@ class ClassesCompatibilityTest {
     }
 
     @Test
+    void getExactParserOnlyReturnsTheRegisteredExactTypeParser() {
+        ClassInfo<ExactBaseType> base = new ClassInfo<>(ExactBaseType.class, "exactbase");
+        base.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public ExactBaseType parse(String input, ParseContext context) {
+                return "base".equals(input) ? new ExactBaseType("base") : null;
+            }
+        });
+        Classes.registerClassInfo(base);
+
+        ClassInfo<ExactChildType> child = new ClassInfo<>(ExactChildType.class, "exactchild");
+        child.setParser(new ClassInfo.Parser<>() {
+            @Override
+            public boolean canParse(ParseContext context) {
+                return true;
+            }
+
+            @Override
+            public ExactChildType parse(String input, ParseContext context) {
+                return "child".equals(input) ? new ExactChildType("child") : null;
+            }
+        });
+        Classes.registerClassInfo(child);
+        Converters.registerConverter(ExactBaseType.class, ExactConvertedType.class, value -> new ExactConvertedType(value.value()));
+
+        ClassInfo.Parser<? extends ExactBaseType> exactBaseParser = Classes.getExactParser(ExactBaseType.class);
+        ClassInfo.Parser<? extends ExactChildType> exactChildParser = Classes.getExactParser(ExactChildType.class);
+
+        assertNotNull(exactBaseParser);
+        assertNotNull(exactChildParser);
+        assertEquals(new ExactBaseType("base"), exactBaseParser.parse("base", ParseContext.DEFAULT));
+        assertNull(exactBaseParser.parse("child", ParseContext.DEFAULT));
+        assertEquals(new ExactChildType("child"), exactChildParser.parse("child", ParseContext.DEFAULT));
+        assertNull(Classes.getExactParser(ExactConvertedType.class));
+    }
+
+    @Test
     void parseSimpleClearsFailedParserErrorsBeforeLaterSuccess() {
         ClassInfo<FallbackSourceType> first = new ClassInfo<>(FallbackSourceType.class, "fallbacksource");
         first.setParser(new ClassInfo.Parser<>() {
@@ -567,6 +609,15 @@ class ClassesCompatibilityTest {
     }
 
     private record ParserTargetType(int value) {
+    }
+
+    private record ExactBaseType(String value) {
+    }
+
+    private record ExactChildType(String value) {
+    }
+
+    private record ExactConvertedType(String value) {
     }
 
     private sealed interface FallbackBaseType permits FallbackSourceType, FallbackTargetType {

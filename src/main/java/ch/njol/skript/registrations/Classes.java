@@ -302,6 +302,11 @@ public final class Classes {
         return null;
     }
 
+    public static <T> @Nullable ClassInfo.Parser<? extends T> getExactParser(Class<T> type) {
+        ClassInfo<T> info = getExactClassInfo(type);
+        return info == null ? null : info.getParser();
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> @Nullable T parse(String text, Class<T> type, ParseContext context) {
         try (ParseLogHandler log = SkriptLogger.startParseLogHandler()) {

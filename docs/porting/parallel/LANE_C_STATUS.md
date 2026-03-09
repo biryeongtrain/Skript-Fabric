@@ -23,6 +23,10 @@ Last updated: 2026-03-09
 
 ## Work Log
 
+- compared local `Classes` exact parser lookup surface with upstream `ch/njol/skript/registrations/Classes#getExactParser`
+- mismatch found: upstream exposes `getExactParser(Class<?>)` to retrieve only the parser registered on the exact classinfo, while the local bridge only exposed broader `getParser(...)` lookup that can resolve subtype and converter-backed parsers
+- applied minimal fix: added `Classes.getExactParser(...)` with upstream-compatible exact-classinfo semantics and a focused compatibility regression
+
 - compared local `Classes` API surface with upstream `ch/njol/skript/registrations/Classes#getAllSuperClassInfos`
 - mismatch found: upstream exposes `getAllSuperClassInfos(Class<?>)` to return every registered assignable classinfo in specificity order, but the local bridge only exposed the single best `getSuperClassInfo(...)` lookup
 - applied minimal fix: added `Classes.getAllSuperClassInfos(...)` with upstream-compatible ordered results and a focused compatibility regression
@@ -91,6 +95,8 @@ Last updated: 2026-03-09
 
 ## Exact Counts Changed
 
+- Java source file count changed in `src/main/java/ch/njol/skript/registrations`: `0` added, `1` modified
+- Java test file count changed in `src/test/java/ch/njol/skript/registrations`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/ch/njol/skript/structures`: `0` added, `1` modified
 - Java test file count changed in `src/test/java/ch/njol/skript`: `0` added, `1` modified
 - Java source file count changed in `src/main/java/ch/njol/skript/config`: `0` added, `2` modified
@@ -106,6 +112,10 @@ Last updated: 2026-03-09
 
 ## Verification
 
+- Repro (before fix): local `Classes` exposed no upstream-compatible exact parser lookup, so callers could only use `getParser(...)`, which may resolve subtype or converter-backed parsers instead of the exact registered parser
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.registrations.ClassesCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms `getExactParser(...)` returns the exact classinfo parser, does not drift to a subtype parser, and does not synthesize converter-backed parsers
 - Repro (before fix): parsing `options:` with `blank:` logged `Invalid line in options` and left `{@blank}` unresolved instead of loading an empty-string option like upstream
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks`
@@ -158,11 +168,11 @@ Last updated: 2026-03-09
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/lang/ParseContext.java`
   - `src/main/java/ch/njol/skript/registrations/Classes.java`
   - `src/test/java/ch/njol/skript/registrations/ClassesCompatibilityTest.java`
+  - `docs/porting/parallel/LANE_C_STATUS.md`
+  - `src/main/java/ch/njol/skript/lang/ParseContext.java`
   - `src/main/java/ch/njol/skript/variables/Variables.java`
   - `src/test/java/ch/njol/skript/variables/VariablesCompatibilityTest.java`
   - `src/main/java/org/skriptlang/skript/util/Priority.java`
   - `src/test/java/org/skriptlang/skript/registration/SyntaxRegistryServiceTest.java`
-  - `docs/porting/parallel/LANE_C_STATUS.md`
