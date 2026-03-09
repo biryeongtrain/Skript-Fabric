@@ -70,6 +70,19 @@ class FunctionCallCompatibilityTest {
     }
 
     @Test
+    void functionReferenceParseUnescapesDoubledQuotesInStringLiteralArguments() {
+        registerEchoFunction();
+
+        FunctionReference<?> reference = FunctionReference.parse("echo(\"a \"\"b\"\" c\")", null, new Class[]{String.class});
+
+        assertNotNull(reference);
+        assertTrue(reference.validateFunction(true));
+        Object[] result = reference.execute(SkriptEvent.EMPTY);
+        assertNotNull(result);
+        assertArrayEquals(new Object[]{"a \"b\" c"}, result);
+    }
+
+    @Test
     void dynamicFunctionReferenceResolvesAndExecutes() {
         registerEchoFunction();
 

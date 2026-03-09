@@ -285,6 +285,11 @@ public class FunctionReference<T> {
         boolean inQuotes = false;
         for (int i = 0; i < value.length(); i++) {
             char ch = value.charAt(i);
+            if (ch == '"' && inQuotes && i + 1 < value.length() && value.charAt(i + 1) == '"') {
+                current.append(ch).append(value.charAt(i + 1));
+                i++;
+                continue;
+            }
             if (ch == '"' && (i == 0 || value.charAt(i - 1) != '\\')) {
                 inQuotes = !inQuotes;
                 current.append(ch);
@@ -318,7 +323,7 @@ public class FunctionReference<T> {
             return null;
         }
         if (value.startsWith("\"") && value.endsWith("\"") && value.length() >= 2) {
-            String string = value.substring(1, value.length() - 1);
+            String string = value.substring(1, value.length() - 1).replace("\"\"", "\"");
             return new SimpleLiteral<>(string, false);
         }
         String lower = value.toLowerCase(Locale.ENGLISH);
