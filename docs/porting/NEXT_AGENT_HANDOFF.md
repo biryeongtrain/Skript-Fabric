@@ -17,7 +17,7 @@ Last updated: 2026-03-09
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `140 / 1189`, shortfall `1049`
+- upstream `ch/njol/skript` snapshot: local `165 / 1189`, shortfall `1024`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,9 +29,9 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head remains on top of the existing `lang-core` baseline
+- current verified head is the first package-bundle closure batch on top of the existing `lang-core` baseline
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- next worker wave is no longer syntax-polish-first; it is package-bundle closure inside `ch/njol/skript`
+- the latest bundle batch restored upstream helper surface in `classes`, `config`, `util`, `variables`, and `log`, and added shared scaffolding under `expressions` / `conditions` / `effects` / `events` / `entity`
 
 ## Recent Closed Prereqs
 

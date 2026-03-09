@@ -30,14 +30,17 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `140`
-- local shortfall versus the captured upstream snapshot: `1049`
+- local `ch/njol/skript`: `165`
+- local shortfall versus the captured upstream snapshot: `1024`
 
 Local top-level packages currently present:
 
 - `classes`
 - `conditions`
 - `config`
+- `effects`
+- `entity`
+- `events`
 - `expressions`
 - `lang`
 - `localization`
@@ -55,9 +58,6 @@ Upstream top-level packages currently absent locally:
 - `bukkitutil`
 - `command`
 - `doc`
-- `effects`
-- `entity`
-- `events`
 - `hooks`
 - `literals`
 - `test`
@@ -70,29 +70,29 @@ Upstream top-level packages currently absent locally:
 | --- | --- | --- | --- | --- | --- |
 | `aliases` | `12` | `0` | absent | `P2` | likely needed after core parser/type closure; do not replace registry-backed parsing with large hardcoded tables |
 | `bukkitutil` | `26` | `0` | absent | `P3` | Bukkit-specific helpers; audit only when a Fabric replacement path is justified |
-| `classes` | `28` | `5` | partial shim | `P1` | foundational for parsing and stringification; `Classes` now covers codename/literal/supertype lookup plus class-info ordering, and the local tree now also restores legacy parser/converter wrapper types, but the layer is still far thinner than upstream |
+| `classes` | `28` | `7` | partial shim | `P1` | foundational for parsing and stringification; `Classes` now covers codename/literal/supertype lookup plus class-info ordering, and the local tree now also restores legacy parser/converter wrapper types, but the layer is still far thinner than upstream |
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
-| `conditions` | `135` | `1` | partial shim | `P2` | very large missing surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
-| `config` | `20` | `6` | partial shim | `P1` | loader/parser support dependency |
+| `conditions` | `135` | `3` | partial shim | `P2` | very large missing surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
+| `config` | `20` | `13` | partial shim | `P1` | loader/parser support dependency |
 | `doc` | `18` | `0` | absent | `P3` | low runtime value; defer |
-| `effects` | `123` | `0` | absent | `P2` | large user-visible syntax surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
-| `entity` | `34` | `0` | absent | `P2` | syntax/runtime adapters; defer until base language closure |
-| `events` | `53` | `0` | absent | `P2` | event classes remain largely absent; only import where Fabric-backed semantics are already available or where scaffolding unblocks wider surface closure |
-| `expressions` | `391` | `3` | partial shim | `P2` | largest remaining user-visible surface; after current dependency closure, split into larger class bundles rather than small syntax slices |
+| `effects` | `123` | `1` | scaffolding-only | `P2` | base package is present through shared scaffolding, but the user-visible surface is still almost entirely missing |
+| `entity` | `34` | `1` | scaffolding-only | `P2` | base package is present through shared scaffolding, but runtime adapters remain largely absent |
+| `events` | `53` | `1` | scaffolding-only | `P2` | base package is present through shared scaffolding, but event classes remain largely absent |
+| `expressions` | `391` | `8` | partial shim | `P2` | largest remaining user-visible surface; after current dependency closure, split into larger class bundles rather than small syntax slices |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
 | `lang` | `85` | `81` | present but behavior-incomplete | `P0` | local delta is effectively only `package-info.java`; this is the highest-leverage closure slice |
 | `literals` | `16` | `0` | absent | `P2` | depends on parser/type behavior |
 | `localization` | `11` | `2` | partial shim | `P2` | not blocking initial parser closure, but still largely absent |
-| `log` | `17` | `9` | partial shim | `P1` | parse/runtime diagnostics are now backed by a restored legacy handler stack, but the logging layer is still much thinner than upstream |
+| `log` | `17` | `11` | partial shim | `P1` | parse/runtime diagnostics are now backed by a restored legacy handler stack, but the logging layer is still much thinner than upstream |
 | `patterns` | `14` | `13` | partial shim | `P1` | foundational parsing dependency; shared matcher, parse-tag flow, lightweight pattern-element graph APIs, grouped string/combinations parity, and `Keyword` prefiltering now exist locally |
-| `registrations` | `10` | `3` | partial shim | `P1` | foundational registration dependency; local compatibility now also restores the legacy `Converters` bridge |
+| `registrations` | `10` | `4` | partial shim | `P1` | foundational registration dependency; local compatibility now also restores the legacy `Converters` bridge |
 | `sections` | `10` | `1` | partial shim | `P1` | section behavior now includes chained `if / else if / else`, `parse if` / `else parse if`, multiline `if any` / `if all` plus `then`, implicit condition sections, generic section nodes through `ScriptLoader`, and `SecIf` through the section registry path; remaining gaps are broader statement/log orchestration and richer parser tag/mark parity |
-| `structures` | `10` | `1` | partial shim | `P1` | now active because `options:` support has started; keep in the dependency-closure track |
+| `structures` | `10` | `2` | partial shim | `P1` | now active because `options:` support has started; keep in the dependency-closure track |
 | `test` | `42` | `0` | absent | `P3` | low shipping-runtime value; use local test harnesses instead |
 | `timings` | `2` | `0` | absent | `P3` | defer |
 | `update` | `10` | `0` | absent | `P3` | defer |
-| `util` | `57` | `8` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables |
-| `variables` | `11` | `3` | partial shim | `P1` | current local store plus `HintManager` now cover a first local-variable hint path, and `TypeHints` now restores the legacy compatibility bridge, but runtime behavior is still far from upstream-complete |
+| `util` | `57` | `9` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables |
+| `variables` | `11` | `4` | partial shim | `P1` | current local store plus `HintManager` now cover a first local-variable hint path, and `TypeHints` now restores the legacy compatibility bridge, but runtime behavior is still far from upstream-complete |
 
 ## `lang` Breakdown
 
