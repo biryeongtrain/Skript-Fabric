@@ -11,6 +11,8 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.RetainingLogHandler;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.variables.Variables;
@@ -87,6 +89,73 @@ class FunctionCoreCompatibilityTest {
             assertNull(Parameter.parse("Value: number, value: number"));
         } finally {
             Variables.caseInsensitiveVariables = previous;
+        }
+    }
+
+    @Test
+    void functionParserParsesPluralReturnAndDeprecatedFacade() {
+        Signature<?> signature = Functions.parseSignature(
+                "sample.sk",
+                "collect",
+                "value: number",
+                "numbers",
+                false
+        );
+
+        assertNotNull(signature);
+        assertEquals("collect", signature.getName());
+        assertEquals(Integer[].class, signature.returnType());
+        assertEquals(1, signature.getParameters().length);
+        assertEquals("value", signature.getParameters()[0].name());
+    }
+
+    @Test
+    void functionParserNormalizesStarredListParameterNames() {
+        Signature<?> signature = FunctionParser.parse(
+                "sample.sk",
+                "collect",
+                "values*: numbers",
+                null,
+                false
+        );
+
+        assertNotNull(signature);
+        assertEquals(1, signature.getParameters().length);
+        assertEquals("values::*", signature.getParameters()[0].name());
+        assertFalse(signature.getParameters()[0].isSingle());
+    }
+
+    @Test
+    void functionParserNormalizesStarredSingularParameterNames() {
+        Signature<?> signature = FunctionParser.parse(
+                "sample.sk",
+                "collect",
+                "value*: number",
+                null,
+                false
+        );
+
+        assertNotNull(signature);
+        assertEquals("value::1", signature.getParameters()[0].name());
+        assertTrue(signature.getParameters()[0].isSingle());
+    }
+
+    @Test
+    void functionParserUsesOrdinalErrorForInvalidArgumentDefinition() {
+        try (RetainingLogHandler log = SkriptLogger.startRetainingLog()) {
+            Signature<?> signature = FunctionParser.parse(
+                    "sample.sk",
+                    "broken",
+                    "first: number, second",
+                    null,
+                    false
+            );
+
+            assertNull(signature);
+            assertEquals(
+                    "The 2nd argument's definition is invalid. It should look like 'name: type' or 'name: type = default value'.",
+                    log.getFirstError().getMessage()
+            );
         }
     }
 

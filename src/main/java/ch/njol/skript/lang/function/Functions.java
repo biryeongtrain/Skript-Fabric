@@ -57,6 +57,20 @@ public abstract class Functions {
         return function;
     }
 
+    /**
+     * Deprecated compatibility bridge kept for future StructFunction import parity.
+     */
+    @Deprecated(forRemoval = true, since = "2.14")
+    public static @Nullable Signature<?> parseSignature(
+            String script,
+            String name,
+            String args,
+            @Nullable String returnType,
+            boolean local
+    ) {
+        return FunctionParser.parse(script, name, args, returnType, local);
+    }
+
     public static @Nullable Signature<?> registerSignature(Signature<?> signature) {
         rememberScript(signature.namespace());
         Parameter<?>[] parameters = signature.getParameters();
