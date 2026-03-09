@@ -9,29 +9,29 @@ Last updated: 2026-03-09
 
 ## Latest Slice
 
-- fixed one upstream-backed `TriggerItem` mismatch: `walk(...)` now catches `StackOverflowError` and returns `false` instead of letting the trigger bridge tear through the runtime
-- kept scope narrow to the runtime bridge only; did not pull in upstream's broader admin-broadcast/reporting path
-- extended the focused trigger-bridge regression coverage to prove both ordinary exceptions and direct `StackOverflowError`s fail closed through `walk(...)`
+- fixed one upstream-backed `ParserInstance` bridge mismatch: switching or clearing the current script now clears transient parser state and parser-scoped data, so stale `InputSource.InputData` does not leak across loads
+- kept the slice inside lane-owned bridge state only; did not pull in upstream's broader parser lifecycle, structure, or logging APIs
+- added a focused regression proving an active parser's input-source data is dropped when the current script is deactivated
 
 ## Files Changed
 
-- `src/main/java/ch/njol/skript/lang/TriggerItem.java`
-- `src/test/java/ch/njol/skript/lang/TriggerItemCompatibilityTest.java`
+- `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
+- `src/test/java/ch/njol/skript/lang/parser/ParserInstanceCompatibilityTest.java`
 - `docs/porting/parallel/LANE_E_STATUS.md`
 
 ## Verification
 
-- `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/TriggerItem.java src/main/java/ch/njol/skript/lang/TriggerItem.java`
-  - confirmed local `walk(...)` still diverged from upstream by rethrowing `StackOverflowError` instead of failing closed
-- `./gradlew test --tests ch.njol.skript.lang.TriggerItemCompatibilityTest --rerun-tasks`
+- `diff -u /tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/parser/ParserInstance.java src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
+  - confirmed the local parser bridge lacked upstream-style transient-state reset around script lifecycle changes
+- `./gradlew test --tests ch.njol.skript.lang.parser.ParserInstanceCompatibilityTest --tests ch.njol.skript.lang.InputSourceCompatibilityTest --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- remaining scoped deltas are either broader runtime portability choices or already-covered input/parser gaps; avoid widening this slice unless a new upstream-backed reproducer appears
+- remaining scoped deltas are either larger parser-lifecycle imports or already-covered bridge gaps; avoid widening this slice unless a new self-contained reproducer stays inside `InputSource`, `ParserInstance`, `ExprInput`, or trigger bridge ownership
 
 ## Merge Notes
 
 - likely conflict surface:
-  - `src/main/java/ch/njol/skript/lang/TriggerItem.java`
+  - `src/main/java/ch/njol/skript/lang/parser/ParserInstance.java`
 - no canonical docs touched
