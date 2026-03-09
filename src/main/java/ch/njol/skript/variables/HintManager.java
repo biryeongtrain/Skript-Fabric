@@ -142,6 +142,14 @@ public final class HintManager {
         return hints == null ? Set.of() : Set.copyOf(hints);
     }
 
+    public Backup backup() {
+        return new Backup(this);
+    }
+
+    public void restore(Backup backup) {
+        scopes.set(0, backup.scope);
+    }
+
     public static boolean canUseHints(Variable<?> variable) {
         return variable.isLocal() && variable.getName().isSimple();
     }
@@ -244,6 +252,17 @@ public final class HintManager {
     private static void mergeHints(Map<String, Set<Class<?>>> from, Map<String, Set<Class<?>>> to) {
         for (Map.Entry<String, Set<Class<?>>> entry : from.entrySet()) {
             to.computeIfAbsent(entry.getKey(), key -> new HashSet<>()).addAll(entry.getValue());
+        }
+    }
+
+    public static final class Backup {
+
+        private final Scope scope;
+
+        private Backup(HintManager source) {
+            Map<String, Set<Class<?>>> hints = new HashMap<>();
+            mergeHints(source.scopes.getFirst().hints(), hints);
+            scope = new Scope(hints, source.scopes.getFirst().section());
         }
     }
 

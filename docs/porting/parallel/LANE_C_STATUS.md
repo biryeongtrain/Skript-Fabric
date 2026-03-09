@@ -79,6 +79,9 @@ Last updated: 2026-03-09
 - compared local `Variables.withLocalVariables(...)` with upstream `ch/njol/skript/variables/Variables#withLocalVariables`
 - mismatch found: upstream does not special-case `provider == user`, so reusing the same local-variable scope clears that scope after the action, while the local bridge short-circuited and preserved the locals
 - applied minimal fix: removed the same-scope fast path so local-variable handoff now follows upstream's copy-back-and-clear flow even when both events resolve to the same scope
+- compared local `HintManager` scope rollback surface with upstream `ch/njol/skript/variables/HintManager#backup` / `#restore`
+- mismatch found: upstream exposes `backup()` / `restore(...)` to snapshot and reinstate the current parse-time hint scope during rollback, but the local bridge omitted that API entirely
+- applied minimal fix: restored `HintManager.Backup`, `backup()`, and `restore(...)` with upstream-compatible current-scope snapshot semantics and a focused compatibility regression
 
 ## Files Changed
 
@@ -169,6 +172,10 @@ Last updated: 2026-03-09
 - Targeted tests and commands:
   - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.variables.VariablesCompatibilityTest --rerun-tasks`
 - After fix: targeted command passes; regression confirms same-scope local-variable handoff now clears the shared scope like upstream
+- Repro (before fix): local `HintManager` exposed no upstream-compatible `backup()` / `restore(...)`, so callers could not snapshot the current hint scope and roll back speculative parse-time hint mutations
+- Targeted tests and commands:
+  - `./gradlew -q test --no-daemon --console plain --tests ch.njol.skript.variables.TypeHintsCompatibilityTest --rerun-tasks`
+- After fix: targeted command passes; regression confirms current-scope hint mutations roll back to the captured snapshot like upstream
 
 ## Unresolved Risks
 

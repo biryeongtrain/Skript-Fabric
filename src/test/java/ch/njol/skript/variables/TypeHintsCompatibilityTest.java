@@ -3,10 +3,12 @@ package ch.njol.skript.variables;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.parser.ParserInstance;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.lang.script.Script;
@@ -70,5 +72,23 @@ class TypeHintsCompatibilityTest {
         Variable<Object> cleared = Variable.newInstance("_value", new Class[]{Object.class});
         assertNotNull(cleared);
         assertEquals(Object.class, cleared.getReturnType());
+    }
+
+    @Test
+    void hintManagerBackupAndRestoreRollBackCurrentScopeLikeUpstream() {
+        ParserInstance.get().setCurrentScript(new Script(null, List.of()));
+        TypeHints.clear();
+
+        HintManager hintManager = ParserInstance.get().getHintManager();
+        hintManager.set("value", Integer.class);
+        HintManager.Backup backup = hintManager.backup();
+
+        hintManager.set("value", String.class);
+        hintManager.add("other", Double.class);
+
+        hintManager.restore(backup);
+
+        assertEquals(Set.of(Integer.class), hintManager.get("value"));
+        assertTrue(hintManager.get("other").isEmpty());
     }
 }
