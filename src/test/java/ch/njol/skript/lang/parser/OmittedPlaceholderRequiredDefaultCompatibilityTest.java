@@ -43,6 +43,24 @@ class OmittedPlaceholderRequiredDefaultCompatibilityTest {
         assertNull(parsed, "pattern with required omitted %string% and no default must fail");
     }
 
+    @Test
+    void unmatchedChoiceBranchPlaceholderDoesNotRequireDefault() {
+        SyntaxInfo<NullAcceptingEffect> info = new SyntaxInfo<>(
+            NullAcceptingEffect.class,
+            new String[]{"probe (text %string%|count %number%)"},
+            NullAcceptingEffect.class.getName()
+        );
+
+        Effect parsed = SkriptParser.parseModern(
+                "probe text \"ok\"",
+                List.of(info).iterator(),
+                ParseContext.DEFAULT,
+                null
+        );
+
+        assertNotNull(parsed, "unmatched choice-branch placeholder must not force a default");
+    }
+
     public static final class NullAcceptingEffect extends Effect {
         @Override
         public boolean init(

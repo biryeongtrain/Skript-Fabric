@@ -5,8 +5,10 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,6 +106,31 @@ public final class SkriptPattern {
         return countNonNullTypes(first);
     }
 
+    public Set<Integer> getActiveExpressionIndices(Expression<?>[] expressions) {
+        if (first == null) {
+            return Set.of();
+        }
+
+        Set<Integer> present = new LinkedHashSet<>();
+        for (int i = 0; i < expressions.length; i++) {
+            if (expressions[i] != null) {
+                present.add(i);
+            }
+        }
+
+        List<Set<Integer>> candidates = collectActiveExpressionIndexSets(first);
+        Set<Integer> best = null;
+        for (Set<Integer> candidate : candidates) {
+            if (!candidate.containsAll(present)) {
+                continue;
+            }
+            if (best == null || candidate.size() < best.size()) {
+                best = candidate;
+            }
+        }
+        return best == null ? present : best;
+    }
+
     public <T extends PatternElement> List<T> getElements(Class<T> type) {
         if (first == null) {
             return List.of();
@@ -137,6 +164,40 @@ public final class SkriptPattern {
             element = element.getOriginalNext();
         }
         return count;
+    }
+
+    private static List<Set<Integer>> collectActiveExpressionIndexSets(@Nullable PatternElement element) {
+        List<Set<Integer>> activeIndexSets = new ArrayList<>();
+        activeIndexSets.add(new LinkedHashSet<>());
+
+        while (element != null) {
+            List<Set<Integer>> elementSets = switch (element) {
+                case TypePatternElement type -> List.of(new LinkedHashSet<>(Set.of(type.expressionIndex())));
+                case ChoicePatternElement choice -> {
+                    List<Set<Integer>> branchSets = new ArrayList<>();
+                    for (PatternElement branch : choice.getPatternElements()) {
+                        branchSets.addAll(collectActiveExpressionIndexSets(branch));
+                    }
+                    yield branchSets.isEmpty() ? List.of(new LinkedHashSet<>()) : branchSets;
+                }
+                case GroupPatternElement group -> collectActiveExpressionIndexSets(group.getPatternElement());
+                case OptionalPatternElement optional -> collectActiveExpressionIndexSets(optional.getPatternElement());
+                default -> List.of(new LinkedHashSet<>());
+            };
+
+            List<Set<Integer>> combined = new ArrayList<>();
+            for (Set<Integer> prefix : activeIndexSets) {
+                for (Set<Integer> suffix : elementSets) {
+                    LinkedHashSet<Integer> merged = new LinkedHashSet<>(prefix);
+                    merged.addAll(suffix);
+                    combined.add(merged);
+                }
+            }
+            activeIndexSets = combined;
+            element = element.getOriginalNext();
+        }
+
+        return activeIndexSets;
     }
 
     private static <T extends PatternElement> void collectElements(

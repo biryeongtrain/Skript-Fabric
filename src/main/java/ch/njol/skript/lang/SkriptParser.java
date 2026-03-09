@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
@@ -507,11 +508,15 @@ public class SkriptParser {
             return expressions;
         }
         typePatterns.sort(Comparator.comparingInt(TypePatternElement::expressionIndex));
+        Set<Integer> activeExpressionIndices = compiledPattern.getActiveExpressionIndices(expressions);
 
         DefaultValueData defaultValues = ParserInstance.get().getData(DefaultValueData.class);
         for (TypePatternElement typePattern : typePatterns) {
             int expressionIndex = typePattern.expressionIndex();
-            if (expressionIndex >= expressions.length || expressions[expressionIndex] != null || typePattern.isOptional()) {
+            if (expressionIndex >= expressions.length
+                    || !activeExpressionIndices.contains(expressionIndex)
+                    || expressions[expressionIndex] != null
+                    || typePattern.isOptional()) {
                 continue;
             }
             DefaultExpression<?> defaultExpression = findDefaultValue(defaultValues, typePattern);
