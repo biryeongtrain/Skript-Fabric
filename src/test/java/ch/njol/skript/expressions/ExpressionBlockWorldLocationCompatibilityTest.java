@@ -95,8 +95,10 @@ class ExpressionBlockWorldLocationCompatibilityTest {
 
     @Test
     void importedExpressionsInstantiate() {
+        assertDoesNotThrow(ExprAbsorbedBlocks::new);
         assertDoesNotThrow(ExprAltitude::new);
         assertDoesNotThrow(ExprAttachedBlock::new);
+        assertDoesNotThrow(ExprBed::new);
         assertDoesNotThrow(ExprBiome::new);
         assertDoesNotThrow(ExprBlock::new);
         assertDoesNotThrow(ExprBlockData::new);
@@ -112,6 +114,7 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         assertDoesNotThrow(ExprLightLevel::new);
         assertDoesNotThrow(ExprMiddleOfLocation::new);
         assertDoesNotThrow(ExprMoonPhase::new);
+        assertDoesNotThrow(ExprPushedBlocks::new);
     }
 
     @Test
@@ -156,8 +159,10 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         Skript.registerExpression(TestEntityExpression.class, Entity.class, "lane-m5-entity");
         Skript.registerExpression(TestProjectileExpression.class, Projectile.class, "lane-m5-projectile");
 
+        new ExprAbsorbedBlocks();
         new ExprAltitude();
         new ExprAttachedBlock();
+        new ExprBed();
         new ExprBiome();
         new ExprBlock();
         new ExprBlockData();
@@ -173,6 +178,7 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         new ExprLightLevel();
         new ExprMiddleOfLocation();
         new ExprMoonPhase();
+        new ExprPushedBlocks();
         syntaxRegistered = true;
     }
 
