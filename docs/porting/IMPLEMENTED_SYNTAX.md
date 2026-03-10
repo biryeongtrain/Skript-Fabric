@@ -26,10 +26,9 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - `[an] eternity`, `forever`, and `[an] (indefinite|infinite) (duration|timespan)`
-  - text-character/codepoint forms: `[(all [[of] the]|the)] [:alphanumeric] characters (between|from) %string% (and|to) %string%`, `[unicode|character] code([ ]point| position)`, and `character (from|at|with) code([ ]point| position) %integer%`
-  - control-flow effect forms: `continue [this loop|[the] [current] loop]`, `continue [the] <integer>(st|nd|rd|th) loop`, `(exit|stop) [trigger]`, and loop/section/conditional stop forms
-  - support-surface additions behind the current registered runtime: pure-Java `DefaultOperations` / `DefaultFunctions`, legacy `FunctionParser` facade, local util chat leaf types, widened `Date`, and alias foundation helpers
+  - no new default-runtime syntax families were kept in the latest upstream-core batch; coordinator preserved the existing `230 / 230` runtime bootstrap surface to keep `./gradlew build --rerun-tasks` green
+  - latest verified support-surface additions behind that unchanged runtime include serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages`, numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes
+  - the experimental variable storage backend / `FlatFileStorage` slice was intentionally excluded from the final green batch after runtime regression
 
 ## Stage 8 Audit Snapshot
 
@@ -42,10 +41,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `323`
+  - local `ch/njol/skript`: `344`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
+  - current shortfall: `845`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored pure-Java default class-data helpers, local util chat/date helpers, alias/literal foundations, the legacy function-signature parser facade, text-character/codepoint expressions, and control-flow effects
+  - latest shortfall-focused closure restored serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages` and numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes, while excluding the regressing storage-backend slice
 
 Primary registration sources:
 

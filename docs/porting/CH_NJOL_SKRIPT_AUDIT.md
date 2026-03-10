@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `323`
-- local shortfall versus the captured upstream snapshot: `866`
+- local `ch/njol/skript`: `344`
+- local shortfall versus the captured upstream snapshot: `845`
 
 Local top-level packages currently present:
 
@@ -39,6 +39,7 @@ Local top-level packages currently present:
 - `classes`
 - `conditions`
 - `config`
+- `doc`
 - `effects`
 - `entity`
 - `events`
@@ -58,7 +59,6 @@ Upstream top-level packages currently absent locally:
 
 - `bukkitutil`
 - `command`
-- `doc`
 - `hooks`
 - `test`
 - `timings`
@@ -70,15 +70,15 @@ Upstream top-level packages currently absent locally:
 | --- | --- | --- | --- | --- | --- |
 | `aliases` | `12` | `3` | partial shim | `P2` | alias foundation is now present through `MatchQuality`, `InvalidMinecraftIdException`, and package scaffolding, but broader item/runtime alias closure is still open |
 | `bukkitutil` | `26` | `0` | absent | `P3` | Bukkit-specific helpers; audit only when a Fabric replacement path is justified |
-| `classes` | `28` | `19` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores legacy parser/converter wrappers plus pure-Java default operation/function helpers, but the layer is still far thinner than upstream |
+| `classes` | `28` | `21` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores serializer-free `SkriptClasses`, legacy parser/converter wrappers, and pure-Java registrars, but the layer is still far thinner than upstream |
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
-| `conditions` | `135` | `8` | partial shim | `P2` | very large missing surface; after current dependency closure, import in larger bundles instead of one syntax family at a time |
+| `conditions` | `135` | `10` | partial shim | `P2` | very large missing surface; date and past/future checks are now present, but the remaining user-visible condition surface is still large |
 | `config` | `20` | `20` | present but behavior-incomplete | `P1` | count parity is now closed, but broader runtime behavior still needs upstream comparison |
-| `doc` | `18` | `0` | absent | `P3` | low runtime value; defer |
+| `doc` | `18` | `1` | partial shim | `P3` | low runtime value overall, but `Documentable` is now present as function-bridge support scaffolding |
 | `effects` | `123` | `14` | partial shim | `P2` | base package now has a slightly wider verified effect surface through the entity-state helpers plus `continue` / `stop` control-flow effects, but most user-visible runtime forms are still missing |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
-| `events` | `53` | `4` | partial shim | `P2` | base package is present through shared scaffolding, but event classes remain largely absent |
-| `expressions` | `391` | `27` | partial shim | `P2` | larger collection, string, value, and text-character helpers are now landing, but the remaining user-visible surface is still very large |
+| `events` | `53` | `6` | partial shim | `P2` | script lifecycle events are now present, but event classes remain largely absent |
+| `expressions` | `391` | `32` | partial shim | `P2` | larger collection, date/time, unix, string, and text-character helpers are now landing, but the remaining user-visible surface is still very large |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
 | `lang` | `85` | `86` | present but behavior-incomplete | `P0` | local count now exceeds upstream by one because the legacy `ch/njol/skript/lang/function/FunctionParser` compatibility facade is local-only; the remaining gap is still foundational behavior, not raw presence |
 | `literals` | `16` | `15` | partial shim | `P2` | most low-dependency numeric/special literal helpers are present and `LitEternity` is now landed, but the package is still not fully closed |
@@ -91,8 +91,8 @@ Upstream top-level packages currently absent locally:
 | `test` | `42` | `0` | absent | `P3` | low shipping-runtime value; use local test harnesses instead |
 | `timings` | `2` | `0` | absent | `P3` | defer |
 | `update` | `10` | `0` | absent | `P3` | defer |
-| `util` | `57` | `28` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables; time/classinfo/date/chat compatibility helpers are now present, but `Direction` / `StructureType` and many runtime-facing utilities remain |
-| `variables` | `11` | `6` | partial shim | `P1` | current local store plus `HintManager` now cover a first local-variable hint path, `TypeHints` now restores the legacy compatibility bridge, and `SerializedVariable` is present, but runtime behavior is still far from upstream-complete |
+| `util` | `57` | `29` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables; time/classinfo/date/chat compatibility helpers plus `ChatMessages` are now present, but `Direction` / `StructureType` and many runtime-facing utilities remain |
+| `variables` | `11` | `6` | partial shim | `P1` | the retained local surface is still the in-memory bridge plus hint helpers; the latest storage-backend / `FlatFileStorage` slice was excluded from the final green batch after runtime regression |
 
 ## `lang` Breakdown
 
@@ -142,15 +142,16 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- merged five verified worker bundles on 2026-03-10; Lane D was a no-op:
-  - Lane A restored serializer-free Java class helper registrations plus numeric converters and comparators
-  - Lane B widened `Timespan` to cover upstream-shaped parsing, arithmetic, temporal helpers, and `Timespan.infinite()`
-  - Lane C restored `StructUsing` and the adjacent `SecConditional` section slice
-  - Lane E restored `CondChance` plus `ExprRandomNumber`
-  - Lane F restored `EffPandaRolling` plus `EffStriderShivering`
+- merged five verified worker bundles on 2026-03-10; Lane C storage work was excluded after coordinator verification:
+  - Lane A restored serializer-free `SkriptClasses` and pure-Java class/function registrar helpers
+  - Lane B restored `ChatMessages`, chat helper leaf types, and shared numeric/date helper scaffolding
+  - Lane D restored the common-function bridge, including the legacy `FunctionParser` facade and default-function builder surface
+  - Lane E restored source-level date/time condition and unix/date expression helpers
+  - Lane F restored script lifecycle event classes
+- coordinator narrowed the default Fabric runtime bootstrap back to the prior `230 / 230` baseline contract, so these additions currently land as upstream-core closure work rather than new default-runtime syntax registrations
 - merged verification on 2026-03-10:
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `314 / 1189`, shortfall `875`
+- raw `ch/njol/skript` snapshot after that merge: `344 / 1189`, shortfall `845`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
 
 ## Latest Merged Syntax-Import Batch

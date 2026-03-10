@@ -26,6 +26,9 @@ public final class DefaultFunctions {
     }
 
     public static void register() {
+        if (Functions.getFunction("date") != null && Functions.getFunction("round") != null) {
+            return;
+        }
         ClassInfo<Object> objectInfo = classInfo(Object.class);
         ClassInfo<Number> numberInfo = classInfo(Number.class);
         ClassInfo<Long> longInfo = classInfo(Long.class);

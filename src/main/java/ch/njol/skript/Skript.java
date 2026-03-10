@@ -9,9 +9,7 @@ import ch.njol.skript.lang.Statement;
 import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.log.SkriptLogger;
 import java.lang.reflect.Constructor;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import org.slf4j.Logger;
@@ -28,17 +26,12 @@ public class Skript implements SkriptAddon {
     private static final Skript INSTANCE = new Skript();
     private static volatile boolean acceptRegistrations = false;
     private static volatile boolean debug = false;
-    private static final List<AutoCloseable> CLOSE_ON_DISABLE = new CopyOnWriteArrayList<>();
 
     private final SyntaxRegistryService syntaxRegistryService = new SyntaxRegistryService();
     private final ExperimentRegistry experimentRegistry = new ExperimentRegistry(this);
     private final Map<Class<?>, Object> registries = new ConcurrentHashMap<>();
 
     public static Skript instance() {
-        return INSTANCE;
-    }
-
-    public static Skript getInstance() {
         return INSTANCE;
     }
 
@@ -66,10 +59,6 @@ public class Skript implements SkriptAddon {
         SkriptLogger.log(new LogEntry(Level.SEVERE, message));
     }
 
-    public static void info(String message) {
-        SkriptLogger.log(new LogEntry(Level.INFO, message));
-    }
-
     public static void debug(String message) {
         SkriptLogger.log(new LogEntry(Level.INFO, message));
     }
@@ -80,28 +69,6 @@ public class Skript implements SkriptAddon {
 
     public static void setDebug(boolean value) {
         debug = value;
-    }
-
-    public static void exception(Throwable throwable) {
-        LOGGER.error("Unhandled Skript exception", throwable);
-    }
-
-    public static void exception(Throwable throwable, String message) {
-        LOGGER.error(message, throwable);
-    }
-
-    public static Thread newThread(Runnable runnable, String name) {
-        Thread thread = new Thread(runnable, name);
-        thread.setDaemon(true);
-        return thread;
-    }
-
-    public static void closeOnDisable(AutoCloseable closeable) {
-        CLOSE_ON_DISABLE.add(closeable);
-    }
-
-    public static String getVersion() {
-        return "fabric-port";
     }
 
     public static ExperimentRegistry experiments() {

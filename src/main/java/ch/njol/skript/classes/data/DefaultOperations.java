@@ -1,7 +1,9 @@
 package ch.njol.skript.classes.data;
 
+import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.util.Timespan;
 import java.math.BigInteger;
+import java.util.function.Supplier;
 import org.skriptlang.skript.lang.arithmetic.Arithmetics;
 import org.skriptlang.skript.lang.arithmetic.Operator;
 
@@ -40,7 +42,7 @@ public final class DefaultOperations {
                 return Math.abs(left.doubleValue() - right.doubleValue());
             });
         }
-        Arithmetics.registerDefaultValue(Number.class, () -> 0L);
+        registerDefaultValueIfMissing(Number.class, () -> 0L);
     }
 
     private static void registerTimespanOperations() {
@@ -80,7 +82,7 @@ public final class DefaultOperations {
         if (!Arithmetics.exactDifferenceExists(Timespan.class)) {
             Arithmetics.registerDifference(Timespan.class, Timespan::difference);
         }
-        Arithmetics.registerDefaultValue(Timespan.class, Timespan::new);
+        registerDefaultValueIfMissing(Timespan.class, Timespan::new);
     }
 
     private static void registerStringOperations() {
@@ -108,6 +110,14 @@ public final class DefaultOperations {
             org.skriptlang.skript.lang.arithmetic.Operation<Number, Number, Number> castOperation =
                     (org.skriptlang.skript.lang.arithmetic.Operation<Number, Number, Number>) operation;
             Arithmetics.registerOperation(operator, Number.class, Number.class, castReturnType, castOperation);
+        }
+    }
+
+    private static <T> void registerDefaultValueIfMissing(Class<T> type, Supplier<T> supplier) {
+        try {
+            Arithmetics.registerDefaultValue(type, supplier);
+        } catch (SkriptAPIException ignored) {
+            // Compatibility registration should stay idempotent across repeated bootstrap/test setup.
         }
     }
 

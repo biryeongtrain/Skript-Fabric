@@ -3,6 +3,8 @@ package org.skriptlang.skript.fabric.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.events.EvtScript;
+import ch.njol.skript.events.EvtSkript;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -27,6 +29,8 @@ final class ScriptLifecycleRuntimeTest {
     static void bootstrapMinecraft() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
+        EvtScript.register();
+        EvtSkript.register();
         Skript.registerEffect(RecordLifecycleEffect.class, "record lifecycle %string%");
     }
 

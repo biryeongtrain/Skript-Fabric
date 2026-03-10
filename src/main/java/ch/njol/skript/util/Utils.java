@@ -49,7 +49,6 @@ public final class Utils {
         }
     }
 
-<<<<<<< HEAD
     public static String replaceChatStyles(String value) {
         return value;
     }

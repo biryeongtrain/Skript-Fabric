@@ -8,22 +8,30 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.runtime.FabricDamageEventHandle;
+import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 
 @SuppressWarnings("unchecked")
 public class EvtDamage extends SkriptEvent {
-
-    private static boolean registered;
 
     private @Nullable Literal<EntityData<?>> ofTypes;
     private @Nullable Literal<EntityData<?>> byTypes;
 
     public static synchronized void register() {
         EntityData.register();
-        if (registered) {
+        if (isRegistered()) {
             return;
         }
         Skript.registerEvent(EvtDamage.class, "damag(e|ing) [of %-entitydata%] [by %-entitydata%]");
-        registered = true;
+    }
+
+    private static boolean isRegistered() {
+        for (SyntaxInfo<?> info : Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EVENT)) {
+            if (info.type() == EvtDamage.class) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

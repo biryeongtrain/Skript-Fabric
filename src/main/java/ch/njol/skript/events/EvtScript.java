@@ -5,6 +5,8 @@ import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptEvent;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 
 public class EvtScript extends SkriptEvent {
 
@@ -13,17 +15,23 @@ public class EvtScript extends SkriptEvent {
             "on [:async] [script] (unload|stop|disable)"
     };
 
-    private static boolean registered;
-
     private boolean async;
     private boolean load;
 
     public static synchronized void register() {
-        if (registered) {
+        if (isRegistered()) {
             return;
         }
         Skript.registerEvent(EvtScript.class, PATTERNS);
-        registered = true;
+    }
+
+    private static boolean isRegistered() {
+        for (SyntaxInfo<?> info : Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EVENT)) {
+            if (info.type() == EvtScript.class) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

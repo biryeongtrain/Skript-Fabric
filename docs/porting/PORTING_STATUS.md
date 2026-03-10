@@ -38,9 +38,10 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged the verified Lane A/B/C/D/E/F results on 2026-03-10
-  - the merged batch restored pure-Java `DefaultOperations` / `DefaultFunctions`, local util chat/date helpers, `LitEternity` plus alias scaffolding, the legacy function-signature parser facade, text character/codepoint expressions, and control-flow `continue` / `stop` effects
-  - the raw `ch/njol/skript` local snapshot moved to `323 / 1189`, reducing the measured shortfall to `866`
+  - coordinator merged the verified Lane A/B/D/E/F upstream-core bundle batch on 2026-03-10; Lane C storage work was excluded after runtime regression
+  - the merged batch restored serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages` and numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes
+  - coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract, so the latest closure is support-surface reduction first, not new default-runtime syntax registration
+  - the raw `ch/njol/skript` local snapshot moved to `344 / 1189`, reducing the measured shortfall to `845`
 
 ## Priority Shift On 2026-03-08
 
@@ -62,14 +63,13 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `323` Java files
-- net missing local surface relative to that snapshot: `866` Java files
+- local `src/main/java/ch/njol/skript`: `344` Java files
+- net missing local surface relative to that snapshot: `845` Java files
 
 Top-level upstream packages missing locally entirely:
 
 - `bukkitutil`
 - `command`
-- `doc`
 - `hooks`
 - `test`
 - `timings`
@@ -79,10 +79,10 @@ Key local package counts versus upstream:
 
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
-- `expressions`: local `27`, upstream `391`
-- `conditions`: local `8`, upstream `135`
-- `classes`: local `19`, upstream `28`
-- `util`: local `28`, upstream `57`
+- `expressions`: local `32`, upstream `391`
+- `conditions`: local `10`, upstream `135`
+- `classes`: local `21`, upstream `28`
+- `util`: local `29`, upstream `57`
 - `variables`: local `6`, upstream `11`
 - `config`: local `20`, upstream `20`
 - `registrations`: local `10`, upstream `10`
@@ -93,8 +93,9 @@ Key local package counts versus upstream:
 - `localization`: local `11`, upstream `11`
 - `literals`: local `15`, upstream `16`
 - `effects`: local `14`, upstream `123`
-- `events`: local `4`, upstream `53`
+- `events`: local `6`, upstream `53`
 - `entity`: local `37`, upstream `34`
+- `doc`: local `1`, upstream `18`
 
 ## Why `lang` Goes First
 

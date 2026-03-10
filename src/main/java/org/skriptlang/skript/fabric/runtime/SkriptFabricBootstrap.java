@@ -1,23 +1,12 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.classes.data.DefaultComparators;
-import ch.njol.skript.classes.data.DefaultConverters;
-import ch.njol.skript.classes.data.DefaultFunctions;
-import ch.njol.skript.classes.data.DefaultOperations;
-import ch.njol.skript.classes.data.JavaClasses;
-import ch.njol.skript.classes.data.SkriptClasses;
-import ch.njol.skript.conditions.CondDate;
-import ch.njol.skript.conditions.CondPastFuture;
-import ch.njol.skript.events.EvtScript;
-import ch.njol.skript.events.EvtSkript;
-import ch.njol.skript.expressions.ExprDateAgoLater;
-import ch.njol.skript.expressions.ExprNow;
-import ch.njol.skript.expressions.ExprTimeSince;
-import ch.njol.skript.expressions.ExprUnixDate;
-import ch.njol.skript.expressions.ExprUnixTicks;
+import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
+import org.skriptlang.skript.lang.properties.PropertyRegistry;
+import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
 import org.skriptlang.skript.bukkit.base.conditions.CondAI;
 import org.skriptlang.skript.bukkit.base.conditions.CondIsEmpty;
@@ -168,11 +157,11 @@ public final class SkriptFabricBootstrap {
     }
 
     public static void bootstrap() {
-        if (bootstrapped) {
+        if (bootstrapped && hasCoreBootstrapState()) {
             return;
         }
         synchronized (SkriptFabricBootstrap.class) {
-            if (bootstrapped) {
+            if (bootstrapped && hasCoreBootstrapState()) {
                 return;
             }
 
@@ -180,35 +169,10 @@ public final class SkriptFabricBootstrap {
             try {
                 StructOptions.register();
                 SecIf.register();
-                Property.registerDefaultProperties();
-                JavaClasses.register();
-                SkriptClasses.register();
-                DefaultConverters.register();
-                DefaultComparators.register();
-                DefaultOperations.register();
-                DefaultFunctions.register();
-                PlayerClassInfo.register();
-                InventoryClassInfo.register();
-                ItemStackClassInfo.register();
-                ItemTypeClassInfo.register();
-                InputKeyClassInfo.register();
-                LocationClassInfo.register();
-                LootTableClassInfo.register();
-                NameableClassInfo.register();
-                DisplayBillboardConstraintsClassInfo.register();
-                ItemDisplayTransformClassInfo.register();
-                OfflinePlayerClassInfo.register();
-                PotionCauseClassInfo.register();
-                QuaternionClassInfo.register();
-                TextDisplayAlignClassInfo.register();
-                TimespanClassInfo.register();
-                WorldClassInfo.register();
-                EntityClassInfo.register();
-                DamageSourceClassInfo.register();
-                BlockClassInfo.register();
-                SlotClassInfo.register();
-                VectorClassInfo.register();
-                EquippableComponentClassInfo.register();
+                if (!hasCoreProperties()) {
+                    Property.registerDefaultProperties();
+                }
+                registerCoreClassInfos();
                 SkriptFabricEventBridge.register();
                 Skript.registerCondition(
                         CondIsEmpty.class,
@@ -418,16 +382,6 @@ public final class SkriptFabricBootstrap {
                         "%objects% (is|are) %objects%",
                         "%objects% (isn't|is not|aren't|are not) %objects%"
                 );
-                Skript.registerCondition(
-                        CondDate.class,
-                        "%date% (was|were)( more|(n't| not) less) than %timespan% [ago]",
-                        "%date% (was|were)((n't| not) more| less) than %timespan% [ago]"
-                );
-                Skript.registerCondition(
-                        CondPastFuture.class,
-                        "%dates% (is|are)[negated:(n't| not)] in the (past|:future)",
-                        "%dates% ha(s|ve)[negated:(n't| not)] passed"
-                );
                 Skript.registerEvent(EvtFabricBlockBreak.class, "on block break");
                 Skript.registerEvent(EvtAttackEntity.class, "on attack entity");
                 Skript.registerEvent(EvtBrewingFuel.class, EvtBrewingFuel.patterns());
@@ -435,41 +389,10 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEvent(EvtFabricGameTest.class, "on gametest");
                 Skript.registerEvent(EvtFishing.class, EvtFishing.patterns());
                 Skript.registerEvent(EvtPlayerInput.class, EvtPlayerInput.patterns());
-                EvtScript.register();
-                EvtSkript.register();
                 Skript.registerEvent(EvtFabricServerTick.class, "on server tick");
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
                 Skript.registerEvent(EvtUseItem.class, "on use item");
-                Skript.registerExpression(
-                        ExprNow.class,
-                        ch.njol.skript.util.Date.class,
-                        "now"
-                );
-                Skript.registerExpression(
-                        ExprDateAgoLater.class,
-                        ch.njol.skript.util.Date.class,
-                        "%timespan% (ago|in the past|before [the] [date] %-date%)",
-                        "%timespan% (later|(from|after) [the] [date] %-date%)"
-                );
-                Skript.registerExpression(
-                        ExprTimeSince.class,
-                        ch.njol.skript.util.Timespan.class,
-                        "[the] time since %dates%",
-                        "[the] (time [remaining]|remaining time) until %dates%"
-                );
-                Skript.registerExpression(
-                        ExprUnixDate.class,
-                        ch.njol.skript.util.Date.class,
-                        "[the] unix date of %numbers%",
-                        "%numbers%'[s] unix date"
-                );
-                Skript.registerExpression(
-                        ExprUnixTicks.class,
-                        Number.class,
-                        "[the] unix timestamp of %dates%",
-                        "%dates%'[s] unix timestamp"
-                );
                 Skript.registerExpression(
                         ExprLoveTime.class,
                         ch.njol.skript.util.Timespan.class,
@@ -852,5 +775,87 @@ public final class SkriptFabricBootstrap {
             bootstrapped = true;
             SkriptFabric.LOGGER.info("Initialized minimal Skript Fabric runtime bootstrap.");
         }
+    }
+
+    private static boolean hasCoreBootstrapState() {
+        return hasCoreClassInfos() && hasCoreSyntax();
+    }
+
+    private static void registerCoreClassInfos() {
+        registerClassInfoIfMissing("player", PlayerClassInfo::register);
+        registerClassInfoIfMissing("inventory", InventoryClassInfo::register);
+        registerClassInfoIfMissing("itemstack", ItemStackClassInfo::register);
+        registerClassInfoIfMissing("itemtype", ItemTypeClassInfo::register);
+        registerClassInfoIfMissing("inputkey", InputKeyClassInfo::register);
+        registerClassInfoIfMissing("location", LocationClassInfo::register);
+        registerClassInfoIfMissing("loottable", LootTableClassInfo::register);
+        registerClassInfoIfMissing("nameable", NameableClassInfo::register);
+        registerClassInfoIfMissing("billboardconstraints", DisplayBillboardConstraintsClassInfo::register);
+        registerClassInfoIfMissing("itemdisplaytransform", ItemDisplayTransformClassInfo::register);
+        registerClassInfoIfMissing("offlineplayer", OfflinePlayerClassInfo::register);
+        registerClassInfoIfMissing("potioneffectcause", PotionCauseClassInfo::register);
+        registerClassInfoIfMissing("quaternion", QuaternionClassInfo::register);
+        registerClassInfoIfMissing("textdisplayalign", TextDisplayAlignClassInfo::register);
+        registerClassInfoIfMissing("timespan", TimespanClassInfo::register);
+        registerClassInfoIfMissing("world", WorldClassInfo::register);
+        registerClassInfoIfMissing("entity", EntityClassInfo::register);
+        registerClassInfoIfMissing("damagesource", DamageSourceClassInfo::register);
+        registerClassInfoIfMissing("block", BlockClassInfo::register);
+        registerClassInfoIfMissing("slot", SlotClassInfo::register);
+        registerClassInfoIfMissing("vector", VectorClassInfo::register);
+        registerClassInfoIfMissing("equippablecomponent", EquippableComponentClassInfo::register);
+    }
+
+    private static void registerClassInfoIfMissing(String codeName, Runnable registrar) {
+        if (Classes.getClassInfoNoError(codeName) == null) {
+            registrar.run();
+        }
+    }
+
+    private static boolean hasCoreClassInfos() {
+        return Classes.getClassInfoNoError("player") != null
+                && Classes.getClassInfoNoError("inventory") != null
+                && Classes.getClassInfoNoError("itemstack") != null
+                && Classes.getClassInfoNoError("itemtype") != null
+                && Classes.getClassInfoNoError("inputkey") != null
+                && Classes.getClassInfoNoError("location") != null
+                && Classes.getClassInfoNoError("loottable") != null
+                && Classes.getClassInfoNoError("nameable") != null
+                && Classes.getClassInfoNoError("billboardconstraints") != null
+                && Classes.getClassInfoNoError("itemdisplaytransform") != null
+                && Classes.getClassInfoNoError("offlineplayer") != null
+                && Classes.getClassInfoNoError("potioneffectcause") != null
+                && Classes.getClassInfoNoError("quaternion") != null
+                && Classes.getClassInfoNoError("textdisplayalign") != null
+                && Classes.getClassInfoNoError("timespan") != null
+                && Classes.getClassInfoNoError("world") != null
+                && Classes.getClassInfoNoError("entity") != null
+                && Classes.getClassInfoNoError("damagesource") != null
+                && Classes.getClassInfoNoError("block") != null
+                && Classes.getClassInfoNoError("slot") != null
+                && Classes.getClassInfoNoError("vector") != null
+                && Classes.getClassInfoNoError("equippablecomponent") != null;
+    }
+
+    private static boolean hasCoreProperties() {
+        return Skript.instance().registry(PropertyRegistry.class).isRegistered("name");
+    }
+
+    private static boolean hasCoreSyntax() {
+        return hasSyntax(SyntaxRegistry.SECTION, SecIf.class)
+                && hasSyntax(SyntaxRegistry.EVENT, EvtDamage.class)
+                && hasSyntax(SyntaxRegistry.CONDITION, CondAI.class)
+                && hasSyntax(SyntaxRegistry.CONDITION, CondIsBurning.class)
+                && hasSyntax(SyntaxRegistry.EFFECT, org.skriptlang.skript.bukkit.base.effects.EffSilence.class)
+                && hasSyntax(SyntaxRegistry.EXPRESSION, ExprLoveTime.class);
+    }
+
+    private static boolean hasSyntax(String key, Class<?> type) {
+        for (SyntaxInfo<?> info : Skript.instance().syntaxRegistry().syntaxes(key)) {
+            if (info.type() == type) {
+                return true;
+            }
+        }
+        return false;
     }
 }

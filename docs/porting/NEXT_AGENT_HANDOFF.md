@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `323 / 1189`, shortfall `866`
+- upstream `ch/njol/skript` snapshot: local `344 / 1189`, shortfall `845`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,9 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head merges the new Lane A/B/C/D/E/F follow-up bundles on top of the existing `lang-core` baseline
+- current verified head merges the new Lane A/B/D/E/F upstream-core bundle batch on top of the existing `lang-core` baseline; Lane C storage work was excluded after runtime regression
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest bundle batch restored pure-Java `DefaultOperations` / `DefaultFunctions`, local util chat/date helpers, `LitEternity` plus alias scaffolding, the legacy function-signature parser facade, text character/codepoint expressions, and control-flow `continue` / `stop` effects
+- the latest bundle batch restored serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages` and numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes
+- coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract; pure-Java registrars are verified outside bootstrap and Lane C storage backend work remains unmerged
 
 ## Recent Closed Prereqs
 
@@ -46,7 +47,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 ## Next Targets
 
-1. remaining `variables` + `sections` + `structures` + `aliases` closure after the now-verified `LitEternity` / alias foundation follow-up, starting from storage-backend, `StructFunction`, `Direction`, and console-sender blockers
+1. remaining `variables` + `sections` + `structures` + `aliases` closure after the now-verified `LitEternity` / alias foundation follow-up, with the storage-backend / `FlatFileStorage` slice retried separately from the last reverted runtime regression
 2. next `effects` + `events` bundle after the new control-flow effect slice, still avoiding large new `org/...` runtime edits
 3. next `expressions` + `conditions` bundle after the text-character/codepoint slice
 4. remaining `classes` / `registrations` follow-up after the pure-Java default class-data helpers, still avoiding `yggdrasil` or Bukkit data imports where possible

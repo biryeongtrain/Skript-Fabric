@@ -14,16 +14,30 @@ import ch.njol.skript.lang.function.Signature;
 import ch.njol.skript.registrations.Classes;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.addon.SkriptAddon;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 class CommonFunctionCompatibilityTest {
 
+    private java.util.List<ClassInfo<?>> savedClassInfos = java.util.List.of();
+
+    @BeforeEach
+    void resetClassInfos() {
+        savedClassInfos = java.util.List.copyOf(Classes.getClassInfos());
+        Classes.clearClassInfos();
+    }
+
     @AfterEach
     void cleanup() {
         FunctionRegistry.getRegistry().clear();
         Functions.clear();
+        Classes.clearClassInfos();
+        for (ClassInfo<?> classInfo : savedClassInfos) {
+            Classes.registerClassInfo(classInfo);
+        }
+        savedClassInfos = java.util.List.of();
     }
 
     @Test

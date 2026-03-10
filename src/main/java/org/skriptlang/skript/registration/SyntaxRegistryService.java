@@ -2,6 +2,7 @@ package org.skriptlang.skript.registration;
 
 import ch.njol.skript.lang.SyntaxElement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,11 @@ public class SyntaxRegistryService {
 
     public <E extends SyntaxElement> void register(String key, SyntaxInfo<? extends E> info) {
         List<SyntaxInfo<?>> syntaxes = syntaxesByKey.computeIfAbsent(key, unused -> new ArrayList<>());
+        for (SyntaxInfo<?> existing : syntaxes) {
+            if (existing.type() == info.type() && Arrays.equals(existing.patterns(), info.patterns())) {
+                return;
+            }
+        }
         int insertionIndex = syntaxes.size();
         for (int index = 0; index < syntaxes.size(); index++) {
             if (info.priority().compareTo(syntaxes.get(index).priority()) < 0) {

@@ -9,6 +9,7 @@ import ch.njol.skript.config.EntryNode;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.ExecutionIntent;
@@ -45,6 +46,7 @@ import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableWrapper;
@@ -57,6 +59,13 @@ import org.skriptlang.skript.lang.structure.Structure;
 class ScriptLoaderCompatibilityTest {
 
     private static final List<String> statementExecution = new ArrayList<>();
+    private List<ClassInfo<?>> savedClassInfos = List.of();
+
+    @BeforeEach
+    void resetClassInfos() {
+        savedClassInfos = List.copyOf(Classes.getClassInfos());
+        Classes.clearClassInfos();
+    }
 
     @AfterEach
     void cleanupParserState() {
@@ -74,6 +83,11 @@ class ScriptLoaderCompatibilityTest {
         Variables.clearAll();
         FunctionRegistry.getRegistry().clear();
         Functions.clear();
+        Classes.clearClassInfos();
+        for (ClassInfo<?> classInfo : savedClassInfos) {
+            Classes.registerClassInfo(classInfo);
+        }
+        savedClassInfos = List.of();
     }
 
     @Test
