@@ -18,7 +18,9 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Name("Entity Visibility")
 @Description({
         "Change visibility of the given entities for the given players.",
-        "If no players are given, will hide the entities from all online players."
+        "If no players are given, will hide the entities from all online players.",
+        "",
+        "Note: all previously hidden entities (including players) will be visible when a player leaves and rejoins."
 })
 @Example("""
         on spawn:
@@ -28,7 +30,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("reveal hidden players of players")
 @Since("2.3, 2.10 (entities)")
 @RequiredPlugins("Minecraft 1.19+ (entities)")
-public class EffEntityVisibility extends Effect {
+public final class EffEntityVisibility extends Effect {
 
     private static boolean registered;
 
@@ -40,11 +42,9 @@ public class EffEntityVisibility extends Effect {
         if (registered) {
             return;
         }
-        Skript.registerEffect(
-                EffEntityVisibility.class,
+        Skript.registerEffect(EffEntityVisibility.class,
                 "hide %entities% [(from|for) %-players%]",
-                "reveal %entities% [(to|for|from) %-players%]"
-        );
+                "reveal %entities% [(to|for|from) %-players%]");
         registered = true;
     }
 
@@ -53,8 +53,8 @@ public class EffEntityVisibility extends Effect {
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult result) {
         reveal = matchedPattern == 1;
         hidden = (Expression<Entity>) exprs[0];
-        viewers = exprs.length > 1 ? (Expression<ServerPlayer>) exprs[1] : null;
-        Skript.error("Per-player entity visibility is not wired in the Fabric runtime yet.");
+        viewers = exprs.length < 2 ? null : (Expression<ServerPlayer>) exprs[1];
+        Skript.error("Per-viewer entity visibility is not wired in the Fabric runtime yet");
         return false;
     }
 
@@ -64,7 +64,8 @@ public class EffEntityVisibility extends Effect {
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
-        return (reveal ? "reveal " : "hide ") + hidden.toString(event, debug)
+        return (reveal ? "reveal " : "hide ")
+                + hidden.toString(event, debug)
                 + (viewers == null ? "" : (reveal ? " to " : " from ") + viewers.toString(event, debug));
     }
 }
