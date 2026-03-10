@@ -25,6 +25,9 @@ public class ExprExplosiveYield extends SimplePropertyExpression<Entity, Number>
         if (!(value instanceof Number) && entity instanceof Creeper) {
             value = ExpressionHandleSupport.invoke(entity, "getExplosionRadius");
         }
+        if (!(value instanceof Number) && entity instanceof Creeper) {
+            value = ExpressionHandleSupport.field(entity, "explosionRadius");
+        }
         return value instanceof Number number ? number : null;
     }
 
@@ -52,7 +55,9 @@ public class ExprExplosiveYield extends SimplePropertyExpression<Entity, Number>
                 updated = Math.min(updated, 127);
             }
             if (!ExpressionHandleSupport.set(entity, "setExplosionPower", updated) && entity instanceof Creeper) {
-                ExpressionHandleSupport.set(entity, "setExplosionRadius", updated);
+                if (!ExpressionHandleSupport.set(entity, "setExplosionRadius", updated)) {
+                    ExpressionHandleSupport.setField(entity, "explosionRadius", updated);
+                }
             }
         }
     }

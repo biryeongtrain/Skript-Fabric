@@ -37,7 +37,7 @@ abstract class CropBlockMixin {
         skript$dispatchIfChanged(level, pos);
     }
 
-    @Inject(method = "grow", at = @At("HEAD"))
+    @Inject(method = "performBonemeal", at = @At("HEAD"))
     private void skript$captureBonemealState(
             ServerLevel level,
             RandomSource random,
@@ -48,7 +48,7 @@ abstract class CropBlockMixin {
         skript$storePreviousState(level, pos, state);
     }
 
-    @Inject(method = "grow", at = @At("RETURN"))
+    @Inject(method = "performBonemeal", at = @At("RETURN"))
     private void skript$dispatchBonemealGrowth(
             ServerLevel level,
             RandomSource random,

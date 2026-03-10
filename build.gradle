@@ -111,6 +111,10 @@ def isolatedRegistrySuites = [
                 className: 'org.skriptlang.skript.fabric.runtime.MixedRuntimeSyntaxBatchTest'
         ],
         [
+                taskName: 'isolatedExpressionPlayerServerCompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionPlayerServerCompatibilityTest'
+        ],
+        [
                 taskName: 'isolatedExpressionEventContextBundleCompatibilityTest',
                 className: 'ch.njol.skript.expressions.ExpressionEventContextBundleCompatibilityTest'
         ],
@@ -125,6 +129,10 @@ def isolatedRegistrySuites = [
         [
                 taskName: 'isolatedEffectEntityClosureCompatibilityTest',
                 className: 'ch.njol.skript.effects.EffectEntityClosureCompatibilityTest'
+        ],
+        [
+                taskName: 'isolatedEffectBindingTest',
+                className: 'org.skriptlang.skript.fabric.runtime.EffectBindingTest'
         ]
 ]
 

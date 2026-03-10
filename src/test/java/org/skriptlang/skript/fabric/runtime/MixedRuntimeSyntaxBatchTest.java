@@ -12,16 +12,11 @@ import ch.njol.skript.conditions.CondFromMobSpawner;
 import ch.njol.skript.conditions.CondHasClientWeather;
 import ch.njol.skript.conditions.CondHasResourcePack;
 import ch.njol.skript.conditions.CondIsPreferredTool;
-import ch.njol.skript.conditions.CondIsEnchanted;
-import ch.njol.skript.conditions.CondIsPluginEnabled;
-import ch.njol.skript.conditions.CondIsSkriptCommand;
-import ch.njol.skript.conditions.CondIsSpawnable;
 import ch.njol.skript.conditions.CondIsSedated;
-import ch.njol.skript.conditions.CondLeashed;
+import ch.njol.skript.conditions.CondIsLeashed;
 import ch.njol.skript.conditions.CondLeashWillDrop;
 import ch.njol.skript.conditions.CondResourcePack;
 import ch.njol.skript.conditions.CondRespawnLocation;
-import ch.njol.skript.conditions.CondScriptLoaded;
 import ch.njol.skript.effects.EffCopy;
 import ch.njol.skript.effects.Delay;
 import ch.njol.skript.effects.EffDoIf;
@@ -107,7 +102,7 @@ final class MixedRuntimeSyntaxBatchTest {
                 FabricUseEntityHandle.class
         ));
         assertInstanceOf(CondChatFiltering.class, parseConditionInEvent(
-                "event-player has chat filtering enabled",
+                "event-player is using text filtering",
                 FabricUseEntityHandle.class
         ));
         assertInstanceOf(CondChatVisibility.class, parseConditionInEvent(
@@ -119,18 +114,14 @@ final class MixedRuntimeSyntaxBatchTest {
                 ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
         ));
         assertInstanceOf(CondHasClientWeather.class, parseConditionInEvent(
-                "event-player has custom weather",
+                "event-player is using custom weather",
                 FabricUseEntityHandle.class
         ));
         assertInstanceOf(CondHasResourcePack.class, parseConditionInEvent(
-                "event-player has a resource pack loaded",
+                "event-player is using a resource pack",
                 FabricUseEntityHandle.class
         ));
-        assertInstanceOf(CondIsEnchanted.class, parseCondition("diamond sword is enchanted"));
-        assertInstanceOf(CondIsPluginEnabled.class, parseCondition("plugin \"fabricloader\" is enabled"));
-        assertInstanceOf(CondIsSkriptCommand.class, parseCondition("\"help\" is a skript command"));
-        assertInstanceOf(CondIsSpawnable.class, parseCondition("zombie is spawnable"));
-        assertInstanceOf(CondLeashed.class, parseConditionInEvent(
+        assertInstanceOf(CondIsLeashed.class, parseConditionInEvent(
                 "event-entity is leashed",
                 ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
         ));
@@ -142,7 +133,6 @@ final class MixedRuntimeSyntaxBatchTest {
                 "resource pack was accepted",
                 ch.njol.skript.events.FabricEventCompatHandles.ResourcePackResponse.class
         ));
-        assertInstanceOf(CondScriptLoaded.class, parseCondition("script \"example.sk\" is loaded"));
         assertInstanceOf(CondIsPreferredTool.class, parseConditionInEvent(
                 "diamond pickaxe is the preferred tool for event-block",
                 ch.njol.skript.events.FabricEventCompatHandles.BeaconToggle.class

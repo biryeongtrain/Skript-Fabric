@@ -270,7 +270,7 @@ public final class FabricEventCompatHandles {
             implements FabricBlockEventHandle, FabricEntityEventHandle {
         @Override
         public Entity entity() {
-            return vehicle;
+            return entity != null ? entity : vehicle;
         }
     }
 

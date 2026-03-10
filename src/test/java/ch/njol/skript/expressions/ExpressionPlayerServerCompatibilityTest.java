@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -37,6 +38,7 @@ import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 import sun.misc.Unsafe;
 
+@Tag("isolated-registry")
 final class ExpressionPlayerServerCompatibilityTest {
 
     private static boolean syntaxRegistered;

@@ -9,6 +9,7 @@ import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import java.util.Locale;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +29,7 @@ public class ExprClicked extends SimpleExpression<Object> implements EventRestri
 
     private @Nullable EntityData<?> entityType;
     private @Nullable FabricItemType itemType;
+    private boolean anyEntity;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -37,6 +39,9 @@ public class ExprClicked extends SimpleExpression<Object> implements EventRestri
             entityType = data;
         } else if (type instanceof FabricItemType fabricItemType) {
             itemType = fabricItemType;
+        } else {
+            String raw = parseResult.expr == null ? "" : parseResult.expr.toLowerCase(Locale.ENGLISH);
+            anyEntity = raw.contains("clicked entity");
         }
         return true;
     }
@@ -51,9 +56,12 @@ public class ExprClicked extends SimpleExpression<Object> implements EventRestri
         if (!(event.handle() instanceof FabricEventCompatHandles.Click handle)) {
             return null;
         }
-        if (entityType != null) {
+        if (entityType != null || anyEntity) {
             Entity entity = handle.entity();
-            if (entity == null || !entityType.isInstance(entity)) {
+            if (entity == null) {
+                return null;
+            }
+            if (entityType != null && !entityType.isInstance(entity)) {
                 return null;
             }
             return new Entity[]{entity};
@@ -76,13 +84,19 @@ public class ExprClicked extends SimpleExpression<Object> implements EventRestri
 
     @Override
     public Class<?> getReturnType() {
-        return entityType != null ? entityType.getType() : FabricBlock.class;
+        if (entityType != null) {
+            return entityType.getType();
+        }
+        return anyEntity ? Entity.class : FabricBlock.class;
     }
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         if (entityType != null) {
             return "clicked " + entityType;
+        }
+        if (anyEntity) {
+            return "clicked entity";
         }
         return "clicked " + (itemType == null ? "block" : itemType);
     }

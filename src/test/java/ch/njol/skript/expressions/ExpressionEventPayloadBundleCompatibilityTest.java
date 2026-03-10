@@ -92,6 +92,16 @@ final class ExpressionEventPayloadBundleCompatibilityTest {
         ));
         assertTrue(clicked instanceof FabricBlock);
 
+        ExprClicked clickedEntity = new ExprClicked();
+        assertTrue(clickedEntity.init(new Expression[]{null}, 0, Kleenean.FALSE, parseResult("clicked entity")));
+        ArmorStand armorStand = allocateEntity(ArmorStand.class, EntityType.ARMOR_STAND);
+        assertEquals(armorStand, clickedEntity.getSingle(new SkriptEvent(
+                new FabricEventCompatHandles.Click(null, BlockPos.ZERO, FabricEventCompatHandles.ClickType.RIGHT, armorStand, null, null),
+                null,
+                null,
+                null
+        )));
+
         ExprExplosionBlockYield explosionBlockYield = new ExprExplosionBlockYield();
         assertTrue(explosionBlockYield.init(new Expression[0], 0, Kleenean.FALSE, parseResult("explosion block yield")));
         FabricEventCompatHandles.Explosion explosion = new FabricEventCompatHandles.Explosion(List.of(new FabricBlock(null, BlockPos.ZERO)), 0.75F);

@@ -55,27 +55,31 @@ final class ExpressionHandleSupport {
         if (target == null) {
             return null;
         }
-        try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field.get(target);
-        } catch (ReflectiveOperationException ignored) {
-            return null;
+        for (Class<?> type = target.getClass(); type != null; type = type.getSuperclass()) {
+            try {
+                Field field = type.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                return field.get(target);
+            } catch (ReflectiveOperationException ignored) {
+            }
         }
+        return null;
     }
 
     static boolean setField(@Nullable Object target, String fieldName, Object value) {
         if (target == null) {
             return false;
         }
-        try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-            return true;
-        } catch (ReflectiveOperationException ignored) {
-            return false;
+        for (Class<?> type = target.getClass(); type != null; type = type.getSuperclass()) {
+            try {
+                Field field = type.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                field.set(target, value);
+                return true;
+            } catch (ReflectiveOperationException ignored) {
+            }
         }
+        return false;
     }
 
     static @Nullable Object staticField(String className, String fieldName) {
@@ -98,9 +102,11 @@ final class ExpressionHandleSupport {
                 return method;
             }
         }
-        for (Method method : type.getDeclaredMethods()) {
-            if (method.getName().equals(methodName) && method.getParameterCount() == argCount) {
-                return method;
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+            for (Method method : current.getDeclaredMethods()) {
+                if (method.getName().equals(methodName) && method.getParameterCount() == argCount) {
+                    return method;
+                }
             }
         }
         return null;

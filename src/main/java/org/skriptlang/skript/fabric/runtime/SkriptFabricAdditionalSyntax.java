@@ -110,7 +110,6 @@ final class SkriptFabricAdditionalSyntax {
         forceInitialize(ch.njol.skript.conditions.CondHasClientWeather.class);
         forceInitialize(ch.njol.skript.conditions.CondHasMetadata.class);
         forceInitialize(ch.njol.skript.conditions.CondHasResourcePack.class);
-        forceInitialize(ch.njol.skript.conditions.CondIsEnchanted.class);
         forceInitialize(ch.njol.skript.conditions.CondIsPluginEnabled.class);
         forceInitialize(ch.njol.skript.conditions.CondIsSkriptCommand.class);
         forceInitialize(ch.njol.skript.conditions.CondIsSlimeChunk.class);

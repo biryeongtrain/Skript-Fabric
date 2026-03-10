@@ -15,6 +15,7 @@ import net.minecraft.server.Bootstrap;
 import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.displays.text.EffTextDisplayDropShadow;
 import org.skriptlang.skript.bukkit.displays.text.EffTextDisplaySeeThroughBlocks;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+@Tag("isolated-registry")
 final class EffectBindingTest {
 
     @BeforeAll

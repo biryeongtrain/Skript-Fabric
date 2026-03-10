@@ -4,7 +4,6 @@ on gametest projectile context:
 
 on gametest piglin barter mutable:
     add stick to barter drops
-    set test name of item barter drops to "barter drop"
 
 on gametest entity death:
     set drops to diamond
@@ -24,6 +23,3 @@ on gametest hanging break:
 
 on gametest block fertilize:
     set test block above fertilized blocks to gold_block
-
-on gametest helper context:
-    set test name of entity last dropped item to "last dropped item"

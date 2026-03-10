@@ -4,6 +4,7 @@
   "package": "kim.biryeong.skriptFabric.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AbstractArrowMixin",
     "AbstractFurnaceBlockEntityMixin",
     "AnimalMixin",
     "AxolotlPotionCauseMixin",
@@ -27,6 +28,7 @@
     "PlayerPotionCauseMixin",
     "PotionContentsMixin",
     "ReloadableServerRegistriesHolderMixin",
+    "ServerCommonPacketListenerImplMixin",
     "ServerGamePacketListenerImplMixin",
     "SpiderPotionCauseMixin",
     "SplashPotionCauseMixin",

@@ -2,20 +2,20 @@ package ch.njol.skript.expressions;
 
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
-public class ExprArrowPierceLevel extends SimplePropertyExpression<Projectile, Long> {
+public class ExprArrowPierceLevel extends SimplePropertyExpression<Entity, Long> {
 
     static {
         register(ExprArrowPierceLevel.class, Long.class, "arrow pierce level", "projectiles");
     }
 
     @Override
-    public @Nullable Long convert(Projectile projectile) {
-        return projectile instanceof AbstractArrow arrow ? (long) arrow.getPierceLevel() : null;
+    public @Nullable Long convert(Entity entity) {
+        return entity instanceof AbstractArrow arrow ? (long) arrow.getPierceLevel() : null;
     }
 
     @Override
@@ -29,8 +29,8 @@ public class ExprArrowPierceLevel extends SimplePropertyExpression<Projectile, L
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         int change = delta == null ? 0 : Math.max(0, ((Number) delta[0]).intValue());
-        for (Projectile projectile : getExpr().getArray(event)) {
-            if (!(projectile instanceof AbstractArrow arrow)) {
+        for (Entity entity : getExpr().getArray(event)) {
+            if (!(entity instanceof AbstractArrow arrow)) {
                 continue;
             }
             int current = arrow.getPierceLevel();

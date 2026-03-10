@@ -2,6 +2,9 @@ package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.entity.EntityData;
+import ch.njol.skript.effects.EffDrop;
+import ch.njol.skript.effects.EffFireworkLaunch;
+import ch.njol.skript.effects.EffLightning;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -49,9 +52,9 @@ public class ExprLastSpawnedEntity extends SimpleExpression<Entity> {
         Entity spawned = switch (from) {
             case 0 -> (Entity) ExpressionHandleSupport.staticField("ch.njol.skript.sections.EffSecSpawn", "lastSpawned");
             case 1 -> (Entity) ExpressionHandleSupport.staticField("ch.njol.skript.sections.EffSecShoot", "lastSpawned");
-            case 2 -> (Entity) ExpressionHandleSupport.staticField("ch.njol.skript.effects.EffDrop", "lastSpawned");
-            case 3 -> (Entity) ExpressionHandleSupport.staticField("ch.njol.skript.effects.EffLightning", "lastSpawned");
-            case 4 -> (Entity) ExpressionHandleSupport.staticField("ch.njol.skript.effects.EffFireworkLaunch", "lastSpawned");
+            case 2 -> EffDrop.lastSpawned;
+            case 3 -> EffLightning.lastSpawned;
+            case 4 -> EffFireworkLaunch.lastSpawned;
             default -> null;
         };
         if (spawned == null || !type.isInstance(spawned)) {

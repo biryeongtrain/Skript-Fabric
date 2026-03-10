@@ -2,20 +2,20 @@ package ch.njol.skript.expressions;
 
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
-public class ExprArrowKnockbackStrength extends SimplePropertyExpression<Projectile, Long> {
+public class ExprArrowKnockbackStrength extends SimplePropertyExpression<Entity, Long> {
 
     static {
         register(ExprArrowKnockbackStrength.class, Long.class, "arrow knockback strength", "projectiles");
     }
 
     @Override
-    public @Nullable Long convert(Projectile projectile) {
-        Object knockback = projectile instanceof AbstractArrow arrow ? ExpressionHandleSupport.invoke(arrow, "getKnockback") : null;
+    public @Nullable Long convert(Entity entity) {
+        Object knockback = entity instanceof AbstractArrow arrow ? ExpressionHandleSupport.invoke(arrow, "getKnockback") : null;
         return knockback instanceof Number number ? number.longValue() : null;
     }
 
@@ -30,8 +30,8 @@ public class ExprArrowKnockbackStrength extends SimplePropertyExpression<Project
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         int change = delta == null ? 0 : Math.max(0, ((Number) delta[0]).intValue());
-        for (Projectile projectile : getExpr().getArray(event)) {
-            if (!(projectile instanceof AbstractArrow arrow)) {
+        for (Entity entity : getExpr().getArray(event)) {
+            if (!(entity instanceof AbstractArrow arrow)) {
                 continue;
             }
             Number knockback = (Number) ExpressionHandleSupport.invoke(arrow, "getKnockback");
