@@ -13,6 +13,7 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
+import ch.njol.skript.variables.Variables;
 import com.mojang.authlib.GameProfile;
 import com.mojang.math.Transformation;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -145,6 +146,7 @@ import org.skriptlang.skript.fabric.runtime.FabricFishingHandle;
 import org.skriptlang.skript.fabric.runtime.FabricPlayerInputHandle;
 import org.skriptlang.skript.fabric.runtime.FabricUseEntityHandle;
 import org.skriptlang.skript.fabric.runtime.FabricUseItemHandle;
+import org.skriptlang.skript.fabric.runtime.GameTestRuntimeContext;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.WXYZHandler;
@@ -225,6 +227,114 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
                         Component.literal("Expected make-baby effect to convert the cow into a baby.")
                 )
         );
+    }
+
+    @GameTest
+    public void doIfEffectExecutesRealScript(GameTestHelper helper) {
+        Interaction interaction = createInteraction(helper, true);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/effect/do_if_names_entity.sk",
+                interaction,
+                "do_if_effect"
+        );
+    }
+
+    @GameTest
+    public void equipEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/equip_entity_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.EMERALD_BLOCK,
+                () -> helper.assertTrue(
+                        cow.getItemBySlot(EquipmentSlot.HEAD).is(Items.DIAMOND_HELMET),
+                        Component.literal("Expected equip effect to place a diamond helmet on the target entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void damageEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        float startingHealth = cow.getHealth();
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/damage_entity_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.REDSTONE_BLOCK,
+                () -> helper.assertTrue(
+                        cow.getHealth() < startingHealth,
+                        Component.literal("Expected damage effect to reduce the target entity's health.")
+                )
+        );
+    }
+
+    @GameTest
+    public void delayEffectExecutesRealScript(GameTestHelper helper) {
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos markerPos = new BlockPos(0, 1, 0);
+        helper.startSequence()
+                .thenExecute(() -> {
+                helper.assertTrue(
+                        RUNTIME_LOCK.compareAndSet(false, true),
+                        Component.literal("Waiting for exclusive Skript runtime access.")
+                );
+                Variables.clearAll();
+                runtime.clearScripts();
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(markerPos), Blocks.AIR.defaultBlockState());
+                runtime.loadFromResource("skript/gametest/effect/wait_one_tick_sets_block.sk");
+
+                int executed = GameTestRuntimeContext.withHelper(helper, () -> runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        helper,
+                        helper.getLevel().getServer(),
+                        helper.getLevel(),
+                        null
+                )));
+                helper.assertTrue(
+                        executed == 1,
+                        Component.literal("Expected exactly one delayed gametest trigger execution but got " + executed)
+                );
+                })
+                .thenWaitUntil(() -> helper.assertBlockPresent(Blocks.GOLD_BLOCK, markerPos))
+                .thenExecute(() -> {
+                    runtime.clearScripts();
+                    Variables.clearAll();
+                    RUNTIME_LOCK.set(false);
+                })
+                .thenSucceed();
+    }
+
+    @GameTest
+    public void returnEffectExecutesRealScript(GameTestHelper helper) {
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos absoluteTarget = new BlockPos(1, 80, 1);
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            if (!loaded.get()) {
+                helper.assertTrue(
+                        RUNTIME_LOCK.compareAndSet(false, true),
+                        Component.literal("Waiting for exclusive Skript runtime access.")
+                );
+                Variables.clearAll();
+                GameTestRuntimeContext.withHelper(helper, () -> {
+                    runtime.clearScripts();
+                    helper.getLevel().setBlockAndUpdate(absoluteTarget, Blocks.AIR.defaultBlockState());
+                    runtime.loadFromResource("skript/gametest/effect/return_function_sets_block.sk");
+                    loaded.set(true);
+                });
+            }
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(absoluteTarget).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected return effect to feed the function result back into the calling trigger.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
     }
 
     @GameTest

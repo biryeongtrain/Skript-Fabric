@@ -1,0 +1,3 @@
+on gametest:
+    wait 1 tick
+    set test block at 0 1 0 to gold_block

@@ -23,7 +23,11 @@ import ch.njol.skript.conditions.CondResourcePack;
 import ch.njol.skript.conditions.CondRespawnLocation;
 import ch.njol.skript.conditions.CondScriptLoaded;
 import ch.njol.skript.effects.EffCopy;
+import ch.njol.skript.effects.Delay;
+import ch.njol.skript.effects.EffDoIf;
+import ch.njol.skript.effects.EffEquip;
 import ch.njol.skript.effects.EffExceptionDebug;
+import ch.njol.skript.effects.EffHealth;
 import ch.njol.skript.effects.EffSort;
 import ch.njol.skript.effects.EffToggle;
 import ch.njol.skript.events.EvtBeaconEffect;
@@ -220,6 +224,10 @@ final class MixedRuntimeSyntaxBatchTest {
         assertInstanceOf(EffCopy.class, parseEffect("copy {source::*} to {target::*}"));
         assertInstanceOf(EffSort.class, parseEffect("sort {values::*}"));
         assertInstanceOf(EffExceptionDebug.class, parseEffect("cause exception"));
+        assertInstanceOf(Delay.class, parseEffect("wait 1 tick"));
+        assertInstanceOf(EffDoIf.class, parseEffectInEvent("set test name of entity event-entity to \"x\" if event-entity is visible", FabricUseEntityHandle.class));
+        assertInstanceOf(EffEquip.class, parseEffectInEvent("equip event-entity with diamond helmet", FabricUseEntityHandle.class));
+        assertInstanceOf(EffHealth.class, parseEffectInEvent("damage event-entity by 1 heart", FabricUseEntityHandle.class));
         assertInstanceOf(EffToggle.class, parseEffectInEvent("toggle gravity of event-entity", FabricUseEntityHandle.class));
     }
 

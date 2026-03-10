@@ -94,6 +94,25 @@ public final class Variables {
         LOCAL_VARIABLES.clear();
     }
 
+    public static @Nullable Object removeLocals(@Nullable SkriptEvent event) {
+        Object key = eventScopeKey(event);
+        synchronized (LOCAL_VARIABLES) {
+            VariablesMap removed = LOCAL_VARIABLES.remove(key);
+            return removed == null ? null : removed.copy();
+        }
+    }
+
+    public static void setLocalVariables(@Nullable SkriptEvent event, @Nullable Object variables) {
+        Object key = eventScopeKey(event);
+        synchronized (LOCAL_VARIABLES) {
+            if (!(variables instanceof VariablesMap map)) {
+                LOCAL_VARIABLES.remove(key);
+                return;
+            }
+            LOCAL_VARIABLES.put(key, map.copy());
+        }
+    }
+
     public static void withLocalVariables(
             @Nullable SkriptEvent source,
             @Nullable SkriptEvent target,

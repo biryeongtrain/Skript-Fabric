@@ -9,7 +9,10 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -31,7 +34,7 @@ public class EffEquip extends Effect {
 
     private static boolean registered;
 
-    private Expression<LivingEntity> entities;
+    private Expression<?> entities;
     private @Nullable Expression<FabricItemType> itemTypes;
     private boolean equip = true;
 
@@ -53,14 +56,14 @@ public class EffEquip extends Effect {
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parser) {
         if (matchedPattern == 0 || matchedPattern == 1) {
-            entities = (Expression<LivingEntity>) exprs[0];
+            entities = exprs[0];
             itemTypes = (Expression<FabricItemType>) exprs[1];
         } else if (matchedPattern == 2) {
             itemTypes = (Expression<FabricItemType>) exprs[0];
-            entities = (Expression<LivingEntity>) exprs[1];
+            entities = exprs[1];
             equip = false;
         } else {
-            entities = (Expression<LivingEntity>) exprs[0];
+            entities = exprs[0];
             itemTypes = null;
             equip = false;
         }
@@ -69,6 +72,54 @@ public class EffEquip extends Effect {
 
     @Override
     protected void execute(SkriptEvent event) {
+        Expression<?> rawEntities = entities;
+        FabricItemType[] resolvedItemTypes = itemTypes == null ? new FabricItemType[0] : itemTypes.getArray(event);
+        for (Object resolvedEntity : rawEntities.getArray(event)) {
+            if (!(resolvedEntity instanceof LivingEntity entity)) {
+                continue;
+            }
+            if (itemTypes == null) {
+                clearEquipment(entity);
+                continue;
+            }
+            for (FabricItemType itemType : resolvedItemTypes) {
+                EquipmentSlot slot = resolveSlot(itemType);
+                if (slot == null) {
+                    continue;
+                }
+                entity.setItemSlot(slot, equip ? itemType.toStack() : ItemStack.EMPTY);
+            }
+        }
+    }
+
+    private void clearEquipment(LivingEntity entity) {
+        entity.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+        entity.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
+        entity.setItemSlot(EquipmentSlot.LEGS, ItemStack.EMPTY);
+        entity.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
+        entity.setItemSlot(EquipmentSlot.BODY, ItemStack.EMPTY);
+    }
+
+    private @Nullable EquipmentSlot resolveSlot(FabricItemType itemType) {
+        ItemStack stack = itemType.toStack();
+        var equippable = stack.get(DataComponents.EQUIPPABLE);
+        if (equippable != null) {
+            return equippable.slot();
+        }
+        String itemId = itemType.itemId();
+        if (itemId.endsWith("helmet") || itemId.endsWith("skull") || itemId.endsWith("head") || itemId.endsWith("pumpkin")) {
+            return EquipmentSlot.HEAD;
+        }
+        if (itemId.endsWith("chestplate") || itemId.endsWith("elytra")) {
+            return EquipmentSlot.CHEST;
+        }
+        if (itemId.endsWith("leggings")) {
+            return EquipmentSlot.LEGS;
+        }
+        if (itemId.endsWith("boots")) {
+            return EquipmentSlot.FEET;
+        }
+        return EquipmentSlot.HEAD;
     }
 
     @Override

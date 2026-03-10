@@ -1,5 +1,9 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import ch.njol.skript.effects.Delay;
+import ch.njol.skript.effects.EffDoIf;
+import ch.njol.skript.effects.EffEquip;
+import ch.njol.skript.effects.EffHealth;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
@@ -75,7 +79,11 @@ final class EffectSyntaxParsingTest {
                 Map.entry("skript/gametest/effect/potion_ambient_effect_names_entity.sk", EffPotionAmbient.class),
                 Map.entry("skript/gametest/effect/potion_icon_effect_names_entity.sk", EffPotionIcon.class),
                 Map.entry("skript/gametest/effect/potion_particles_effect_names_entity.sk", EffPotionParticles.class),
-                Map.entry("skript/gametest/effect/register_custom_tag_renames_item.sk", EffRegisterTag.class)
+                Map.entry("skript/gametest/effect/register_custom_tag_renames_item.sk", EffRegisterTag.class),
+                Map.entry("skript/gametest/effect/wait_one_tick_sets_block.sk", Delay.class),
+                Map.entry("skript/gametest/effect/do_if_names_entity.sk", EffDoIf.class),
+                Map.entry("skript/gametest/effect/equip_entity_marks_block.sk", EffEquip.class),
+                Map.entry("skript/gametest/effect/damage_entity_marks_block.sk", EffHealth.class)
         );
 
         List<Executable> assertions = new ArrayList<>();

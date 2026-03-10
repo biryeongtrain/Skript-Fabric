@@ -1,0 +1,3 @@
+on use entity:
+    damage event-entity by 2 hearts
+    set test block under player event-player to redstone_block

@@ -4,6 +4,10 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.effects.Delay;
+import ch.njol.skript.effects.EffDoIf;
+import ch.njol.skript.effects.EffEquip;
+import ch.njol.skript.effects.EffHealth;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import net.minecraft.SharedConstants;
@@ -116,6 +120,34 @@ final class EffectBindingTest {
         assertTrue(expression(effect, "name").toString(null, false).contains("effect_test_items"));
         assertEquals("event-item", expression(effect, "contents").toString(null, false));
         assertEquals("ITEM", readObject(effect, "target").toString());
+    }
+
+    @Test
+    void delayFixtureBindsTimespanExpression() throws Exception {
+        Delay effect = loadFirstEffect("skript/gametest/effect/wait_one_tick_sets_block.sk", Delay.class);
+        String rendered = expression(effect, "duration").toString(null, false);
+        assertTrue(rendered.contains("1 tick"));
+    }
+
+    @Test
+    void doIfFixtureBindsInnerEffectAndCondition() throws Exception {
+        EffDoIf effect = loadFirstEffect("skript/gametest/effect/do_if_names_entity.sk", EffDoIf.class);
+        assertNotNull(readObject(effect, "effect"));
+        assertNotNull(readObject(effect, "condition"));
+    }
+
+    @Test
+    void equipFixtureBindsEventEntityAndItemType() throws Exception {
+        EffEquip effect = loadFirstEffect("skript/gametest/effect/equip_entity_marks_block.sk", EffEquip.class);
+        assertEquals("event-entity", expression(effect, "entities").toString(null, false));
+        assertTrue(expression(effect, "itemTypes").toString(null, false).contains("diamond"));
+    }
+
+    @Test
+    void healthFixtureBindsDamageTargetAndAmount() throws Exception {
+        EffHealth effect = loadFirstEffect("skript/gametest/effect/damage_entity_marks_block.sk", EffHealth.class);
+        assertEquals("event-entity", expression(effect, "damageables").toString(null, false));
+        assertEquals(2, ((Number) expression(effect, "amount").getSingle(null)).intValue());
     }
 
     private <T> T loadFirstEffect(String resourcePath, Class<T> effectClass) throws Exception {

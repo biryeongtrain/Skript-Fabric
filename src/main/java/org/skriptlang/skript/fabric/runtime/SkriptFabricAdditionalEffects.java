@@ -1,6 +1,11 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.effects.Delay;
+import ch.njol.skript.effects.EffDoIf;
+import ch.njol.skript.effects.EffEquip;
+import ch.njol.skript.effects.EffHealth;
+import ch.njol.skript.effects.EffReturn;
 import org.skriptlang.skript.bukkit.breeding.elements.EffAllowAging;
 import org.skriptlang.skript.bukkit.breeding.elements.EffBreedable;
 import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
@@ -33,6 +38,11 @@ final class SkriptFabricAdditionalEffects {
     }
 
     static void register() {
+        Delay.register();
+        EffDoIf.register();
+        EffEquip.register();
+        EffHealth.register();
+        EffReturn.register();
         Skript.registerEffect(
                 EffAllowAging.class,
                 "lock age of %entities%",

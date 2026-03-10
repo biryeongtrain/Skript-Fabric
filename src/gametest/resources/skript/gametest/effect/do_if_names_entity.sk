@@ -1,0 +1,2 @@
+on use entity:
+    set test name of entity event-entity to "do_if_effect" if event-entity is visible

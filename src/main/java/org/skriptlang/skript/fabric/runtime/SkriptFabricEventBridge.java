@@ -88,6 +88,7 @@ public final class SkriptFabricEventBridge {
     }
 
     private static void dispatchServerTick(MinecraftServer server) {
+        SkriptFabricTaskScheduler.tick(server);
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 FabricRuntimeHandle.SERVER_TICK,
                 server,
