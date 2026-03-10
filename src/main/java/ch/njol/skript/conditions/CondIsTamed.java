@@ -1,0 +1,31 @@
+package ch.njol.skript.conditions;
+
+import ch.njol.skript.conditions.base.PropertyCondition;
+import ch.njol.skript.doc.Description;
+import ch.njol.skript.doc.Example;
+import ch.njol.skript.doc.Name;
+import ch.njol.skript.doc.Since;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.TamableAnimal;
+
+@Name("Is Tamed")
+@Description("Check if a tameable entity is tamed (horse, parrot, cat, etc.).")
+@Example("send true if {_horse} is tamed")
+@Example("tame {_horse} if {_horse} is untamed")
+@Since("2.10")
+public class CondIsTamed extends PropertyCondition<Entity> {
+
+    static {
+        register(CondIsTamed.class, "(tamed|domesticated)", "entities");
+    }
+
+    @Override
+    public boolean check(Entity entity) {
+        return entity instanceof TamableAnimal tameable && tameable.isTame();
+    }
+
+    @Override
+    protected String getPropertyName() {
+        return "tamed";
+    }
+}
