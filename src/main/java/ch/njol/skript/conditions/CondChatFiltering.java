@@ -11,7 +11,8 @@ public final class CondChatFiltering extends PropertyCondition<ServerPlayer> {
 
     @Override
     public boolean check(ServerPlayer player) {
-        return ConditionRuntimeSupport.booleanMethod(player, false, "isTextFilteringEnabled");
+        return ConditionRuntimeSupport.booleanMethod(player, false, "isTextFilteringEnabled")
+                || ConditionRuntimeSupport.booleanField(player, false, "textFilteringEnabled");
     }
 
     @Override

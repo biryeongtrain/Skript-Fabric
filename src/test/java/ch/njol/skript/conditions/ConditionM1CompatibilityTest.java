@@ -55,9 +55,13 @@ class ConditionM1CompatibilityTest {
         assertDoesNotThrow(CondHasClientWeather::new);
         assertDoesNotThrow(CondHasMetadata::new);
         assertDoesNotThrow(CondHasResourcePack::new);
+        assertDoesNotThrow(CondIsEnchanted::new);
         assertDoesNotThrow(CondIsPluginEnabled::new);
+        assertDoesNotThrow(CondIsSkriptCommand::new);
+        assertDoesNotThrow(CondIsSlimeChunk::new);
         assertDoesNotThrow(CondIsSpawnable::new);
         assertDoesNotThrow(CondLeashed::new);
+        assertDoesNotThrow(CondResourcePack::new);
     }
 
     @Test
@@ -117,6 +121,18 @@ class ConditionM1CompatibilityTest {
         CondIsPluginEnabled pluginText = new CondIsPluginEnabled();
         pluginText.init(new Expression[]{new SimpleLiteral<>("fabricloader", false)}, 0, Kleenean.FALSE, parseResult(""));
         assertEquals("plugin [fabricloader] is enabled", pluginText.toString(SkriptEvent.EMPTY, false));
+
+        assertDoesNotThrow(() -> new CondIsEnchanted().check(
+                new org.skriptlang.skript.fabric.compat.FabricItemType(
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)
+                )
+        ));
+
+        CondIsSkriptCommand skriptCommand = new CondIsSkriptCommand();
+        skriptCommand.init(new Expression[]{new SimpleLiteral<>("help", false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals("[help] is a skript command", skriptCommand.toString(SkriptEvent.EMPTY, false));
+
+        assertFalse(new CondIsSlimeChunk().check(new Object()));
 
         CondIsSpawnable spawnable = new CondIsSpawnable();
         spawnable.init(

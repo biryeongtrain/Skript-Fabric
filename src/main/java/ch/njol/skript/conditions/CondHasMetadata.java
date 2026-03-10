@@ -57,13 +57,8 @@ public final class CondHasMetadata extends Condition {
         if (holder instanceof Map<?, ?> map) {
             return map.containsKey(value);
         }
-        try {
-            java.lang.reflect.Method method = holder.getClass().getMethod("hasMetadata", String.class);
-            Object result = method.invoke(holder, value);
-            if (result instanceof Boolean bool) {
-                return bool;
-            }
-        } catch (ReflectiveOperationException ignored) {
+        if (ConditionRuntimeSupport.booleanMethod(holder, new Object[]{value}, false, "hasMetadata", "hasTag", "contains")) {
+            return true;
         }
         Object result = ConditionRuntimeSupport.invokeCompatible(holder, "metadata", "getMetadata");
         if (result instanceof Map<?, ?> map) {

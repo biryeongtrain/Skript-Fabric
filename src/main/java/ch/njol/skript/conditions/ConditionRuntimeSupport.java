@@ -1,10 +1,14 @@
 package ch.njol.skript.conditions;
 
+import ch.njol.skript.entity.EntityData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 import org.skriptlang.skript.lang.script.Script;
@@ -15,18 +19,22 @@ final class ConditionRuntimeSupport {
     }
 
     static @Nullable Object invokeCompatible(@Nullable Object target, String... methodNames) {
+        return invokeCompatible(target, new Object[0], methodNames);
+    }
+
+    static @Nullable Object invokeCompatible(@Nullable Object target, Object[] args, String... methodNames) {
         if (target == null) {
             return null;
         }
         Class<?> current = target.getClass();
         for (String methodName : methodNames) {
-            Method method = findCompatibleMethod(current, methodName);
+            Method method = findCompatibleMethod(current, methodName, args);
             if (method == null) {
                 continue;
             }
             try {
                 method.setAccessible(true);
-                return method.invoke(target);
+                return method.invoke(target, args);
             } catch (ReflectiveOperationException ignored) {
             }
         }
@@ -35,6 +43,11 @@ final class ConditionRuntimeSupport {
 
     static boolean booleanMethod(@Nullable Object target, boolean fallback, String... methodNames) {
         Object result = invokeCompatible(target, methodNames);
+        return result instanceof Boolean value ? value : fallback;
+    }
+
+    static boolean booleanMethod(@Nullable Object target, Object[] args, boolean fallback, String... methodNames) {
+        Object result = invokeCompatible(target, args, methodNames);
         return result instanceof Boolean value ? value : fallback;
     }
 
@@ -104,22 +117,100 @@ final class ConditionRuntimeSupport {
                 .trim();
     }
 
-    private static @Nullable Method findCompatibleMethod(Class<?> type, String methodName) {
+    static boolean hasEnabledMod(@Nullable String input) {
+        if (input == null || input.isBlank()) {
+            return false;
+        }
+        FabricLoader loader = FabricLoader.getInstance();
+        String normalized = normalizeToken(input);
+        String compact = normalized.replace(" ", "");
+        String dashed = normalized.replace(' ', '-');
+        if (loader.isModLoaded(normalized) || loader.isModLoaded(compact) || loader.isModLoaded(dashed)) {
+            return true;
+        }
+        for (ModContainer container : loader.getAllMods()) {
+            if (normalized.equals(normalizeToken(container.getMetadata().getId()))
+                    || normalized.equals(normalizeToken(container.getMetadata().getName()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean isSpawnable(@Nullable EntityData<?> entityData) {
+        EntityType<?> entityType = exactEntityType(entityData);
+        return entityType != null && entityType.canSummon();
+    }
+
+    private static @Nullable EntityType<?> exactEntityType(@Nullable EntityData<?> entityData) {
+        Object result = invokeCompatible(entityData, "getMinecraftType");
+        return result instanceof EntityType<?> entityType ? entityType : null;
+    }
+
+    private static @Nullable Method findCompatibleMethod(Class<?> type, String methodName, Object[] args) {
         for (Method method : type.getMethods()) {
-            if (method.getName().equals(methodName) && method.getParameterCount() == 0) {
+            if (isCompatibleMethod(method, methodName, args)) {
                 return method;
             }
         }
         Class<?> current = type;
         while (current != null) {
             for (Method method : current.getDeclaredMethods()) {
-                if (method.getName().equals(methodName) && method.getParameterCount() == 0) {
+                if (isCompatibleMethod(method, methodName, args)) {
                     return method;
                 }
             }
             current = current.getSuperclass();
         }
         return null;
+    }
+
+    private static boolean isCompatibleMethod(Method method, String methodName, Object[] args) {
+        if (!method.getName().equals(methodName) || method.getParameterCount() != args.length) {
+            return false;
+        }
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Object arg = args[i];
+            if (arg == null) {
+                continue;
+            }
+            if (!wrap(parameterTypes[i]).isInstance(arg)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Class<?> wrap(Class<?> type) {
+        if (!type.isPrimitive()) {
+            return type;
+        }
+        if (type == boolean.class) {
+            return Boolean.class;
+        }
+        if (type == byte.class) {
+            return Byte.class;
+        }
+        if (type == short.class) {
+            return Short.class;
+        }
+        if (type == int.class) {
+            return Integer.class;
+        }
+        if (type == long.class) {
+            return Long.class;
+        }
+        if (type == float.class) {
+            return Float.class;
+        }
+        if (type == double.class) {
+            return Double.class;
+        }
+        if (type == char.class) {
+            return Character.class;
+        }
+        return type;
     }
 
     private static boolean matchesScriptName(Script script, String normalized) {

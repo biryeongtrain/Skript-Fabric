@@ -1,0 +1,5 @@
+on step on pressure plate:
+    set test block at 4 1 0 to lapis_block
+
+on tripwire:
+    set test block at 5 1 0 to red_wool

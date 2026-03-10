@@ -150,6 +150,7 @@ import org.skriptlang.skript.fabric.runtime.FabricFishingHandle;
 import org.skriptlang.skript.fabric.runtime.FabricPlayerInputHandle;
 import org.skriptlang.skript.fabric.runtime.FabricUseEntityHandle;
 import org.skriptlang.skript.fabric.runtime.FabricUseItemHandle;
+import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.WXYZHandler;
@@ -350,7 +351,8 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             BlockPos markerAbsolute = helper.absolutePos(new BlockPos(6, 1, 0));
             helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
 
-            MinecartChest minecart = new MinecartChest(helper.getLevel(), 0.5D, 1.0D, 0.5D);
+            MinecartChest minecart = new MinecartChest(EntityType.CHEST_MINECART, helper.getLevel());
+            minecart.setPos(0.5D, 1.0D, 0.5D);
             helper.getLevel().addFreshEntity(minecart);
             Zombie zombie = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 1.5F, 1.0F, 0.5F);
 
