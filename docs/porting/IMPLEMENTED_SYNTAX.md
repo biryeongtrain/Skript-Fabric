@@ -29,6 +29,7 @@ It is not:
   - latest verified runtime-surface additions now also include `ExprRandomCharacter` and `ExprTimes`, registered on the Fabric bootstrap and covered by `RandomExpressionSyntaxTest`
   - latest verified support-surface additions behind that unchanged `230 / 230` GameTest baseline now also include `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, and `ExprRandom`
   - `ExprRandom` was intentionally left off the active runtime inventory after verification showed the `%*classinfo%` parse path still misresolves `"string"` through the item-type path during init
+  - latest verified ancillary upstream-core additions also include the lightweight `doc` annotation bundle and the non-scheduler `update` manifest/checker bundle; these reduce raw shortfall only and do not change the active runtime syntax inventory
   - the earlier Lane E helper bundles (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`) remain merged underneath it
   - the experimental variable storage backend / `FlatFileStorage` slice was intentionally excluded from the final green batch after runtime regression
 
@@ -43,11 +44,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `370`
+  - local `ch/njol/skript`: `392`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `819`
+  - current shortfall: `797`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a mixed Lane E compatibility/runtime batch (`CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) while keeping the regressing storage-backend slice excluded
+  - latest shortfall-focused closure restored a 22-class ancillary `doc` + `update` batch while keeping the regressing storage-backend slice excluded
 
 Primary registration sources:
 

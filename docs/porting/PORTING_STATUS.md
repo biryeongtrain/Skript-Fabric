@@ -38,9 +38,11 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator added a mixed Lane E closure on 2026-03-10: compatibility shims `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, plus runtime-registered `ExprRandomCharacter` and `ExprTimes`
-  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while extending the upstream `ch/njol/skript` condition/expression surface
-  - the raw `ch/njol/skript` local snapshot moved to `370 / 1189`, reducing the measured shortfall to `819`
+  - coordinator added a 22-class ancillary closure on 2026-03-10:
+    - `doc`: `Description`, `DocumentationGenerator`, `DocumentationId`, `Events`, `Example`, `Examples`, `Keywords`, `Name`, `NoDoc`, `RelatedProperty`, `RequiredPlugins`, `Since`, `package-info`
+    - `update`: `GithubChecker`, `NoUpdateChecker`, `ReleaseChannel`, `ReleaseManifest`, `ReleaseStatus`, `UpdateChecker`, `UpdateManifest`, `UpdaterState`, `package-info`
+  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall with non-runtime ancillary package closure
+  - the raw `ch/njol/skript` local snapshot moved to `392 / 1189`, reducing the measured shortfall to `797`
 
 ## Priority Shift On 2026-03-08
 
@@ -62,8 +64,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `370` Java files
-- net missing local surface relative to that snapshot: `819` Java files
+- local `src/main/java/ch/njol/skript`: `392` Java files
+- net missing local surface relative to that snapshot: `797` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -72,7 +74,6 @@ Top-level upstream packages missing locally entirely:
 - `hooks`
 - `test`
 - `timings`
-- `update`
 
 Key local package counts versus upstream:
 
@@ -94,7 +95,8 @@ Key local package counts versus upstream:
 - `effects`: local `14`, upstream `123`
 - `events`: local `6`, upstream `53`
 - `entity`: local `37`, upstream `34`
-- `doc`: local `1`, upstream `18`
+- `doc`: local `14`, upstream `18`
+- `update`: local `9`, upstream `10`
 
 ## Why `lang` Goes First
 

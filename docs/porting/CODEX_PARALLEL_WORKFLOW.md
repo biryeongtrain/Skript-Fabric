@@ -98,7 +98,7 @@ Coordinator can stay on the main repo path:
 - Work in package bundles, not one-off syntax slices.
 - A lane may land multiple commits in one batch if they stay inside its owned bundle and keep moving the same closure track forward.
 - Use one primary bundle and one fallback bundle inside the same ownership area, and if both still leave owned work open, continue into the next same-scope sub-bundle before declaring no-op.
-- Keep pushing until one of these is true: the owned bundle is blocked, the owned bundle is exhausted, or the lane has landed roughly `15-40` class-equivalent additions/restorations or `2-4` verifiable commits in that batch.
+- Keep pushing until one of these is true: the owned bundle is blocked, the owned bundle is exhausted, or the lane has landed at least `20` class-equivalent additions/restorations and preferably roughly `20-60`, or `2-4` verifiable commits in that batch.
 - Surface-package lanes should prefer shared base classes, abstract helpers, import-enabling scaffolding, and common runtime glue before leaf syntax classes.
 - Record exact commands and exact counts in the lane status file.
 - If a lane needs a file owned by another lane, stop and hand it back to the coordinator instead of freelancing into overlap.

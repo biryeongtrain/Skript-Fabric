@@ -53,7 +53,7 @@ Worker policy:
 - Assign one primary bundle and one fallback bundle inside each lane's ownership area.
 - If primary and fallback still leave owned work open, continue into the next same-scope sub-bundle before stopping.
 - A lane may land multiple commits in one batch if they stay inside the owned bundle and remain verifiable.
-- Do not stop after the first small win; aim for roughly 15-40 class-equivalent additions/restorations or 2-4 verifiable commits unless the owned bundle is clearly blocked or exhausted.
+- Do not stop after the first small win; aim for at least 20 class-equivalent additions/restorations and preferably roughly 20-60, or 2-4 verifiable commits unless the owned bundle is clearly blocked or exhausted.
 - Prioritize missing upstream classes over polish on already-ported syntax.
 - If a lane finds no real bundle-local work after primary, fallback, and one more same-scope sub-bundle, end it as a no-op. Do not force a speculative patch.
 - Workers own code in their lane scopes and only update their own short status file under docs/porting/parallel/.
@@ -82,7 +82,7 @@ Merge order:
 Current known status headline:
 - latest verified runtime baseline: 230 / 230
 - latest successful full verification: ./gradlew build --rerun-tasks
-- upstream ch/njol/skript snapshot: local 165 / 1189, shortfall 1024
+- upstream ch/njol/skript snapshot: local 392 / 1189, shortfall 797
 - current phase: package-bundle closure inside `ch/njol/skript`
 
 Implementation guardrails:

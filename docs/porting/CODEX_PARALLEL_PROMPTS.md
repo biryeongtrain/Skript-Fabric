@@ -15,7 +15,7 @@ Apply these to every lane:
 - use one primary bundle and one fallback bundle inside the lane's ownership
 - if both still leave owned work open, continue into the next same-scope sub-bundle before stopping
 - land as many upstream-backed classes or closures as the lane can verify without leaving its ownership area
-- do not stop after the first small win; aim for roughly `15-40` class-equivalent additions/restorations or `2-4` verifiable commits unless the owned bundle is clearly blocked or exhausted
+- do not stop after the first small win; aim for at least `20` class-equivalent additions/restorations and preferably roughly `20-60`, or `2-4` verifiable commits unless the owned bundle is clearly blocked or exhausted
 - if primary, fallback, and one more same-scope sub-bundle produce no mergeable work, do a short no-op lane update
 - update only your lane status file under `docs/porting/parallel/`
 - commit as many times as needed if code lands

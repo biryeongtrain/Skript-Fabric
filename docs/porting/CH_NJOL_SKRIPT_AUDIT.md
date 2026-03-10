@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `370`
-- local shortfall versus the captured upstream snapshot: `819`
+- local `ch/njol/skript`: `392`
+- local shortfall versus the captured upstream snapshot: `797`
 
 Local top-level packages currently present:
 
@@ -52,6 +52,7 @@ Local top-level packages currently present:
 - `registrations`
 - `sections`
 - `structures`
+- `update`
 - `util`
 - `variables`
 
@@ -62,7 +63,6 @@ Upstream top-level packages currently absent locally:
 - `hooks`
 - `test`
 - `timings`
-- `update`
 
 ## Top-Level Package Matrix
 
@@ -74,7 +74,7 @@ Upstream top-level packages currently absent locally:
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
 | `conditions` | `135` | `23` | partial shim | `P2` | very large missing surface; date, permission, helper checks, and the latest entity-state compatibility closure are now present, but the remaining user-visible condition surface is still large |
 | `config` | `20` | `20` | present but behavior-incomplete | `P1` | count parity is now closed, but broader runtime behavior still needs upstream comparison |
-| `doc` | `18` | `1` | partial shim | `P3` | low runtime value overall, but `Documentable` is now present as function-bridge support scaffolding |
+| `doc` | `18` | `14` | partial shim | `P3` | low runtime value overall, but the common documentation annotations and generator base are now present in addition to `Documentable`; the heavier ID/generator surfaces are still open |
 | `effects` | `123` | `14` | partial shim | `P2` | base package now has a slightly wider verified effect surface through the entity-state helpers plus `continue` / `stop` control-flow effects, but most user-visible runtime forms are still missing |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
 | `events` | `53` | `6` | partial shim | `P2` | script lifecycle events are now present, but event classes remain largely absent |
@@ -90,7 +90,7 @@ Upstream top-level packages currently absent locally:
 | `structures` | `10` | `6` | partial shim | `P1` | `options:` is real and the current batch now verifies `StructEvent`, `StructExample`, and `StructUsing`, but `StructFunction` and broader structure closure are still open |
 | `test` | `42` | `0` | absent | `P3` | low shipping-runtime value; use local test harnesses instead |
 | `timings` | `2` | `0` | absent | `P3` | defer |
-| `update` | `10` | `0` | absent | `P3` | defer |
+| `update` | `10` | `9` | partial shim | `P3` | release manifests, checker interfaces, and the GitHub/no-op checker surfaces are now present; `Updater` itself still depends on missing scheduler/Bukkit task glue |
 | `util` | `57` | `29` | partial shim | `P1` | many dependencies feed back into parser, classes, and variables; time/classinfo/date/chat compatibility helpers plus `ChatMessages` are now present, but `Direction` / `StructureType` and many runtime-facing utilities remain |
 | `variables` | `11` | `6` | partial shim | `P1` | the retained local surface is still the in-memory bridge plus hint helpers; the latest storage-backend / `FlatFileStorage` slice was excluded from the final green batch after runtime regression |
 
@@ -142,14 +142,14 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- latest verified Lane E closure on 2026-03-10 mixes runtime registration with pure compatibility imports:
-  - restored compatibility shims `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, and `ExprRandom`
-  - registered the exact upstream runtime forms for `random [:alphanumeric] character[s] (from|between) %string% (to|and) %string%` and `%number% time[s]` / `once` / `twice` / `thrice`
-  - kept `ExprRandom` support-surface only after verification showed the `%*classinfo%` runtime parse path still misresolves `"string"` through the item-type path during init
+- latest verified ancillary closure on 2026-03-10 restores the lightweight upstream `doc` and `update` surfaces:
+  - `doc`: `Description`, `DocumentationGenerator`, `DocumentationId`, `Events`, `Example`, `Examples`, `Keywords`, `Name`, `NoDoc`, `RelatedProperty`, `RequiredPlugins`, `Since`, `package-info`
+  - `update`: `GithubChecker`, `NoUpdateChecker`, `ReleaseChannel`, `ReleaseManifest`, `ReleaseStatus`, `UpdateChecker`, `UpdateManifest`, `UpdaterState`, `package-info`
+  - intentionally excluded `Updater`, `SkriptTimings`, and the heavier doc generator/ID classes because they still cross into missing scheduler, Bukkit, or larger doc-generation glue
 - merged verification on 2026-03-10:
-  - `./gradlew test --tests ch.njol.skript.conditions.ConditionEffectClosureCompatibilityTest --tests ch.njol.skript.expressions.ExpressionClosureCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.RandomExpressionSyntaxTest --rerun-tasks`
+  - `./gradlew test --tests ch.njol.skript.doc.DocumentationSupportCompatibilityTest --tests ch.njol.skript.update.UpdateSupportCompatibilityTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `370 / 1189`, shortfall `819`
+- raw `ch/njol/skript` snapshot after that merge: `392 / 1189`, shortfall `797`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
 
 ## Latest Merged Syntax-Import Batch
