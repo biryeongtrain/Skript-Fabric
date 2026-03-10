@@ -2,6 +2,17 @@ package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.conditions.CondPermission;
+import ch.njol.skript.expressions.ExprAI;
+import ch.njol.skript.expressions.ExprAttackCooldown;
+import ch.njol.skript.expressions.ExprExhaustion;
+import ch.njol.skript.expressions.ExprFallDistance;
+import ch.njol.skript.expressions.ExprFireTicks;
+import ch.njol.skript.expressions.ExprFlightMode;
+import ch.njol.skript.expressions.ExprFreezeTicks;
+import ch.njol.skript.expressions.ExprGravity;
+import ch.njol.skript.expressions.ExprLastDamage;
+import ch.njol.skript.expressions.ExprLevelProgress;
+import ch.njol.skript.expressions.ExprMaxFreezeTicks;
 import ch.njol.skript.expressions.ExprRandomCharacter;
 import ch.njol.skript.expressions.ExprTimes;
 import ch.njol.skript.registrations.Classes;
@@ -706,6 +717,7 @@ public final class SkriptFabricBootstrap {
                         "twice",
                         "thrice"
                 );
+                initializeRecoveredExpressionBundle();
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();
                 ch.njol.skript.effects.EffActionBar.register();
@@ -839,6 +851,28 @@ public final class SkriptFabricBootstrap {
         }
     }
 
+    private static void initializeRecoveredExpressionBundle() {
+        forceInitialize(ExprAI.class);
+        forceInitialize(ExprAttackCooldown.class);
+        forceInitialize(ExprExhaustion.class);
+        forceInitialize(ExprFallDistance.class);
+        forceInitialize(ExprFireTicks.class);
+        forceInitialize(ExprFlightMode.class);
+        forceInitialize(ExprFreezeTicks.class);
+        forceInitialize(ExprGravity.class);
+        forceInitialize(ExprLastDamage.class);
+        forceInitialize(ExprLevelProgress.class);
+        forceInitialize(ExprMaxFreezeTicks.class);
+    }
+
+    private static void forceInitialize(Class<?> type) {
+        try {
+            Class.forName(type.getName(), true, type.getClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Failed to initialize syntax class " + type.getName(), e);
+        }
+    }
+
     private static boolean hasCoreClassInfos() {
         return Classes.getClassInfoNoError("player") != null
                 && Classes.getClassInfoNoError("inventory") != null
@@ -870,11 +904,15 @@ public final class SkriptFabricBootstrap {
 
     private static boolean hasCoreSyntax() {
         return hasSyntax(SyntaxRegistry.SECTION, SecIf.class)
+                && hasSyntax(SyntaxRegistry.EVENT, EvtFabricGameTest.class)
                 && hasSyntax(SyntaxRegistry.EVENT, EvtDamage.class)
                 && hasSyntax(SyntaxRegistry.CONDITION, CondAI.class)
                 && hasSyntax(SyntaxRegistry.CONDITION, CondIsBurning.class)
+                && hasSyntax(SyntaxRegistry.EFFECT, ch.njol.skript.effects.EffActionBar.class)
                 && hasSyntax(SyntaxRegistry.EFFECT, org.skriptlang.skript.bukkit.base.effects.EffSilence.class)
-                && hasSyntax(SyntaxRegistry.EXPRESSION, ExprLoveTime.class);
+                && hasSyntax(SyntaxRegistry.EXPRESSION, ExprLoveTime.class)
+                && hasSyntax(SyntaxRegistry.EXPRESSION, ExprEventPlayer.class)
+                && hasSyntax(SyntaxRegistry.EXPRESSION, ExprAI.class);
     }
 
     private static boolean hasSyntax(String key, Class<?> type) {

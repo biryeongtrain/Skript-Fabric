@@ -38,12 +38,12 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged a 47-class runtime-facing syntax closure on 2026-03-10:
-    - `conditions`: 27 new upstream-backed classes across entity/player-state and item/block/value bundles
-    - `effects`: 20 new upstream-backed classes across entity-control and player/server feedback bundles
+  - coordinator merged a 38-class runtime-facing syntax closure on 2026-03-10:
+    - `conditions`: 27 new upstream-backed classes across entity-behavior and server/item-state bundles
+    - `expressions`: 11 new upstream-backed entity-property classes
     - imported syntax classes now preserve upstream `ch.njol.skript.doc.*` annotations
   - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall with a larger verified syntax batch
-  - the raw `ch/njol/skript` local snapshot moved to `440 / 1189`, reducing the measured shortfall to `749`
+  - the raw `ch/njol/skript` local snapshot moved to `478 / 1189`, reducing the measured shortfall to `711`
 
 ## Priority Shift On 2026-03-08
 
@@ -65,8 +65,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `440` Java files
-- net missing local surface relative to that snapshot: `749` Java files
+- local `src/main/java/ch/njol/skript`: `478` Java files
+- net missing local surface relative to that snapshot: `711` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -80,8 +80,8 @@ Key local package counts versus upstream:
 
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
-- `expressions`: local `45`, upstream `391`
-- `conditions`: local `50`, upstream `135`
+- `expressions`: local `51`, upstream `391`
+- `conditions`: local `75`, upstream `135`
 - `classes`: local `21`, upstream `28`
 - `util`: local `29`, upstream `57`
 - `variables`: local `6`, upstream `11`

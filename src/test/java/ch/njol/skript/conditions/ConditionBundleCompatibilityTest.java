@@ -10,12 +10,23 @@ import ch.njol.skript.lang.ExpressionList;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.util.Kleenean;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.world.item.Items;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 class ConditionBundleCompatibilityTest {
+
+    @BeforeAll
+    static void bootstrapMinecraft() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     @AfterEach
     void cleanupRegistry() {
@@ -125,6 +136,21 @@ class ConditionBundleCompatibilityTest {
         CondChance plainNever = new CondChance();
         plainNever.init(new Expression[]{new SimpleLiteral<>(0, false)}, 0, Kleenean.FALSE, parseResult(""));
         assertFalse(plainNever.check(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void unbreakableSupportsBreakableBranchForDefaultItems() {
+        CondIsUnbreakable breakable = new CondIsUnbreakable();
+        breakable.init(new Expression[]{new SimpleLiteral<>(new FabricItemType(Items.DIAMOND_SWORD), false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertTrue(breakable.check(SkriptEvent.EMPTY));
+        assertEquals("breakable", breakable.getPropertyName());
+
+        CondIsUnbreakable unbreakable = new CondIsUnbreakable();
+        SkriptParser.ParseResult parse = parseResult("");
+        parse.tags.add("un");
+        unbreakable.init(new Expression[]{new SimpleLiteral<>(new FabricItemType(Items.DIAMOND_SWORD), false)}, 0, Kleenean.FALSE, parse);
+        assertFalse(unbreakable.check(SkriptEvent.EMPTY));
+        assertEquals("unbreakable", unbreakable.getPropertyName());
     }
 
     private static SkriptParser.ParseResult parseResult(String expr) {

@@ -27,10 +27,19 @@ It is not:
   - build path executed `runGameTest`
 - Recent verified additions:
   - latest verified runtime-surface additions now also include 27 upstream-backed conditions:
+    - `CondAllayCanDuplicate`, `CondAnchorWorks`, `CondEntityIsInLiquid`, `CondEntityIsWet`, `CondGoatHasHorns`, `CondHasItemCooldown`, `CondIgnitionProcess`, `CondIsBanned`, `CondIsChargingFireball`, `CondIsCustomNameVisible`, `CondIsDashing`, `CondIsFrozen`, `CondIsLeashed`, `CondIsOnline`, `CondIsOp`, `CondIsPlayingDead`, `CondIsScreaming`, `CondIsSheared`, `CondIsTameable`, `CondIsUnbreakable`, `CondIsWhitelisted`, `CondPandaIsOnBack`, `CondPandaIsRolling`, `CondPandaIsScared`, `CondPandaIsSneezing`, `CondPvP`, `CondStriderIsShivering`
+  - latest verified runtime-surface additions now also include 11 upstream-backed expressions:
+    - `ExprAI`, `ExprAttackCooldown`, `ExprExhaustion`, `ExprFallDistance`, `ExprFireTicks`, `ExprFlightMode`, `ExprFreezeTicks`, `ExprGravity`, `ExprLastDamage`, `ExprLevelProgress`, `ExprMaxFreezeTicks`
+  - the recovered server-backed condition bundle was aligned onto the local Fabric/Mojang APIs:
+    - ban/op/whitelist checks now use direct `GameProfile` + `PlayerList` paths
+    - online checks now use `ServerPlayer.hasDisconnected()`
+    - unbreakable checks now use `DataComponents.UNBREAKABLE`
+  - the latest expression bundle is registered through `SkriptFabricBootstrap` and covered by `RecoveredExpressionBundleSyntaxTest`
+  - imported syntax classes in this batch preserve upstream `ch.njol.skript.doc.*` annotations
+  - latest verified runtime-surface additions now also include 27 upstream-backed conditions:
     - `CondCanFly`, `CondCanPickUpItems`, `CondHasScoreboardTag`, `CondIsBlocking`, `CondIsClimbing`, `CondIsFlying`, `CondIsGliding`, `CondIsHandRaised`, `CondIsLeftHanded`, `CondIsOnGround`, `CondIsRiptiding`, `CondIsSleeping`, `CondIsSneaking`, `CondIsSwimming`, `CondIsTamed`, `CondIsBlock`, `CondIsBlockRedstonePowered`, `CondIsCommandBlockConditional`, `CondIsEdible`, `CondIsFlammable`, `CondIsInfinite`, `CondIsInteractable`, `CondIsOccluding`, `CondIsPassable`, `CondIsSolid`, `CondIsTransparent`, `CondIsVectorNormalized`
   - latest verified runtime-surface additions now also include 20 upstream-backed effects:
     - `EffCustomName`, `EffEating`, `EffHandedness`, `EffIgnite`, `EffLeash`, `EffMakeFly`, `EffPlayingDead`, `EffShear`, `EffTame`, `EffToggleCanPickUpItems`, `EffActionBar`, `EffBroadcast`, `EffKick`, `EffMessage`, `EffOp`, `EffPlaySound`, `EffResetTitle`, `EffSendResourcePack`, `EffSendTitle`, `EffStopSound`
-  - imported syntax classes in this batch preserve upstream `ch.njol.skript.doc.*` annotations
   - the earlier runtime-surface additions `ExprRandomCharacter` and `ExprTimes`, registered on the Fabric bootstrap and covered by `RandomExpressionSyntaxTest`, remain merged underneath this batch
   - latest verified support-surface additions behind that unchanged `230 / 230` GameTest baseline now also include `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, and `ExprRandom`
   - `ExprRandom` was intentionally left off the active runtime inventory after verification showed the `%*classinfo%` parse path still misresolves `"string"` through the item-type path during init
@@ -49,11 +58,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `440`
+  - local `ch/njol/skript`: `478`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `749`
+  - current shortfall: `711`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a 47-class condition/effect syntax batch while leaving the blocked location/world expression attempt excluded
+  - latest shortfall-focused closure restored a 38-class condition/expression syntax batch on top of the earlier condition/effect closure
 
 Primary registration sources:
 

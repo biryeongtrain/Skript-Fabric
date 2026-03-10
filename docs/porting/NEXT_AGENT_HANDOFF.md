@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `440 / 1189`, shortfall `749`
+- upstream `ch/njol/skript` snapshot: local `478 / 1189`, shortfall `711`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,13 +29,13 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head adds a 47-class runtime-facing closure:
-  - `conditions`: `CondCanFly`, `CondCanPickUpItems`, `CondHasScoreboardTag`, `CondIsBlocking`, `CondIsClimbing`, `CondIsFlying`, `CondIsGliding`, `CondIsHandRaised`, `CondIsLeftHanded`, `CondIsOnGround`, `CondIsRiptiding`, `CondIsSleeping`, `CondIsSneaking`, `CondIsSwimming`, `CondIsTamed`, `CondIsBlock`, `CondIsBlockRedstonePowered`, `CondIsCommandBlockConditional`, `CondIsEdible`, `CondIsFlammable`, `CondIsInfinite`, `CondIsInteractable`, `CondIsOccluding`, `CondIsPassable`, `CondIsSolid`, `CondIsTransparent`, `CondIsVectorNormalized`
-  - `effects`: `EffCustomName`, `EffEating`, `EffHandedness`, `EffIgnite`, `EffLeash`, `EffMakeFly`, `EffPlayingDead`, `EffShear`, `EffTame`, `EffToggleCanPickUpItems`, `EffActionBar`, `EffBroadcast`, `EffKick`, `EffMessage`, `EffOp`, `EffPlaySound`, `EffResetTitle`, `EffSendResourcePack`, `EffSendTitle`, `EffStopSound`
+- current verified head adds a 38-class runtime-facing closure:
+  - `conditions`: `CondAllayCanDuplicate`, `CondAnchorWorks`, `CondEntityIsInLiquid`, `CondEntityIsWet`, `CondGoatHasHorns`, `CondHasItemCooldown`, `CondIgnitionProcess`, `CondIsBanned`, `CondIsChargingFireball`, `CondIsCustomNameVisible`, `CondIsDashing`, `CondIsFrozen`, `CondIsLeashed`, `CondIsOnline`, `CondIsOp`, `CondIsPlayingDead`, `CondIsScreaming`, `CondIsSheared`, `CondIsTameable`, `CondIsUnbreakable`, `CondIsWhitelisted`, `CondPandaIsOnBack`, `CondPandaIsRolling`, `CondPandaIsScared`, `CondPandaIsSneezing`, `CondPvP`, `CondStriderIsShivering`
+  - `expressions`: `ExprAI`, `ExprAttackCooldown`, `ExprExhaustion`, `ExprFallDistance`, `ExprFireTicks`, `ExprFlightMode`, `ExprFreezeTicks`, `ExprGravity`, `ExprLastDamage`, `ExprLevelProgress`, `ExprMaxFreezeTicks`
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `749`
+- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `711`
 - imported syntax classes in this batch keep upstream `doc` annotations
-- no missing-library rollback was needed in this slice; `x2` was intentionally left as a no-op because the location/world expression closure is structurally blocked on `FabricLocation` / `FabricBlock` versus upstream Bukkit types
+- no missing-library rollback was needed in this slice; the recovered server-backed condition bundle only needed local API alignment (`GameProfile`, `PlayerList`, `ServerPlayer.hasDisconnected()`, `DataComponents.UNBREAKABLE`)
 - the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`, `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) remains merged underneath it
 
 ## Recent Closed Prereqs

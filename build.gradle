@@ -92,6 +92,14 @@ def isolatedRegistrySuites = [
         [
                 taskName: 'isolatedFeedSyntaxTest',
                 className: 'org.skriptlang.skript.fabric.runtime.FeedSyntaxTest'
+        ],
+        [
+                taskName: 'isolatedPresentationEffectBindingTest',
+                className: 'org.skriptlang.skript.fabric.runtime.PresentationEffectBindingTest'
+        ],
+        [
+                taskName: 'isolatedRecoveredExpressionBundleSyntaxTest',
+                className: 'org.skriptlang.skript.fabric.runtime.RecoveredExpressionBundleSyntaxTest'
         ]
 ]
 
