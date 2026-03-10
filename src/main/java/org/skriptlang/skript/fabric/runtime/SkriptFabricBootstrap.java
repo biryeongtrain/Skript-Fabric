@@ -1,6 +1,12 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.classes.data.DefaultComparators;
+import ch.njol.skript.classes.data.DefaultConverters;
+import ch.njol.skript.classes.data.DefaultFunctions;
+import ch.njol.skript.classes.data.DefaultOperations;
+import ch.njol.skript.classes.data.JavaClasses;
+import ch.njol.skript.classes.data.SkriptClasses;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
@@ -166,6 +172,12 @@ public final class SkriptFabricBootstrap {
                 StructOptions.register();
                 SecIf.register();
                 Property.registerDefaultProperties();
+                JavaClasses.register();
+                SkriptClasses.register();
+                DefaultConverters.register();
+                DefaultComparators.register();
+                DefaultOperations.register();
+                DefaultFunctions.register();
                 PlayerClassInfo.register();
                 InventoryClassInfo.register();
                 ItemStackClassInfo.register();
