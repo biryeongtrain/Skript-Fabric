@@ -1,6 +1,6 @@
 # Codex Parallel Prompts
 
-Last updated: 2026-03-09
+Last updated: 2026-03-10
 
 Use these as compact prompts for the next parallel run.
 
@@ -19,6 +19,7 @@ Apply these to every lane:
 - if primary, fallback, and one more same-scope sub-bundle produce no mergeable work, do a short no-op lane update
 - update only your lane status file under `docs/porting/parallel/`
 - commit as many times as needed if code lands
+- parser/unit coverage is enough for import-only syntax, but if you make syntax active in the runtime instead of leaving it import-only, you must also add representative real `.sk` GameTest coverage in the same batch
 - use conventional-style commit messages without lane prefixes:
   - `fix(parser): ...`
   - `fix(function): ...`
@@ -61,6 +62,8 @@ Coordinator owns:
 - merge and integration fixes
 - canonical docs under docs/porting/*.md
 - root pointer headline updates
+- the batch-close gate for runtime activation:
+  - if newly active runtime syntax does not have representative real `.sk` GameTest coverage, add that coverage in the coordinator pass or leave the syntax import-only
 - final verification:
   - ./gradlew build --rerun-tasks
 - fast-forward main after green verification

@@ -1,6 +1,6 @@
 # Codex Parallel Workflow
 
-Last updated: 2026-03-09
+Last updated: 2026-03-10
 
 ## Goal
 
@@ -95,6 +95,8 @@ Coordinator can stay on the main repo path:
 - Do not revert unrelated dirty changes.
 - Do not claim parity complete unless it is verified.
 - If user-visible `.sk` behavior changes, add or update real `.sk` coverage and run the narrowest matching runtime tests; coordinator handles final `./gradlew build --rerun-tasks`.
+- Import-only syntax closure may stop at parser/unit coverage, but any syntax that becomes active in the Fabric runtime through bootstrap registration or equivalent live activation must also gain representative real `.sk` GameTest coverage in the same batch.
+- Parser/bootstrap-only tests are not sufficient for newly active runtime syntax.
 - Work in package bundles, not one-off syntax slices.
 - A lane may land multiple commits in one batch if they stay inside its owned bundle and keep moving the same closure track forward.
 - Use one primary bundle and one fallback bundle inside the same ownership area, and if both still leave owned work open, continue into the next same-scope sub-bundle before declaring no-op.
@@ -110,11 +112,12 @@ Each worker must leave behind all of the following in its own branch/worktree:
 1. code changes limited to the lane scope
 2. as many upstream-backed class imports or bundle-local behavior closures as can be verified in that lane
 3. test changes for the imported bundle behavior
-4. one updated lane status file under `docs/porting/parallel/`
-5. exact verification commands and results
-6. a short merge note listing the files most likely to conflict
-7. one or more conventional-style commits if code lands
-8. enough owned-bundle progress that the lane did not stop at a trivial single-class win unless it was genuinely blocked
+4. if the lane makes syntax live in the runtime instead of leaving it import-only, representative real `.sk` GameTest coverage for that active syntax
+5. one updated lane status file under `docs/porting/parallel/`
+6. exact verification commands and results
+7. a short merge note listing the files most likely to conflict
+8. one or more conventional-style commits if code lands
+9. enough owned-bundle progress that the lane did not stop at a trivial single-class win unless it was genuinely blocked
 
 Workers do not update:
 
@@ -176,7 +179,8 @@ Reasoning:
 6. rerun full verification
 7. update canonical docs with exact counts, exact scope, and exact test results
    coordinator must also update `docs/porting/IMPLEMENTED_SYNTAX.md` with the newly landed user-visible syntax as concrete inventory entries and representative forms, not headline-only notes
-8. refresh root pointer headlines if the headline numbers changed
+8. before closing the batch, confirm every newly active runtime syntax family has representative real `.sk` GameTest coverage; if that coverage is missing, add it in the coordinator pass or keep the syntax import-only instead of claiming it as active
+9. refresh root pointer headlines if the headline numbers changed
 
 ## Stop Conditions
 
@@ -185,6 +189,7 @@ A worker should stop and return to the coordinator if any of the following happe
 - a required edit overlaps another active lane's owned file set
 - the lane discovers a design decision that changes another lane's scope boundary
 - the lane cannot verify a user-visible behavior change with tests or real `.sk`
+- the lane wants to move syntax from import-only to active runtime but does not have representative real `.sk` GameTest coverage yet
 - the lane sees unexpected modifications in files it is actively editing and cannot explain them
 
 ## Current Recommended Lane Assignment
