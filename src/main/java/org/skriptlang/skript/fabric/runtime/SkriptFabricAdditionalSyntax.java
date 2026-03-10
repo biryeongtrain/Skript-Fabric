@@ -1,6 +1,17 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.expressions.ExprArrowKnockbackStrength;
+import ch.njol.skript.expressions.ExprArrowPierceLevel;
+import ch.njol.skript.expressions.ExprBarterDrops;
+import ch.njol.skript.expressions.ExprClicked;
+import ch.njol.skript.expressions.ExprDrops;
+import ch.njol.skript.expressions.ExprExplosionBlockYield;
+import ch.njol.skript.expressions.ExprExplosionYield;
+import ch.njol.skript.expressions.ExprExplosiveYield;
+import ch.njol.skript.expressions.ExprFertilizedBlocks;
+import ch.njol.skript.expressions.ExprHanging;
+import ch.njol.skript.expressions.ExprLastSpawnedEntity;
 import ch.njol.skript.util.Color;
 import ch.njol.skript.util.Date;
 import ch.njol.skript.util.Timespan;
@@ -72,6 +83,8 @@ import org.skriptlang.skript.bukkit.tags.elements.ExprTagContents;
 import org.skriptlang.skript.bukkit.tags.elements.ExprTagKey;
 import org.skriptlang.skript.bukkit.tags.elements.ExprTagsOf;
 import org.skriptlang.skript.bukkit.tags.elements.ExprTagsOfType;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.syntax.event.EvtBucketCatch;
 import org.skriptlang.skript.fabric.syntax.event.EvtBreeding;
@@ -120,6 +133,70 @@ final class SkriptFabricAdditionalSyntax {
         Skript.registerEvent(
                 EvtFurnace.class,
                 EvtFurnace.patterns()
+        );
+
+        Skript.registerExpression(
+                ExprArrowKnockbackStrength.class,
+                Long.class,
+                "arrow knockback strength of %entities%",
+                "%entities%'[s] arrow knockback strength"
+        );
+        Skript.registerExpression(
+                ExprArrowPierceLevel.class,
+                Long.class,
+                "arrow pierce level of %entities%",
+                "%entities%'[s] arrow pierce level"
+        );
+        Skript.registerExpression(
+                ExprBarterDrops.class,
+                (Class) FabricItemType.class,
+                "[the] [piglin] barter[ing] drops"
+        );
+        Skript.registerExpression(
+                ExprClicked.class,
+                Object.class,
+                "[the] clicked (block|%-*itemtype/entitydata%)"
+        );
+        Skript.registerExpression(
+                ExprDrops.class,
+                (Class) FabricItemType.class,
+                "[the] drops"
+        );
+        Skript.registerExpression(
+                ExprExplosionBlockYield.class,
+                Number.class,
+                "[the] [explosion['s]] block (yield|amount)",
+                "[the] percentage of blocks dropped"
+        );
+        Skript.registerExpression(
+                ExprExplosionYield.class,
+                Number.class,
+                "[the] explosion (yield|radius|size)",
+                "[the] (yield|radius|size) of [the] explosion"
+        );
+        Skript.registerExpression(
+                ExprExplosiveYield.class,
+                Number.class,
+                "explosive (yield|radius|size|power) of %entities%",
+                "%entities%'[s] explosive (yield|radius|size|power)"
+        );
+        Skript.registerExpression(
+                ExprFertilizedBlocks.class,
+                (Class) FabricBlock.class,
+                "[all] [the] fertilized blocks"
+        );
+        Skript.registerExpression(
+                ExprHanging.class,
+                Entity.class,
+                "[the] hanging (entity|:remover)"
+        );
+        Skript.registerExpression(
+                ExprLastSpawnedEntity.class,
+                Entity.class,
+                "[the] [last[ly]] (0:spawned|1:shot) %*entitydata%",
+                "[the] [last[ly]] dropped (2:item)",
+                "[the] [last[ly]] (created|struck) (3:lightning)",
+                "[the] [last[ly]] (launched|deployed) (4:firework)"
         );
 
         Skript.registerExpression(

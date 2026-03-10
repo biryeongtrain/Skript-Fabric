@@ -44,10 +44,21 @@ import ch.njol.skript.events.EvtPressurePlate;
 import ch.njol.skript.events.EvtResourcePackResponse;
 import ch.njol.skript.events.EvtVehicleCollision;
 import ch.njol.skript.expressions.ExprAffectedEntities;
+import ch.njol.skript.expressions.ExprArrowKnockbackStrength;
+import ch.njol.skript.expressions.ExprArrowPierceLevel;
+import ch.njol.skript.expressions.ExprBarterDrops;
+import ch.njol.skript.expressions.ExprClicked;
 import ch.njol.skript.expressions.ExprConsumedItem;
+import ch.njol.skript.expressions.ExprDrops;
 import ch.njol.skript.expressions.ExprExplodedBlocks;
+import ch.njol.skript.expressions.ExprExplosionBlockYield;
+import ch.njol.skript.expressions.ExprExplosionYield;
+import ch.njol.skript.expressions.ExprExplosiveYield;
+import ch.njol.skript.expressions.ExprFertilizedBlocks;
 import ch.njol.skript.expressions.ExprHatchingNumber;
+import ch.njol.skript.expressions.ExprHanging;
 import ch.njol.skript.expressions.ExprHealAmount;
+import ch.njol.skript.expressions.ExprLastSpawnedEntity;
 import ch.njol.skript.expressions.ExprLevel;
 import ch.njol.skript.expressions.ExprMaxDurability;
 import ch.njol.skript.expressions.ExprRawName;
@@ -152,6 +163,14 @@ final class MixedRuntimeSyntaxBatchTest {
                 "exploded blocks",
                 ch.njol.skript.events.FabricEventCompatHandles.Explosion.class
         ));
+        assertInstanceOf(ExprExplosionBlockYield.class, parseExpressionInEvent(
+                "explosion block yield",
+                ch.njol.skript.events.FabricEventCompatHandles.Explosion.class
+        ));
+        assertInstanceOf(ExprBarterDrops.class, parseExpressionInEvent(
+                "barter drops",
+                ch.njol.skript.events.FabricEventCompatHandles.PiglinBarter.class
+        ));
         assertInstanceOf(ExprAffectedEntities.class, parseExpressionInEvent(
                 "affected entities",
                 ch.njol.skript.events.FabricEventCompatHandles.AreaEffectCloudApply.class
@@ -162,6 +181,36 @@ final class MixedRuntimeSyntaxBatchTest {
         ));
         assertInstanceOf(ExprLevel.class, parseExpressionInEvent("xp level of event-player", FabricUseEntityHandle.class));
         assertInstanceOf(ExprSpeed.class, parseExpressionInEvent("walk speed of event-player", FabricUseEntityHandle.class));
+        assertInstanceOf(ExprArrowKnockbackStrength.class, parseExpressionInEvent(
+                "arrow knockback strength of event-entity",
+                ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
+        ));
+        assertInstanceOf(ExprArrowPierceLevel.class, parseExpressionInEvent(
+                "arrow pierce level of event-entity",
+                ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
+        ));
+        assertInstanceOf(ExprClicked.class, parseExpressionInEvent("clicked entity", ch.njol.skript.events.FabricEventCompatHandles.Click.class));
+        assertInstanceOf(ExprDrops.class, parseExpressionInEvent(
+                "drops",
+                resolveEventClass("ch.njol.skript.effects.FabricEffectEventHandles$EntityDeath")
+        ));
+        assertInstanceOf(ExprExplosionYield.class, parseExpressionInEvent(
+                "explosion yield",
+                resolveEventClass("ch.njol.skript.effects.FabricEffectEventHandles$ExplosionPrime")
+        ));
+        assertInstanceOf(ExprExplosiveYield.class, parseExpressionInEvent(
+                "explosive yield of event-entity",
+                ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
+        ));
+        assertInstanceOf(ExprFertilizedBlocks.class, parseExpressionInEvent(
+                "fertilized blocks",
+                ch.njol.skript.events.FabricEventCompatHandles.BlockFertilize.class
+        ));
+        assertInstanceOf(ExprHanging.class, parseExpressionInEvent(
+                "hanging entity",
+                resolveEventClass("ch.njol.skript.effects.FabricEffectEventHandles$HangingBreak")
+        ));
+        assertInstanceOf(ExprLastSpawnedEntity.class, parseExpression("last dropped item"));
         assertInstanceOf(ExprMaxDurability.class, parseExpression("maximum durability of diamond sword"));
         assertInstanceOf(ExprRawName.class, parseExpression("minecraft name of diamond sword"));
     }

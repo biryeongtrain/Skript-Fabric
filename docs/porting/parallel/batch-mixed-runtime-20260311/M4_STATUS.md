@@ -63,31 +63,44 @@
 
 ## Runtime-Eligible Classes
 
-- import-ready after coordinator bootstrap wiring:
+- mixed-runtime registered in `SkriptFabricAdditionalSyntax` in this lane:
   - `ExprArrowKnockbackStrength`
   - `ExprArrowPierceLevel`
   - `ExprBarterDrops`
-  - `ExprBeaconEffects`
-  - `ExprBeaconRange`
-  - `ExprBeaconTier`
   - `ExprClicked`
   - `ExprDrops`
-  - `ExprDropsOfBlock`
-  - `ExprEntityAttribute`
   - `ExprExplosionBlockYield`
   - `ExprExplosionYield`
   - `ExprExplosiveYield`
   - `ExprFertilizedBlocks`
-  - `ExprFireworkEffect`
   - `ExprHanging`
-  - `ExprLastDeathLocation`
   - `ExprLastSpawnedEntity`
+- landed but not registered in mixed runtime in this lane:
+  - `ExprBeaconEffects`
+  - `ExprBeaconRange`
+  - `ExprBeaconTier`
+  - `ExprDropsOfBlock`
+  - `ExprEntityAttribute`
+  - `ExprFireworkEffect`
+  - `ExprLastDeathLocation`
   - `ExprRespawnLocation`
   - `ExprRespawnReason`
 
 ## Bootstrap Registrations Needed
 
-- `SkriptFabricBootstrap` force-init / registration pass for the `20` expressions above
+- no `SkriptFabricBootstrap.java` edits were made in this lane by rule
+- if coordinator still wants cold-start bootstrap parity, mirror the mixed-runtime registrations for:
+  - `ExprArrowKnockbackStrength`
+  - `ExprArrowPierceLevel`
+  - `ExprBarterDrops`
+  - `ExprClicked`
+  - `ExprDrops`
+  - `ExprExplosionBlockYield`
+  - `ExprExplosionYield`
+  - `ExprExplosiveYield`
+  - `ExprFertilizedBlocks`
+  - `ExprHanging`
+  - `ExprLastSpawnedEntity`
 - classinfo prerequisites before live parsing:
   - `projectile`
   - `attributetype`
@@ -102,17 +115,34 @@
 
 ## Targeted Tests
 
-- `./gradlew test --tests 'ch.njol.skript.expressions.*CompatibilityTest' --rerun-tasks`
-- result: passed
+- `./gradlew compileGametestJava --rerun-tasks`
+  - passed
+- `./gradlew isolatedMixedRuntimeSyntaxBatchTest --rerun-tasks`
+  - passed
+- `./gradlew test --tests ...`
+  - Gradle reported `No tests found for given includes` for the new package-private compatibility classes in this repo setup
+- representative real `.sk` coverage added but not executed in this lane:
+  - `src/gametest/resources/skript/gametest/expression/mixed_runtime_event_payload_bundle.sk`
+  - `SkriptFabricMixedRuntimeBackfillGameTest#eventPayloadBundleExecutesRealScript`
 
 ## Blockers
 
-- no `SkriptFabricBootstrap.java` edits in lane, so everything above remains import-only until coordinator registration
+- no `SkriptFabricBootstrap.java` edits in lane, so bootstrap-owned activation remains coordinator work
 - several event-payload expressions currently rely on newly added compat payload classes, but the live Fabric runtime does not dispatch those payloads yet:
   - `ExprDrops`
   - `ExprExplosionYield`
   - `ExprFertilizedBlocks`
   - `ExprHanging`
+  - `ExprRespawnLocation`
+  - `ExprRespawnReason`
+- not all landed expressions were registered in `SkriptFabricAdditionalSyntax` in this lane:
+  - `ExprBeaconEffects`
+  - `ExprBeaconRange`
+  - `ExprBeaconTier`
+  - `ExprDropsOfBlock`
+  - `ExprEntityAttribute`
+  - `ExprFireworkEffect`
+  - `ExprLastDeathLocation`
   - `ExprRespawnLocation`
   - `ExprRespawnReason`
 - `ExprClicked` lands only the click-event block/entity surface, not the upstream inventory-click variants
@@ -124,5 +154,7 @@
 - likely conflict files:
   - `src/main/java/ch/njol/skript/events/FabricEventCompatHandles.java`
   - `src/main/java/ch/njol/skript/effects/FabricEffectEventHandles.java`
+  - `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricAdditionalSyntax.java`
+  - `src/gametest/java/kim/biryeong/skriptFabricPort/gametest/SkriptFabricMixedRuntimeBackfillGameTest.java`
   - `src/test/java/ch/njol/skript/expressions/ExpressionEventPayloadBundleCompatibilityTest.java`
-- lane avoided bootstrap edits and left coordinator-owned runtime activation / GameTest follow-up untouched
+- lane avoided bootstrap edits and left live Fabric event producer wiring / GameTest execution follow-up to coordinator merge

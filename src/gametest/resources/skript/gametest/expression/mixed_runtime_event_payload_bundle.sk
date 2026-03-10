@@ -1,0 +1,29 @@
+on gametest projectile context:
+    add 2 to arrow knockback strength of event-entity
+    set arrow pierce level of event-entity to 3
+
+on gametest piglin barter mutable:
+    add stick to barter drops
+    set test name of item barter drops to "barter drop"
+
+on gametest entity death:
+    set drops to diamond
+
+on gametest explode mutable:
+    set explosion block yield to 0
+
+on gametest explosion prime mutable:
+    set explosion yield to 3
+
+on gametest explosive entity context:
+    set explosive yield of event-entity to 5
+
+on gametest hanging break:
+    set test name of entity hanging entity to "hanging entity"
+    set test name of entity hanging remover to "hanging remover"
+
+on gametest block fertilize:
+    set test block above fertilized blocks to gold_block
+
+on gametest helper context:
+    set test name of entity last dropped item to "last dropped item"

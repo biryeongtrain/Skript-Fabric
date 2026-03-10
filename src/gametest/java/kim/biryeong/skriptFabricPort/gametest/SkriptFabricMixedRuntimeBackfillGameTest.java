@@ -19,13 +19,16 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricDamageEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
@@ -40,6 +43,8 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
     private static final Class<?> ENTITY_UNLEASH_EVENT = effectEventClass("EntityUnleash");
     private static final Class<?> PLAYER_RESPAWN_EVENT = effectEventClass("PlayerRespawn");
     private static final Class<?> EXPLOSION_PRIME_EVENT = effectEventClass("ExplosionPrime");
+    private static final Class<?> ENTITY_DEATH_EVENT = effectEventClass("EntityDeath");
+    private static final Class<?> HANGING_BREAK_EVENT = effectEventClass("HangingBreak");
 
     @GameTest
     public void storageUtilityAndPropertySyntaxExecutesRealScript(GameTestHelper helper) {
@@ -520,6 +525,98 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         });
     }
 
+    @GameTest
+    public void eventPayloadBundleExecutesRealScript(GameTestHelper helper) {
+        ensureCustomEventsRegistered();
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/expression/mixed_runtime_event_payload_bundle.sk");
+
+            Arrow arrow = new Arrow(helper.getLevel(), 0.5D, 1.0D, 0.5D, ItemStack.EMPTY, null);
+            assertExecuted(helper, dispatch(runtime, new ProjectileContextHandle(arrow), helper, null), "projectile context");
+            helper.assertTrue(
+                    readIntMethod(arrow, "getKnockback") == 2 && readIntMethod(arrow, "getPierceLevel") == 3,
+                    Component.literal("Expected projectile context script to mutate arrow knockback and pierce values.")
+            );
+
+            List<ItemStack> barterOutcome = new java.util.ArrayList<>();
+            barterOutcome.add(new ItemStack(Items.APPLE));
+            assertExecuted(helper, dispatch(
+                    runtime,
+                    new FabricEventCompatHandles.PiglinBarter(new ItemStack(Items.GOLD_INGOT), barterOutcome),
+                    helper,
+                    null
+            ), "piglin barter mutable context");
+            helper.assertTrue(
+                    barterOutcome.size() == 2
+                            && "barter drop".equals(barterOutcome.get(0).getHoverName().getString())
+                            && barterOutcome.stream().anyMatch(stack -> stack.is(Items.STICK)),
+                    Component.literal("Expected barter drops script to rename the existing outcome and add a stick.")
+            );
+
+            MutableEntityDeathHandle deathHandle = new MutableEntityDeathHandle(List.of(new ItemStack(Items.APPLE)), 1);
+            assertExecuted(helper, dispatch(runtime, deathHandle, helper, null), "entity death context");
+            helper.assertTrue(
+                    deathHandle.drops().size() == 1 && deathHandle.drops().get(0).is(Items.DIAMOND),
+                    Component.literal("Expected drops script to replace the death drops with diamonds.")
+            );
+
+            FabricEventCompatHandles.Explosion explosion = new FabricEventCompatHandles.Explosion(List.of(new FabricBlock(helper.getLevel(), helper.absolutePos(new BlockPos(0, 1, 0)))), 0.75F);
+            assertExecuted(helper, dispatch(runtime, explosion, helper, null), "explode mutable context");
+            helper.assertTrue(
+                    explosion.yield() == 0.0F,
+                    Component.literal("Expected explosion block yield script to clear the mutable explosion yield.")
+            );
+
+            MutableExplosionPrimeHandle explosionPrime = new MutableExplosionPrimeHandle(1.0F, false);
+            assertExecuted(helper, dispatch(runtime, explosionPrime, helper, null), "explosion prime mutable context");
+            helper.assertTrue(
+                    explosionPrime.radius() == 3.0F,
+                    Component.literal("Expected explosion yield script to update the explosion radius.")
+            );
+
+            Creeper creeper = (Creeper) helper.spawnWithNoFreeWill(EntityType.CREEPER, 1.5F, 1.0F, 0.5F);
+            assertExecuted(helper, dispatch(runtime, new ExplosiveEntityContextHandle(creeper), helper, null), "explosive entity context");
+            helper.assertTrue(
+                    readIntMethod(creeper, "getExplosionRadius") == 5,
+                    Component.literal("Expected explosive yield script to update the creeper radius.")
+            );
+
+            ArmorStand hangingEntity = new ArmorStand(helper.getLevel(), 2.5D, 1.0D, 0.5D);
+            ArmorStand hangingRemover = new ArmorStand(helper.getLevel(), 3.5D, 1.0D, 0.5D);
+            helper.getLevel().addFreshEntity(hangingEntity);
+            helper.getLevel().addFreshEntity(hangingRemover);
+            assertExecuted(helper, dispatch(runtime, new HangingBreakHandle(hangingEntity, hangingRemover), helper, null), "hanging break context");
+            helper.assertTrue(
+                    "hanging entity".equals(hangingEntity.getCustomName() == null ? null : hangingEntity.getCustomName().getString())
+                            && "hanging remover".equals(hangingRemover.getCustomName() == null ? null : hangingRemover.getCustomName().getString()),
+                    Component.literal("Expected hanging expressions to resolve both the hanging entity and remover.")
+            );
+
+            BlockPos fertilized = helper.absolutePos(new BlockPos(4, 1, 0));
+            helper.getLevel().setBlockAndUpdate(fertilized, Blocks.WHEAT.defaultBlockState());
+            assertExecuted(helper, dispatch(
+                    runtime,
+                    new FabricEventCompatHandles.BlockFertilize(List.of(new FabricBlock(helper.getLevel(), fertilized))),
+                    helper,
+                    null
+            ), "block fertilize context");
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(4, 2, 0));
+
+            ItemEntity dropped = new ItemEntity(helper.getLevel(), 5.5D, 1.0D, 0.5D, new ItemStack(Items.APPLE));
+            helper.getLevel().addFreshEntity(dropped);
+            ch.njol.skript.effects.EffDrop.lastSpawned = dropped;
+            assertExecuted(helper, dispatch(runtime, new HelperContextHandle(), helper, null), "helper context");
+            helper.assertTrue(
+                    "last dropped item".equals(dropped.getCustomName() == null ? null : dropped.getCustomName().getString()),
+                    Component.literal("Expected last dropped item expression to resolve the cached effect entity.")
+            );
+
+            runtime.clearScripts();
+        });
+    }
+
     private static void ensureCustomEventsRegistered() {
         if (!CUSTOM_EVENTS_REGISTERED.compareAndSet(false, true)) {
             return;
@@ -532,7 +629,16 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestPiglinBarterEvent.class, "gametest piglin barter");
         Skript.registerEvent(GameTestExperienceCooldownChangeEvent.class, "gametest player experience cooldown change");
         Skript.registerEvent(GameTestExplosionEvent.class, "gametest explode");
+        Skript.registerEvent(GameTestExplodeMutableEvent.class, "gametest explode mutable");
         Skript.registerEvent(GameTestEggThrowEvent.class, "gametest player egg throw");
+        Skript.registerEvent(GameTestEntityDeathEvent.class, "gametest entity death");
+        Skript.registerEvent(GameTestExplosiveEntityContextEvent.class, "gametest explosive entity context");
+        Skript.registerEvent(GameTestHangingBreakEvent.class, "gametest hanging break");
+        Skript.registerEvent(GameTestHelperContextEvent.class, "gametest helper context");
+        Skript.registerEvent(GameTestProjectileContextEvent.class, "gametest projectile context");
+        Skript.registerEvent(GameTestPiglinBarterMutableEvent.class, "gametest piglin barter mutable");
+        Skript.registerEvent(GameTestExplosionPrimeMutableEvent.class, "gametest explosion prime mutable");
+        Skript.registerEvent(GameTestBlockFertilizeEvent.class, "gametest block fertilize");
         Skript.registerEvent(GameTestUnleashEvent.class, "gametest unleash");
         Skript.registerEvent(GameTestRespawnEvent.class, "gametest respawn");
         Skript.registerEvent(GameTestExplosionPrimeEvent.class, "gametest explosion prime");
@@ -577,6 +683,16 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         }
     }
 
+    private static int readIntMethod(Object target, String methodName) {
+        try {
+            java.lang.reflect.Method method = target.getClass().getMethod(methodName);
+            method.setAccessible(true);
+            return ((Number) method.invoke(target)).intValue();
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to invoke " + methodName, exception);
+        }
+    }
+
     private record DamageContextHandle(
             net.minecraft.server.level.ServerLevel level,
             LivingEntity entity,
@@ -598,6 +714,68 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
     }
 
     private record ItemEntityContextHandle(ItemEntity entity) implements FabricEntityEventHandle {
+    }
+
+    private record ProjectileContextHandle(Entity entity) implements FabricEntityEventHandle {
+    }
+
+    private record ExplosiveEntityContextHandle(Entity entity) implements FabricEntityEventHandle {
+    }
+
+    private record HelperContextHandle() {
+    }
+
+    private static final class MutableEntityDeathHandle {
+
+        private final List<ItemStack> drops;
+        private int droppedExp;
+
+        private MutableEntityDeathHandle(List<ItemStack> drops, int droppedExp) {
+            this.drops = new java.util.ArrayList<>(drops);
+            this.droppedExp = droppedExp;
+        }
+
+        public List<ItemStack> drops() {
+            return drops;
+        }
+
+        public int droppedExp() {
+            return droppedExp;
+        }
+
+        public void setDroppedExp(int droppedExp) {
+            this.droppedExp = droppedExp;
+        }
+    }
+
+    private static final class MutableExplosionPrimeHandle {
+
+        private float radius;
+        private boolean causesFire;
+
+        private MutableExplosionPrimeHandle(float radius, boolean causesFire) {
+            this.radius = radius;
+            this.causesFire = causesFire;
+        }
+
+        public float radius() {
+            return radius;
+        }
+
+        public void setRadius(float radius) {
+            this.radius = radius;
+        }
+
+        public boolean causesFire() {
+            return causesFire;
+        }
+
+        public void setCausesFire(boolean causesFire) {
+            this.causesFire = causesFire;
+        }
+    }
+
+    private record HangingBreakHandle(Entity entity, @Nullable Entity remover) {
     }
 
     private static final class MutableEggThrowHandle implements FabricEggThrowEventHandle {
@@ -851,6 +1029,29 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         }
     }
 
+    public static final class GameTestExplodeMutableEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof FabricEventCompatHandles.Explosion;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{FabricEventCompatHandles.Explosion.class};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest explode mutable";
+        }
+    }
+
     public static final class GameTestEggThrowEvent extends ch.njol.skript.lang.SkriptEvent {
 
         @Override
@@ -940,6 +1141,190 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest explosion prime";
+        }
+    }
+
+    public static final class GameTestExplosionPrimeMutableEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof MutableExplosionPrimeHandle;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{EXPLOSION_PRIME_EVENT};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest explosion prime mutable";
+        }
+    }
+
+    public static final class GameTestEntityDeathEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof MutableEntityDeathHandle;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{ENTITY_DEATH_EVENT};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest entity death";
+        }
+    }
+
+    public static final class GameTestExplosiveEntityContextEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof ExplosiveEntityContextHandle;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{ExplosiveEntityContextHandle.class};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest explosive entity context";
+        }
+    }
+
+    public static final class GameTestHangingBreakEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof HangingBreakHandle;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{HANGING_BREAK_EVENT};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest hanging break";
+        }
+    }
+
+    public static final class GameTestHelperContextEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof HelperContextHandle;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{HelperContextHandle.class};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest helper context";
+        }
+    }
+
+    public static final class GameTestProjectileContextEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof ProjectileContextHandle;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{ProjectileContextHandle.class};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest projectile context";
+        }
+    }
+
+    public static final class GameTestPiglinBarterMutableEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof FabricEventCompatHandles.PiglinBarter;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{FabricEventCompatHandles.PiglinBarter.class};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest piglin barter mutable";
+        }
+    }
+
+    public static final class GameTestBlockFertilizeEvent extends ch.njol.skript.lang.SkriptEvent {
+
+        @Override
+        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
+            return args.length == 0;
+        }
+
+        @Override
+        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return event.handle() instanceof FabricEventCompatHandles.BlockFertilize;
+        }
+
+        @Override
+        public Class<?>[] getEventClasses() {
+            return new Class<?>[]{FabricEventCompatHandles.BlockFertilize.class};
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "gametest block fertilize";
         }
     }
 }
