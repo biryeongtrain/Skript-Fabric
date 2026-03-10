@@ -730,6 +730,29 @@ public final class SkriptFabricBootstrap {
                 ch.njol.skript.effects.EffSendResourcePack.register();
                 ch.njol.skript.effects.EffSendTitle.register();
                 ch.njol.skript.effects.EffStopSound.register();
+                ch.njol.skript.effects.EffBan.register();
+                ch.njol.skript.effects.EffCancelItemUse.register();
+                ch.njol.skript.effects.EffCommand.register();
+                ch.njol.skript.effects.EffLidState.register();
+                ch.njol.skript.effects.EffLook.register();
+                ch.njol.skript.effects.EffOpenBook.register();
+                ch.njol.skript.effects.EffOpenInventory.register();
+                ch.njol.skript.effects.EffPvP.register();
+                ch.njol.skript.effects.EffSendBlockChange.register();
+                ch.njol.skript.effects.EffTooltip.register();
+                ch.njol.skript.effects.EffWardenDisturbance.register();
+                ch.njol.skript.effects.EffWorldLoad.register();
+                ch.njol.skript.effects.EffWorldSave.register();
+                ch.njol.skript.effects.EffStopServer.register();
+                ch.njol.skript.effects.EffBlockUpdate.register();
+                ch.njol.skript.effects.EffBreakNaturally.register();
+                ch.njol.skript.effects.EffCancelCooldown.register();
+                ch.njol.skript.effects.EffCancelDrops.register();
+                ch.njol.skript.effects.EffCancelEvent.register();
+                ch.njol.skript.effects.EffHidePlayerFromServerList.register();
+                ch.njol.skript.effects.EffLoadServerIcon.register();
+                ch.njol.skript.effects.EffPlayerInfoVisibility.register();
+                ch.njol.skript.effects.EffRing.register();
                 Skript.registerEffect(
                         EffFeed.class,
                         "feed [the] %players% [by %-number% [beef[s]]]"
