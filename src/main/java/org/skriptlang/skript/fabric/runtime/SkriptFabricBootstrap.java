@@ -14,6 +14,8 @@ import ch.njol.skript.events.EvtSkript;
 import ch.njol.skript.expressions.ExprDateAgoLater;
 import ch.njol.skript.expressions.ExprNow;
 import ch.njol.skript.expressions.ExprTimeSince;
+import ch.njol.skript.expressions.ExprUnixDate;
+import ch.njol.skript.expressions.ExprUnixTicks;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
@@ -455,6 +457,18 @@ public final class SkriptFabricBootstrap {
                         ch.njol.skript.util.Timespan.class,
                         "[the] time since %dates%",
                         "[the] (time [remaining]|remaining time) until %dates%"
+                );
+                Skript.registerExpression(
+                        ExprUnixDate.class,
+                        ch.njol.skript.util.Date.class,
+                        "[the] unix date of %numbers%",
+                        "%numbers%'[s] unix date"
+                );
+                Skript.registerExpression(
+                        ExprUnixTicks.class,
+                        Number.class,
+                        "[the] unix timestamp of %dates%",
+                        "%dates%'[s] unix timestamp"
                 );
                 Skript.registerExpression(
                         ExprLoveTime.class,
