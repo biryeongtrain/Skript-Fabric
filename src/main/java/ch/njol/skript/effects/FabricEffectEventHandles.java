@@ -17,6 +17,19 @@ final class FabricEffectEventHandles {
     static final class PlayerEggThrow {
     }
 
+    static final class PlayerElytraBoost {
+
+        private final boolean shouldConsume;
+
+        PlayerElytraBoost(boolean shouldConsume) {
+            this.shouldConsume = shouldConsume;
+        }
+
+        boolean shouldConsume() {
+            return shouldConsume;
+        }
+    }
+
     static final class EntityUnleash {
     }
 }

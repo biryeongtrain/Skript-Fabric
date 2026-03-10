@@ -4,10 +4,22 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import ch.njol.skript.conditions.CondCancelled;
+import ch.njol.skript.conditions.CondChatColors;
+import ch.njol.skript.conditions.CondChatFiltering;
+import ch.njol.skript.conditions.CondChatVisibility;
 import ch.njol.skript.conditions.CondDamageCause;
+import ch.njol.skript.conditions.CondFromMobSpawner;
+import ch.njol.skript.conditions.CondHasClientWeather;
+import ch.njol.skript.conditions.CondHasResourcePack;
 import ch.njol.skript.conditions.CondIsPreferredTool;
+import ch.njol.skript.conditions.CondIsEnchanted;
+import ch.njol.skript.conditions.CondIsPluginEnabled;
+import ch.njol.skript.conditions.CondIsSkriptCommand;
+import ch.njol.skript.conditions.CondIsSpawnable;
 import ch.njol.skript.conditions.CondIsSedated;
+import ch.njol.skript.conditions.CondLeashed;
 import ch.njol.skript.conditions.CondLeashWillDrop;
+import ch.njol.skript.conditions.CondResourcePack;
 import ch.njol.skript.conditions.CondRespawnLocation;
 import ch.njol.skript.conditions.CondScriptLoaded;
 import ch.njol.skript.effects.EffCopy;
@@ -21,10 +33,16 @@ import ch.njol.skript.events.EvtBookEdit;
 import ch.njol.skript.events.EvtBookSign;
 import ch.njol.skript.events.EvtClick;
 import ch.njol.skript.events.EvtEntity;
+import ch.njol.skript.events.EvtEntityBlockChange;
 import ch.njol.skript.events.EvtEntityTransform;
 import ch.njol.skript.events.EvtExperienceSpawn;
+import ch.njol.skript.events.EvtGrow;
 import ch.njol.skript.events.EvtHealing;
 import ch.njol.skript.events.EvtItem;
+import ch.njol.skript.events.EvtPlantGrowth;
+import ch.njol.skript.events.EvtPressurePlate;
+import ch.njol.skript.events.EvtResourcePackResponse;
+import ch.njol.skript.events.EvtVehicleCollision;
 import ch.njol.skript.expressions.ExprAffectedEntities;
 import ch.njol.skript.expressions.ExprConsumedItem;
 import ch.njol.skript.expressions.ExprExplodedBlocks;
@@ -69,9 +87,45 @@ final class MixedRuntimeSyntaxBatchTest {
                 "the leash will drop",
                 resolveEventClass("ch.njol.skript.effects.FabricEffectEventHandles$EntityUnleash")
         ));
+        assertInstanceOf(CondChatColors.class, parseConditionInEvent(
+                "event-player can see chat colors",
+                FabricUseEntityHandle.class
+        ));
+        assertInstanceOf(CondChatFiltering.class, parseConditionInEvent(
+                "event-player has chat filtering enabled",
+                FabricUseEntityHandle.class
+        ));
+        assertInstanceOf(CondChatVisibility.class, parseConditionInEvent(
+                "event-player can see all messages",
+                FabricUseEntityHandle.class
+        ));
+        assertInstanceOf(CondFromMobSpawner.class, parseConditionInEvent(
+                "event-entity is from a spawner",
+                ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
+        ));
+        assertInstanceOf(CondHasClientWeather.class, parseConditionInEvent(
+                "event-player has custom weather",
+                FabricUseEntityHandle.class
+        ));
+        assertInstanceOf(CondHasResourcePack.class, parseConditionInEvent(
+                "event-player has a resource pack loaded",
+                FabricUseEntityHandle.class
+        ));
+        assertInstanceOf(CondIsEnchanted.class, parseCondition("diamond sword is enchanted"));
+        assertInstanceOf(CondIsPluginEnabled.class, parseCondition("plugin \"fabricloader\" is enabled"));
+        assertInstanceOf(CondIsSkriptCommand.class, parseCondition("\"help\" is a skript command"));
+        assertInstanceOf(CondIsSpawnable.class, parseCondition("zombie is spawnable"));
+        assertInstanceOf(CondLeashed.class, parseConditionInEvent(
+                "event-entity is leashed",
+                ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class
+        ));
         assertInstanceOf(CondRespawnLocation.class, parseConditionInEvent(
                 "respawn location is a bed",
                 resolveEventClass("ch.njol.skript.effects.FabricEffectEventHandles$PlayerRespawn")
+        ));
+        assertInstanceOf(CondResourcePack.class, parseConditionInEvent(
+                "resource pack was accepted",
+                ch.njol.skript.events.FabricEventCompatHandles.ResourcePackResponse.class
         ));
         assertInstanceOf(CondScriptLoaded.class, parseCondition("script \"example.sk\" is loaded"));
         assertInstanceOf(CondIsPreferredTool.class, parseConditionInEvent(
@@ -129,10 +183,16 @@ final class MixedRuntimeSyntaxBatchTest {
         assertInstanceOf(EvtBlock.class, parseEvent("block breaking of stone"));
         assertInstanceOf(EvtClick.class, parseEvent("right click with stick on stone"));
         assertInstanceOf(EvtEntity.class, parseEvent("spawning of zombie"));
+        assertInstanceOf(EvtEntityBlockChange.class, parseEvent("sheep eat"));
         assertInstanceOf(EvtEntityTransform.class, parseEvent("zombie transforming due to \"curing\""));
         assertInstanceOf(EvtExperienceSpawn.class, parseEvent("experience orb spawn"));
+        assertInstanceOf(EvtGrow.class, parseEvent("growth"));
         assertInstanceOf(EvtHealing.class, parseEvent("healing of zombie by \"magic\""));
         assertInstanceOf(EvtItem.class, parseEvent("item spawn of stick"));
+        assertInstanceOf(EvtPlantGrowth.class, parseEvent("plant growth"));
+        assertInstanceOf(EvtPressurePlate.class, parseEvent("tripwire"));
+        assertInstanceOf(EvtResourcePackResponse.class, parseEvent("resource pack accepted"));
+        assertInstanceOf(EvtVehicleCollision.class, parseEvent("vehicle entity collision of zombie"));
     }
 
     private Condition parseCondition(String input) {

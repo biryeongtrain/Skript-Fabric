@@ -50,10 +50,12 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Dolphin;
 import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Illusioner;
 import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombieVillager;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.Villager;
@@ -214,6 +216,155 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                 helper.getLevel().getBlockState(brokenAbsolute).is(Blocks.REDSTONE_BLOCK),
                 Component.literal("Expected block break bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void blockPlaceCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_place_sets_block.sk");
+
+            BlockPos placedAbsolute = helper.absolutePos(new BlockPos(1, 1, 1));
+            helper.getLevel().setBlockAndUpdate(placedAbsolute, Blocks.STONE.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.teleportTo(placedAbsolute.getX() + 0.5D, placedAbsolute.getY() + 1.0D, placedAbsolute.getZ() + 0.5D);
+
+            SkriptFabricEventBridge.dispatchBlockPlace(
+                    helper.getLevel(),
+                    placedAbsolute,
+                    Blocks.STONE.defaultBlockState(),
+                    new ItemStack(Items.STONE),
+                    player
+            );
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(placedAbsolute.above()).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected block place compat bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void plantGrowthCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/plant_growth_sets_blocks.sk");
+
+            BlockPos cropAbsolute = helper.absolutePos(new BlockPos(0, 1, 0));
+            helper.getLevel().setBlockAndUpdate(cropAbsolute, Blocks.WHEAT.defaultBlockState());
+
+            SkriptFabricEventBridge.dispatchPlantGrowth(
+                    helper.getLevel(),
+                    cropAbsolute,
+                    Blocks.WHEAT.defaultBlockState(),
+                    Blocks.WHEAT.defaultBlockState()
+            );
+            SkriptFabricEventBridge.dispatchGrow(
+                    helper.getLevel(),
+                    cropAbsolute,
+                    Blocks.WHEAT.defaultBlockState(),
+                    Blocks.WHEAT.defaultBlockState(),
+                    null
+            );
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(cropAbsolute.above()).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected plant growth compat bridge to expose event-block in loaded Skript.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(3, 1, 0))).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected grow compat bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void entityBlockChangeCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/entity_block_change_marks_block.sk");
+
+            BlockPos changedAbsolute = helper.absolutePos(new BlockPos(1, 1, 0));
+            helper.getLevel().setBlockAndUpdate(changedAbsolute, Blocks.GRASS_BLOCK.defaultBlockState());
+
+            Sheep sheep = (Sheep) helper.spawnWithNoFreeWill(EntityType.SHEEP, 0.5F, 1.0F, 0.5F);
+            SkriptFabricEventBridge.dispatchEntityBlockChange(
+                    helper.getLevel(),
+                    changedAbsolute,
+                    sheep,
+                    Blocks.GRASS_BLOCK.defaultBlockState(),
+                    Blocks.AIR.defaultBlockState()
+            );
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(changedAbsolute.above()).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected entity block change compat bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void pressurePlateCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/pressure_plate_marks_blocks.sk");
+
+            BlockPos pressureMarker = helper.absolutePos(new BlockPos(4, 1, 0));
+            BlockPos tripwireMarker = helper.absolutePos(new BlockPos(5, 1, 0));
+            helper.getLevel().setBlockAndUpdate(pressureMarker, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(tripwireMarker, Blocks.AIR.defaultBlockState());
+
+            SkriptFabricEventBridge.dispatchPressurePlate(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 0)), false);
+            SkriptFabricEventBridge.dispatchPressurePlate(helper.getLevel(), helper.absolutePos(new BlockPos(3, 1, 0)), true);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(pressureMarker).is(Blocks.LAPIS_BLOCK),
+                    Component.literal("Expected pressure plate compat bridge to execute loaded Skript file.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(tripwireMarker).is(Blocks.RED_WOOL),
+                    Component.literal("Expected tripwire compat bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void vehicleCollisionCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/vehicle_collision_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(6, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            MinecartChest minecart = new MinecartChest(helper.getLevel(), 0.5D, 1.0D, 0.5D);
+            helper.getLevel().addFreshEntity(minecart);
+            Zombie zombie = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 1.5F, 1.0F, 0.5F);
+
+            SkriptFabricEventBridge.dispatchVehicleCollision(
+                    helper.getLevel(),
+                    helper.absolutePos(new BlockPos(0, 1, 0)),
+                    minecart,
+                    null,
+                    zombie
+            );
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected vehicle collision compat bridge to execute loaded Skript file.")
             );
             runtime.clearScripts();
         });

@@ -1,0 +1,5 @@
+on plant growth:
+    set test block above event-block to emerald_block
+
+on growth:
+    set test block at 3 1 0 to gold_block

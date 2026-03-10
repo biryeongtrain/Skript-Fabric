@@ -89,6 +89,27 @@ final class SkriptFabricAdditionalSyntax {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     static void register() {
+        forceInitialize(ch.njol.skript.conditions.CondChatColors.class);
+        forceInitialize(ch.njol.skript.conditions.CondChatFiltering.class);
+        forceInitialize(ch.njol.skript.conditions.CondChatVisibility.class);
+        forceInitialize(ch.njol.skript.conditions.CondElytraBoostConsume.class);
+        forceInitialize(ch.njol.skript.conditions.CondFromMobSpawner.class);
+        forceInitialize(ch.njol.skript.conditions.CondHasClientWeather.class);
+        forceInitialize(ch.njol.skript.conditions.CondHasMetadata.class);
+        forceInitialize(ch.njol.skript.conditions.CondHasResourcePack.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsEnchanted.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsPluginEnabled.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsSkriptCommand.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsSlimeChunk.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsSpawnable.class);
+        forceInitialize(ch.njol.skript.conditions.CondLeashed.class);
+        forceInitialize(ch.njol.skript.conditions.CondResourcePack.class);
+        ch.njol.skript.events.EvtEntityBlockChange.register();
+        ch.njol.skript.events.EvtGrow.register();
+        ch.njol.skript.events.EvtPlantGrowth.register();
+        ch.njol.skript.events.EvtPressurePlate.register();
+        ch.njol.skript.events.EvtResourcePackResponse.register();
+        ch.njol.skript.events.EvtVehicleCollision.register();
         Skript.registerEvent(EvtBucketCatch.class, EvtBucketCatch.patterns());
         Skript.registerEvent(EvtBreeding.class, EvtBreeding.patterns());
         Skript.registerEvent(EvtBrewingComplete.class, EvtBrewingComplete.patterns());
@@ -437,5 +458,13 @@ final class SkriptFabricAdditionalSyntax {
                 "[the] [all] block tags",
                 "[the] [all] entity tags"
         );
+    }
+
+    private static void forceInitialize(Class<?> type) {
+        try {
+            Class.forName(type.getName(), true, type.getClassLoader());
+        } catch (ClassNotFoundException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 }

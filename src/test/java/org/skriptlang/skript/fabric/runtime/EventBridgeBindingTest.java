@@ -10,10 +10,15 @@ import ch.njol.skript.events.EvtBookEdit;
 import ch.njol.skript.events.EvtBookSign;
 import ch.njol.skript.events.EvtClick;
 import ch.njol.skript.events.EvtEntity;
+import ch.njol.skript.events.EvtEntityBlockChange;
 import ch.njol.skript.events.EvtEntityTransform;
 import ch.njol.skript.events.EvtExperienceSpawn;
+import ch.njol.skript.events.EvtGrow;
 import ch.njol.skript.events.EvtHealing;
 import ch.njol.skript.events.EvtItem;
+import ch.njol.skript.events.EvtPlantGrowth;
+import ch.njol.skript.events.EvtPressurePlate;
+import ch.njol.skript.events.EvtVehicleCollision;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
@@ -40,10 +45,15 @@ final class EventBridgeBindingTest {
         EvtBookSign.register();
         EvtClick.register();
         EvtEntity.register();
+        EvtEntityBlockChange.register();
         EvtEntityTransform.register();
         EvtExperienceSpawn.register();
+        EvtGrow.register();
         EvtHealing.register();
         EvtItem.register();
+        EvtPlantGrowth.register();
+        EvtPressurePlate.register();
+        EvtVehicleCollision.register();
     }
 
     @Test
@@ -51,13 +61,20 @@ final class EventBridgeBindingTest {
         assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.BeaconEffect.class));
         assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.BeaconToggle.class));
         assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.Block.class));
+        assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.EntityBlockChange.class));
+        assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.Grow.class));
+        assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.PlantGrowth.class));
+        assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.PressurePlate.class));
+        assertInstanceOf(ExprEventBlock.class, parseExpressionInEvent("event-block", ch.njol.skript.events.FabricEventCompatHandles.VehicleCollision.class));
     }
 
     @Test
     void entityBackedCompatHandlesBindEventEntity() {
         assertInstanceOf(ExprEventEntity.class, parseExpressionInEvent("event-entity", ch.njol.skript.events.FabricEventCompatHandles.EntityLifecycle.class));
+        assertInstanceOf(ExprEventEntity.class, parseExpressionInEvent("event-entity", ch.njol.skript.events.FabricEventCompatHandles.EntityBlockChange.class));
         assertInstanceOf(ExprEventEntity.class, parseExpressionInEvent("event-entity", ch.njol.skript.events.FabricEventCompatHandles.EntityTransform.class));
         assertInstanceOf(ExprEventEntity.class, parseExpressionInEvent("event-entity", ch.njol.skript.events.FabricEventCompatHandles.Healing.class));
+        assertInstanceOf(ExprEventEntity.class, parseExpressionInEvent("event-entity", ch.njol.skript.events.FabricEventCompatHandles.VehicleCollision.class));
     }
 
     @Test

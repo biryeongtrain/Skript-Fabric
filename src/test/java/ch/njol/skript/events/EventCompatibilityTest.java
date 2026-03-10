@@ -50,6 +50,7 @@ final class EventCompatibilityTest {
         EvtBlock.register();
         EvtClick.register();
         EvtEntity.register();
+        EvtEntityBlockChange.register();
         EvtItem.register();
         EvtEntityShootBow.register();
         EvtEntityTarget.register();
@@ -61,9 +62,13 @@ final class EventCompatibilityTest {
         EvtHealing.register();
         EvtLeash.register();
         EvtMoveOn.register();
+        EvtGrow.register();
+        EvtPlantGrowth.register();
         EvtPlayerArmorChange.register();
         EvtPortal.register();
+        EvtPressurePlate.register();
         EvtResourcePackResponse.register();
+        EvtVehicleCollision.register();
         EvtWeatherChange.register();
         EvtWorld.register();
     }
@@ -244,6 +249,54 @@ final class EventCompatibilityTest {
                         null
                 ))
         );
+    }
+
+    @Test
+    void entityBlockChangeEventParsesFallingLandingPattern() {
+        EvtEntityBlockChange event = parseEvent("falling block landing", EvtEntityBlockChange.class);
+        assertEquals("falling block landing", event.toString(null, false));
+    }
+
+    @Test
+    void growEventChecksBlockGrowthHandle() {
+        EvtGrow event = parseEvent("growth", EvtGrow.class);
+        assertEquals("grow", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.Grow(dummyLevel(), BlockPos.ZERO, Blocks.WHEAT.defaultBlockState(), Blocks.WHEAT.defaultBlockState(), null),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void plantGrowthEventChecksHandle() {
+        EvtPlantGrowth event = parseEvent("plant growth of wheat seeds", EvtPlantGrowth.class);
+        assertEquals("plant growth", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.PlantGrowth(dummyLevel(), BlockPos.ZERO, Blocks.WHEAT.defaultBlockState(), Blocks.WHEAT.defaultBlockState()),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void pressurePlateEventParsesTripwireVariant() {
+        EvtPressurePlate event = parseEvent("tripwire", EvtPressurePlate.class);
+        assertEquals("trip", event.toString(null, false));
+    }
+
+    @Test
+    void vehicleCollisionEventParsesEntityVariant() {
+        EvtVehicleCollision event = parseEvent("vehicle entity collision of zombie", EvtVehicleCollision.class);
+        assertEquals("vehicle entity collision of [zombie]", event.toString(null, false));
     }
 
     @Test

@@ -386,6 +386,84 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchBlockPlace(
+            ServerLevel level,
+            BlockPos pos,
+            @Nullable BlockState state,
+            @Nullable ItemStack itemStack,
+            @Nullable ServerPlayer player
+    ) {
+        dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.PLACE, state, itemStack, false, player);
+    }
+
+    public static void dispatchEntityBlockChange(
+            ServerLevel level,
+            BlockPos pos,
+            Entity entity,
+            @Nullable BlockState from,
+            @Nullable BlockState to
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityBlockChange(level, pos.immutable(), entity, from, to),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchGrow(
+            ServerLevel level,
+            BlockPos pos,
+            @Nullable BlockState from,
+            @Nullable BlockState to,
+            @Nullable String structureType
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Grow(level, pos.immutable(), from, to, structureType),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchPlantGrowth(
+            ServerLevel level,
+            BlockPos pos,
+            @Nullable BlockState from,
+            @Nullable BlockState to
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PlantGrowth(level, pos.immutable(), from, to),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchPressurePlate(ServerLevel level, BlockPos pos, boolean tripwire) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PressurePlate(level, pos.immutable(), tripwire),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchVehicleCollision(
+            ServerLevel level,
+            BlockPos pos,
+            Entity vehicle,
+            @Nullable BlockState blockState,
+            @Nullable Entity entity
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.VehicleCollision(level, pos.immutable(), vehicle, blockState, entity),
+                level.getServer(),
+                level,
+                vehicle instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
     private static void dispatchCompatBlock(
             ServerLevel level,
             BlockPos pos,
