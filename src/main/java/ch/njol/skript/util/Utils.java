@@ -1,5 +1,8 @@
 package ch.njol.skript.util;
 
+import java.util.Locale;
+import org.jetbrains.annotations.Nullable;
+
 public final class Utils {
 
     private Utils() {
@@ -44,5 +47,21 @@ public final class Utils {
         } catch (NumberFormatException ignored) {
             return value.startsWith("-") ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
+    }
+
+    public static @Nullable String parseHexColor(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.startsWith("#") ? value.substring(1) : value;
+        if (normalized.length() != 6) {
+            return null;
+        }
+        for (int i = 0; i < normalized.length(); i++) {
+            if (Character.digit(normalized.charAt(i), 16) == -1) {
+                return null;
+            }
+        }
+        return "#" + normalized.toLowerCase(Locale.ENGLISH);
     }
 }
