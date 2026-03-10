@@ -49,6 +49,7 @@ Use local upstream snapshots only.
 Keep Stage 8 frozen at 23 / 214.
 Priority is reducing the raw `ch/njol/skript` shortfall by closing upstream package bundles.
 Do not spend worker time polishing already-landed syntax unless that directly blocks new upstream imports.
+When running a syntax-heavy mixed-runtime cycle, assign at least `100` syntax-class or live-activation targets across the six workers if that much plausible surface remains.
 
 Worker merge order:
 1. Lane A

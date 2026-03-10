@@ -88,6 +88,7 @@ These are already closed. Do not reopen without a new reproducer.
 - do not stop after the first small win; aim for at least `20` class-equivalent additions/restorations and preferably roughly `20-60`, or `2-4` verifiable commits unless the bundle is blocked or exhausted
 - no web
 - worker docs stay minimal
+- for syntax-heavy mixed-runtime cycles, assign at least `100` syntax-class or live-activation targets across the six workers when that much plausible surface remains
 - for syntax-heavy runtime batches, prefer mixed-runtime sub-lanes instead of falling back to the old package A-F split:
   - `Lane 1`: event activation / remaining concrete event producers
   - `Lane 2`: remaining or adjacent condition closures
