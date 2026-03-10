@@ -28,6 +28,15 @@ final class EventCompatibilityTest {
         EvtBucketCatch.register();
         EvtScript.register();
         EvtSkript.register();
+        EvtCommand.register();
+        EvtFirstJoin.register();
+        EvtLevel.register();
+        EvtMove.register();
+        EvtPlayerChunkEnter.register();
+        EvtPlayerCommandSend.register();
+        EvtSpectate.register();
+        EvtTeleport.register();
+        EvtExperienceChange.register();
     }
 
     @Test
@@ -70,6 +79,112 @@ final class EventCompatibilityTest {
         assertEquals("on skript start", event.toString(null, false));
     }
 
+    @Test
+    void commandEventStripsSlashAndMatchesLabels() throws Exception {
+        EvtCommand event = parseEvent("command \"/stop now\"", EvtCommand.class);
+
+        assertEquals("stop now", readStringArray(event, "commands"));
+        assertEquals("command \"/stop now\"", event.toString(null, false));
+        assertEquals(1, event.getEventClasses().length);
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricPlayerEventHandles.Command("/stop now please"),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void firstJoinEventChecksFirstJoinFlag() {
+        EvtFirstJoin event = parseEvent("first join", EvtFirstJoin.class);
+
+        assertEquals("first join", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricPlayerEventHandles.FirstJoin(true),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void levelEventParsesUpAndChecksNewLevel() {
+        EvtLevel event = parseEvent("player level up", EvtLevel.class);
+
+        assertEquals("level up", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricPlayerEventHandles.Level(4, 5),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void moveEventParsesRotateVariant() throws Exception {
+        EvtMove event = parseEvent("player turning around", EvtMove.class);
+
+        assertEquals("player", readField(event, "entityData").toString());
+        assertEquals("player rotate", event.toString(null, false));
+    }
+
+    @Test
+    void playerChunkEnterEventChecksChunkBoundary() {
+        EvtPlayerChunkEnter event = parseEvent("player enters a chunk", EvtPlayerChunkEnter.class);
+
+        assertEquals("player enter chunk", event.toString(null, false));
+        assertEquals(1, event.getEventClasses().length);
+    }
+
+    @Test
+    void playerCommandSendEventSnapshotsOriginalCommands() {
+        EvtPlayerCommandSend event = parseEvent("send command list", EvtPlayerCommandSend.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricPlayerEventHandles.CommandSend(java.util.List.of("help", "stop")),
+                        null,
+                        null,
+                        null
+                ))
+        );
+        assertEquals(java.util.List.of("help", "stop"), event.getOriginalCommands());
+        assertEquals("sending of the server command list", event.toString(null, false));
+    }
+
+    @Test
+    void spectateEventParsesStartPattern() throws Exception {
+        EvtSpectate event = parseEvent("player start spectating of zombie", EvtSpectate.class);
+
+        assertEquals("zombie", readLiteralArray(event, "datas"));
+    }
+
+    @Test
+    void experienceChangeEventParsesDecreaseAndChecksAmount() {
+        EvtExperienceChange event = parseEvent("player experience decrease", EvtExperienceChange.class);
+
+        assertEquals("player level progress decrease", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricPlayerEventHandles.ExperienceChange(null, -3),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
     private <T> T parseEvent(String input, Class<T> type) {
         ch.njol.skript.lang.SkriptEvent parsed = ch.njol.skript.lang.SkriptEvent.parse(
                 input,
@@ -91,6 +206,11 @@ final class EventCompatibilityTest {
     private String readArray(Object owner, String fieldName) throws Exception {
         Object value = readField(owner, fieldName);
         Object[] array = (Object[]) value;
+        return array.length == 0 ? "" : String.valueOf(array[0]);
+    }
+
+    private String readStringArray(Object owner, String fieldName) throws Exception {
+        Object[] array = (Object[]) readField(owner, fieldName);
         return array.length == 0 ? "" : String.valueOf(array[0]);
     }
 
