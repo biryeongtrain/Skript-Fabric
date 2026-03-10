@@ -1,0 +1,51 @@
+- landed classes
+  - `CondCancelled`
+  - `CondDamageCause`
+  - `CondEntityUnload`
+  - `CondIncendiary`
+  - `CondItemDespawn`
+  - `CondIsPreferredTool`
+  - `CondIsSedated`
+  - `CondLeashWillDrop`
+  - `CondRespawnLocation`
+  - `CondScriptLoaded`
+  - helper: `ConditionRuntimeSupport`
+
+- runtime-eligible classes
+  - `CondCancelled` via reflective `isCancelled()` event handles when available
+  - `CondDamageCause` via `FabricDamageSourceEventHandle`
+  - `CondEntityUnload` via `persistenceRequired`
+  - `CondIncendiary` via event handle `causesFire()` or entity `isIncendiary()`
+  - `CondItemDespawn` via unlimited-lifetime reflection
+  - `CondIsPreferredTool` for `FabricBlock` / `BlockState`
+  - `CondIsSedated` for `FabricBlock` beehives
+  - `CondLeashWillDrop` via reflective `isDropLeash()` event handles
+  - `CondRespawnLocation` via reflective `isBedSpawn()` / `isAnchorSpawn()` event handles
+  - `CondScriptLoaded` via loaded-script reflection on `SkriptRuntime`
+
+- bootstrap registrations needed
+  - `CondCancelled`
+  - `CondDamageCause`
+  - `CondEntityUnload`
+  - `CondIncendiary`
+  - `CondItemDespawn`
+  - `CondIsPreferredTool`
+  - `CondIsSedated`
+  - `CondLeashWillDrop`
+  - `CondRespawnLocation`
+  - `CondScriptLoaded`
+
+- targeted tests
+  - `./gradlew test --tests ch.njol.skript.conditions.ConditionImportedRuntimeCompatibilityTest --rerun-tasks`
+  - passed
+
+- blockers
+  - `CondIsEnchanted`: exact upstream `%enchantmenttypes%` surface is still missing locally; I did not widen scope into new classinfo/util registration.
+  - `CondIsSlimeChunk`: no local chunk compat type surfaced in this lane.
+  - `CondFromMobSpawner`: no reliable local spawn-origin API is wired for entities in this tree.
+  - `CondIsSpawnable`: local `EntityData` does not expose the upstream `canSpawn(world)` surface.
+  - `CondHasClientWeather`: no local player custom-weather surface is present.
+
+- merge-note
+  - conflicts should stay limited to `src/main/java/ch/njol/skript/conditions/**` and the new targeted condition test.
+  - coordinator will need to decide whether to wire these condition classes into `SkriptFabricBootstrap`; this lane intentionally did not edit bootstrap.
