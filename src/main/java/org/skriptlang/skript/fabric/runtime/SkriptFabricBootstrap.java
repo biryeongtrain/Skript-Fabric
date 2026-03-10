@@ -7,8 +7,13 @@ import ch.njol.skript.classes.data.DefaultFunctions;
 import ch.njol.skript.classes.data.DefaultOperations;
 import ch.njol.skript.classes.data.JavaClasses;
 import ch.njol.skript.classes.data.SkriptClasses;
+import ch.njol.skript.conditions.CondDate;
+import ch.njol.skript.conditions.CondPastFuture;
 import ch.njol.skript.events.EvtScript;
 import ch.njol.skript.events.EvtSkript;
+import ch.njol.skript.expressions.ExprDateAgoLater;
+import ch.njol.skript.expressions.ExprNow;
+import ch.njol.skript.expressions.ExprTimeSince;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
@@ -411,6 +416,16 @@ public final class SkriptFabricBootstrap {
                         "%objects% (is|are) %objects%",
                         "%objects% (isn't|is not|aren't|are not) %objects%"
                 );
+                Skript.registerCondition(
+                        CondDate.class,
+                        "%date% (was|were)( more|(n't| not) less) than %timespan% [ago]",
+                        "%date% (was|were)((n't| not) more| less) than %timespan% [ago]"
+                );
+                Skript.registerCondition(
+                        CondPastFuture.class,
+                        "%dates% (is|are)[negated:(n't| not)] in the (past|:future)",
+                        "%dates% ha(s|ve)[negated:(n't| not)] passed"
+                );
                 Skript.registerEvent(EvtFabricBlockBreak.class, "on block break");
                 Skript.registerEvent(EvtAttackEntity.class, "on attack entity");
                 Skript.registerEvent(EvtBrewingFuel.class, EvtBrewingFuel.patterns());
@@ -424,6 +439,23 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
                 Skript.registerEvent(EvtUseItem.class, "on use item");
+                Skript.registerExpression(
+                        ExprNow.class,
+                        ch.njol.skript.util.Date.class,
+                        "now"
+                );
+                Skript.registerExpression(
+                        ExprDateAgoLater.class,
+                        ch.njol.skript.util.Date.class,
+                        "%timespan% (ago|in the past|before [the] [date] %-date%)",
+                        "%timespan% (later|(from|after) [the] [date] %-date%)"
+                );
+                Skript.registerExpression(
+                        ExprTimeSince.class,
+                        ch.njol.skript.util.Timespan.class,
+                        "[the] time since %dates%",
+                        "[the] (time [remaining]|remaining time) until %dates%"
+                );
                 Skript.registerExpression(
                         ExprLoveTime.class,
                         ch.njol.skript.util.Timespan.class,
