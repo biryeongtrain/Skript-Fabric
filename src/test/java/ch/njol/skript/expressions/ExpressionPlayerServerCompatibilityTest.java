@@ -137,12 +137,10 @@ final class ExpressionPlayerServerCompatibilityTest {
         UUID uuid = UUID.randomUUID();
         Path file = playerData.resolve(uuid + ".dat");
         Files.writeString(file, "lane-e");
-        GameProfile profile = new GameProfile(uuid, "lane-e-m3");
-
-        FileTime first = ExprLastLoginTime.resolveLoginTime(playerData, profile, true);
+        FileTime first = ExprLastLoginTime.resolveLoginTime(file, true);
         FileTime expectedLast = FileTime.fromMillis(System.currentTimeMillis() + 5_000L);
         Files.setLastModifiedTime(file, expectedLast);
-        FileTime last = ExprLastLoginTime.resolveLoginTime(playerData, profile, false);
+        FileTime last = ExprLastLoginTime.resolveLoginTime(file, false);
 
         assertNotNull(first);
         assertNotNull(last);
