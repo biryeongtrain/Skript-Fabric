@@ -1,0 +1,35 @@
+on beacon activation:
+    set test block above event-block to emerald_block
+
+on primary beacon effect:
+    set test block above event-block to gold_block
+
+on block dropping of stone:
+    set test block above event-block to diamond_block
+
+on book edit:
+    set test name of item event-item to "edited book"
+
+on book signing:
+    set test name of item event-item to "signed book"
+
+on right click on armor stand using stick:
+    set test name of entity event-entity to "clicked entity"
+
+on spawning of zombie:
+    set test name of entity event-entity to "spawned zombie"
+
+on zombie transforming due to "curing":
+    set test name of entity event-entity to "transformed zombie"
+
+on experience orb spawn:
+    set test block at 6 1 0 to lapis_block
+
+on healing of player by "magic":
+    set test name of entity event-entity to "heal %heal amount%"
+
+on item spawn of apple:
+    set test name of item event-item to "spawned apple"
+
+on consuming of apple:
+    set test name of item consumed item to "consumed apple"

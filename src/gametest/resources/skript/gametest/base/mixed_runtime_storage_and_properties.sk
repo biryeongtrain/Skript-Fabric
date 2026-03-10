@@ -1,0 +1,34 @@
+on gametest:
+    if script "skript/gametest/base/mixed_runtime_storage_and_properties.sk" is loaded:
+        set test block at 0 1 0 to emerald_block
+
+    set {_source::b} to 2
+    set {_source::a} to 1
+    copy {_source::*} to {_copy::*}
+    if {_copy::a} is 1:
+        if {_copy::b} is 2:
+            set test block at 1 1 0 to lapis_block
+
+    set {_numbers::*} to 3, 1, 2
+    sort {_numbers::*}
+    if {_numbers::1} is 1:
+        if {_numbers::2} is 2:
+            if {_numbers::3} is 3:
+                set test block at 2 1 0 to diamond_block
+
+    set {_enabled} to false
+    toggle {_enabled}
+    if {_enabled} is true:
+        set test block at 3 1 0 to gold_block
+
+    set {_tool} to diamond sword
+    set max durability of {_tool} to 432
+    set max stack size of {_tool} to 17
+    if raw name of {_tool} is "diamond_sword":
+        set test block at 4 1 0 to redstone_block
+    if max durability of {_tool} is 432:
+        set test block at 5 1 0 to iron_block
+    if max stack size of {_tool} is 17:
+        set test block at 6 1 0 to white_wool
+    if maximum usage duration of potion is 32 ticks:
+        set test block at 7 1 0 to amethyst_block

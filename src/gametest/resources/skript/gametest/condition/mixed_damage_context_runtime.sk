@@ -1,0 +1,17 @@
+on gametest damage context:
+    if event is cancelled:
+        set test block at 0 1 0 to redstone_block
+    if damage was caused by "fire":
+        set test block at 1 1 0 to emerald_block
+    set invulnerability ticks of event-entity to 12
+    set maximum health of event-entity to 15
+    set xp level of event-player to 7
+    set walk speed of event-player to 0.4
+    if xp level of event-player is 7:
+        set test block at 2 1 0 to diamond_block
+    if walk speed of event-player is 0.4:
+        set test block at 3 1 0 to gold_block
+    set test name of entity last attacker of event-entity to "last attacker marker"
+
+on healing of player by "magic":
+    set test name of entity event-entity to "heal %heal amount%"
