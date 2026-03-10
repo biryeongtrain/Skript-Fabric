@@ -5,11 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.effects.EffFeed;
+import ch.njol.skript.effects.EffCustomName;
+import ch.njol.skript.effects.EffEating;
+import ch.njol.skript.effects.EffHandedness;
+import ch.njol.skript.effects.EffIgnite;
 import ch.njol.skript.effects.EffInvisible;
 import ch.njol.skript.effects.EffInvulnerability;
 import ch.njol.skript.effects.EffKill;
+import ch.njol.skript.effects.EffLeash;
+import ch.njol.skript.effects.EffMakeFly;
+import ch.njol.skript.effects.EffPlayingDead;
+import ch.njol.skript.effects.EffShear;
 import ch.njol.skript.effects.EffSilence;
 import ch.njol.skript.effects.EffSprinting;
+import ch.njol.skript.effects.EffTame;
+import ch.njol.skript.effects.EffToggleCanPickUpItems;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleLiteral;
@@ -47,12 +57,22 @@ class ConditionEffectClosureCompatibilityTest {
         assertDoesNotThrow(CondIsInvulnerable::new);
         assertDoesNotThrow(CondIsSilent::new);
         assertDoesNotThrow(CondIsSprinting::new);
+        assertDoesNotThrow(EffCustomName::new);
+        assertDoesNotThrow(EffEating::new);
         assertDoesNotThrow(EffFeed::new);
+        assertDoesNotThrow(EffHandedness::new);
+        assertDoesNotThrow(EffIgnite::new);
         assertDoesNotThrow(EffInvisible::new);
         assertDoesNotThrow(EffInvulnerability::new);
         assertDoesNotThrow(EffKill::new);
+        assertDoesNotThrow(EffLeash::new);
+        assertDoesNotThrow(EffMakeFly::new);
+        assertDoesNotThrow(EffPlayingDead::new);
+        assertDoesNotThrow(EffShear::new);
         assertDoesNotThrow(EffSilence::new);
         assertDoesNotThrow(EffSprinting::new);
+        assertDoesNotThrow(EffTame::new);
+        assertDoesNotThrow(EffToggleCanPickUpItems::new);
     }
 
     private static SkriptParser.ParseResult parseResult(String expr) {
