@@ -14,10 +14,11 @@ on gametest item entity context:
     set uuid of dropped item thrower of event-entity to event-player
     if event-entity will naturally despawn:
         set test block at 1 1 0 to diamond_block
+    if uuid of dropped item owner of event-entity is set:
+        set test block at 9 1 0 to emerald_block
 
 on gametest area cloud effect:
-    loop affected entities:
-        set test name of entity loop-entity to "affected entity"
+    set test name of entity affected entities to "affected entity"
 
 on gametest piglin barter:
     set test name of item barter input to "barter input"
@@ -26,8 +27,7 @@ on gametest player experience cooldown change:
     set test name of entity event-player to xp cooldown change reason
 
 on gametest explode:
-    loop exploded blocks:
-        set test block above loop-block to redstone_block
+    set test block above exploded blocks to redstone_block
 
 on gametest player egg throw:
     set hatching number to 3

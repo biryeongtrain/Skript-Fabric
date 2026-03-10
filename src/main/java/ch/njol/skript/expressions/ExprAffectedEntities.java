@@ -11,6 +11,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import java.util.Iterator;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -49,6 +50,16 @@ public class ExprAffectedEntities extends SimpleExpression<LivingEntity> impleme
     }
 
     @Override
+    public @Nullable Iterator<? extends LivingEntity> iterator(SkriptEvent event) {
+        if (!(event.handle() instanceof FabricEventCompatHandles.AreaEffectCloudApply handle)
+                || handle.affectedEntities() == null
+                || handle.affectedEntities().isEmpty()) {
+            return super.iterator(event);
+        }
+        return handle.affectedEntities().iterator();
+    }
+
+    @Override
     public boolean isSingle() {
         return false;
     }
@@ -61,6 +72,11 @@ public class ExprAffectedEntities extends SimpleExpression<LivingEntity> impleme
     @Override
     public Class<? extends LivingEntity> getReturnType() {
         return LivingEntity.class;
+    }
+
+    @Override
+    public boolean isLoopOf(String input) {
+        return "entity".equals(input) || "livingentity".equals(input);
     }
 
     @Override

@@ -25,8 +25,8 @@ on zombie transforming due to "curing":
 on experience orb spawn:
     set test block at 6 1 0 to lapis_block
 
-on healing of player by "magic":
-    set test name of entity event-entity to "heal %heal amount%"
+on healing by "magic":
+    set xp level of event-player to heal amount
 
 on item spawn of apple:
     set test name of item event-item to "spawned apple"

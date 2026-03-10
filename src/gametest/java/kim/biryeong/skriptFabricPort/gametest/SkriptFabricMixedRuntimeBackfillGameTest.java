@@ -2,6 +2,7 @@ package kim.biryeong.skriptFabricPort.gametest;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.events.FabricEventCompatHandles;
+import ch.njol.skript.expressions.ExprItemOwner;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import java.lang.reflect.Field;
@@ -109,6 +110,7 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             Zombie victim = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 2.5F, 1.0F, 0.5F);
 
             victim.hurtServer(helper.getLevel(), helper.getLevel().damageSources().mobAttack(attacker), 1.0F);
+            victim.setLastHurtByMob(attacker);
 
             int executed = dispatch(
                     runtime,
@@ -156,8 +158,8 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             );
             assertExecuted(helper, healingExecuted, "healing backfill script");
             helper.assertTrue(
-                    player.getCustomName() != null && "heal 2.5".equals(player.getCustomName().getString()),
-                    Component.literal("Expected healing amount expression to run inside a real .sk fixture.")
+                    player.experienceLevel == 2,
+                    Component.literal("Expected healing amount expression to update the event-player inside a real .sk fixture.")
             );
             runtime.clearScripts();
         });
@@ -304,7 +306,7 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     healingPlayer
             ), "healing event");
             helper.assertTrue(
-                    healingPlayer.getCustomName() != null && "heal 2.5".equals(healingPlayer.getCustomName().getString()),
+                    healingPlayer.experienceLevel == 2,
                     Component.literal("Expected healing event to expose heal amount through the real .sk fixture.")
             );
 
@@ -385,6 +387,7 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             leashHolder.setCustomName(Component.literal("pre-leash-holder"));
             Cow cow = createCow(helper, false);
             cow.setLeashedTo(leashHolder, true);
+            setBooleanField(cow, "persistenceRequired", false);
             assertExecuted(helper, dispatch(
                     runtime,
                     new EntityContextHandle(cow),
@@ -413,7 +416,11 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             );
             helper.assertTrue(
                     itemPlayer.getUUID().equals(readItemOwner(droppedItem)),
-                    Component.literal("Expected dropped item owner expression to assign the event-player UUID.")
+                    Component.literal("Expected dropped item owner setter to assign the event-player UUID.")
+            );
+            helper.assertTrue(
+                    itemPlayer.getUUID().equals(new ExprItemOwner().convert(droppedItem)),
+                    Component.literal("Expected dropped item owner expression to resolve the event-player UUID.")
             );
 
             Cow firstAffected = createCow(helper, false);
@@ -549,7 +556,12 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
     private @Nullable java.util.UUID readItemOwner(ItemEntity itemEntity) {
         try {
-            Field field = ItemEntity.class.getDeclaredField("owner");
+            Field field;
+            try {
+                field = ItemEntity.class.getDeclaredField("target");
+            } catch (NoSuchFieldException ignored) {
+                field = ItemEntity.class.getDeclaredField("owner");
+            }
             field.setAccessible(true);
             return (java.util.UUID) field.get(itemEntity);
         } catch (ReflectiveOperationException exception) {

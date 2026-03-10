@@ -115,7 +115,7 @@ public final class FabricEventCompatHandles {
             @Nullable Entity entity,
             @Nullable BlockState blockState,
             @Nullable ItemStack tool
-    ) implements FabricItemEventHandle {
+    ) implements FabricBlockEventHandle, FabricEntityEventHandle, FabricItemEventHandle {
         @Override
         public ItemStack itemStack() {
             return tool == null ? ItemStack.EMPTY : tool;

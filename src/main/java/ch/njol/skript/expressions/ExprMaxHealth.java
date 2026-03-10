@@ -7,6 +7,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
+import ch.njol.skript.lang.Expression;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +54,11 @@ public class ExprMaxHealth extends SimplePropertyExpression<LivingEntity, Number
     @Override
     public void change(SkriptEvent event, @Nullable Object[] delta, ChangeMode mode) {
         double amount = delta == null ? 0.0 : ((Number) delta[0]).doubleValue();
-        for (LivingEntity entity : getExpr().getArray(event)) {
+        Object[] values = ((Expression<?>) getExpr()).getArray(event);
+        for (Object value : values) {
+            if (!(value instanceof LivingEntity entity)) {
+                continue;
+            }
             float current = entity.getMaxHealth() / 2.0F;
             float updated = switch (mode) {
                 case SET -> (float) amount;

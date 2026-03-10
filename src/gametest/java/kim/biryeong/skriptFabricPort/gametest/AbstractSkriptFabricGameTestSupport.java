@@ -161,6 +161,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.skriptlang.skript.fabric.runtime.GameTestRuntimeContext;
 
 public abstract class AbstractSkriptFabricGameTestSupport {
 
@@ -174,7 +175,7 @@ public abstract class AbstractSkriptFabricGameTestSupport {
             );
             try {
                 Variables.clearAll();
-                body.run();
+                GameTestRuntimeContext.withHelper(helper, body::run);
             } finally {
                 Variables.clearAll();
                 RUNTIME_LOCK.set(false);
@@ -808,12 +809,34 @@ public abstract class AbstractSkriptFabricGameTestSupport {
 
     protected void setIntField(Object target, String fieldName, int value) {
         try {
-            Field field = target.getClass().getDeclaredField(fieldName);
+            Field field = findField(target.getClass(), fieldName);
             field.setAccessible(true);
             field.setInt(target, value);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Failed to set integer field '" + fieldName + "' for GameTest.", exception);
         }
+    }
+
+    protected void setBooleanField(Object target, String fieldName, boolean value) {
+        try {
+            Field field = findField(target.getClass(), fieldName);
+            field.setAccessible(true);
+            field.setBoolean(target, value);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to set boolean field '" + fieldName + "' for GameTest.", exception);
+        }
+    }
+
+    private Field findField(Class<?> type, String fieldName) throws NoSuchFieldException {
+        Class<?> current = type;
+        while (current != null) {
+            try {
+                return current.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(fieldName);
     }
 
     protected ItemStack createEquippableTestItem(

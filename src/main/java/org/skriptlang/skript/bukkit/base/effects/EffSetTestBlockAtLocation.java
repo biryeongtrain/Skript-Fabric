@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
+import org.skriptlang.skript.fabric.runtime.GameTestRuntimeContext;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class EffSetTestBlockAtLocation extends Effect {
@@ -44,7 +45,8 @@ public final class EffSetTestBlockAtLocation extends Effect {
         }
 
         BlockPos position = BlockPos.containing(target.position());
-        if (event.handle() instanceof GameTestHelper helper && target.level() == null) {
+        GameTestHelper helper = GameTestRuntimeContext.resolve(event);
+        if (helper != null && target.level() == null) {
             helper.setBlock(position, block.defaultBlockState());
             return;
         }

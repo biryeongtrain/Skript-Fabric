@@ -9,6 +9,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Block;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
+import org.skriptlang.skript.fabric.runtime.GameTestRuntimeContext;
 
 public final class EffSetTestBlock extends Effect {
 
@@ -32,7 +33,8 @@ public final class EffSetTestBlock extends Effect {
 
     @Override
     protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
-        if (!(event.handle() instanceof GameTestHelper helper)) {
+        GameTestHelper helper = GameTestRuntimeContext.resolve(event);
+        if (helper == null) {
             throw new IllegalStateException("set test block effect requires a GameTestHelper event handle.");
         }
 

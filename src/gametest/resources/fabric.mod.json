@@ -20,6 +20,7 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricFeedGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInvisibleGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInvulnerableGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricMixedRuntimeBackfillGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSilentGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSprintingGameTest"
     ]

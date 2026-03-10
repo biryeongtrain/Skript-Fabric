@@ -49,7 +49,11 @@ public class ExprItemThrower extends SimplePropertyExpression<ItemEntity, UUID> 
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         UUID uuid = delta == null ? null : asUuid(delta[0]);
-        for (ItemEntity item : getExpr().getArray(event)) {
+        Object[] values = ((ch.njol.skript.lang.Expression<?>) getExpr()).getArray(event);
+        for (Object value : values) {
+            if (!(value instanceof ItemEntity item)) {
+                continue;
+            }
             Entity entity = uuid == null ? null : resolveEntity(item, uuid);
             if (entity != null) {
                 item.setThrower(entity);

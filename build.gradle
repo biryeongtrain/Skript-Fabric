@@ -115,6 +115,10 @@ def isolatedRegistrySuites = [
                 className: 'ch.njol.skript.expressions.ExpressionEventContextBundleCompatibilityTest'
         ],
         [
+                taskName: 'isolatedEffectStorageRuntimeTest',
+                className: 'org.skriptlang.skript.fabric.runtime.EffectStorageRuntimeTest'
+        ],
+        [
                 taskName: 'isolatedEffectRuntimeClosureCompatibilityTest',
                 className: 'ch.njol.skript.effects.EffectRuntimeClosureCompatibilityTest'
         ],

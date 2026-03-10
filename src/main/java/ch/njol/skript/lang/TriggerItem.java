@@ -7,6 +7,8 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public abstract class TriggerItem implements Debuggable {
 
+    private static final ThreadLocal<@Nullable Throwable> LAST_EXECUTION_FAILURE = new ThreadLocal<>();
+
     private @Nullable TriggerSection parent;
     private @Nullable TriggerItem next;
     private @Nullable String indentation;
@@ -35,6 +37,7 @@ public abstract class TriggerItem implements Debuggable {
     protected abstract boolean run(SkriptEvent event);
 
     public static boolean walk(TriggerItem start, SkriptEvent event) {
+        LAST_EXECUTION_FAILURE.remove();
         try {
             return CurrentSkriptEvent.with(event, () -> {
                 TriggerItem current = start;
@@ -44,11 +47,13 @@ public abstract class TriggerItem implements Debuggable {
                 return true;
             });
         } catch (StackOverflowError err) {
+            LAST_EXECUTION_FAILURE.set(err);
             if (Skript.debug()) {
                 err.printStackTrace();
             }
             return false;
         } catch (Exception ex) {
+            LAST_EXECUTION_FAILURE.set(ex);
             if (Skript.debug()) {
                 ex.printStackTrace();
             }
@@ -56,6 +61,12 @@ public abstract class TriggerItem implements Debuggable {
         } catch (Throwable throwable) {
             throw throwable;
         }
+    }
+
+    public static @Nullable Throwable consumeExecutionFailure() {
+        Throwable failure = LAST_EXECUTION_FAILURE.get();
+        LAST_EXECUTION_FAILURE.remove();
+        return failure;
     }
 
     protected @Nullable ExecutionIntent executionIntent() {

@@ -24,9 +24,12 @@ public class ExprLastDamageCause extends PropertyExpression<LivingEntity, String
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        setExpr((Expression<LivingEntity>) expressions[0]);
+        Expression<? extends LivingEntity> converted = expressions[0].getConvertedExpression(LivingEntity.class);
+        if (converted == null) {
+            return false;
+        }
+        setExpr(converted);
         return true;
     }
 

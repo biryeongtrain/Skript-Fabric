@@ -29,9 +29,12 @@ public class ExprHealth extends PropertyExpression<LivingEntity, Number> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] vars, int matchedPattern, Kleenean isDelayed, ParseResult parser) {
-        setExpr((Expression<LivingEntity>) vars[0]);
+        Expression<? extends LivingEntity> converted = vars[0].getConvertedExpression(LivingEntity.class);
+        if (converted == null) {
+            return false;
+        }
+        setExpr(converted);
         return true;
     }
 

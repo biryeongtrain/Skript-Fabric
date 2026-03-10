@@ -8,6 +8,7 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.log.ParseLogHandler;
 import ch.njol.skript.log.SkriptLogger;
 import ch.njol.util.coll.iterator.ConsumingIterator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import org.jetbrains.annotations.Nullable;
@@ -142,8 +143,23 @@ public abstract class SkriptEvent extends Structure {
     public static @Nullable SkriptEvent parse(String expr, SectionNode sectionNode, @Nullable String defaultError) {
         ParserInstance.get().getData(StructureData.class).node = sectionNode;
 
+        try (ParseLogHandler parseLogHandler = SkriptLogger.startParseLogHandler()) {
+            SkriptEvent event = parseEventExpression(expr, defaultError);
+            if (event == null && expr.regionMatches(true, 0, "on ", 0, 3)) {
+                event = parseEventExpression(expr.substring(3).trim(), defaultError);
+            }
+            if (event != null) {
+                parseLogHandler.printLog();
+                return event;
+            }
+            parseLogHandler.printError();
+            return null;
+        }
+    }
+
+    private static Iterator<?> eventSyntaxIterator() {
         var iterator = Skript.instance().syntaxRegistry().syntaxes(org.skriptlang.skript.registration.SyntaxRegistry.EVENT).iterator();
-        iterator = new ConsumingIterator<>(iterator, info -> {
+        return new ConsumingIterator<>(iterator, info -> {
             StructureData structureData = ParserInstance.get().getData(StructureData.class);
             if (info instanceof SyntaxInfo.Structure<?> structureInfo) {
                 @SuppressWarnings("unchecked")
@@ -153,22 +169,17 @@ public abstract class SkriptEvent extends Structure {
                 structureData.structureInfo = null;
             }
         });
+    }
 
-        try (ParseLogHandler parseLogHandler = SkriptLogger.startParseLogHandler()) {
-            @SuppressWarnings({"rawtypes", "unchecked"})
-            SkriptEvent event = (SkriptEvent) SkriptParser.parseModern(
-                    expr,
-                    (java.util.Iterator) iterator,
-                    ParseContext.EVENT,
-                    defaultError
-            );
-            if (event != null) {
-                parseLogHandler.printLog();
-                return event;
-            }
-            parseLogHandler.printError();
-            return null;
-        }
+    private static @Nullable SkriptEvent parseEventExpression(String expr, @Nullable String defaultError) {
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        SkriptEvent event = (SkriptEvent) SkriptParser.parseModern(
+                expr,
+                (Iterator) eventSyntaxIterator(),
+                ParseContext.EVENT,
+                defaultError
+        );
+        return event;
     }
 
     private String eventName() {

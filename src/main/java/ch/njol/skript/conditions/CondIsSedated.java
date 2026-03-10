@@ -5,7 +5,7 @@ import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
-import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
+import net.minecraft.world.level.block.CampfireBlock;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 
 @Name("Beehive Is Sedated")
@@ -20,7 +20,7 @@ public class CondIsSedated extends PropertyCondition<FabricBlock> {
 
     @Override
     public boolean check(FabricBlock block) {
-        return block.level().getBlockEntity(block.position()) instanceof BeehiveBlockEntity beehive && beehive.isSedated();
+        return CampfireBlock.isSmokeyPos(block.level(), block.position());
     }
 
     @Override

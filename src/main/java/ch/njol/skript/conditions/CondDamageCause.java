@@ -45,11 +45,22 @@ public class CondDamageCause extends Condition {
             return false;
         }
         String cause = ConditionRuntimeSupport.normalizeToken(DamageSourceTypeSupport.display(handle.damageSource()));
-        return expected.check(event, input -> cause.equals(ConditionRuntimeSupport.normalizeToken(input)), isNegated());
+        return expected.check(event, input -> matchesCause(cause, input), isNegated());
     }
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         return "damage was" + (isNegated() ? " not" : "") + " caused by " + expected.toString(event, debug);
+    }
+
+    private boolean matchesCause(String cause, String input) {
+        String normalized = ConditionRuntimeSupport.normalizeToken(input);
+        if (cause.equals(normalized)) {
+            return true;
+        }
+        return switch (normalized) {
+            case "fire", "burning", "on fire", "in fire" -> cause.equals("in fire") || cause.equals("on fire");
+            default -> false;
+        };
     }
 }

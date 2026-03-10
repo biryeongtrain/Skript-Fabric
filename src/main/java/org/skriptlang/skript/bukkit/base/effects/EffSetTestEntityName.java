@@ -27,12 +27,15 @@ public final class EffSetTestEntityName extends Effect {
 
     @Override
     protected void execute(SkriptEvent event) {
-        Entity entity = entityExpression.getSingle(event);
+        Entity[] entities = entityExpression.getArray(event);
         String name = nameExpression.getSingle(event);
-        if (entity == null || name == null) {
+        if (entities.length == 0 || name == null) {
             throw new IllegalStateException("set test entity name effect received incomplete entity or name.");
         }
-        entity.setCustomName(SkriptTextPlaceholders.resolveComponent(normalizeName(name), event));
+        Component resolved = SkriptTextPlaceholders.resolveComponent(normalizeName(name), event);
+        for (Entity entity : entities) {
+            entity.setCustomName(resolved);
+        }
     }
 
     private String normalizeName(String name) {

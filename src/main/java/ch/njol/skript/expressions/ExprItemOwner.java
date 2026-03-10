@@ -37,7 +37,7 @@ public class ExprItemOwner extends SimplePropertyExpression<ItemEntity, UUID> {
     @Override
     public @Nullable UUID convert(ItemEntity item) {
         try {
-            Field ownerField = ItemEntity.class.getDeclaredField("owner");
+            Field ownerField = findOwnerField();
             ownerField.setAccessible(true);
             return (UUID) ownerField.get(item);
         } catch (ReflectiveOperationException exception) {
@@ -56,7 +56,11 @@ public class ExprItemOwner extends SimplePropertyExpression<ItemEntity, UUID> {
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         UUID uuid = delta == null ? null : asUuid(delta[0]);
-        for (ItemEntity item : getExpr().getArray(event)) {
+        Object[] values = ((ch.njol.skript.lang.Expression<?>) getExpr()).getArray(event);
+        for (Object value : values) {
+            if (!(value instanceof ItemEntity item)) {
+                continue;
+            }
             setOwner(item, uuid);
         }
     }
@@ -75,21 +79,23 @@ public class ExprItemOwner extends SimplePropertyExpression<ItemEntity, UUID> {
     }
 
     private void setOwner(ItemEntity item, @Nullable UUID uuid) {
-        for (java.lang.reflect.Method method : ItemEntity.class.getMethods()) {
-            if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == UUID.class) {
-                try {
-                    method.setAccessible(true);
-                    method.invoke(item, uuid);
-                } catch (ReflectiveOperationException ignored) {
-                }
-                return;
+        try {
+            item.setTarget(uuid);
+        } catch (NoSuchMethodError error) {
+            try {
+                Field ownerField = findOwnerField();
+                ownerField.setAccessible(true);
+                ownerField.set(item, uuid);
+            } catch (ReflectiveOperationException ignored) {
             }
         }
+    }
+
+    private Field findOwnerField() throws NoSuchFieldException {
         try {
-            Field ownerField = ItemEntity.class.getDeclaredField("owner");
-            ownerField.setAccessible(true);
-            ownerField.set(item, uuid);
-        } catch (ReflectiveOperationException ignored) {
+            return ItemEntity.class.getDeclaredField("target");
+        } catch (NoSuchFieldException ignored) {
+            return ItemEntity.class.getDeclaredField("owner");
         }
     }
 

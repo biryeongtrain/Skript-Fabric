@@ -9,11 +9,14 @@ on gametest:
         if {_copy::b} is 2:
             set test block at 1 1 0 to lapis_block
 
-    set {_numbers::*} to 3, 1, 2
-    sort {_numbers::*}
-    if {_numbers::1} is 1:
-        if {_numbers::2} is 2:
-            if {_numbers::3} is 3:
+    delete {gametest::storage-sort::*}
+    set {gametest::storage-sort::1} to "c"
+    set {gametest::storage-sort::2} to "a"
+    set {gametest::storage-sort::3} to "b"
+    sort {gametest::storage-sort::*}
+    if {gametest::storage-sort::1} is "a":
+        if {gametest::storage-sort::2} is "b":
+            if {gametest::storage-sort::3} is "c":
                 set test block at 2 1 0 to diamond_block
 
     set {_enabled} to false

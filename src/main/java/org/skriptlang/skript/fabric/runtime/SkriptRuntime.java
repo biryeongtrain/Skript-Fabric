@@ -9,6 +9,7 @@ import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.parser.ParserInstance;
 import java.io.IOException;
 import java.io.InputStream;
@@ -94,7 +95,23 @@ public final class SkriptRuntime {
                 if (trigger == null) {
                     throw new IllegalStateException("Event trigger was not loaded for " + skriptEvent.getClass().getName());
                 }
-                trigger.execute(event);
+                boolean successful = trigger.execute(event);
+                if (!successful) {
+                    Throwable failure = TriggerItem.consumeExecutionFailure();
+                    if (failure instanceof RuntimeException runtimeException) {
+                        throw runtimeException;
+                    }
+                    if (failure instanceof Error error) {
+                        throw error;
+                    }
+                    if (failure != null) {
+                        throw new IllegalStateException(
+                                "Trigger execution failed for " + trigger.getDebugLabel(),
+                                failure
+                        );
+                    }
+                    throw new IllegalStateException("Trigger execution failed for " + trigger.getDebugLabel());
+                }
                 executed++;
             }
         }

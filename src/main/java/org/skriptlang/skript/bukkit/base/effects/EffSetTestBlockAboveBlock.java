@@ -29,9 +29,9 @@ public final class EffSetTestBlockAboveBlock extends Effect {
 
     @Override
     protected void execute(SkriptEvent event) {
-        FabricBlock target = blockExpression.getSingle(event);
+        FabricBlock[] targets = blockExpression.getArray(event);
         String blockKey = blockId.getSingle(event);
-        if (target == null || blockKey == null || blockKey.isBlank()) {
+        if (targets.length == 0 || blockKey == null || blockKey.isBlank()) {
             throw new IllegalStateException("set test block above block effect received incomplete block target or block id.");
         }
 
@@ -41,8 +41,10 @@ public final class EffSetTestBlockAboveBlock extends Effect {
             throw new IllegalArgumentException("Unknown block id: " + blockKey);
         }
 
-        BlockPos targetPos = target.position().above();
-        target.level().setBlockAndUpdate(targetPos, block.defaultBlockState());
+        for (FabricBlock target : targets) {
+            BlockPos targetPos = target.position().above();
+            target.level().setBlockAndUpdate(targetPos, block.defaultBlockState());
+        }
     }
 
     @Override

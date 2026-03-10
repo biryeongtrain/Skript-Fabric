@@ -5,6 +5,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleEvent;
 import net.minecraft.gametest.framework.GameTestHelper;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.GameTestRuntimeContext;
 
 public final class EvtFabricGameTest extends SimpleEvent {
 
@@ -15,7 +16,7 @@ public final class EvtFabricGameTest extends SimpleEvent {
 
     @Override
     public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-        return event.handle() instanceof GameTestHelper;
+        return GameTestRuntimeContext.resolve(event) != null;
     }
 
     @Override

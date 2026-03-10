@@ -50,7 +50,11 @@ public class ExprNoDamageTicks extends SimplePropertyExpression<LivingEntity, Lo
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         int provided = delta != null && delta[0] instanceof Number number ? number.intValue() : 0;
-        for (LivingEntity entity : getExpr().getArray(event)) {
+        Object[] values = ((Expression<?>) getExpr()).getArray(event);
+        for (Object value : values) {
+            if (!(value instanceof LivingEntity entity)) {
+                continue;
+            }
             switch (mode) {
                 case SET, DELETE, RESET -> entity.invulnerableTime = Math.max(0, provided);
                 case ADD -> entity.invulnerableTime = Math.max(0, entity.invulnerableTime + provided);

@@ -27,9 +27,12 @@ public class ExprFoodLevel extends PropertyExpression<ServerPlayer, Number> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] vars, int matchedPattern, Kleenean isDelayed, ParseResult parser) {
-        setExpr((Expression<ServerPlayer>) vars[0]);
+        Expression<? extends ServerPlayer> converted = vars[0].getConvertedExpression(ServerPlayer.class);
+        if (converted == null) {
+            return false;
+        }
+        setExpr(converted);
         return true;
     }
 
