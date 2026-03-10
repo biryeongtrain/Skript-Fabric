@@ -2,32 +2,22 @@ package ch.njol.skript.expressions;
 
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.classes.Changer.ChangeMode;
-import ch.njol.skript.doc.Description;
-import ch.njol.skript.doc.Example;
-import ch.njol.skript.doc.Name;
-import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.simplification.SimplifiedLiteral;
 import ch.njol.util.Kleenean;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import net.minecraft.world.phys.Vec3;
 
-@Name("Coordinate")
-@Description("Represents a given coordinate of a location.")
-@Example("player's y-coordinate is smaller than 40")
-@Since("1.4.3")
 public class ExprCoordinate extends SimplePropertyExpression<FabricLocation, Number> {
-
-    private static final char[] AXES = {'x', 'y', 'z'};
 
     static {
         register(ExprCoordinate.class, Number.class, "(0¦x|1¦y|2¦z)(-| )(coord[inate]|pos[ition]|loc[ation])[s]", "locations");
     }
 
+    private static final char[] AXES = {'x', 'y', 'z'};
     private int axis;
 
     @Override
@@ -47,7 +37,7 @@ public class ExprCoordinate extends SimplePropertyExpression<FabricLocation, Num
     }
 
     @Override
-    public @Nullable Class<?>[] acceptChange(ChangeMode mode) {
+    public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
         if ((mode == ChangeMode.SET || mode == ChangeMode.ADD || mode == ChangeMode.REMOVE)
                 && getExpr().isSingle()
                 && Changer.ChangerUtils.acceptsChange(getExpr(), ChangeMode.SET, FabricLocation.class)) {
@@ -57,7 +47,7 @@ public class ExprCoordinate extends SimplePropertyExpression<FabricLocation, Num
     }
 
     @Override
-    public void change(SkriptEvent event, @Nullable Object[] delta, ChangeMode mode) {
+    public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) throws UnsupportedOperationException {
         if (delta == null || delta.length == 0) {
             return;
         }
@@ -65,32 +55,30 @@ public class ExprCoordinate extends SimplePropertyExpression<FabricLocation, Num
         if (location == null) {
             return;
         }
-        double changed = ((Number) delta[0]).doubleValue();
+        double value = ((Number) delta[0]).doubleValue();
         if (mode == ChangeMode.REMOVE) {
-            changed = -changed;
-            mode = ChangeMode.ADD;
+            value = -value;
         }
-        FabricLocation updated = switch (mode) {
-            case ADD -> FabricLocationExpressionSupport.withAxis(location, axis, convert(location).doubleValue() + changed);
-            case SET -> FabricLocationExpressionSupport.withAxis(location, axis, changed);
-            default -> null;
+        Vec3 position = location.position();
+        Vec3 updated = switch (mode) {
+            case ADD, REMOVE -> switch (axis) {
+                case 0 -> new Vec3(position.x + value, position.y, position.z);
+                case 1 -> new Vec3(position.x, position.y + value, position.z);
+                default -> new Vec3(position.x, position.y, position.z + value);
+            };
+            case SET -> switch (axis) {
+                case 0 -> new Vec3(value, position.y, position.z);
+                case 1 -> new Vec3(position.x, value, position.z);
+                default -> new Vec3(position.x, position.y, value);
+            };
+            default -> position;
         };
-        if (updated != null) {
-            getExpr().change(event, new FabricLocation[]{updated}, ChangeMode.SET);
-        }
+        getExpr().change(event, new Object[]{new FabricLocation(location.level(), updated)}, ChangeMode.SET);
     }
 
     @Override
     public Class<? extends Number> getReturnType() {
         return Number.class;
-    }
-
-    @Override
-    public Expression<? extends Number> simplify() {
-        if (getExpr() instanceof Literal<? extends FabricLocation>) {
-            return SimplifiedLiteral.fromExpression(this);
-        }
-        return this;
     }
 
     @Override
