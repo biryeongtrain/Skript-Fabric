@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
@@ -111,10 +113,21 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         assertDoesNotThrow(ExprDistance::new);
         assertDoesNotThrow(ExprDustedStage::new);
         assertDoesNotThrow(ExprFacing::new);
+        assertDoesNotThrow(ExprHumidity::new);
+        assertDoesNotThrow(ExprLocation::new);
+        assertDoesNotThrow(ExprLocationAt::new);
+        assertDoesNotThrow(ExprLocationOf::new);
         assertDoesNotThrow(ExprLightLevel::new);
         assertDoesNotThrow(ExprMiddleOfLocation::new);
         assertDoesNotThrow(ExprMoonPhase::new);
         assertDoesNotThrow(ExprPushedBlocks::new);
+        assertDoesNotThrow(ExprRedstoneBlockPower::new);
+        assertDoesNotThrow(ExprSeaLevel::new);
+        assertDoesNotThrow(ExprSeed::new);
+        assertDoesNotThrow(ExprSimulationDistance::new);
+        assertDoesNotThrow(ExprSpawn::new);
+        assertDoesNotThrow(ExprChunkX::new);
+        assertDoesNotThrow(ExprChunkZ::new);
     }
 
     @Test
@@ -124,16 +137,51 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         assertInstanceOf(ExprBlockData.class, parseExpression("block data of lane-m5-block", net.minecraft.world.level.block.state.BlockState.class));
         assertInstanceOf(ExprBlockSound.class, parseExpression("break sound of stone", String.class));
         assertInstanceOf(ExprChunk.class, parseExpression("chunk of lane-m5-location", LevelChunk.class));
+        assertInstanceOf(ExprChunkX.class, parseExpression("chunk x-coordinate of lane-m5-chunk", Number.class));
+        assertInstanceOf(ExprChunkZ.class, parseExpression("chunk z-coordinate of lane-m5-chunk", Number.class));
         assertInstanceOf(ExprCoordinate.class, parseExpression("x-coordinate of lane-m5-location", Number.class));
         assertInstanceOf(ExprDifficulty.class, parseExpression("difficulty of lane-m5-world", net.minecraft.world.Difficulty.class));
         assertInstanceOf(ExprDirection.class, parseExpression("north", Direction.class));
         assertInstanceOf(ExprDistance.class, parseExpression("distance between lane-m5-location and lane-m5-location", Number.class));
         assertInstanceOf(ExprDustedStage.class, parseExpression("dusted stage of lane-m5-block", Integer.class));
         assertInstanceOf(ExprFacing.class, parseExpression("horizontal facing of lane-m5-entity", Direction.class));
+        assertInstanceOf(ExprHumidity.class, parseExpression("humidity of lane-m5-block", Number.class));
         assertInstanceOf(ExprLightLevel.class, parseExpression("block light level of lane-m5-location", Byte.class));
+        assertInstanceOf(ExprLocationAt.class, parseExpression("location at x = 1, y = 2, and z = 3 in world lane-m5-world", FabricLocation.class));
+        assertInstanceOf(ExprLocationOf.class, parseExpression("location of lane-m5-block", FabricLocation.class));
         assertInstanceOf(ExprMiddleOfLocation.class, parseExpression("center of lane-m5-location", FabricLocation.class));
         assertInstanceOf(ExprMoonPhase.class, parseExpression("moon phase of lane-m5-world", MoonPhase.class));
         assertInstanceOf(ExprAttachedBlock.class, parseExpression("attached blocks of lane-m5-projectile", FabricBlock.class));
+        assertInstanceOf(ExprRedstoneBlockPower.class, parseExpression("redstone power of lane-m5-block", Long.class));
+        assertInstanceOf(ExprSeaLevel.class, parseExpression("sea level of lane-m5-world", Long.class));
+        assertInstanceOf(ExprSeed.class, parseExpression("seed of lane-m5-world", Long.class));
+        assertInstanceOf(ExprSimulationDistance.class, parseExpression("simulation distance of lane-m5-world", Integer.class));
+        assertInstanceOf(ExprSpawn.class, parseExpression("spawn location of lane-m5-world", FabricLocation.class));
+    }
+
+    @Test
+    void helperExpressionsRetainExpectedLocalContracts() {
+        FabricLocation built = parseExpression(
+                "location at x = 1, y = 2, and z = 3",
+                ExprLocationAt.class
+        ).getSingle(SkriptEvent.EMPTY);
+        assertNotNull(built);
+        assertEquals(1.0, built.position().x);
+        assertEquals(2.0, built.position().y);
+        assertEquals(3.0, built.position().z);
+        assertNull(built.level());
+
+        ExprLocationOf locationOf = new ExprLocationOf();
+        assertTrue(locationOf.init(new Expression[]{new SimpleLiteral<>(new FabricBlock(null, new BlockPos(4, 5, 6)), false)}, 0, Kleenean.FALSE, parseResult("")));
+        FabricLocation blockLocation = locationOf.getSingle(SkriptEvent.EMPTY);
+        assertNotNull(blockLocation);
+        assertEquals(4.0, blockLocation.position().x);
+        assertEquals(5.0, blockLocation.position().y);
+        assertEquals(6.0, blockLocation.position().z);
+
+        ExprSimulationDistance simulationDistance = new ExprSimulationDistance();
+        assertInstanceOf(Class[].class, simulationDistance.acceptChange(ChangeMode.SET));
+        assertEquals(Integer.class, simulationDistance.acceptChange(ChangeMode.SET)[0]);
     }
 
     private static void ensureSyntax() {
@@ -175,10 +223,21 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         new ExprDistance();
         new ExprDustedStage();
         new ExprFacing();
+        new ExprHumidity();
+        new ExprLocation();
+        new ExprLocationAt();
+        new ExprLocationOf();
         new ExprLightLevel();
         new ExprMiddleOfLocation();
         new ExprMoonPhase();
         new ExprPushedBlocks();
+        new ExprRedstoneBlockPower();
+        new ExprSeaLevel();
+        new ExprSeed();
+        new ExprSimulationDistance();
+        new ExprSpawn();
+        new ExprChunkX();
+        new ExprChunkZ();
         syntaxRegistered = true;
     }
 
@@ -192,6 +251,12 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         Expression<?> parsed = new SkriptParser(input, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(returnTypes);
         assertNotNull(parsed, input);
         return parsed;
+    }
+
+    private static <T extends Expression<?>> T parseExpression(String input, Class<T> type) {
+        Expression<?> parsed = parseExpression(input, Object.class);
+        assertInstanceOf(type, parsed);
+        return type.cast(parsed);
     }
 
     private static SkriptParser.ParseResult parseResult(String expr) {

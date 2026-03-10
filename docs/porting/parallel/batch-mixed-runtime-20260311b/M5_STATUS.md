@@ -33,24 +33,49 @@
 
 ## Landed Classes
 
-- pending
+- `ExprHumidity`
+- `ExprLocation`
+- `ExprLocationAt`
+- `ExprLocationOf`
+- `ExprRedstoneBlockPower`
+- `ExprSeaLevel`
+- `ExprSeed`
+- `ExprSimulationDistance`
+- `ExprSpawn`
+- `ExprChunkX`
+- `ExprChunkZ`
+- helper follow-up: `FabricLocationExpressionSupport`
 
 ## Runtime-Eligible Classes
 
-- pending
+- `ExprHumidity`
+- `ExprLocation`
+- `ExprLocationAt`
+- `ExprLocationOf`
+- `ExprRedstoneBlockPower`
+- `ExprSeaLevel`
+- `ExprSeed`
+- `ExprSimulationDistance`
+- `ExprSpawn`
+- `ExprChunkX`
+- `ExprChunkZ`
 
 ## Bootstrap Registrations Needed
 
-- coordinator to decide after merge
+- none beyond the `SkriptFabricAdditionalSyntax` force-initialization added in this lane
 
 ## Targeted Tests
 
-- pending
+- `./gradlew test --tests ch.njol.skript.expressions.ExpressionBlockWorldLocationCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.WorldLocationExpressionSyntaxTest`
+- direct compatibility coverage extended for parse/instantiate/change-contract checks in the block/world/location bundle
+- isolated-registry coverage added to confirm bootstrap registration for the landed world/location expressions
 
 ## Blockers
 
-- pending
+- not landed in this lane: `ExprBlockSphere`, `ExprCompassTarget`, `ExprLocationFromVector`, `ExprLocationVectorOffset`, `ExprLowestHighestSolidBlock`, `ExprMidpoint`, `ExprSeaPickles`, `ExprSignText`, `ExprSourceBlock`, `ExprPortal`
+- `ExprHumidity` needed reflective climate-settings access because the mapped server biome type in this runtime does not expose `Biome.downfall()` directly
 
 ## Merge Note
 
-- pending
+- preserves the existing partial worktree patch and avoids edits to canonical docs or `SkriptFabricBootstrap.java`
+- ready to merge as the M5 world/property expression slice for the landed classes above; remaining assigned targets stay open for a follow-up lane
