@@ -101,6 +101,14 @@ public final class FabricItemType {
         return stack;
     }
 
+    public void applyPrototype(ItemStack stack) {
+        prototype = stack.copy();
+        amount = Math.max(1, prototype.getCount());
+        Component name = prototype.get(DataComponents.CUSTOM_NAME);
+        customName = name != null ? name.getString() : null;
+        equippable = prototype.get(DataComponents.EQUIPPABLE);
+    }
+
     public boolean matches(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !stack.is(item)) {
             return false;

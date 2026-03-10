@@ -11,6 +11,7 @@ import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.util.Kleenean;
+import java.util.UUID;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.block.Blocks;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import com.mojang.authlib.GameProfile;
 
 class ExpressionEntityCompatibilityTest {
 
@@ -49,9 +51,15 @@ class ExpressionEntityCompatibilityTest {
         assertDoesNotThrow(ExprFoodLevel::new);
         assertDoesNotThrow(ExprGlidingState::new);
         assertDoesNotThrow(ExprHealth::new);
+        assertDoesNotThrow(ExprItemOwner::new);
+        assertDoesNotThrow(ExprItemThrower::new);
+        assertDoesNotThrow(ExprLevel::new);
+        assertDoesNotThrow(ExprMaxHealth::new);
         assertDoesNotThrow(ExprNoDamageTime::new);
+        assertDoesNotThrow(ExprNoDamageTicks::new);
         assertDoesNotThrow(ExprPortalCooldown::new);
         assertDoesNotThrow(ExprRemainingAir::new);
+        assertDoesNotThrow(ExprSpeed::new);
     }
 
     @Test
@@ -83,8 +91,24 @@ class ExpressionEntityCompatibilityTest {
         ExprHealth health = new ExprHealth();
         assertArrayEquals(new Class[]{Number.class}, health.acceptChange(ChangeMode.ADD));
 
+        ExprLevel level = new ExprLevel();
+        assertArrayEquals(new Class[]{Number.class}, level.acceptChange(ChangeMode.SET));
+
+        ExprMaxHealth maxHealth = new ExprMaxHealth();
+        assertArrayEquals(new Class[]{Number.class}, maxHealth.acceptChange(ChangeMode.ADD));
+
+        ExprNoDamageTicks noDamageTicks = new ExprNoDamageTicks();
+        assertArrayEquals(new Class[]{Number.class}, noDamageTicks.acceptChange(ChangeMode.SET));
+
         ExprEntityOwner owner = new ExprEntityOwner();
         assertEquals(com.mojang.authlib.GameProfile.class, owner.getReturnType());
+
+        ExprItemOwner itemOwner = new ExprItemOwner();
+        assertEquals(UUID.class, itemOwner.getReturnType());
+        assertArrayEquals(new Class[]{net.minecraft.world.entity.Entity.class, GameProfile.class, UUID.class}, itemOwner.acceptChange(ChangeMode.SET));
+
+        ExprItemThrower itemThrower = new ExprItemThrower();
+        assertEquals(UUID.class, itemThrower.getReturnType());
 
         ExprGlidingState gliding = new ExprGlidingState();
         assertArrayEquals(new Class[]{Boolean.class}, gliding.acceptChange(ChangeMode.SET));

@@ -16,10 +16,12 @@ import ch.njol.skript.registrations.Classes;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.vehicle.MinecartCommandBlock;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
@@ -71,13 +73,24 @@ final class ExpressionSyntaxS2CompatibilityTest {
             registerClassInfo(FabricLocation.class, "location");
             registerClassInfo(FabricInventory.class, "inventory");
             registerClassInfo(FabricItemType.class, "itemtype");
+            registerClassInfo(ItemEntity.class, "itementity");
             registerClassInfo(ch.njol.skript.util.Timespan.class, "timespan");
             Skript.registerExpression(TestCommandBlockExpression.class, FabricBlock.class, "lane-e-test-command-block");
             Skript.registerExpression(TestCommandMinecartExpression.class, MinecartCommandBlock.class, "lane-e-test-command-minecart");
+            Skript.registerExpression(TestPlayerExpression.class, ServerPlayer.class, "lane-e-test-player");
+            Skript.registerExpression(TestItemEntityExpression.class, ItemEntity.class, "lane-e-test-itementity");
             syntaxRegistered = true;
         }
         new ExprItemCooldown();
         new ExprCommandBlockCommand();
+        new ExprItemOwner();
+        new ExprItemThrower();
+        new ExprLevel();
+        new ExprMaxDurability();
+        new ExprMaxItemUseTime();
+        new ExprMaxStack();
+        new ExprRawName();
+        new ExprSpeed();
     }
 
     private static <T> void registerClassInfo(Class<T> type, String codeName) {
@@ -114,6 +127,26 @@ final class ExpressionSyntaxS2CompatibilityTest {
         assertInstanceOf(EffChange.class, minecartStatement);
         assertEquals("command block command of lane-e-test-command-minecart",
                 expression(minecartStatement, "changed").toString(null, false));
+    }
+
+    @Test
+    void importedPropertyExpressionsParseAndBindAsChangeTargets() throws Exception {
+        assertInstanceOf(ExprLevel.class, parseExpression("xp level of lane-e-test-player", Long.class));
+        assertInstanceOf(ExprSpeed.class, parseExpression("walk speed of lane-e-test-player", Number.class));
+        assertInstanceOf(ExprRawName.class, parseExpression("raw name of diamond sword", String.class));
+        assertInstanceOf(ExprMaxDurability.class, parseExpression("max durability of diamond sword", Integer.class));
+        assertInstanceOf(ExprMaxItemUseTime.class, parseExpression("maximum item use duration of potion", ch.njol.skript.util.Timespan.class));
+        assertInstanceOf(ExprMaxStack.class, parseExpression("max stack size of diamond", Integer.class));
+        assertInstanceOf(ExprItemOwner.class, parseExpression("uuid of dropped item owner of lane-e-test-itementity", UUID.class));
+        assertInstanceOf(ExprItemThrower.class, parseExpression("uuid of dropped item thrower of lane-e-test-itementity", UUID.class));
+
+        Statement walkSpeed = parseStatement("set walking speed of lane-e-test-player to 0.4");
+        assertInstanceOf(EffChange.class, walkSpeed);
+        assertEquals("walk speed of lane-e-test-player", expression(walkSpeed, "changed").toString(null, false));
+
+        Statement itemOwner = parseStatement("set uuid of dropped item owner of lane-e-test-itementity to lane-e-test-player");
+        assertInstanceOf(EffChange.class, itemOwner);
+        assertEquals("uuid of the dropped item owner of lane-e-test-itementity", expression(itemOwner, "changed").toString(null, false));
     }
 
     private Expression<?> parseExpression(String input, Class<?>... returnTypes) {
@@ -224,6 +257,50 @@ final class ExpressionSyntaxS2CompatibilityTest {
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "lane-e-test-command-minecart";
+        }
+    }
+
+    public static final class TestPlayerExpression extends SimpleExpression<ServerPlayer> {
+        @Override
+        protected ServerPlayer @Nullable [] get(SkriptEvent event) {
+            return new ServerPlayer[0];
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends ServerPlayer> getReturnType() {
+            return ServerPlayer.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "lane-e-test-player";
+        }
+    }
+
+    public static final class TestItemEntityExpression extends SimpleExpression<ItemEntity> {
+        @Override
+        protected ItemEntity @Nullable [] get(SkriptEvent event) {
+            return new ItemEntity[0];
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends ItemEntity> getReturnType() {
+            return ItemEntity.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "lane-e-test-itementity";
         }
     }
 }

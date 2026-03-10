@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
@@ -36,6 +37,7 @@ import org.skriptlang.skript.fabric.compat.FabricInventory;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.registration.SyntaxRegistry;
+import ch.njol.skript.util.Timespan;
 
 class ExpressionItemCompatibilityTest {
 
@@ -242,6 +244,45 @@ class ExpressionItemCompatibilityTest {
     }
 
     @Test
+    void rawNameMaxStackAndMaxDurabilityOperateOnCompatItemTypes() {
+        FabricItemType diamondSword = new FabricItemType(Items.DIAMOND_SWORD);
+
+        ExprRawName rawName = new ExprRawName();
+        rawName.init(new Expression[]{new SimpleLiteral<>(diamondSword, false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(diamondSword.itemId(), rawName.getSingle(SkriptEvent.EMPTY));
+
+        ExprMaxDurability maxDurability = new ExprMaxDurability();
+        maxDurability.init(new Expression[]{new SimpleLiteral<>(diamondSword, false)}, 0, Kleenean.FALSE, parseResult(""));
+        Integer originalDurability = maxDurability.getSingle(SkriptEvent.EMPTY);
+        assertTrue(originalDurability != null && originalDurability > 0);
+        maxDurability.change(SkriptEvent.EMPTY, new Object[]{originalDurability + 12}, ch.njol.skript.classes.Changer.ChangeMode.SET);
+        assertEquals(originalDurability + 12, maxDurability.getSingle(SkriptEvent.EMPTY));
+
+        ExprMaxStack maxStack = new ExprMaxStack();
+        FabricItemType sticks = new FabricItemType(Items.STICK);
+        maxStack.init(new Expression[]{new SimpleLiteral<>(sticks, false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(64, maxStack.getSingle(SkriptEvent.EMPTY));
+        maxStack.change(SkriptEvent.EMPTY, new Object[]{16}, ch.njol.skript.classes.Changer.ChangeMode.SET);
+        assertEquals(16, maxStack.getSingle(SkriptEvent.EMPTY));
+        maxStack.change(SkriptEvent.EMPTY, null, ch.njol.skript.classes.Changer.ChangeMode.RESET);
+        assertEquals(64, maxStack.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void maxItemUseTimeAndInventoryStackSizeReadCurrentValues() {
+        ExprMaxItemUseTime maxUseTime = new ExprMaxItemUseTime();
+        maxUseTime.init(new Expression[]{new SimpleLiteral<>(new ItemStack(Items.POTION), false)}, 0, Kleenean.FALSE, parseResult(""));
+        Timespan duration = maxUseTime.getSingle(SkriptEvent.EMPTY);
+        assertTrue(duration != null && duration.getAs(Timespan.TimePeriod.TICK) > 0);
+
+        SimpleContainer container = new SimpleContainer(3);
+        ExprMaxStack maxStack = new ExprMaxStack();
+        maxStack.init(new Expression[]{new SimpleLiteral<>(new FabricInventory(container), false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(container.getMaxStackSize(), maxStack.getSingle(SkriptEvent.EMPTY));
+        assertNull(maxStack.acceptChange(ch.njol.skript.classes.Changer.ChangeMode.SET));
+    }
+
+    @Test
     void importedExpressionsInstantiate() {
         assertDoesNotThrow(ExprAmountOfItems::new);
         assertDoesNotThrow(ExprBookAuthor::new);
@@ -257,7 +298,17 @@ class ExpressionItemCompatibilityTest {
         assertDoesNotThrow(ExprExactItem::new);
         assertDoesNotThrow(ExprItem::new);
         assertDoesNotThrow(ExprItemAmount::new);
+        assertDoesNotThrow(ExprItemOwner::new);
+        assertDoesNotThrow(ExprItemThrower::new);
         assertDoesNotThrow(ExprItems::new);
+        assertDoesNotThrow(ExprLevel::new);
+        assertDoesNotThrow(ExprMaxDurability::new);
+        assertDoesNotThrow(ExprMaxHealth::new);
+        assertDoesNotThrow(ExprMaxItemUseTime::new);
+        assertDoesNotThrow(ExprMaxStack::new);
+        assertDoesNotThrow(ExprNoDamageTicks::new);
+        assertDoesNotThrow(ExprRawName::new);
+        assertDoesNotThrow(ExprSpeed::new);
         assertDoesNotThrow(ExprItemWithCustomModelData::new);
         assertDoesNotThrow(ExprItemWithEnchantmentGlint::new);
         assertDoesNotThrow(ExprItemWithLore::new);
