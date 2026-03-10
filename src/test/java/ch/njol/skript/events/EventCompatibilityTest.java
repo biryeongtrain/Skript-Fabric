@@ -10,6 +10,10 @@ import ch.njol.skript.entity.EntityType;
 import java.lang.reflect.Field;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -37,6 +41,24 @@ final class EventCompatibilityTest {
         EvtSpectate.register();
         EvtTeleport.register();
         EvtExperienceChange.register();
+        EvtBookEdit.register();
+        EvtBookSign.register();
+        EvtClick.register();
+        EvtEntityShootBow.register();
+        EvtEntityTarget.register();
+        EvtEntityTransform.register();
+        EvtExperienceSpawn.register();
+        EvtFirework.register();
+        EvtGameMode.register();
+        EvtHarvestBlock.register();
+        EvtHealing.register();
+        EvtLeash.register();
+        EvtMoveOn.register();
+        EvtPlayerArmorChange.register();
+        EvtPortal.register();
+        EvtResourcePackResponse.register();
+        EvtWeatherChange.register();
+        EvtWorld.register();
     }
 
     @Test
@@ -183,6 +205,244 @@ final class EventCompatibilityTest {
                         null
                 ))
         );
+    }
+
+    @Test
+    void bookEditEventChecksSigningFlag() {
+        EvtBookEdit event = parseEvent("book edit", EvtBookEdit.class);
+
+        assertEquals("book edit", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.BookEdit(false),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void bookSignEventChecksSigningFlag() {
+        EvtBookSign event = parseEvent("book signing", EvtBookSign.class);
+
+        assertEquals("book sign", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.BookEdit(true),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void clickEventParsesToolAndChecksBlockHandle() {
+        EvtClick event = parseEvent("right click with stick on stone", EvtClick.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.Click(
+                                FabricEventCompatHandles.ClickType.RIGHT,
+                                null,
+                                Blocks.STONE.defaultBlockState(),
+                                new ItemStack(Items.STICK)
+                        ),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void entityShootBowEventParsesEntityFilter() throws Exception {
+        EvtEntityShootBow event = parseEvent("skeleton shooting bow", EvtEntityShootBow.class);
+
+        assertEquals("skeleton", readLiteralArray(event, "entityDatas"));
+    }
+
+    @Test
+    void entityTargetEventChecksUntarget() {
+        EvtEntityTarget event = parseEvent("entity untarget", EvtEntityTarget.class);
+
+        assertEquals("entity untarget", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.EntityTarget(null),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void entityTransformEventParsesEntityAndReasonFilters() throws Exception {
+        EvtEntityTransform event = parseEvent("zombie transforming due to \"curing\"", EvtEntityTransform.class);
+
+        assertEquals("zombie", readLiteralArray(event, "datas"));
+        assertEquals("curing", readLiteralArray(event, "reasons"));
+    }
+
+    @Test
+    void experienceSpawnEventParsesAlternatePattern() {
+        EvtExperienceSpawn event = parseEvent("spawn of an experience orb", EvtExperienceSpawn.class);
+
+        assertEquals("experience spawn", event.toString(null, false));
+        assertEquals(1, event.getEventClasses().length);
+    }
+
+    @Test
+    void fireworkEventParsesAndChecksPlainHandle() {
+        EvtFirework event = parseEvent("firework explode", EvtFirework.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.Firework(java.util.Set.of()),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void gamemodeEventParsesSpecificModeAndChecksHandle() {
+        EvtGameMode event = parseEvent("gamemode change to spectator", EvtGameMode.class);
+
+        assertEquals("gamemode change to spectator", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.GameMode(GameType.SPECTATOR),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void harvestBlockEventParsesItemFilterAndChecksHandle() {
+        EvtHarvestBlock event = parseEvent("block harvest of stone", EvtHarvestBlock.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.HarvestBlock(Blocks.STONE.defaultBlockState()),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void healingEventParsesEntityAndStringReason() throws Exception {
+        EvtHealing event = parseEvent("healing of zombie by \"magic\"", EvtHealing.class);
+
+        assertEquals("zombie", readLiteralArray(event, "entityDatas"));
+        assertEquals("magic", readLiteralArray(event, "healReasons"));
+    }
+
+    @Test
+    void leashEventParsesPlayerUnleashVariant() {
+        EvtLeash event = parseEvent("player unleashing", EvtLeash.class);
+
+        assertEquals("player unleash", event.toString(null, false));
+    }
+
+    @Test
+    void moveOnEventParsesItemTypeAndChecksHandle() {
+        EvtMoveOn event = parseEvent("walking on dirt", EvtMoveOn.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.MoveOn(Blocks.DIRT.defaultBlockState()),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void playerArmorChangeEventChecksHelmetVariant() {
+        EvtPlayerArmorChange event = parseEvent("helmet change", EvtPlayerArmorChange.class);
+
+        assertEquals("helmet changed", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.HEAD),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void portalEventParsesEntityVariant() {
+        EvtPortal event = parseEvent("entity portal", EvtPortal.class);
+
+        assertEquals("entity portal", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.Portal(null, false),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void resourcePackEventChecksAcceptedVariant() {
+        EvtResourcePackResponse event = parseEvent("resource pack accepted", EvtResourcePackResponse.class);
+
+        assertEquals("resource pack accepted", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.ResourcePackResponse("accepted"),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void weatherChangeEventChecksThunderVariant() {
+        EvtWeatherChange event = parseEvent("weather change to thunder", EvtWeatherChange.class);
+
+        assertEquals("weather change to thunder", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.WeatherChange(true, true),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void worldEventParsesLoadVariant() {
+        EvtWorld event = parseEvent("world loading", EvtWorld.class);
+
+        assertEquals("world save/init/unload/load", event.toString(null, false));
     }
 
     private <T> T parseEvent(String input, Class<T> type) {
