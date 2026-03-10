@@ -26,15 +26,18 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - latest verified syntax-core worker batch now also adds 40 upstream `ch/njol/skript` classes:
-    - `conditions`: `CondEntityStorageIsFull`, `CondIsFuel`, `CondIsOfType`, `CondIsResonating`, `CondItemEnchantmentGlint`, `CondWillHatch`
-    - `expressions`: `ExprAttacked`, `ExprAttacker`, `ExprCommandBlockCommand`, `ExprDamage`, `ExprDamageCause`, `ExprExperience`, `ExprFinalDamage`, `ExprHealReason`, `ExprItemCooldown`, `ExprLastDamageCause`
-    - `effects`: `EffApplyBoneMeal`, `EffConnect`, `EffDetonate`, `EffEntityUnload`, `EffForceEnchantmentGlint`, `EffKeepInventory`, `EffLog`, `EffMakeSay`, `EffReplace`, `EffRun`, `EffScriptFile`, `EffSuppressTypeHints`, `EffSuppressWarnings`, `EffWorldBorderExpand`
-    - `events`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtEntity`, `EvtEntityBlockChange`, `EvtGrow`, `EvtItem`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
-  - active runtime registration from that batch now covers the 6 conditions, 10 expressions, and 10 effects through `SkriptFabricBootstrap`
-  - the new event bundle plus `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile` remain import-only in this batch
-  - final coordinator integration intentionally excluded `ExprFireworkEffect` and `EffExplosion` because they do not yet fit the local Fabric runtime cleanly
-  - the registry-sensitive `ExpressionSyntaxS2CompatibilityTest` suite now runs through the dedicated `isolatedExpressionSyntaxS2CompatibilityTest` task so the final `build` path stays green
+  - latest verified mixed-runtime coordinator batch now reduces the raw upstream shortfall to `727 / 1189`:
+    - live-activated events `11`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntity`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtHealing`, `EvtItem`
+    - newly imported conditions `10`: `CondCancelled`, `CondDamageCause`, `CondEntityUnload`, `CondIncendiary`, `CondItemDespawn`, `CondIsPreferredTool`, `CondIsSedated`, `CondLeashWillDrop`, `CondRespawnLocation`, `CondScriptLoaded`
+    - newly imported expressions `20`: `ExprAffectedEntities`, `ExprBarterInput`, `ExprConsumedItem`, `ExprExperienceCooldownChangeReason`, `ExprExplodedBlocks`, `ExprHatchingNumber`, `ExprHatchingType`, `ExprHealAmount`, `ExprLastAttacker`, `ExprLeashHolder`, `ExprLevel`, `ExprMaxDurability`, `ExprMaxHealth`, `ExprMaxItemUseTime`, `ExprMaxStack`, `ExprNoDamageTicks`, `ExprItemOwner`, `ExprItemThrower`, `ExprRawName`, `ExprSpeed`
+    - newly imported effects `19` unique: `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`, `EffCopy`, `EffSort`, `EffToggle`, `EffExceptionDebug`
+  - active runtime registration from that batch now covers conditions `10`, expressions `20`, effects `4`, and events `11` through `SkriptFabricBootstrap`
+  - the blocked mixed-batch effect remainder stays import-only for now:
+    - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
+  - coordinator stabilization in the batch:
+    - `ExpressionEventContextBundleCompatibilityTest` now runs as an isolated registry-sensitive suite
+    - `MixedRuntimeSyntaxBatchTest` was added as a dedicated isolated runtime parser suite
+    - the healing bridge now carries the numeric heal amount through the compat handle
   - latest verified active runtime inventory/container closure now also adds 10 upstream `ch/njol/skript` classes:
     - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
     - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
@@ -68,11 +71,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `662`
+  - local `ch/njol/skript`: `727`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `527`
+  - current shortfall: `462`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a 40-class syntax-core worker batch on top of the earlier inventory/container and import-heavy expressions/conditions/effects/events batches
+  - latest shortfall-focused closure is the mixed-runtime coordinator batch that live-activates 11 imported events while importing 10 conditions, 20 expressions, and 19 unique effects on top of the earlier inventory/container and import-heavy expressions/conditions/effects/events batches
 
 Primary registration sources:
 
@@ -114,6 +117,17 @@ Related tracking docs:
 | Furnace smelting start | `on smelting start` | furnace block, source item, fuel, furnace times |
 | Furnace smelt | `on furnace smelt` | furnace block, smelted item, result |
 | Furnace extract | `on furnace extract` | furnace block, extracted item, player |
+| Beacon effect | `on primary beacon effect`, `on secondary beacon effect of speed` | beacon block position, primary/secondary flag, effect type |
+| Beacon toggle | `on beacon toggle`, `on beacon activation`, `on beacon deactivation` | beacon block position, activation state |
+| Block compatibility | `on block breaking of stone` | compat block handle; currently active only through break-backed dispatch |
+| Book edit | `on book edit` | player plus before/after book item payload |
+| Book sign | `on book signing` | player plus signed book payload |
+| Click | `on right click with stick on stone`, `on left click` | click type, clicked entity/block, held tool |
+| Entity compatibility | `on spawning of zombie`, `on death of zombie` | entity lifecycle handle; currently active only for spawn/death |
+| Entity transform | `on zombie transforming due to "curing"` | transforming entity plus coarse reason string |
+| Experience spawn | `on experience orb spawn` | spawned experience amount |
+| Healing | `on healing of zombie by "magic"` | healed entity, coarse reason string, heal amount |
+| Item compatibility | `on item spawn of stick` | compat item handle; currently active only for item-spawn dispatch |
 
 ### Imported compatibility events not yet bootstrapped into the active runtime
 
@@ -125,20 +139,22 @@ Related tracking docs:
   - representative forms: `player move`, `player rotate`, `player enters a chunk`, `%entitytypes% teleport`
 - spectating
   - representative forms: `player start spectating [of %-*entitydatas%]`, `player stop spectating`, `player swap spectating`
-- book, click, and input-style events
-  - representative forms: `book edit`, `book sign`, `click`, `left click`, `right click`
 - player/entity/world compatibility events
-  - representative forms: `gamemode change [to %gamemode%]`, `healing [of %-entitydatas%] [by %-strings%]`, `portal`, `resource pack accepted/declined/failed`, `weather change [to %-strings%]`, `world load/save/init/unload`
+  - representative forms: `gamemode change [to %gamemode%]`, `portal`, `resource pack accepted/declined/failed`, `weather change [to %-strings%]`, `world load/save/init/unload`
 - combat and interaction compatibility events
-  - representative forms: `entity shoot[ing] [a] bow`, `entity target`, `entity transform`, `experience spawn`, `firework explode`, `player leash/unleash`, `armor change`, `move on %itemtypes%`, `block harvest`
-- beacon, block, and growth compatibility events
-  - representative forms: `primary beacon effect [of %-potioneffecttypes%]`, `secondary beacon effect`, `beacon toggle`, `block breaking [of %-itemtypes/blockdatas%]`, `grow[th] from %itemtypes/blockdatas%`, `grow[th] into %structuretypes/itemtypes/blockdatas%`, `plant grow[th]`
-- entity, item, and vehicle compatibility events
-  - representative forms: `death [of %-entitydatas%]`, `spawn[ing] [of %-entitydatas%]`, `dispensing [of %-itemtypes%]`, `item spawning [of %-itemtypes%]`, `item stack merging`, `pressure plate`, `vehicle collision [(with|of) ...]`, `vehicle block collision`, `vehicle entity collision`
+  - representative forms: `entity shoot[ing] [a] bow`, `entity target`, `firework explode`, `player leash/unleash`, `armor change`, `move on %itemtypes%`, `block harvest`
+- remaining concrete Fabric hook candidates from the imported event batch
+  - representative forms: `entity block change`, `grow[th] from %itemtypes/blockdatas%`, `grow[th] into %structuretypes/itemtypes/blockdatas%`, `plant grow[th]`, `pressure plate`, `vehicle collision [(with|of) ...]`, `vehicle block collision`, `vehicle entity collision`
 
 ### Known event-syntax gaps
 
-- No currently tracked runtime-backed event-syntax gaps remain in the active Fabric target surface.
+- Partial active rows that still need broader backing:
+  - `EvtBlock` is currently break-backed only
+  - `EvtItem` is currently item-spawn-backed only
+  - `EvtEntity` is currently lifecycle spawn/death-backed only
+  - `EvtEntityTransform` and `EvtHealing` still use coarse reason strings
+- Still missing dedicated live producers for the imported event classes:
+  - `EvtEntityBlockChange`, `EvtGrow`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
 - Generic status-effect type parsing is registry-backed: `bare id` values default to `minecraft`, explicit namespaces are preserved, and real `.sk` coverage now includes `minecraft:poison`.
 - Package-local Stage 8 parity-complete slice now covers `breeding (12 / 12)`, `input (5 / 5)`, and `interactions (6 / 6)`.
 - A cross-cutting base-surface gap still remains outside those packages: ambiguous bare item-id equality through generic compare, for example `event-item is wheat`.
@@ -231,6 +247,15 @@ Related tracking docs:
 - contains
   - representative forms: `%inventories% contain %itemtypes%`, `%strings% contain %strings%`, `%objects% contain %objects%`
 
+### Event and script state
+
+- event cancellation
+  - representative forms: `event is cancelled`, `event is not cancelled`
+- damage cause filter
+  - representative forms: `damage was caused by "fire"`, `damage was not caused by "magic"`
+- script load state
+  - representative forms: `script "example.sk" is loaded`, `scripts are loaded`
+
 ### Server and account state
 
 - banned / IP-banned checks
@@ -249,15 +274,17 @@ Related tracking docs:
 - control and visibility state
   - representative forms: `%livingentities% are charging a fireball`, `%entities%' custom names are visible`, `custom name of %entities% is visible`
 - item and block state
-  - representative forms: `%players% have cooldown on %itemtypes%`, `%players% have %itemtypes% on cooldown`, `%itemtypes% are unbreakable`, `respawn anchors work in %worlds%`
+  - representative forms: `%players% have cooldown on %itemtypes%`, `%players% have %itemtypes% on cooldown`, `%itemtypes% are unbreakable`, `respawn anchors work in %worlds%`, `%itemtypes% are the preferred tool for %blocks%`, `%blocks% are sedated`
 - type, fuel, and storage state
   - representative forms: `[the] entity storage of %blocks% is full`, `%itemtypes% are furnace fuel`, `%itemstacks/entities% are of type %itemtypes/entitydatas%`, `%blocks% are resonating`, `%itemtypes% have enchantment glint overridden`, `%itemtypes% are forced to glint`, `%itemtypes% are forced to not glint`
 - leash, taming, and damageability state
-  - representative forms: `%livingentities% are leashed`, `%livingentities% are tameable`, `%livingentities% are sheared`
+  - representative forms: `%livingentities% are leashed`, `%livingentities% are tameable`, `%livingentities% are sheared`, `the leash will drop`
 - equipment state
   - representative forms: `%livingentities% are holding %itemtypes%`, `%livingentities% are holding %itemtypes% in off-hand`, `%livingentities% are wearing %itemtypes%`
 - event-restricted state
-  - representative forms: `the egg will hatch`, `the egg won't hatch`
+  - representative forms: `the egg will hatch`, `the egg won't hatch`, `respawn location is a bed`, `respawn location is a respawn anchor`, `the event-explosion is incendiary`
+- despawn and explosion state
+  - representative forms: `%livingentities% can despawn on chunk unload`, `%itementities% will naturally despawn`, `%entities% are incendiary`
 
 ### Mob-specific state
 
@@ -358,6 +385,8 @@ The list below groups the active syntax by domain and calls out the representati
 - `event-entity`
 - `event-item`
 - `event-damage source`
+- mixed-runtime event payload additions
+  - representative forms: `affected entities`, `barter input`, `consumed item`, `experience cooldown change reason`, `exploded blocks`, `hatching number`, `hatching entity type`, `heal amount`
 
 ### Base mapped types and utilities
 
@@ -396,6 +425,12 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `burning time of %entities%`, `maximum burning time of %entities%`, `freeze time of %entities%`, `maximum freeze time of %entities%`
 - damage and healing event context
   - representative forms: `attacked`, `victim`, `attacker`, `damager`, `damage`, `final damage`, `damage cause`, `heal reason`, `spawned experience`, `last damage cause of %livingentities%`
+- dropped-item ownership and raw identity
+  - representative forms: `uuid of the dropped item owner of %itementities%`, `uuid of the dropped item thrower of %itementities%`, `minecraft name of %itemtypes%`
+- combat/property follow-up state
+  - representative forms: `last attacker of %livingentities%`, `leash holder of %livingentities%`, `xp level of %players%`, `walk speed of %players%`, `flight speed of %players%`
+- durability and survival caps
+  - representative forms: `maximum durability of %itemtypes/itemstacks/slots%`, `maximum health of %livingentities%`, `maximum item use time of %itemtypes/itemstacks%`, `maximum stack size of %itemtypes/inventories%`, `invulnerability ticks of %livingentities%`
 
 ### Inventory and container state
 
@@ -592,6 +627,8 @@ The list below groups the active syntax by domain and calls out the representati
   - `remove %object% from %object%`
   - `reset %object%`
   - `delete %object%`
+- mixed-runtime collection and debug helpers
+  - representative forms: `copy %objects% into %objects%`, `sort %objects%`, `sort %objects% in descending order`, `toggle %blocks/booleans%`, `cause exception`
 - base entity control
   - `kill %entities%`
   - `feed [the] %players%`
@@ -616,6 +653,9 @@ The list below groups the active syntax by domain and calls out the representati
 - fishing approach-angle setter
 
 ### Imported compatibility effects not yet bootstrapped into the active runtime
+
+- mixed-runtime blocked effect remainder
+  - representative forms: `color %itemtypes% %colors%`, `enchant %itemtypes% with %enchantments%`, `equip %livingentities% with %itemtypes%`, `drop %objects%`, `set health of %livingentities% to %number%`, `teleport %entities%`, `wake up %players%`, `launch %itemtypes% as a firework`, `consume elytra boost`, `create explosion`, `grow tree`, `make %entities% visible/invisible`, `clear entity storage of %blocks%`, `insert %entities% into entity storage of %blocks%`, `release entity storage of %blocks%`
 
 - movement and vehicle control
   - representative forms: `make %livingentities% teleport randomly`, `make %livingentities% pathfind towards %livingentity/location%`, `make %entities% ride %entity/entitydata%`, `eject passengers of %entities%`
@@ -723,6 +763,6 @@ The current loader/runtime also supports:
 
 ## Immediate Known Gaps
 
-- Tracked Stage 5 event/backend implementation gaps are closed in the current Fabric target surface.
+- Several imported event classes are now active but still partial, and `EvtEntityBlockChange`, `EvtGrow`, `EvtPlantGrowth`, `EvtPressurePlate`, and `EvtVehicleCollision` still need dedicated Fabric producers.
 - Deprecated-unused `PATROL_CAPTAIN` was intentionally dropped instead of emulated.
 - Full Stage 8 parity audit is not complete yet.

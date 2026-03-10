@@ -368,9 +368,9 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
-    public static void dispatchHealing(ServerLevel level, LivingEntity entity, @Nullable String reason) {
+    public static void dispatchHealing(ServerLevel level, LivingEntity entity, @Nullable String reason, float amount) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.Healing(entity, reason),
+                new FabricEventCompatHandles.Healing(entity, reason, amount),
                 level.getServer(),
                 level,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null

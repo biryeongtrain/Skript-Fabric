@@ -22,7 +22,7 @@ Last updated: 2026-03-10
 - Source-level condition port: `28 / 28` complete.
 - Source-level expression port: `84 / 84` complete.
 - Source-level effect port: `24 / 24` complete.
-- Stage 5 event backend closure: `22 / 22` tracked rows active.
+- Stage 5 event backend closure: `33 / 33` tracked rows active.
 - Stage 8 parity audit: `in_progress`.
 - Package-local Stage 8 audit progress: `23 / 214`.
 - Package-local parity-complete slice:
@@ -38,15 +38,25 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - latest verified syntax-core worker batch on 2026-03-10 adds 40 upstream classes:
-    - `conditions`: `CondEntityStorageIsFull`, `CondIsFuel`, `CondIsOfType`, `CondIsResonating`, `CondItemEnchantmentGlint`, `CondWillHatch`
-    - `expressions`: `ExprAttacked`, `ExprAttacker`, `ExprCommandBlockCommand`, `ExprDamage`, `ExprDamageCause`, `ExprExperience`, `ExprFinalDamage`, `ExprHealReason`, `ExprItemCooldown`, `ExprLastDamageCause`
-    - `effects`: `EffApplyBoneMeal`, `EffConnect`, `EffDetonate`, `EffEntityUnload`, `EffForceEnchantmentGlint`, `EffKeepInventory`, `EffLog`, `EffMakeSay`, `EffReplace`, `EffRun`, `EffScriptFile`, `EffSuppressTypeHints`, `EffSuppressWarnings`, `EffWorldBorderExpand`
-    - `events`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtEntity`, `EvtEntityBlockChange`, `EvtGrow`, `EvtItem`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
-  - active Fabric runtime bootstrap now registers the 6 conditions, 10 expressions, and 10 effect forms from that batch; the 10 event classes and the effect-side `EffConnect`, `EffKeepInventory`, `EffMakeSay`, `EffScriptFile` remain import-only for now
-  - final integration intentionally excluded `ExprFireworkEffect` and `EffExplosion` because they do not fit the current local Fabric surface cleanly yet
-  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall to `662 / 1189`
-  - the measured shortfall is now `527`
+  - latest verified mixed-runtime coordinator batch on 2026-03-10 live-activates 11 previously imported event classes:
+    - `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntity`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtHealing`, `EvtItem`
+  - the same batch also imports the remaining worker-lane syntax surface:
+    - `conditions`: `CondCancelled`, `CondDamageCause`, `CondEntityUnload`, `CondIncendiary`, `CondItemDespawn`, `CondIsPreferredTool`, `CondIsSedated`, `CondLeashWillDrop`, `CondRespawnLocation`, `CondScriptLoaded`
+    - `expressions`: `ExprAffectedEntities`, `ExprBarterInput`, `ExprConsumedItem`, `ExprExperienceCooldownChangeReason`, `ExprExplodedBlocks`, `ExprHatchingNumber`, `ExprHatchingType`, `ExprHealAmount`, `ExprLastAttacker`, `ExprLeashHolder`, `ExprLevel`, `ExprMaxDurability`, `ExprMaxHealth`, `ExprMaxItemUseTime`, `ExprMaxStack`, `ExprNoDamageTicks`, `ExprItemOwner`, `ExprItemThrower`, `ExprRawName`, `ExprSpeed`
+    - `effects`: `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`, `EffCopy`, `EffSort`, `EffToggle`, `EffExceptionDebug`
+  - active Fabric runtime bootstrap now registers the runtime-safe subset from that batch:
+    - conditions `10`
+    - expressions `20`
+    - effects `4`
+    - events `11`
+  - import-only remainder from the same batch currently stays unregistered:
+    - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
+  - coordinator-only stabilization in the merge batch:
+    - `ExpressionEventContextBundleCompatibilityTest` now runs isolated
+    - `MixedRuntimeSyntaxBatchTest` was added as a dedicated isolated runtime parser suite
+    - the healing bridge now passes the compat-handle amount payload end-to-end
+  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall to `727 / 1189`
+  - the measured shortfall is now `462`
 
 ## Priority Shift On 2026-03-08
 
@@ -68,8 +78,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `662` Java files
-- net missing local surface relative to that snapshot: `527` Java files
+- local `src/main/java/ch/njol/skript`: `727` Java files
+- net missing local surface relative to that snapshot: `462` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -83,8 +93,8 @@ Key local package counts versus upstream:
 
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
-- `expressions`: local `104`, upstream `391`
-- `conditions`: local `105`, upstream `135`
+- `expressions`: local `134`, upstream `391`
+- `conditions`: local `122`, upstream `135`
 - `classes`: local `21`, upstream `28`
 - `util`: local `29`, upstream `57`
 - `variables`: local `6`, upstream `11`
@@ -96,8 +106,8 @@ Key local package counts versus upstream:
 - `structures`: local `6`, upstream `10`
 - `localization`: local `11`, upstream `11`
 - `literals`: local `15`, upstream `16`
-- `effects`: local `87`, upstream `123`
-- `events`: local `37`, upstream `53`
+- `effects`: local `120`, upstream `123`
+- `events`: local `47`, upstream `53`
 - `entity`: local `37`, upstream `34`
 - `doc`: local `14`, upstream `18`
 - `update`: local `9`, upstream `10`

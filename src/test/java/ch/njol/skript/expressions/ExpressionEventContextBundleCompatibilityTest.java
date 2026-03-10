@@ -33,11 +33,13 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import sun.misc.Unsafe;
 
+@Tag("isolated-registry")
 final class ExpressionEventContextBundleCompatibilityTest {
 
     private static boolean syntaxRegistered;
@@ -76,7 +78,13 @@ final class ExpressionEventContextBundleCompatibilityTest {
         ExprConsumedItem consumed = new ExprConsumedItem();
         assertTrue(consumed.init(new Expression[0], 0, Kleenean.FALSE, parseResult("consumed item")));
         assertEquals(Items.CARROT, consumed.getSingle(new SkriptEvent(
-                new FabricEventCompatHandles.Item(FabricEventCompatHandles.ItemAction.CONSUME, new ItemStack(Items.CARROT), false),
+                new FabricEventCompatHandles.Item(
+                        null,
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.CONSUME,
+                        new ItemStack(Items.CARROT),
+                        false
+                ),
                 null,
                 null,
                 null

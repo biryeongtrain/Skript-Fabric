@@ -18,7 +18,7 @@ abstract class LivingEntityHealingMixin {
         }
         LivingEntity entity = (LivingEntity) (Object) this;
         if (entity.level() instanceof ServerLevel serverLevel) {
-            SkriptFabricEventBridge.dispatchHealing(serverLevel, entity, null);
+            SkriptFabricEventBridge.dispatchHealing(serverLevel, entity, null, amount);
         }
     }
 }

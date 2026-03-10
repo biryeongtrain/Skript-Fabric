@@ -442,6 +442,7 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
                 Skript.registerEvent(EvtUseItem.class, "on use item");
+                registerRecoveredEventActivationBundle();
                 Skript.registerExpression(
                         ExprChestInventory.class,
                         org.skriptlang.skript.fabric.compat.FabricInventory.class,
@@ -960,6 +961,16 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.conditions.CondIsResonating.class);
         forceInitialize(ch.njol.skript.conditions.CondItemEnchantmentGlint.class);
         forceInitialize(ch.njol.skript.conditions.CondWillHatch.class);
+        forceInitialize(ch.njol.skript.conditions.CondCancelled.class);
+        forceInitialize(ch.njol.skript.conditions.CondDamageCause.class);
+        forceInitialize(ch.njol.skript.conditions.CondEntityUnload.class);
+        forceInitialize(ch.njol.skript.conditions.CondIncendiary.class);
+        forceInitialize(ch.njol.skript.conditions.CondItemDespawn.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsPreferredTool.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsSedated.class);
+        forceInitialize(ch.njol.skript.conditions.CondLeashWillDrop.class);
+        forceInitialize(ch.njol.skript.conditions.CondRespawnLocation.class);
+        forceInitialize(ch.njol.skript.conditions.CondScriptLoaded.class);
     }
 
     private static void initializeRecoveredSyntaxCoreExpressionBundle() {
@@ -973,6 +984,26 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprHealReason.class);
         forceInitialize(ch.njol.skript.expressions.ExprItemCooldown.class);
         forceInitialize(ch.njol.skript.expressions.ExprLastDamageCause.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAffectedEntities.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBarterInput.class);
+        forceInitialize(ch.njol.skript.expressions.ExprConsumedItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprExperienceCooldownChangeReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprExplodedBlocks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHatchingNumber.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHatchingType.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHealAmount.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLastAttacker.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLeashHolder.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMaxDurability.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMaxHealth.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMaxItemUseTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMaxStack.class);
+        forceInitialize(ch.njol.skript.expressions.ExprNoDamageTicks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemOwner.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemThrower.class);
+        forceInitialize(ch.njol.skript.expressions.ExprRawName.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSpeed.class);
     }
 
     private static void initializeRecoveredExpressionBundle() {
@@ -1000,6 +1031,24 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.effects.EffSuppressWarnings.register();
         ch.njol.skript.effects.EffSuppressTypeHints.register();
         ch.njol.skript.effects.EffWorldBorderExpand.register();
+        ch.njol.skript.effects.EffCopy.register();
+        ch.njol.skript.effects.EffSort.register();
+        ch.njol.skript.effects.EffToggle.register();
+        ch.njol.skript.effects.EffExceptionDebug.register();
+    }
+
+    private static void registerRecoveredEventActivationBundle() {
+        ch.njol.skript.events.EvtBeaconEffect.register();
+        ch.njol.skript.events.EvtBeaconToggle.register();
+        ch.njol.skript.events.EvtBlock.register();
+        ch.njol.skript.events.EvtBookEdit.register();
+        ch.njol.skript.events.EvtBookSign.register();
+        ch.njol.skript.events.EvtClick.register();
+        ch.njol.skript.events.EvtEntity.register();
+        ch.njol.skript.events.EvtEntityTransform.register();
+        ch.njol.skript.events.EvtExperienceSpawn.register();
+        ch.njol.skript.events.EvtHealing.register();
+        ch.njol.skript.events.EvtItem.register();
     }
 
     private static void forceInitialize(Class<?> type) {
