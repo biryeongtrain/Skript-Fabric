@@ -10,9 +10,8 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
-- restored the missing `ch/njol/skript/lang/function/FunctionParser` facade and deprecated `Functions.parseSignature(...)` bridge for future `StructFunction` import work
-- aligned the new parser path with local legacy class-name fallbacks plus starred parameter normalization so function signatures can resolve `number` / `numbers` and list-style parameter names without touching `structures`
-- extended `FunctionCoreCompatibilityTest` to cover plural return parsing, deprecated facade delegation, starred parameter normalization, and ordinal signature-definition error retention
+- restored the upstream `org.skriptlang.skript.common.function` core bridge inside lane scope, including common signatures/parameters/arguments/reference runtime plus legacy `Function`/`Signature` integration and registry enumeration support
+- added the Java-side `DefaultFunction` builder path with a minimal `Documentable` surface and `Functions.register(DefaultFunction<?>)` overload so more upstream function imports can land without reworking `structures`
 - commits:
   - `01fd00330` `feat(log): restore upstream compatibility handlers`
   - `9893b6339` `feat(lang): restore function facade entry points`
@@ -38,10 +37,13 @@ Last updated: 2026-03-10
   - passed
 - `./gradlew test --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --rerun-tasks`
   - passed
+- upstream reference for this slice: compared against `/tmp/skript-upstream-e6ec744-2/src/main/java/org/skriptlang/skript/common/function/{Function,FunctionArguments,FunctionParser,FunctionReference,Parameter,Parameters,ScriptParameter,Signature,DefaultFunction,DefaultFunctionImpl}.java`, `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/lang/function/{Function,FunctionRegistry,Functions,Signature}.java`, and `/tmp/skript-upstream-e6ec744-2/src/main/java/ch/njol/skript/doc/Documentable.java`
+- `./gradlew test --tests 'ch.njol.skript.lang.function.*' --tests 'ch.njol.skript.lang.parser.*' --tests 'org.skriptlang.skript.common.function.*'`
+  - passed
 
 ## Next Lead
 
-- `log` package count parity is now closed except the intentionally skipped Bukkit-only `BukkitLoggerFilter`; next Lane D lead is the next self-contained parser/function facade closure that reduces `StructFunction` import risk without editing `structures`
+- next Lane D lead is wiring parser entry points onto the imported common reference parser path once that can be done without broad `SkriptParser` churn; `BukkitLoggerFilter` remains intentionally skipped
 
 ## Merge Notes
 

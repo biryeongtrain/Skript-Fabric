@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.common.function.DefaultFunction;
 import org.skriptlang.skript.lang.script.Script;
 
 /**
@@ -48,6 +49,11 @@ public abstract class Functions {
         javaNamespace.addFunction(function);
         globalFunctions.put(name, javaNamespace);
         FunctionRegistry.getRegistry().register(null, function);
+        return function;
+    }
+
+    public static DefaultFunction<?> register(DefaultFunction<?> function) {
+        register((Function<?>) function);
         return function;
     }
 
