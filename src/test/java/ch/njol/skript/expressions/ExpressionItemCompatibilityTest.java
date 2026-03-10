@@ -17,6 +17,7 @@ import ch.njol.skript.util.ColorRGB;
 import ch.njol.util.Kleenean;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -174,6 +175,26 @@ class ExpressionItemCompatibilityTest {
         tooltip.init(new Expression[]{new SimpleLiteral<>(new FabricItemType(Items.STICK), false)}, 0, Kleenean.FALSE, tooltipParse);
         TooltipDisplay tooltipDisplay = tooltip.getSingle(SkriptEvent.EMPTY).toStack().get(DataComponents.TOOLTIP_DISPLAY);
         assertTrue(tooltipDisplay.hideTooltip());
+    }
+
+    @Test
+    void itemFlagsReadAndMutateTooltipHiddenComponents() {
+        FabricItemType item = new FabricItemType(new ItemStack(Items.DIAMOND_SWORD));
+        ExprItemFlags flags = new ExprItemFlags();
+        flags.init(new Expression[]{new SimpleLiteral<>(item, false)}, 0, Kleenean.FALSE, parseResult(""));
+
+        flags.change(SkriptEvent.EMPTY, new Object[]{"hide enchants", "hide unbreakable"}, ch.njol.skript.classes.Changer.ChangeMode.ADD);
+        assertEquals(Set.of("HIDE_ENCHANTS", "HIDE_UNBREAKABLE"), Set.of(flags.getArray(SkriptEvent.EMPTY)));
+
+        TooltipDisplay display = item.toStack().get(DataComponents.TOOLTIP_DISPLAY);
+        assertTrue(display.hiddenComponents().contains(DataComponents.ENCHANTMENTS));
+        assertTrue(display.hiddenComponents().contains(DataComponents.UNBREAKABLE));
+
+        flags.change(SkriptEvent.EMPTY, new Object[]{"hide enchants"}, ch.njol.skript.classes.Changer.ChangeMode.REMOVE);
+        assertEquals(Set.of("HIDE_UNBREAKABLE"), Set.of(flags.getArray(SkriptEvent.EMPTY)));
+
+        flags.change(SkriptEvent.EMPTY, null, ch.njol.skript.classes.Changer.ChangeMode.DELETE);
+        assertEquals(0, flags.getArray(SkriptEvent.EMPTY).length);
     }
 
     @Test

@@ -83,6 +83,7 @@ final class ExpressionSyntaxS2CompatibilityTest {
         }
         new ExprItemCooldown();
         new ExprCommandBlockCommand();
+        new ExprItemFlags();
         new ExprItemOwner();
         new ExprItemThrower();
         new ExprLevel();
@@ -134,6 +135,7 @@ final class ExpressionSyntaxS2CompatibilityTest {
         assertInstanceOf(ExprLevel.class, parseExpression("xp level of lane-e-test-player", Long.class));
         assertInstanceOf(ExprSpeed.class, parseExpression("walk speed of lane-e-test-player", Number.class));
         assertInstanceOf(ExprRawName.class, parseExpression("raw name of diamond sword", String.class));
+        assertInstanceOf(ExprItemFlags.class, parseExpression("item flags of diamond sword", String.class));
         assertInstanceOf(ExprMaxDurability.class, parseExpression("max durability of diamond sword", Integer.class));
         assertInstanceOf(ExprMaxItemUseTime.class, parseExpression("maximum item use duration of potion", ch.njol.skript.util.Timespan.class));
         assertInstanceOf(ExprMaxStack.class, parseExpression("max stack size of diamond", Integer.class));
@@ -143,6 +145,10 @@ final class ExpressionSyntaxS2CompatibilityTest {
         Statement walkSpeed = parseStatement("set walking speed of lane-e-test-player to 0.4");
         assertInstanceOf(EffChange.class, walkSpeed);
         assertEquals("walk speed of lane-e-test-player", expression(walkSpeed, "changed").toString(null, false));
+
+        Statement itemFlags = parseStatement("set item flags of diamond sword to \"hide enchants\"");
+        assertInstanceOf(EffChange.class, itemFlags);
+        assertEquals("item flags of diamond sword", expression(itemFlags, "changed").toString(null, false));
 
         Statement itemOwner = parseStatement("set uuid of dropped item owner of lane-e-test-itementity to lane-e-test-player");
         assertInstanceOf(EffChange.class, itemOwner);
