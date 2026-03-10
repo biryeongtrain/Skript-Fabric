@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `353 / 1189`, shortfall `836`
+- upstream `ch/njol/skript` snapshot: local `357 / 1189`, shortfall `832`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,10 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head adds `CondPermission` through the official LuckPerms API/provider path exposed by LuckPerms Fabric
+- current verified head adds `ExprAmount`, `ExprFormatDate`, `ExprIndices`, and `ExprInverse` as a pure-local Lane E helper bundle
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `230 / 230` baseline while extending default runtime syntax with `%players% has permission %strings%`
-- the prior Lane E helper bundle (`CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`) remains merged underneath it
+- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `832`
+- the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`) remains merged underneath it
 
 ## Recent Closed Prereqs
 
@@ -49,7 +49,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 1. remaining `variables` + `sections` + `structures` + `aliases` closure after the now-verified `LitEternity` / alias foundation follow-up, with the storage-backend / `FlatFileStorage` slice retried separately from the last reverted runtime regression
 2. next `effects` + `events` bundle after the new control-flow effect slice, still avoiding large new `org/...` runtime edits
-3. next `expressions` + `conditions` bundle after the text-character/codepoint slice
+3. next `expressions` + `conditions` bundle after the amount/format-date/indices/inverse slice, still avoiding aliases or container crossings first
 4. remaining `classes` / `registrations` follow-up after the pure-Java default class-data helpers, still avoiding `yggdrasil` or Bukkit data imports where possible
 5. remaining `util` / `lang` blocker imports, especially `Direction` / `StructureType` and the next parser/runtime closure that unblocks `StructFunction`
 

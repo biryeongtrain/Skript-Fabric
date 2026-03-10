@@ -16,6 +16,8 @@ import ch.njol.skript.lang.KeyedValue;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.lang.util.common.AnyAmount;
+import ch.njol.skript.util.Date;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -335,6 +337,55 @@ class ExpressionTextCollectionCompatibilityTest {
         assertArrayEquals(new Number[0], impossibleIntegerRange.getArray(SkriptEvent.EMPTY));
     }
 
+    @Test
+    void amountInverseIndicesAndFormatDateMatchLegacyBehaviors() {
+        ExprAmount amount = new ExprAmount();
+        amount.init(new Expression[]{new SimpleLiteral<>(new TestAnyAmount(7), false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(7, amount.getSingle(SkriptEvent.EMPTY));
+
+        ExprAmount count = new ExprAmount();
+        count.init(new Expression[]{new SimpleLiteral<>(new String[]{"alpha", "beta", "gamma"}, String.class, true)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(3L, count.getSingle(SkriptEvent.EMPTY));
+
+        ExprAmount invalidSingle = new ExprAmount();
+        assertFalse(invalidSingle.init(new Expression[]{new SimpleLiteral<>("alpha", false)}, 0, Kleenean.FALSE, parseResult("")));
+
+        ExprInverse inverse = new ExprInverse();
+        inverse.init(new Expression[]{new SimpleLiteral<>(new Boolean[]{true, false}, Boolean.class, true)}, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new Boolean[]{false, true}, inverse.getArray(SkriptEvent.EMPTY));
+
+        ExprIndices sortedIndices = new ExprIndices();
+        SkriptParser.ParseResult descendingParse = parseResult("");
+        descendingParse.mark = 1;
+        sortedIndices.init(new Expression[]{
+                new KeyedProviderExpression(new Object[]{10, 30, 20}, new String[]{"first", "third", "second"})
+        }, 2, Kleenean.FALSE, descendingParse);
+        assertArrayEquals(new String[]{"third", "second", "first"}, sortedIndices.getArray(SkriptEvent.EMPTY));
+
+        ExprIndices distinctIndices = new ExprIndices();
+        distinctIndices.init(new Expression[]{
+                new KeyedProviderExpression(
+                        new Object[]{"a", "b", "c"},
+                        new String[]{"page::1", "page::2", "other::1"}
+                )
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertArrayEquals(new String[]{"page", "other"}, distinctIndices.getArray(SkriptEvent.EMPTY));
+
+        ExprFormatDate formattedDate = new ExprFormatDate();
+        formattedDate.init(new Expression[]{
+                new SimpleLiteral<>(new Date(0L), false),
+                new SimpleLiteral<>("yyyy-MM-dd", false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals("1970-01-01", formattedDate.getSingle(SkriptEvent.EMPTY));
+
+        ExprFormatDate defaultFormattedDate = new ExprFormatDate();
+        defaultFormattedDate.init(new Expression[]{
+                new SimpleLiteral<>(new Date(0L), false),
+                null
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertTrue(defaultFormattedDate.getSingle(SkriptEvent.EMPTY).contains("1970"));
+    }
+
     private static SkriptParser.ParseResult parseResult(String expr) {
         SkriptParser.ParseResult result = new SkriptParser.ParseResult();
         result.expr = expr;
@@ -445,6 +496,9 @@ class ExpressionTextCollectionCompatibilityTest {
         public Class<? extends Object> getReturnType() {
             return Object.class;
         }
+    }
+
+    private record TestAnyAmount(Number amount) implements AnyAmount {
     }
 
     public static final class TestCondition extends ch.njol.skript.lang.Condition {

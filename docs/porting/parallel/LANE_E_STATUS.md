@@ -9,9 +9,9 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
-- imported `CondPermission` as a default-runtime condition using the official LuckPerms API/provider path exposed by LuckPerms Fabric
-- preserved upstream `skript.*` wildcard fallback semantics while keeping the syntax Fabric-local to `%players%`
-- kept the slice off aliases and container closures; the only runtime bootstrap edit was the new permission condition registration
+- imported `ExprAmount`, `ExprFormatDate`, `ExprIndices`, and `ExprInverse` as a pure-local expression utility closure
+- kept the slice off aliases, container closures, Bukkit-only APIs, and new external libraries
+- prior `CondPermission` runtime syntax remains merged underneath this helper batch
 
 ## Verification
 
@@ -26,7 +26,7 @@ Last updated: 2026-03-10
 
 ## Next Lead
 
-- next importable Lane E bundle is still the nearby low-dependency expression/condition surface that avoids aliases or inventory/container crossings; `CondContains` still looks worse than adjacent bundles because it pulls aliases/container logic back into scope, so the next low-risk follow-up after `CondPermission` is another pure-local numeric/text helper cluster before container-aware conditions
+- next importable Lane E bundle is still the nearby low-dependency expression/condition surface that avoids aliases or inventory/container crossings; `CondContains` still looks worse than adjacent bundles because it pulls aliases/container logic back into scope, so the next low-risk follow-up after this helper batch is another pure-local numeric/text cluster before container-aware conditions
 
 ## Merge Notes
 
