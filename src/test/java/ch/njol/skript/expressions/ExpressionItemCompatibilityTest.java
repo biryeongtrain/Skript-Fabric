@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.ExpressionList;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.util.ColorRGB;
@@ -24,11 +26,13 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomModelData;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.item.component.WrittenBookContent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.fabric.compat.FabricInventory;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.registration.SyntaxRegistry;
@@ -126,6 +130,86 @@ class ExpressionItemCompatibilityTest {
     }
 
     @Test
+    void importedItemExpressionsPreservePrototypeComponents() {
+        ExprItemWithLore lore = new ExprItemWithLore();
+        lore.init(new Expression[]{
+                new SimpleLiteral<>(new FabricItemType(Items.STICK), false),
+                new SimpleLiteral<>("line 1\nline 2", false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        FabricItemType loreItem = lore.getSingle(SkriptEvent.EMPTY);
+        assertEquals(List.of(Component.literal("line 1"), Component.literal("line 2")),
+                loreItem.toStack().get(DataComponents.LORE).lines());
+
+        ExprItemWithCustomModelData customModelData = new ExprItemWithCustomModelData();
+        ExpressionList<Object> customModelDataValues = new ExpressionList<>(
+                new Expression[]{
+                        new SimpleLiteral<>(2.5F, false),
+                        new SimpleLiteral<>(false, false),
+                        new SimpleLiteral<>("blade", false),
+                        new SimpleLiteral<>(new ColorRGB(1, 2, 3), false)
+                },
+                Object.class,
+                true
+        );
+        customModelData.init(new Expression[]{
+                new SimpleLiteral<>(new FabricItemType(Items.STICK), false),
+                customModelDataValues
+        }, 0, Kleenean.FALSE, parseResult(""));
+        FabricItemType modelItem = customModelData.getSingle(SkriptEvent.EMPTY);
+        CustomModelData data = modelItem.toStack().get(DataComponents.CUSTOM_MODEL_DATA);
+        assertEquals(List.of(2.5F), data.floats());
+        assertEquals(List.of(false), data.flags());
+        assertEquals(List.of("blade"), data.strings());
+        assertEquals(List.of(0x010203), data.colors());
+
+        ExprItemWithEnchantmentGlint glint = new ExprItemWithEnchantmentGlint();
+        glint.init(new Expression[]{new SimpleLiteral<>(new FabricItemType(Items.STICK), false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(Boolean.TRUE, glint.getSingle(SkriptEvent.EMPTY).toStack().get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE));
+
+        ExprItemWithTooltip tooltip = new ExprItemWithTooltip();
+        SkriptParser.ParseResult tooltipParse = parseResult("");
+        tooltipParse.tags.add("out");
+        tooltip.init(new Expression[]{new SimpleLiteral<>(new FabricItemType(Items.STICK), false)}, 0, Kleenean.FALSE, tooltipParse);
+        TooltipDisplay tooltipDisplay = tooltip.getSingle(SkriptEvent.EMPTY).toStack().get(DataComponents.TOOLTIP_DISPLAY);
+        assertTrue(tooltipDisplay.hideTooltip());
+    }
+
+    @Test
+    void itemAmountAndInventoryCountExpressionsHandleCompatTypes() {
+        FabricItemType stackType = new FabricItemType(Items.STICK, 3, null);
+        ExprItemAmount amount = new ExprItemAmount();
+        amount.init(new Expression[]{new SimpleLiteral<>(stackType, false)}, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(3L, amount.getSingle(SkriptEvent.EMPTY));
+        amount.change(SkriptEvent.EMPTY, new Object[]{2L}, ch.njol.skript.classes.Changer.ChangeMode.ADD);
+        assertEquals(5, stackType.amount());
+
+        SimpleContainer container = new SimpleContainer(2);
+        container.setItem(0, new ItemStack(Items.STICK, 4));
+        container.setItem(1, new ItemStack(Items.DIRT, 2));
+        ExprAmountOfItems inventoryCount = new ExprAmountOfItems();
+        inventoryCount.init(new Expression[]{
+                new SimpleLiteral<>(new FabricItemType(Items.STICK), false),
+                new SimpleLiteral<>(new FabricInventory(container), false)
+        }, 0, Kleenean.FALSE, parseResult(""));
+        assertEquals(4L, inventoryCount.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void itemsExpressionReturnsBlocksAndTypedItems() {
+        ExprItems blocks = new ExprItems();
+        blocks.init(new Expression[0], 0, Kleenean.FALSE, parseResult(""));
+        FabricItemType[] allBlocks = blocks.getArray(SkriptEvent.EMPTY);
+        assertTrue(Arrays.stream(allBlocks).anyMatch(item -> item.item() == Items.STONE));
+        assertFalse(Arrays.stream(allBlocks).anyMatch(item -> item.item() == Items.STICK));
+
+        ExprItems items = new ExprItems();
+        items.init(new Expression[]{new SimpleLiteral<>(new FabricItemType(Items.STICK), false)}, 3, Kleenean.FALSE, parseResult(""));
+        FabricItemType[] resolved = items.getArray(SkriptEvent.EMPTY);
+        assertEquals(1, resolved.length);
+        assertEquals(Items.STICK, resolved[0].item());
+    }
+
+    @Test
     void damagedItemAndDurabilityHandleItemStacksAndSlots() {
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
 
@@ -159,6 +243,7 @@ class ExpressionItemCompatibilityTest {
 
     @Test
     void importedExpressionsInstantiate() {
+        assertDoesNotThrow(ExprAmountOfItems::new);
         assertDoesNotThrow(ExprBookAuthor::new);
         assertDoesNotThrow(ExprBookPages::new);
         assertDoesNotThrow(ExprBookTitle::new);
@@ -169,6 +254,14 @@ class ExpressionItemCompatibilityTest {
         assertDoesNotThrow(ExprDamagedItem::new);
         assertDoesNotThrow(ExprDurability::new);
         assertDoesNotThrow(ExprEgg::new);
+        assertDoesNotThrow(ExprExactItem::new);
+        assertDoesNotThrow(ExprItem::new);
+        assertDoesNotThrow(ExprItemAmount::new);
+        assertDoesNotThrow(ExprItems::new);
+        assertDoesNotThrow(ExprItemWithCustomModelData::new);
+        assertDoesNotThrow(ExprItemWithEnchantmentGlint::new);
+        assertDoesNotThrow(ExprItemWithLore::new);
+        assertDoesNotThrow(ExprItemWithTooltip::new);
         assertTrue(true);
     }
 

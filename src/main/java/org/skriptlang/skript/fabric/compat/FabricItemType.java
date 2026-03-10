@@ -17,6 +17,7 @@ public final class FabricItemType {
     private int amount;
     private @Nullable String customName;
     private @Nullable Equippable equippable;
+    private @Nullable ItemStack prototype;
 
     public FabricItemType(Item item) {
         this(item, 1, null);
@@ -26,6 +27,15 @@ public final class FabricItemType {
         this.item = item;
         this.amount = Math.max(1, amount);
         this.customName = customName;
+    }
+
+    public FabricItemType(ItemStack stack) {
+        this.item = stack.getItem();
+        this.amount = Math.max(1, stack.getCount());
+        Component name = stack.get(DataComponents.CUSTOM_NAME);
+        this.customName = name != null ? name.getString() : null;
+        this.equippable = stack.get(DataComponents.EQUIPPABLE);
+        this.prototype = stack.copy();
     }
 
     public Item item() {
@@ -38,6 +48,9 @@ public final class FabricItemType {
 
     public void amount(int amount) {
         this.amount = Math.max(1, amount);
+        if (prototype != null) {
+            prototype.setCount(this.amount);
+        }
     }
 
     public @Nullable String name() {
@@ -46,6 +59,14 @@ public final class FabricItemType {
 
     public void name(@Nullable String customName) {
         this.customName = customName;
+        if (prototype == null) {
+            return;
+        }
+        if (customName == null || customName.isBlank()) {
+            prototype.remove(DataComponents.CUSTOM_NAME);
+        } else {
+            prototype.set(DataComponents.CUSTOM_NAME, SkriptTextPlaceholders.resolveComponent(customName, null));
+        }
     }
 
     public @Nullable Equippable equippable() {
@@ -54,15 +75,28 @@ public final class FabricItemType {
 
     public void equippable(@Nullable Equippable equippable) {
         this.equippable = equippable;
+        if (prototype == null) {
+            return;
+        }
+        if (equippable == null) {
+            prototype.remove(DataComponents.EQUIPPABLE);
+        } else {
+            prototype.set(DataComponents.EQUIPPABLE, equippable);
+        }
     }
 
     public ItemStack toStack() {
-        ItemStack stack = new ItemStack(item, amount);
+        ItemStack stack = prototype != null ? prototype.copy() : new ItemStack(item, amount);
+        stack.setCount(amount);
         if (customName != null && !customName.isBlank()) {
             stack.set(DataComponents.CUSTOM_NAME, SkriptTextPlaceholders.resolveComponent(customName, null));
+        } else {
+            stack.remove(DataComponents.CUSTOM_NAME);
         }
         if (equippable != null) {
             stack.set(DataComponents.EQUIPPABLE, equippable);
+        } else if (prototype == null) {
+            stack.remove(DataComponents.EQUIPPABLE);
         }
         return stack;
     }
@@ -73,6 +107,11 @@ public final class FabricItemType {
         }
         if (stack.getCount() < amount) {
             return false;
+        }
+        if (prototype != null) {
+            ItemStack expected = prototype.copy();
+            expected.setCount(stack.getCount());
+            return ItemStack.isSameItemSameComponents(expected, stack);
         }
         if (customName != null && !customName.isBlank()) {
             Component stackName = stack.get(DataComponents.CUSTOM_NAME);
