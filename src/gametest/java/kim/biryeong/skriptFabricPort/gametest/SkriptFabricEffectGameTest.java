@@ -243,34 +243,88 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
     @GameTest
     public void equipEffectExecutesRealScript(GameTestHelper helper) {
         Cow cow = createCow(helper, false);
-        assertUseEntityScriptSetsMarker(
-                helper,
-                "skript/gametest/effect/equip_entity_marks_block.sk",
-                cow,
-                new BlockPos(9, 1, 0),
-                Blocks.EMERALD_BLOCK,
-                () -> helper.assertTrue(
-                        cow.getItemBySlot(EquipmentSlot.HEAD).is(Items.DIAMOND_HELMET),
-                        Component.literal("Expected equip effect to place a diamond helmet on the target entity.")
-                )
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos markerPos = new BlockPos(9, 1, 0);
+        helper.assertTrue(
+                RUNTIME_LOCK.compareAndSet(false, true),
+                Component.literal("Waiting for exclusive Skript runtime access.")
         );
+        try {
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/equip_entity_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    cow,
+                    new EntityHitResult(cow)
+            ));
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected use entity equip test to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, markerPos);
+            helper.assertTrue(
+                    cow.getItemBySlot(EquipmentSlot.HEAD).is(Items.DIAMOND_HELMET),
+                    Component.literal("Expected equip effect to place a diamond helmet on the target entity.")
+            );
+            runtime.clearScripts();
+            helper.succeed();
+        } finally {
+            RUNTIME_LOCK.set(false);
+        }
     }
 
     @GameTest
     public void damageEffectExecutesRealScript(GameTestHelper helper) {
         Cow cow = createCow(helper, false);
         float startingHealth = cow.getHealth();
-        assertUseEntityScriptSetsMarker(
-                helper,
-                "skript/gametest/effect/damage_entity_marks_block.sk",
-                cow,
-                new BlockPos(9, 1, 0),
-                Blocks.REDSTONE_BLOCK,
-                () -> helper.assertTrue(
-                        cow.getHealth() < startingHealth,
-                        Component.literal("Expected damage effect to reduce the target entity's health.")
-                )
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos markerPos = new BlockPos(9, 1, 0);
+        helper.assertTrue(
+                RUNTIME_LOCK.compareAndSet(false, true),
+                Component.literal("Waiting for exclusive Skript runtime access.")
         );
+        try {
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/damage_entity_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    cow,
+                    new EntityHitResult(cow)
+            ));
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected use entity damage test to keep Fabric callback flow in PASS state.")
+            );
+            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, markerPos);
+            helper.assertTrue(
+                    cow.getHealth() < startingHealth,
+                    Component.literal("Expected damage effect to reduce the target entity's health.")
+            );
+            runtime.clearScripts();
+            helper.succeed();
+        } finally {
+            RUNTIME_LOCK.set(false);
+        }
     }
 
     @GameTest
