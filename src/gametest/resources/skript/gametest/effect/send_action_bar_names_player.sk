@@ -1,0 +1,3 @@
+on use entity:
+    send action bar "lane f action bar" to event-player
+    set test name of entity event-player to "bound action bar"

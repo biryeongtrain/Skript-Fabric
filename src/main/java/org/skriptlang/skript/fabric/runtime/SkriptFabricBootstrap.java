@@ -708,6 +708,16 @@ public final class SkriptFabricBootstrap {
                 );
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();
+                ch.njol.skript.effects.EffActionBar.register();
+                ch.njol.skript.effects.EffBroadcast.register();
+                ch.njol.skript.effects.EffKick.register();
+                ch.njol.skript.effects.EffMessage.register();
+                ch.njol.skript.effects.EffOp.register();
+                ch.njol.skript.effects.EffPlaySound.register();
+                ch.njol.skript.effects.EffResetTitle.register();
+                ch.njol.skript.effects.EffSendResourcePack.register();
+                ch.njol.skript.effects.EffSendTitle.register();
+                ch.njol.skript.effects.EffStopSound.register();
                 Skript.registerEffect(
                         EffFeed.class,
                         "feed [the] %players% [by %-number% [beef[s]]]"

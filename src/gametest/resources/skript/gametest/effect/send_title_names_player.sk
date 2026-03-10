@@ -1,0 +1,3 @@
+on use entity:
+    send title "lane f title" with subtitle "lane f subtitle" to event-player for 5 seconds with fadein 1 second and with fadeout 1 second
+    set test name of entity event-player to "title bound"

@@ -1,0 +1,3 @@
+on use entity:
+    stop sound "minecraft:block.note_block.pling" for event-player
+    set test name of entity event-player to "stop sound bound"

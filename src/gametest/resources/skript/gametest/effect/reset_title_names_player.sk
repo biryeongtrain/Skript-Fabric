@@ -1,0 +1,3 @@
+on use entity:
+    reset the title of event-player
+    set test name of entity event-player to "title reset bound"
