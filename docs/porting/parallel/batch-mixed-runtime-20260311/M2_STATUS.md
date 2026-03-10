@@ -31,61 +31,73 @@
 
 ## Landed Classes
 
-- none in this pass
-- attempted upstream-backed imports and rolled them back after verification:
-  - `ExprAppliedEnchantments`
-  - `ExprBannerItem`
-  - `ExprBannerPatterns`
-  - `ExprEnchantItem`
-  - `ExprEnchantmentLevel`
-  - `ExprEnchantmentOffer`
-  - `ExprEnchantments`
-  - `ExprItemFlags`
-- compile-safe branch state kept to the already-present mixed-runtime inventory/container expressions:
+- landed compile-safe mixed-runtime ports from the assigned bundle:
   - `ExprAnvilRepairCost`
   - `ExprAnvilText`
   - `ExprArmorChangeItem`
   - `ExprArmorSlot`
   - `ExprCursorSlot`
+  - `ExprEnchantmentOfferCost`
   - `ExprHotbarButton`
   - `ExprHotbarSlot`
   - `ExprInventoryAction`
   - `ExprInventoryCloseReason`
   - `ExprOpenedInventory`
   - `ExprPickupDelay`
+- support glue added for the landed subset:
+  - `ReflectiveHandleAccess`
 
 ## Runtime-Eligible Classes
 
-- no newly landed runtime-active classes in this pass
-- already-present assigned expressions above remain the only compile-safe/runtime-eligible subset in this worktree
+- compile-safe and bootstrap-eligible if the coordinator chooses to activate them with real `.sk` coverage:
+  - `ExprAnvilRepairCost`
+  - `ExprAnvilText`
+  - `ExprArmorChangeItem`
+  - `ExprArmorSlot`
+  - `ExprCursorSlot`
+  - `ExprEnchantmentOfferCost`
+  - `ExprHotbarButton`
+  - `ExprHotbarSlot`
+  - `ExprInventoryAction`
+  - `ExprInventoryCloseReason`
+  - `ExprOpenedInventory`
+  - `ExprPickupDelay`
+- still import-only in this lane because no bootstrap wiring was added here
 
 ## Bootstrap Registrations Needed
 
-- none from this lane
-- no new bootstrap registration request because no additional syntax was made runtime-active
-- coordinator should continue treating the missing enchant/banner/item-flag expressions as blocked imports, not bootstrap work
+- none landed as runtime-active in this lane
+- no `SkriptFabricBootstrap.java` changes were made
+- if the coordinator decides to activate the landed subset later, those registrations still need coordinator-owned bootstrap wiring plus representative real `.sk` GameTests in the merge pass
 
 ## Targeted Tests
 
 - `./gradlew compileJava --console=plain`
   - result: `BUILD SUCCESSFUL`
-- `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryImportCompatibilityTest --console=plain`
-  - result: blocked in `compileTestJava` before the selected test ran
 - `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryContainerCompatibilityTest --console=plain`
   - result: blocked in `compileTestJava` before the selected test ran
+- `./gradlew -q -I /tmp/m2-testcp.init.gradle printM2TestClasspath`
+  - result: emitted the narrow manual test compile/runtime classpath
+- `javac -cp "$TEST_CP" -d build/m2-test-classes src/test/java/ch/njol/skript/expressions/ExpressionInventoryContainerCompatibilityTest.java`
+  - result: passed, warnings only for `sun.misc.Unsafe`
+- `java -cp "$TEST_CP:build/m2-test-classes:/tmp" M2ExpressionInventoryContainerTestRunner`
+  - result: passed; exercised:
+    - parser/init coverage for `ExprOpenedInventory`, `ExprArmorSlot`, `ExprCursorSlot`, `ExprHotbarSlot`, `ExprPickupDelay`
+    - reflective holder/event coverage for `ExprAnvilRepairCost`, `ExprAnvilText`, `ExprArmorChangeItem`, `ExprEnchantmentOfferCost`, `ExprHotbarButton`, `ExprInventoryAction`, `ExprInventoryCloseReason`
+    - `ItemEntity.pickupDelay` read/write coverage for `ExprPickupDelay`
 - blocking verification context:
-  - unrelated pre-existing test compile failures remain outside the M2-owned files and prevented narrow test execution
-  - the temporary upstream import attempt also failed `compileJava` immediately and was rolled back before final status
+  - unrelated pre-existing `compileTestJava` failures remain outside the M2-owned files and prevented normal Gradle `test --tests ...` execution
+  - narrow verification therefore used manual single-test compilation and execution against the Gradle-resolved test classpath
 
 ## Blockers
 
-- missing mixed-runtime item/enchantment compatibility layer for the remaining assigned upstream expressions:
+- missing mixed-runtime item/enchantment compatibility layer for the remaining assigned expressions:
   - upstream imports depend on `ch.njol.skript.aliases.ItemType`
   - upstream imports depend on `ch.njol.skript.util.EnchantmentType`
   - upstream imports depend on Bukkit event/item APIs not present in this branch surface, including `org.bukkit.enchantments.EnchantmentOffer`, `org.bukkit.inventory.ItemFlag`, and enchantment event classes
-- current branch uses the Fabric-side item model under `org.skriptlang.skript.bukkit.base.types` instead of the upstream Bukkit `ItemType` path, so straight upstream expression imports are not compile-safe
-- `ExprBannerPatterns` also depends on broader Bukkit banner/block/slot item adaptation and would need a real mixed-runtime port, not a direct copy
-- `ExprInventoryAction` and `ExprInventoryCloseReason` are already present via reflective handle access; newly blocked work is specifically the missing enchant/banner/item-flag classes:
+- the current branch uses the Fabric-side item model instead of the upstream Bukkit `ItemType` / `EnchantmentType` path, so straight upstream copies are not compile-safe
+- `ExprBannerPatterns` also depends on broader banner/block/item adaptation and would need a real mixed-runtime port instead of a direct import
+- blocked assigned targets in this lane:
   - `ExprAppliedEnchantments`
   - `ExprBannerItem`
   - `ExprBannerPatterns`
@@ -97,5 +109,19 @@
 
 ## Merge Note
 
-- status-only lane result
-- likely merge touchpoints are limited to [docs/porting/parallel/batch-mixed-runtime-20260311/M2_STATUS.md](/private/tmp/skript-mixed-runtime-20260311/m2/docs/porting/parallel/batch-mixed-runtime-20260311/M2_STATUS.md)
+- likely merge touchpoints:
+  - [ExprAnvilRepairCost.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprAnvilRepairCost.java)
+  - [ExprAnvilText.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprAnvilText.java)
+  - [ExprArmorChangeItem.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprArmorChangeItem.java)
+  - [ExprArmorSlot.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprArmorSlot.java)
+  - [ExprCursorSlot.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprCursorSlot.java)
+  - [ExprEnchantmentOfferCost.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprEnchantmentOfferCost.java)
+  - [ExprHotbarButton.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprHotbarButton.java)
+  - [ExprHotbarSlot.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprHotbarSlot.java)
+  - [ExprInventoryAction.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprInventoryAction.java)
+  - [ExprInventoryCloseReason.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprInventoryCloseReason.java)
+  - [ExprOpenedInventory.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprOpenedInventory.java)
+  - [ExprPickupDelay.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ExprPickupDelay.java)
+  - [ReflectiveHandleAccess.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/main/java/ch/njol/skript/expressions/ReflectiveHandleAccess.java)
+  - [ExpressionInventoryContainerCompatibilityTest.java](/private/tmp/skript-mixed-runtime-20260311/m2/src/test/java/ch/njol/skript/expressions/ExpressionInventoryContainerCompatibilityTest.java)
+  - [M2_STATUS.md](/private/tmp/skript-mixed-runtime-20260311/m2/docs/porting/parallel/batch-mixed-runtime-20260311/M2_STATUS.md)
