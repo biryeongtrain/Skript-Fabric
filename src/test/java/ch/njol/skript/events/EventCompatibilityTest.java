@@ -14,6 +14,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -43,7 +45,12 @@ final class EventCompatibilityTest {
         EvtExperienceChange.register();
         EvtBookEdit.register();
         EvtBookSign.register();
+        EvtBeaconEffect.register();
+        EvtBeaconToggle.register();
+        EvtBlock.register();
         EvtClick.register();
+        EvtEntity.register();
+        EvtItem.register();
         EvtEntityShootBow.register();
         EvtEntityTarget.register();
         EvtEntityTransform.register();
@@ -215,7 +222,7 @@ final class EventCompatibilityTest {
         assertEquals(
                 true,
                 event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        new FabricEventCompatHandles.BookEdit(false),
+                        new FabricEventCompatHandles.BookEdit(ItemStack.EMPTY, new ItemStack(Items.WRITABLE_BOOK), false),
                         null,
                         null,
                         null
@@ -231,12 +238,49 @@ final class EventCompatibilityTest {
         assertEquals(
                 true,
                 event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        new FabricEventCompatHandles.BookEdit(true),
+                        new FabricEventCompatHandles.BookEdit(new ItemStack(Items.WRITABLE_BOOK), new ItemStack(Items.WRITTEN_BOOK), true),
                         null,
                         null,
                         null
                 ))
         );
+    }
+
+    @Test
+    void beaconEffectEventParsesPrimaryFilterAndChecksHandle() {
+        EvtBeaconEffect event = parseEvent("primary beacon effect of speed", EvtBeaconEffect.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.BeaconEffect(dummyLevel(), BlockPos.ZERO, true, "speed"),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void beaconToggleEventChecksActivationHandle() {
+        EvtBeaconToggle event = parseEvent("beacon activation", EvtBeaconToggle.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.BeaconToggle(dummyLevel(), BlockPos.ZERO, true),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void blockEventParsesBreakFilterAndChecksHandle() {
+        EvtBlock event = parseEvent("block breaking of stone", EvtBlock.class);
+
+        assertEquals(true, event.toString(null, false).contains("break"));
     }
 
     @Test
@@ -247,6 +291,8 @@ final class EventCompatibilityTest {
                 true,
                 event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
                         new FabricEventCompatHandles.Click(
+                                dummyLevel(),
+                                BlockPos.ZERO,
                                 FabricEventCompatHandles.ClickType.RIGHT,
                                 null,
                                 Blocks.STONE.defaultBlockState(),
@@ -292,7 +338,7 @@ final class EventCompatibilityTest {
 
     @Test
     void experienceSpawnEventParsesAlternatePattern() {
-        EvtExperienceSpawn event = parseEvent("spawn of an experience orb", EvtExperienceSpawn.class);
+        EvtExperienceSpawn event = parseEvent("experience orb spawn", EvtExperienceSpawn.class);
 
         assertEquals("experience spawn", event.toString(null, false));
         assertEquals(1, event.getEventClasses().length);
@@ -350,6 +396,34 @@ final class EventCompatibilityTest {
 
         assertEquals("zombie", readLiteralArray(event, "entityDatas"));
         assertEquals("magic", readLiteralArray(event, "healReasons"));
+    }
+
+    @Test
+    void entityLifecycleEventParsesSpawnFilterAndChecksHandle() {
+        EvtEntity event = parseEvent("spawning of zombie", EvtEntity.class);
+
+        assertEquals("spawn of zombie", event.toString(null, false));
+    }
+
+    @Test
+    void itemEventParsesSpawnFilterAndChecksHandle() {
+        EvtItem event = parseEvent("item spawn of stick", EvtItem.class);
+
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.Item(
+                                dummyLevel(),
+                                BlockPos.ZERO,
+                                FabricEventCompatHandles.ItemAction.SPAWN,
+                                new ItemStack(Items.STICK),
+                                false
+                        ),
+                        null,
+                        null,
+                        null
+                ))
+        );
     }
 
     @Test
@@ -478,5 +552,9 @@ final class EventCompatibilityTest {
         Field field = owner.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(owner);
+    }
+
+    private static ServerLevel dummyLevel() {
+        return null;
     }
 }

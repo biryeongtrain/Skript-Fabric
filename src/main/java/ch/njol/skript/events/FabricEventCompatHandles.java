@@ -1,13 +1,19 @@
 package ch.njol.skript.events;
 
-import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import java.util.Set;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricItemEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricTimeAwareItemEventHandle;
 
 public final class FabricEventCompatHandles {
 
@@ -20,7 +26,7 @@ public final class FabricEventCompatHandles {
     public record ResourcePackResponse(@Nullable String status) {
     }
 
-    public record Healing(Entity entity, @Nullable String reason) {
+    public record Healing(Entity entity, @Nullable String reason) implements FabricEntityEventHandle {
     }
 
     public record Portal(Entity entity, boolean player) {
@@ -42,7 +48,7 @@ public final class FabricEventCompatHandles {
     public record MoveOn(BlockState blockState) {
     }
 
-    public record EntityTransform(Entity entity, @Nullable String reason) {
+    public record EntityTransform(Entity entity, @Nullable String reason) implements FabricEntityEventHandle {
     }
 
     public record EntityTarget(@Nullable Entity target) {
@@ -96,20 +102,35 @@ public final class FabricEventCompatHandles {
     }
 
     public record Click(
+            ServerLevel level,
+            BlockPos position,
             ClickType clickType,
             @Nullable Entity entity,
             @Nullable BlockState blockState,
             @Nullable ItemStack tool
-    ) {
+    ) implements FabricItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return tool == null ? ItemStack.EMPTY : tool;
+        }
     }
 
-    public record BookEdit(boolean signing) {
+    public record BookEdit(ItemStack previous, ItemStack current, boolean signing) implements FabricTimeAwareItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return current;
+        }
+
+        @Override
+        public ItemStack itemStack(int time) {
+            return time == 1 ? previous : current;
+        }
     }
 
-    public record BeaconEffect(boolean primary, @Nullable Object effectType) {
+    public record BeaconEffect(ServerLevel level, BlockPos position, boolean primary, @Nullable Object effectType) implements FabricBlockEventHandle {
     }
 
-    public record BeaconToggle(boolean activated) {
+    public record BeaconToggle(ServerLevel level, BlockPos position, boolean activated) implements FabricBlockEventHandle {
     }
 
     public enum BlockAction {
@@ -122,20 +143,28 @@ public final class FabricEventCompatHandles {
     }
 
     public record Block(
+            ServerLevel level,
+            BlockPos position,
             BlockAction action,
             @Nullable BlockState blockState,
             @Nullable ItemStack itemStack,
             boolean dropped
-    ) {
+    ) implements FabricBlockEventHandle, FabricItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return itemStack == null ? ItemStack.EMPTY : itemStack;
+        }
     }
 
-    public record EntityLifecycle(Entity entity, boolean spawn) {
+    public record EntityLifecycle(Entity entity, boolean spawn) implements FabricEntityEventHandle {
     }
 
-    public record EntityBlockChange(Entity entity, @Nullable BlockState from, @Nullable BlockState to) {
+    public record EntityBlockChange(ServerLevel level, BlockPos position, Entity entity, @Nullable BlockState from, @Nullable BlockState to)
+            implements FabricBlockEventHandle, FabricEntityEventHandle {
     }
 
-    public record Grow(@Nullable BlockState from, @Nullable BlockState to, @Nullable String structureType) {
+    public record Grow(ServerLevel level, BlockPos position, @Nullable BlockState from, @Nullable BlockState to, @Nullable String structureType)
+            implements FabricBlockEventHandle {
     }
 
     public enum ItemAction {
@@ -153,15 +182,35 @@ public final class FabricEventCompatHandles {
         STONECUTTING
     }
 
-    public record Item(ItemAction action, @Nullable ItemStack itemStack, boolean entityEvent) {
+    public record Item(ServerLevel level, BlockPos position, ItemAction action, @Nullable ItemStack itemStack, boolean entityEvent)
+            implements FabricItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return itemStack == null ? ItemStack.EMPTY : itemStack;
+        }
     }
 
-    public record PlantGrowth(@Nullable BlockState from, @Nullable BlockState to) {
+    public record PlantGrowth(ServerLevel level, BlockPos position, @Nullable BlockState from, @Nullable BlockState to)
+            implements FabricBlockEventHandle {
     }
 
-    public record PressurePlate(boolean tripwire) {
+    public record PressurePlate(ServerLevel level, BlockPos position, boolean tripwire) implements FabricBlockEventHandle {
     }
 
-    public record VehicleCollision(@Nullable BlockState blockState, @Nullable Entity entity) {
+    public record VehicleCollision(ServerLevel level, BlockPos position, Entity vehicle, @Nullable BlockState blockState, @Nullable Entity entity)
+            implements FabricBlockEventHandle, FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return vehicle;
+        }
+    }
+
+    public static @Nullable String effectName(@Nullable net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect) {
+        if (effect == null) {
+            return null;
+        }
+        return effect.unwrapKey()
+                .map(key -> key.location().getPath())
+                .orElseGet(() -> BuiltInRegistries.MOB_EFFECT.getKey(effect.value()).getPath());
     }
 }

@@ -4,12 +4,14 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -23,6 +25,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.AgeableMob;
@@ -42,7 +45,9 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
+import ch.njol.skript.events.FabricEventCompatHandles;
 import org.skriptlang.skript.bukkit.loottables.LootTable;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
 import org.skriptlang.skript.fabric.compat.FabricBreedingItemSource;
@@ -70,10 +75,14 @@ public final class SkriptFabricEventBridge {
             ServerTickEvents.END_SERVER_TICK.register(SkriptFabricEventBridge::dispatchServerTick);
             PlayerBlockBreakEvents.AFTER.register(SkriptFabricEventBridge::dispatchBlockBreak);
             AttackEntityCallback.EVENT.register(SkriptFabricEventBridge::dispatchAttackEntity);
+            AttackBlockCallback.EVENT.register(SkriptFabricEventBridge::dispatchAttackBlock);
             UseBlockCallback.EVENT.register(SkriptFabricEventBridge::dispatchUseBlock);
             UseEntityCallback.EVENT.register(SkriptFabricEventBridge::dispatchUseEntity);
             UseItemCallback.EVENT.register(SkriptFabricEventBridge::dispatchUseItem);
+            ServerEntityEvents.ENTITY_LOAD.register(SkriptFabricEventBridge::dispatchEntityLoad);
             ServerLivingEntityEvents.ALLOW_DAMAGE.register(SkriptFabricEventBridge::dispatchDamage);
+            ServerLivingEntityEvents.AFTER_DEATH.register(SkriptFabricEventBridge::dispatchDeath);
+            ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
             registered = true;
         }
     }
@@ -91,6 +100,7 @@ public final class SkriptFabricEventBridge {
         if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
             return;
         }
+        dispatchCompatBlock(serverLevel, pos.immutable(), FabricEventCompatHandles.BlockAction.BREAK, state, null, true, serverPlayer);
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricBlockBreakHandle(serverLevel, serverPlayer, pos.immutable(), state, blockEntity),
                 serverLevel.getServer(),
@@ -99,10 +109,33 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    private static InteractionResult dispatchAttackBlock(
+            net.minecraft.world.entity.player.Player player,
+            Level level,
+            InteractionHand hand,
+            BlockPos pos,
+            net.minecraft.core.Direction direction
+    ) {
+        if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
+            return InteractionResult.PASS;
+        }
+        dispatchClick(serverLevel, pos.immutable(), FabricEventCompatHandles.ClickType.LEFT, null, level.getBlockState(pos), player.getItemInHand(hand), serverPlayer);
+        return InteractionResult.PASS;
+    }
+
     private static InteractionResult dispatchUseBlock(net.minecraft.world.entity.player.Player player, Level level, InteractionHand hand, BlockHitResult hitResult) {
         if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
         }
+        dispatchClick(
+                serverLevel,
+                hitResult.getBlockPos().immutable(),
+                FabricEventCompatHandles.ClickType.RIGHT,
+                null,
+                serverLevel.getBlockState(hitResult.getBlockPos()),
+                player.getItemInHand(hand),
+                serverPlayer
+        );
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricUseBlockHandle(serverLevel, serverPlayer, hand, hitResult),
                 serverLevel.getServer(),
@@ -125,6 +158,7 @@ public final class SkriptFabricEventBridge {
         if (entity instanceof Interaction interaction) {
             FabricInteractionState.recordAttack(interaction, serverPlayer);
         }
+        dispatchClick(serverLevel, entity.blockPosition().immutable(), FabricEventCompatHandles.ClickType.LEFT, entity, null, player.getItemInHand(hand), serverPlayer);
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricAttackEntityHandle(serverLevel, serverPlayer, hand, entity, hitResult),
                 serverLevel.getServer(),
@@ -147,6 +181,7 @@ public final class SkriptFabricEventBridge {
         if (entity instanceof Interaction interaction) {
             FabricInteractionState.recordInteract(interaction, serverPlayer);
         }
+        dispatchClick(serverLevel, entity.blockPosition().immutable(), FabricEventCompatHandles.ClickType.RIGHT, entity, null, player.getItemInHand(hand), serverPlayer);
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricUseEntityHandle(serverLevel, serverPlayer, hand, entity, hitResult),
                 serverLevel.getServer(),
@@ -173,6 +208,22 @@ public final class SkriptFabricEventBridge {
         return InteractionResult.PASS;
     }
 
+    private static void dispatchEntityLoad(Entity entity, ServerLevel level) {
+        if (!(entity instanceof net.minecraft.world.entity.player.Player)) {
+            SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    new FabricEventCompatHandles.EntityLifecycle(entity, true),
+                    level.getServer(),
+                    level,
+                    entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+            ));
+        }
+        if (entity instanceof ItemEntity itemEntity) {
+            dispatchCompatItem(level, itemEntity.blockPosition().immutable(), FabricEventCompatHandles.ItemAction.SPAWN, itemEntity.getItem(), false, null);
+        } else if (entity instanceof ExperienceOrb orb) {
+            dispatchExperienceSpawn(level, orb);
+        }
+    }
+
     private static boolean dispatchDamage(LivingEntity entity, DamageSource source, float amount) {
         if (!(entity.level() instanceof ServerLevel serverLevel)) {
             return true;
@@ -184,6 +235,31 @@ public final class SkriptFabricEventBridge {
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
         ));
         return true;
+    }
+
+    private static void dispatchDeath(LivingEntity entity, DamageSource source) {
+        if (!(entity.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityLifecycle(entity, false),
+                serverLevel.getServer(),
+                serverLevel,
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    private static void dispatchEntityTransform(Mob previous, Mob converted, net.minecraft.world.entity.ConversionParams conversionParams) {
+        if (!(previous.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        String reason = conversionParams.type().name().toLowerCase(java.util.Locale.ENGLISH);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityTransform(previous, reason),
+                serverLevel.getServer(),
+                serverLevel,
+                null
+        ));
     }
 
     public static void dispatchBrewingFuel(ServerLevel level, BlockPos pos, BrewingStandBlockEntity brewingStand, boolean willConsume) {
@@ -253,6 +329,114 @@ public final class SkriptFabricEventBridge {
     ) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricBucketCatchHandle(level, player, entity, originalBucket, entityBucket),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchBookEdit(ServerPlayer player, ItemStack previous, ItemStack current, boolean signing) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BookEdit(previous.copy(), current.copy(), signing),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchBeaconEffect(
+            ServerLevel level,
+            BlockPos pos,
+            boolean primary,
+            @Nullable net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BeaconEffect(level, pos.immutable(), primary, FabricEventCompatHandles.effectName(effect)),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchBeaconToggle(ServerLevel level, BlockPos pos, boolean activated) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BeaconToggle(level, pos.immutable(), activated),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchHealing(ServerLevel level, LivingEntity entity, @Nullable String reason) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Healing(entity, reason),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchExperienceSpawn(ServerLevel level, ExperienceOrb orb) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ExperienceSpawn(orb.getValue()),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    private static void dispatchCompatBlock(
+            ServerLevel level,
+            BlockPos pos,
+            FabricEventCompatHandles.BlockAction action,
+            @Nullable BlockState state,
+            @Nullable ItemStack itemStack,
+            boolean dropped,
+            @Nullable ServerPlayer player
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(level, pos, action, state, itemStack == null ? null : itemStack.copy(), dropped),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    private static void dispatchCompatItem(
+            ServerLevel level,
+            BlockPos pos,
+            FabricEventCompatHandles.ItemAction action,
+            ItemStack itemStack,
+            boolean entityEvent,
+            @Nullable ServerPlayer player
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(level, pos, action, itemStack.copy(), entityEvent),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    private static void dispatchClick(
+            ServerLevel level,
+            BlockPos pos,
+            FabricEventCompatHandles.ClickType clickType,
+            @Nullable Entity entity,
+            @Nullable BlockState blockState,
+            ItemStack tool,
+            @Nullable ServerPlayer player
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Click(
+                        level,
+                        pos,
+                        clickType,
+                        entity,
+                        blockState,
+                        tool.isEmpty() ? null : tool.copyWithCount(1)
+                ),
                 level.getServer(),
                 level,
                 player

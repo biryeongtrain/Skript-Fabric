@@ -1,8 +1,9 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import net.minecraft.world.entity.Entity;
+import org.jetbrains.annotations.Nullable;
 
 public interface FabricEntityEventHandle {
 
-    Entity entity();
+    @Nullable Entity entity();
 }
