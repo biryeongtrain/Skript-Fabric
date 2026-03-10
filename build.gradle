@@ -104,6 +104,10 @@ def isolatedRegistrySuites = [
         [
                 taskName: 'isolatedEffectRuntimeClosureCompatibilityTest',
                 className: 'ch.njol.skript.effects.EffectRuntimeClosureCompatibilityTest'
+        ],
+        [
+                taskName: 'isolatedEffectEntityClosureCompatibilityTest',
+                className: 'ch.njol.skript.effects.EffectEntityClosureCompatibilityTest'
         ]
 ]
 

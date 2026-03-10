@@ -10,4 +10,13 @@ final class FabricEffectEventHandles {
 
     static final class EntityDeath {
     }
+
+    static final class ExplosionPrime {
+    }
+
+    static final class PlayerEggThrow {
+    }
+
+    static final class EntityUnleash {
+    }
 }

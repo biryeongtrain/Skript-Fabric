@@ -133,6 +133,24 @@ final class EffectRuntimeSupport {
         return false;
     }
 
+    static boolean setField(@Nullable Object target, String fieldName, @Nullable Object value) {
+        if (target == null) {
+            return false;
+        }
+        Class<?> current = target.getClass();
+        while (current != null) {
+            try {
+                Field field = current.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                field.set(target, value);
+                return true;
+            } catch (ReflectiveOperationException ignored) {
+            }
+            current = current.getSuperclass();
+        }
+        return false;
+    }
+
     private static @Nullable Method findCompatibleMethod(Class<?> type, String methodName, Object[] args) {
         for (Method method : type.getMethods()) {
             if (method.getName().equals(methodName) && isCompatible(method.getParameterTypes(), args)) {
