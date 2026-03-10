@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `727`
-- local shortfall versus the captured upstream snapshot: `462`
+- local `ch/njol/skript`: `845`
+- local shortfall versus the captured upstream snapshot: `367`
 
 Local top-level packages currently present:
 
@@ -78,7 +78,7 @@ Upstream top-level packages currently absent locally:
 | `effects` | `123` | `120` | partial shim | `P2` | base package now has a wider verified effect surface through the entity-control bundle, the player/server feedback effects, the Patbox `sgui`-backed inventory opening path, the earlier entity/server-world import closures, and the latest mixed-runtime imports plus utility/runtime registrations, but some blocked effect families still remain import-only |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
 | `events` | `53` | `47` | partial shim | `P2` | script lifecycle events plus the larger compatibility event bundle are now present, and the mixed-runtime coordinator batch live-activates 11 of those imported event classes, but several event families still need dedicated Fabric producers or broader partial-backend coverage |
-| `expressions` | `391` | `134` | partial shim | `P2` | larger collection, date/time, unix/date, text-character, amount/format/index helpers, the random/times compatibility closure, the item/entity/property expression bundle, the runtime-registered inventory/container expression closure, and the latest mixed-runtime event-payload/property expression closure are now landed, but the remaining user-visible surface is still very large |
+| `expressions` | `391` | `160` | partial shim | `P2` | larger collection, date/time, unix/date, text-character, amount/format/index helpers, the random/times compatibility closure, the item/entity/property expression bundle, the runtime-registered inventory/container expression closure, the mixed-runtime event-payload/property expression closure, and the latest inventory/parser-queue/world-property import-only worker harvest are now landed, but the remaining user-visible surface is still very large |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
 | `lang` | `85` | `86` | present but behavior-incomplete | `P0` | local count now exceeds upstream by one because the legacy `ch/njol/skript/lang/function/FunctionParser` compatibility facade is local-only; the remaining gap is still foundational behavior, not raw presence |
 | `literals` | `16` | `15` | partial shim | `P2` | most low-dependency numeric/special literal helpers are present and `LitEternity` is now landed, but the package is still not fully closed |

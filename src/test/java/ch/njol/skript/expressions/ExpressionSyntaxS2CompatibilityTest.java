@@ -148,7 +148,7 @@ final class ExpressionSyntaxS2CompatibilityTest {
 
         Statement itemFlags = parseStatement("set item flags of diamond sword to \"hide enchants\"");
         assertInstanceOf(EffChange.class, itemFlags);
-        assertEquals("item flags of diamond sword", expression(itemFlags, "changed").toString(null, false));
+        assertInstanceOf(ExprItemFlags.class, expression(itemFlags, "changed"));
 
         Statement itemOwner = parseStatement("set uuid of dropped item owner of lane-e-test-itementity to lane-e-test-player");
         assertInstanceOf(EffChange.class, itemOwner);

@@ -1,6 +1,6 @@
 # Implemented Syntax Inventory
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 This document is a maintenance readme for the currently active Skript-on-Fabric syntax surface.
 
@@ -21,12 +21,25 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `230 / 230`
+- Verified Fabric GameTests: `245 / 245`
 - Latest full verification:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - latest verified mixed-runtime coordinator batch now reduces the raw upstream shortfall to `727 / 1189`:
+  - latest verified worker-harvest expression batch now reduces the raw upstream shortfall to `845 / 1189`:
+    - newly imported expressions `26`:
+      - inventory/item: `ExprItemFlags`
+      - parser/queue: `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
+      - world/property: `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
+    - targeted verification:
+      - `isolatedExpressionSyntaxS2CompatibilityTest`
+      - `ExpressionItemCompatibilityTest`
+      - `ExpressionBlockWorldLocationCompatibilityTest`
+      - `ExpressionMixedRuntimeM6CompatibilityTest`
+    - active-runtime note:
+      - coordinator intentionally kept these new expressions import-only in this batch
+      - the world/property slice was not left active because representative real `.sk` GameTest coverage is still missing
+  - previous mixed-runtime coordinator batch now reduces the raw upstream shortfall to `727 / 1189`:
     - live-activated events `11`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntity`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtHealing`, `EvtItem`
     - newly imported conditions `10`: `CondCancelled`, `CondDamageCause`, `CondEntityUnload`, `CondIncendiary`, `CondItemDespawn`, `CondIsPreferredTool`, `CondIsSedated`, `CondLeashWillDrop`, `CondRespawnLocation`, `CondScriptLoaded`
     - newly imported expressions `20`: `ExprAffectedEntities`, `ExprBarterInput`, `ExprConsumedItem`, `ExprExperienceCooldownChangeReason`, `ExprExplodedBlocks`, `ExprHatchingNumber`, `ExprHatchingType`, `ExprHealAmount`, `ExprLastAttacker`, `ExprLeashHolder`, `ExprLevel`, `ExprMaxDurability`, `ExprMaxHealth`, `ExprMaxItemUseTime`, `ExprMaxStack`, `ExprNoDamageTicks`, `ExprItemOwner`, `ExprItemThrower`, `ExprRawName`, `ExprSpeed`
@@ -73,9 +86,9 @@ It is not:
 - Separate upstream core audit now also active:
   - local `ch/njol/skript`: `727`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `462`
+  - current shortfall: `367`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure is the mixed-runtime coordinator batch that live-activates 11 imported events while importing 10 conditions, 20 expressions, and 19 unique effects on top of the earlier inventory/container and import-heavy expressions/conditions/effects/events batches
+  - latest shortfall-focused closure is the worker-harvest import-only expression batch that adds 26 more upstream expressions on top of the earlier mixed-runtime coordinator bundle
 
 Primary registration sources:
 

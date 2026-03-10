@@ -62,13 +62,13 @@
 
 ## Bootstrap Registrations Needed
 
-- none beyond the `SkriptFabricAdditionalSyntax` force-initialization added in this lane
+- coordinator deferred active registration in this batch
+- lane is merged as import-only until representative real `.sk` GameTest coverage exists
 
 ## Targeted Tests
 
-- `./gradlew test --tests ch.njol.skript.expressions.ExpressionBlockWorldLocationCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.WorldLocationExpressionSyntaxTest`
+- `./gradlew test --tests ch.njol.skript.expressions.ExpressionBlockWorldLocationCompatibilityTest`
 - direct compatibility coverage extended for parse/instantiate/change-contract checks in the block/world/location bundle
-- isolated-registry coverage added to confirm bootstrap registration for the landed world/location expressions
 
 ## Blockers
 
@@ -78,4 +78,5 @@
 ## Merge Note
 
 - preserves the existing partial worktree patch and avoids edits to canonical docs or `SkriptFabricBootstrap.java`
-- ready to merge as the M5 world/property expression slice for the landed classes above; remaining assigned targets stay open for a follow-up lane
+- coordinator kept this lane import-only in the merged branch because active runtime registration would require representative real `.sk` GameTest coverage
+- remaining assigned targets stay open for a follow-up lane

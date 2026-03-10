@@ -1,6 +1,6 @@
 # Next Agent Handoff
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 ## Read Order
 
@@ -13,11 +13,11 @@ Last updated: 2026-03-10
 
 ## Current Headline
 
-- latest verified runtime baseline: `230 / 230`
+- latest verified runtime baseline: `245 / 245`
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `727 / 1189`, shortfall `462`
+- upstream `ch/njol/skript` snapshot: local `845 / 1189`, shortfall `367`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,23 +29,23 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- latest verified mixed-runtime coordinator batch reduces the raw shortfall to `727 / 1189`:
-  - live-activated events `11`:
-    - `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntity`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtHealing`, `EvtItem`
-  - newly imported runtime syntax:
-    - conditions `10`: `CondCancelled`, `CondDamageCause`, `CondEntityUnload`, `CondIncendiary`, `CondItemDespawn`, `CondIsPreferredTool`, `CondIsSedated`, `CondLeashWillDrop`, `CondRespawnLocation`, `CondScriptLoaded`
-    - expressions `20`: `ExprAffectedEntities`, `ExprBarterInput`, `ExprConsumedItem`, `ExprExperienceCooldownChangeReason`, `ExprExplodedBlocks`, `ExprHatchingNumber`, `ExprHatchingType`, `ExprHealAmount`, `ExprLastAttacker`, `ExprLeashHolder`, `ExprLevel`, `ExprMaxDurability`, `ExprMaxHealth`, `ExprMaxItemUseTime`, `ExprMaxStack`, `ExprNoDamageTicks`, `ExprItemOwner`, `ExprItemThrower`, `ExprRawName`, `ExprSpeed`
-    - effects `19` unique: `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`, `EffCopy`, `EffSort`, `EffToggle`, `EffExceptionDebug`
-  - runtime-registered on `SkriptFabricBootstrap`:
-    - conditions `10`, expressions `20`, effects `4`, events `11`
-  - import-only remainder from this batch:
-    - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
-  - coordinator stabilization:
-    - `ExpressionEventContextBundleCompatibilityTest` isolated
-    - `MixedRuntimeSyntaxBatchTest` added as an isolated runtime parser suite
-    - healing compat handle now carries amount
+- latest verified worker-harvest expression batch reduces the raw shortfall to `845 / 1189`:
+  - newly imported expressions `26`:
+    - inventory/item: `ExprItemFlags`
+    - parser/queue: `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
+    - world/property: `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
+  - targeted coordinator verification:
+    - `isolatedExpressionSyntaxS2CompatibilityTest`
+    - `ExpressionItemCompatibilityTest`
+    - `ExpressionBlockWorldLocationCompatibilityTest`
+    - `ExpressionMixedRuntimeM6CompatibilityTest`
+  - coordinator kept this batch import-only:
+    - `ExprItemFlags`
+    - `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
+    - `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
+  - world/property expressions were intentionally not left active because representative real `.sk` GameTest coverage is still missing
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `462`
+- the latest focused follow-up keeps the existing `245 / 245` baseline while reducing the raw shortfall to `367`
 - the active/import-only split is now explicit:
   - active runtime surface: conditions `10`, expressions `20`, effects `4`, events `11`
   - import-only surface: the blocked mixed-batch effect remainder plus the older `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile`
@@ -74,7 +74,7 @@ These are already closed. Do not reopen without a new reproducer.
    - finer reason coverage for `EvtEntityTransform` and `EvtHealing`
 3. resolve or continue the import-only mixed-batch effect remainder:
    - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
-4. run the next syntax-heavy mixed-runtime worker batch for new `conditions` / `expressions` / `effects`, keeping worker targets at `10-20` syntax classes each and continuing to defer the location/world expression family until there is an explicit compat-type decision around `FabricLocation` / `FabricBlock`
+4. run the next syntax-heavy mixed-runtime worker batch for new `conditions` / `expressions` / `effects`, keeping worker targets at `10-20` syntax classes each and favoring still-missing expression families after this import-only worker harvest
 5. after the next syntax batch, return to the remaining `variables` + `sections` + `structures` + `aliases` closure and the next `classes` / `util` / `lang` blocker imports
 
 ## Parallel Defaults

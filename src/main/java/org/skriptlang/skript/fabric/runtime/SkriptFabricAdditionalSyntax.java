@@ -116,17 +116,6 @@ final class SkriptFabricAdditionalSyntax {
         forceInitialize(ch.njol.skript.conditions.CondIsSpawnable.class);
         forceInitialize(ch.njol.skript.conditions.CondLeashed.class);
         forceInitialize(ch.njol.skript.conditions.CondResourcePack.class);
-        forceInitialize(ch.njol.skript.expressions.ExprChunkX.class);
-        forceInitialize(ch.njol.skript.expressions.ExprChunkZ.class);
-        forceInitialize(ch.njol.skript.expressions.ExprHumidity.class);
-        forceInitialize(ch.njol.skript.expressions.ExprLocation.class);
-        forceInitialize(ch.njol.skript.expressions.ExprLocationAt.class);
-        forceInitialize(ch.njol.skript.expressions.ExprLocationOf.class);
-        forceInitialize(ch.njol.skript.expressions.ExprRedstoneBlockPower.class);
-        forceInitialize(ch.njol.skript.expressions.ExprSeaLevel.class);
-        forceInitialize(ch.njol.skript.expressions.ExprSeed.class);
-        forceInitialize(ch.njol.skript.expressions.ExprSimulationDistance.class);
-        forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
         ch.njol.skript.events.EvtEntityBlockChange.register();
         ch.njol.skript.events.EvtGrow.register();
         ch.njol.skript.events.EvtPlantGrowth.register();

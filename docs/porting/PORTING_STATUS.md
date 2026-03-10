@@ -55,8 +55,13 @@ Last updated: 2026-03-10
     - `ExpressionEventContextBundleCompatibilityTest` now runs isolated
     - `MixedRuntimeSyntaxBatchTest` was added as a dedicated isolated runtime parser suite
     - the healing bridge now passes the compat-handle amount payload end-to-end
-  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall to `727 / 1189`
-  - the measured shortfall is now `462`
+  - the latest coordinator worker-harvest batch keeps the existing `245 / 245` Fabric GameTest baseline while reducing the upstream core shortfall to `845 / 1189`
+  - the measured shortfall is now `367`
+  - latest verified import-only expression closures add `26` upstream `ch/njol/skript` classes:
+    - inventory/item: `ExprItemFlags`
+    - parser/queue: `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
+    - world/property: `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
+  - coordinator kept the new world/property slice import-only in this batch because active runtime registration would require representative real `.sk` GameTest coverage
 
 ## Priority Shift On 2026-03-08
 
@@ -78,8 +83,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `727` Java files
-- net missing local surface relative to that snapshot: `462` Java files
+- local `src/main/java/ch/njol/skript`: `845` Java files
+- net missing local surface relative to that snapshot: `367` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -93,7 +98,7 @@ Key local package counts versus upstream:
 
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
-- `expressions`: local `134`, upstream `391`
+- `expressions`: local `160`, upstream `391`
 - `conditions`: local `122`, upstream `135`
 - `classes`: local `21`, upstream `28`
 - `util`: local `29`, upstream `57`
