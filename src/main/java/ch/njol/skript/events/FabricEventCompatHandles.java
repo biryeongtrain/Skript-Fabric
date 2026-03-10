@@ -9,6 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
@@ -197,10 +198,65 @@ public final class FabricEventCompatHandles {
         }
     }
 
-    public record PiglinBarter(@Nullable ItemStack input) {
+    public static final class PiglinBarter {
+
+        private final @Nullable ItemStack input;
+        private final java.util.List<ItemStack> outcome;
+
+        public PiglinBarter(@Nullable ItemStack input) {
+            this(input, new java.util.ArrayList<>());
+        }
+
+        public PiglinBarter(@Nullable ItemStack input, java.util.List<ItemStack> outcome) {
+            this.input = input;
+            this.outcome = outcome;
+        }
+
+        public @Nullable ItemStack input() {
+            return input;
+        }
+
+        public java.util.List<ItemStack> outcome() {
+            return outcome;
+        }
     }
 
-    public record Explosion(@Nullable java.util.List<FabricBlock> explodedBlocks) {
+    public static final class Explosion {
+
+        private final @Nullable java.util.List<FabricBlock> explodedBlocks;
+        private float yield;
+
+        public Explosion(@Nullable java.util.List<FabricBlock> explodedBlocks) {
+            this(explodedBlocks, 1.0F);
+        }
+
+        public Explosion(@Nullable java.util.List<FabricBlock> explodedBlocks, float yield) {
+            this.explodedBlocks = explodedBlocks;
+            this.yield = yield;
+        }
+
+        public @Nullable java.util.List<FabricBlock> explodedBlocks() {
+            return explodedBlocks;
+        }
+
+        public float yield() {
+            return yield;
+        }
+
+        public void setYield(float yield) {
+            this.yield = yield;
+        }
+    }
+
+    public record BlockFertilize(@Nullable java.util.List<FabricBlock> blocks) {
+    }
+
+    public record PlayerRespawn(
+            @Nullable FabricLocation respawnLocation,
+            boolean bedSpawn,
+            boolean anchorSpawn,
+            @Nullable String reason
+    ) {
     }
 
     public record PlantGrowth(ServerLevel level, BlockPos position, @Nullable BlockState from, @Nullable BlockState to)
