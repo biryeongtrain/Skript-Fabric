@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `392 / 1189`, shortfall `797`
+- upstream `ch/njol/skript` snapshot: local `440 / 1189`, shortfall `749`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,12 +29,13 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head adds a 22-class ancillary closure:
-  - `doc`: `Description`, `DocumentationGenerator`, `DocumentationId`, `Events`, `Example`, `Examples`, `Keywords`, `Name`, `NoDoc`, `RelatedProperty`, `RequiredPlugins`, `Since`, `package-info`
-  - `update`: `GithubChecker`, `NoUpdateChecker`, `ReleaseChannel`, `ReleaseManifest`, `ReleaseStatus`, `UpdateChecker`, `UpdateManifest`, `UpdaterState`, `package-info`
+- current verified head adds a 47-class runtime-facing closure:
+  - `conditions`: `CondCanFly`, `CondCanPickUpItems`, `CondHasScoreboardTag`, `CondIsBlocking`, `CondIsClimbing`, `CondIsFlying`, `CondIsGliding`, `CondIsHandRaised`, `CondIsLeftHanded`, `CondIsOnGround`, `CondIsRiptiding`, `CondIsSleeping`, `CondIsSneaking`, `CondIsSwimming`, `CondIsTamed`, `CondIsBlock`, `CondIsBlockRedstonePowered`, `CondIsCommandBlockConditional`, `CondIsEdible`, `CondIsFlammable`, `CondIsInfinite`, `CondIsInteractable`, `CondIsOccluding`, `CondIsPassable`, `CondIsSolid`, `CondIsTransparent`, `CondIsVectorNormalized`
+  - `effects`: `EffCustomName`, `EffEating`, `EffHandedness`, `EffIgnite`, `EffLeash`, `EffMakeFly`, `EffPlayingDead`, `EffShear`, `EffTame`, `EffToggleCanPickUpItems`, `EffActionBar`, `EffBroadcast`, `EffKick`, `EffMessage`, `EffOp`, `EffPlaySound`, `EffResetTitle`, `EffSendResourcePack`, `EffSendTitle`, `EffStopSound`
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `797`
-- no missing-library rollback was needed in this slice; `timings` and `Updater` stayed intentionally excluded because they still pull external timing/Bukkit scheduler surfaces
+- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `749`
+- imported syntax classes in this batch keep upstream `doc` annotations
+- no missing-library rollback was needed in this slice; `x2` was intentionally left as a no-op because the location/world expression closure is structurally blocked on `FabricLocation` / `FabricBlock` versus upstream Bukkit types
 - the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`, `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) remains merged underneath it
 
 ## Recent Closed Prereqs
@@ -52,7 +53,7 @@ These are already closed. Do not reopen without a new reproducer.
 
 1. remaining `variables` + `sections` + `structures` + `aliases` closure after the now-verified `LitEternity` / alias foundation follow-up, with the storage-backend / `FlatFileStorage` slice retried separately from the last reverted runtime regression
 2. next `effects` + `events` bundle after the new control-flow effect slice, still avoiding large new `org/...` runtime edits
-3. next `expressions` + `conditions` bundle after the ancillary doc/update closure, with `ExprRandom`'s `%*classinfo%` runtime parse blocker retried separately from adjacent low-dependency imports
+3. next `expressions` + `conditions` bundle after this larger condition/effect closure, but keep the location/world expression family deferred until there is an explicit compat-type decision around `FabricLocation` / `FabricBlock`
 4. remaining `classes` / `registrations` follow-up after the pure-Java default class-data helpers, still avoiding `yggdrasil` or Bukkit data imports where possible
 5. remaining `util` / `lang` blocker imports, especially `Direction` / `StructureType` and the next parser/runtime closure that unblocks `StructFunction`
 

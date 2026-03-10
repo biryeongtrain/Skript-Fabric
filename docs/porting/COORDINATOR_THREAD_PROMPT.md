@@ -82,7 +82,7 @@ Merge order:
 Current known status headline:
 - latest verified runtime baseline: 230 / 230
 - latest successful full verification: ./gradlew build --rerun-tasks
-- upstream ch/njol/skript snapshot: local 392 / 1189, shortfall 797
+- upstream ch/njol/skript snapshot: local 440 / 1189, shortfall 749
 - current phase: package-bundle closure inside `ch/njol/skript`
 
 Implementation guardrails:

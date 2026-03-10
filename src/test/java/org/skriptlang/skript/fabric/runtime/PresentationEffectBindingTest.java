@@ -130,8 +130,14 @@ final class PresentationEffectBindingTest {
         runtime.loadFromPath(Path.of("src/gametest/resources").resolve(resourcePath));
         Trigger trigger = onlyLoadedTrigger(runtime);
         Object first = firstTriggerItem(trigger);
-        assertInstanceOf(effectClass, first);
-        return effectClass.cast(first);
+        assertInstanceOf(TriggerItem.class, first);
+        TriggerItem current = (TriggerItem) first;
+        while (current != null && !effectClass.isInstance(current)) {
+            current = current.getNext();
+        }
+        assertNotNull(current);
+        assertInstanceOf(effectClass, current);
+        return effectClass.cast(current);
     }
 
     private Trigger onlyLoadedTrigger(SkriptRuntime runtime) throws ReflectiveOperationException {

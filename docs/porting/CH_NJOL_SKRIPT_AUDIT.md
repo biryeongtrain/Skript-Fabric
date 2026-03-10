@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `392`
-- local shortfall versus the captured upstream snapshot: `797`
+- local `ch/njol/skript`: `440`
+- local shortfall versus the captured upstream snapshot: `749`
 
 Local top-level packages currently present:
 
@@ -72,10 +72,10 @@ Upstream top-level packages currently absent locally:
 | `bukkitutil` | `26` | `0` | absent | `P3` | Bukkit-specific helpers; audit only when a Fabric replacement path is justified |
 | `classes` | `28` | `21` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores serializer-free `SkriptClasses`, legacy parser/converter wrappers, and pure-Java registrars, but the layer is still far thinner than upstream |
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
-| `conditions` | `135` | `23` | partial shim | `P2` | very large missing surface; date, permission, helper checks, and the latest entity-state compatibility closure are now present, but the remaining user-visible condition surface is still large |
+| `conditions` | `135` | `50` | partial shim | `P2` | very large missing surface; date, permission, helper checks, the entity/player-state bundle, and the latest block/item/value condition closure are now present, but the remaining user-visible condition surface is still large |
 | `config` | `20` | `20` | present but behavior-incomplete | `P1` | count parity is now closed, but broader runtime behavior still needs upstream comparison |
 | `doc` | `18` | `14` | partial shim | `P3` | low runtime value overall, but the common documentation annotations and generator base are now present in addition to `Documentable`; the heavier ID/generator surfaces are still open |
-| `effects` | `123` | `14` | partial shim | `P2` | base package now has a slightly wider verified effect surface through the entity-state helpers plus `continue` / `stop` control-flow effects, but most user-visible runtime forms are still missing |
+| `effects` | `123` | `34` | partial shim | `P2` | base package now has a wider verified effect surface through the entity-control bundle and the latest player/server feedback effects, but most user-visible runtime forms are still missing |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
 | `events` | `53` | `6` | partial shim | `P2` | script lifecycle events are now present, but event classes remain largely absent |
 | `expressions` | `391` | `45` | partial shim | `P2` | larger collection, date/time, unix/date, text-character, amount/format/index helpers, and the latest random/times compatibility closure are now landing, but the remaining user-visible surface is still very large |
@@ -142,17 +142,17 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- latest verified ancillary closure on 2026-03-10 restores the lightweight upstream `doc` and `update` surfaces:
-  - `doc`: `Description`, `DocumentationGenerator`, `DocumentationId`, `Events`, `Example`, `Examples`, `Keywords`, `Name`, `NoDoc`, `RelatedProperty`, `RequiredPlugins`, `Since`, `package-info`
-  - `update`: `GithubChecker`, `NoUpdateChecker`, `ReleaseChannel`, `ReleaseManifest`, `ReleaseStatus`, `UpdateChecker`, `UpdateManifest`, `UpdaterState`, `package-info`
-  - intentionally excluded `Updater`, `SkriptTimings`, and the heavier doc generator/ID classes because they still cross into missing scheduler, Bukkit, or larger doc-generation glue
+- latest verified syntax closure on 2026-03-10 restores 47 runtime-facing upstream classes:
+  - `conditions`: 27 classes across entity/player-state and item/block/value bundles
+  - `effects`: 20 classes across entity-control and player/server feedback bundles
+  - imported syntax classes preserve upstream `ch.njol.skript.doc.*` annotations
+  - intentionally excluded the `x2` location/world expression attempt because the current tree exposes `FabricLocation` / `FabricBlock` instead of the upstream Bukkit `Location` / `Block` surface
 - merged verification on 2026-03-10:
-  - `./gradlew test --tests ch.njol.skript.doc.DocumentationSupportCompatibilityTest --tests ch.njol.skript.update.UpdateSupportCompatibilityTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `392 / 1189`, shortfall `797`
+- raw `ch/njol/skript` snapshot after that merge: `440 / 1189`, shortfall `749`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
 
-## Latest Merged Syntax-Import Batch
+## Previous Merged Syntax-Import Batch
 
 - merged exact upstream runtime forms for `burning|ignited|on fire`, invisible/visible conditions, `has ai|artificial intelligence`, `is sprinting`, and sprinting start/stop effects
 - merged verification on 2026-03-08:
