@@ -75,19 +75,11 @@
 - `./gradlew compileJava --console=plain`
   - result: `BUILD SUCCESSFUL`
 - `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryContainerCompatibilityTest --console=plain`
-  - result: blocked in `compileTestJava` before the selected test ran
-- `./gradlew -q -I /tmp/m2-testcp.init.gradle printM2TestClasspath`
-  - result: emitted the narrow manual test compile/runtime classpath
-- `javac -cp "$TEST_CP" -d build/m2-test-classes src/test/java/ch/njol/skript/expressions/ExpressionInventoryContainerCompatibilityTest.java`
-  - result: passed, warnings only for `sun.misc.Unsafe`
-- `java -cp "$TEST_CP:build/m2-test-classes:/tmp" M2ExpressionInventoryContainerTestRunner`
-  - result: passed; exercised:
+  - result: `BUILD SUCCESSFUL`
+  - coverage includes:
     - parser/init coverage for `ExprOpenedInventory`, `ExprArmorSlot`, `ExprCursorSlot`, `ExprHotbarSlot`, `ExprPickupDelay`
     - reflective holder/event coverage for `ExprAnvilRepairCost`, `ExprAnvilText`, `ExprArmorChangeItem`, `ExprEnchantmentOfferCost`, `ExprHotbarButton`, `ExprInventoryAction`, `ExprInventoryCloseReason`
     - `ItemEntity.pickupDelay` read/write coverage for `ExprPickupDelay`
-- blocking verification context:
-  - unrelated pre-existing `compileTestJava` failures remain outside the M2-owned files and prevented normal Gradle `test --tests ...` execution
-  - narrow verification therefore used manual single-test compilation and execution against the Gradle-resolved test classpath
 
 ## Blockers
 
