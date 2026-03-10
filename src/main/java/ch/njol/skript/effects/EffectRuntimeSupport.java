@@ -1,6 +1,8 @@
 package ch.njol.skript.effects;
 
 import ch.njol.skript.registrations.Classes;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import ch.njol.skript.util.StringMode;
 import java.util.Locale;
 import net.minecraft.core.Holder;
@@ -86,5 +88,117 @@ final class EffectRuntimeSupport {
             return new ServerPlayer[0];
         }
         return level.players().toArray(ServerPlayer[]::new);
+    }
+
+    static @Nullable Object invokeCompatible(@Nullable Object target, String methodName, Object... args) {
+        return invokeCompatible(target, new String[]{methodName}, args);
+    }
+
+    static @Nullable Object invokeCompatible(@Nullable Object target, String[] methodNames, Object... args) {
+        if (target == null) {
+            return null;
+        }
+        Class<?> type = target.getClass();
+        for (String methodName : methodNames) {
+            Method method = findCompatibleMethod(type, methodName, args);
+            if (method == null) {
+                continue;
+            }
+            try {
+                method.setAccessible(true);
+                return method.invoke(target, args);
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+        return null;
+    }
+
+    static boolean setBooleanField(@Nullable Object target, String fieldName, boolean value) {
+        if (target == null) {
+            return false;
+        }
+        Class<?> current = target.getClass();
+        while (current != null) {
+            try {
+                Field field = current.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                    field.setBoolean(target, value);
+                    return true;
+                }
+            } catch (ReflectiveOperationException ignored) {
+            }
+            current = current.getSuperclass();
+        }
+        return false;
+    }
+
+    private static @Nullable Method findCompatibleMethod(Class<?> type, String methodName, Object[] args) {
+        for (Method method : type.getMethods()) {
+            if (method.getName().equals(methodName) && isCompatible(method.getParameterTypes(), args)) {
+                return method;
+            }
+        }
+        Class<?> current = type;
+        while (current != null) {
+            for (Method method : current.getDeclaredMethods()) {
+                if (method.getName().equals(methodName) && isCompatible(method.getParameterTypes(), args)) {
+                    return method;
+                }
+            }
+            current = current.getSuperclass();
+        }
+        return null;
+    }
+
+    private static boolean isCompatible(Class<?>[] parameterTypes, Object[] args) {
+        if (parameterTypes.length != args.length) {
+            return false;
+        }
+        for (int i = 0; i < parameterTypes.length; i++) {
+            if (!isCompatible(parameterTypes[i], args[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isCompatible(Class<?> parameterType, @Nullable Object argument) {
+        if (argument == null) {
+            return !parameterType.isPrimitive();
+        }
+        Class<?> wrapped = wrap(parameterType);
+        return wrapped.isInstance(argument);
+    }
+
+    private static Class<?> wrap(Class<?> type) {
+        if (!type.isPrimitive()) {
+            return type;
+        }
+        if (type == boolean.class) {
+            return Boolean.class;
+        }
+        if (type == byte.class) {
+            return Byte.class;
+        }
+        if (type == short.class) {
+            return Short.class;
+        }
+        if (type == int.class) {
+            return Integer.class;
+        }
+        if (type == long.class) {
+            return Long.class;
+        }
+        if (type == float.class) {
+            return Float.class;
+        }
+        if (type == double.class) {
+            return Double.class;
+        }
+        if (type == char.class) {
+            return Character.class;
+        }
+        return type;
     }
 }
