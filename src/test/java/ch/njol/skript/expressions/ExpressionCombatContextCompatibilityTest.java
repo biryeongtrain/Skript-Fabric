@@ -113,7 +113,7 @@ class ExpressionCombatContextCompatibilityTest {
         ExprHealReason healReason = new ExprHealReason();
         assertTrue(healReason.init(new Expression[0], 0, Kleenean.FALSE, parseResult("heal reason")));
         assertEquals("magic", healReason.getSingle(new SkriptEvent(
-                new FabricEventCompatHandles.Healing(null, "magic"),
+                new FabricEventCompatHandles.Healing(null, "magic", 4.0F),
                 null,
                 null,
                 null

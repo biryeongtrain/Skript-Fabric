@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricItemEventHandle;
@@ -26,7 +27,7 @@ public final class FabricEventCompatHandles {
     public record ResourcePackResponse(@Nullable String status) {
     }
 
-    public record Healing(Entity entity, @Nullable String reason) implements FabricEntityEventHandle {
+    public record Healing(Entity entity, @Nullable String reason, float amount) implements FabricEntityEventHandle {
     }
 
     public record Portal(Entity entity, boolean player) {
@@ -54,10 +55,16 @@ public final class FabricEventCompatHandles {
     public record EntityTarget(@Nullable Entity target) {
     }
 
-    public record EntityShootBow(LivingEntity entity) {
+    public record EntityShootBow(LivingEntity entity, @Nullable ItemStack consumable) {
+    }
+
+    public record AreaEffectCloudApply(@Nullable java.util.List<LivingEntity> affectedEntities) {
     }
 
     public record ExperienceSpawn(int amount) {
+    }
+
+    public record ExperienceCooldownChange(@Nullable String reason) {
     }
 
     public record Firework(@Nullable Set<Integer> colors) {
@@ -188,6 +195,12 @@ public final class FabricEventCompatHandles {
         public ItemStack itemStack() {
             return itemStack == null ? ItemStack.EMPTY : itemStack;
         }
+    }
+
+    public record PiglinBarter(@Nullable ItemStack input) {
+    }
+
+    public record Explosion(@Nullable java.util.List<FabricBlock> explodedBlocks) {
     }
 
     public record PlantGrowth(ServerLevel level, BlockPos position, @Nullable BlockState from, @Nullable BlockState to)

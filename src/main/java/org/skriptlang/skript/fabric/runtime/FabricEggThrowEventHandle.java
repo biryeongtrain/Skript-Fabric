@@ -1,5 +1,8 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import net.minecraft.world.entity.EntityType;
+import org.jetbrains.annotations.Nullable;
+
 public interface FabricEggThrowEventHandle {
 
     boolean hatching();
@@ -9,4 +12,8 @@ public interface FabricEggThrowEventHandle {
     byte hatches();
 
     void setHatches(byte hatches);
+
+    @Nullable EntityType<?> hatchingType();
+
+    void setHatchingType(EntityType<?> hatchingType);
 }

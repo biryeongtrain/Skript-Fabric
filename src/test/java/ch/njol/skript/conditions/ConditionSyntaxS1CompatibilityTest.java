@@ -15,6 +15,7 @@ import ch.njol.util.Kleenean;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
@@ -162,6 +163,16 @@ class ConditionSyntaxS1CompatibilityTest {
 
 		@Override
 		public void setHatches(byte hatches) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public EntityType<?> hatchingType() {
+			return EntityType.CHICKEN;
+		}
+
+		@Override
+		public void setHatchingType(EntityType<?> hatchingType) {
 			throw new UnsupportedOperationException();
 		}
 	}
