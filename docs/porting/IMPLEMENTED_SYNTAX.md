@@ -26,17 +26,14 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - latest verified runtime-surface additions now also include 27 upstream-backed conditions:
-    - `CondAllayCanDuplicate`, `CondAnchorWorks`, `CondEntityIsInLiquid`, `CondEntityIsWet`, `CondGoatHasHorns`, `CondHasItemCooldown`, `CondIgnitionProcess`, `CondIsBanned`, `CondIsChargingFireball`, `CondIsCustomNameVisible`, `CondIsDashing`, `CondIsFrozen`, `CondIsLeashed`, `CondIsOnline`, `CondIsOp`, `CondIsPlayingDead`, `CondIsScreaming`, `CondIsSheared`, `CondIsTameable`, `CondIsUnbreakable`, `CondIsWhitelisted`, `CondPandaIsOnBack`, `CondPandaIsRolling`, `CondPandaIsScared`, `CondPandaIsSneezing`, `CondPvP`, `CondStriderIsShivering`
-  - latest verified runtime-surface additions now also include 11 upstream-backed expressions:
-    - `ExprAI`, `ExprAttackCooldown`, `ExprExhaustion`, `ExprFallDistance`, `ExprFireTicks`, `ExprFlightMode`, `ExprFreezeTicks`, `ExprGravity`, `ExprLastDamage`, `ExprLevelProgress`, `ExprMaxFreezeTicks`
-  - the recovered server-backed condition bundle was aligned onto the local Fabric/Mojang APIs:
-    - ban/op/whitelist checks now use direct `GameProfile` + `PlayerList` paths
-    - online checks now use `ServerPlayer.hasDisconnected()`
-    - unbreakable checks now use `DataComponents.UNBREAKABLE`
-  - the latest expression bundle is registered through `SkriptFabricBootstrap` and covered by `RecoveredExpressionBundleSyntaxTest`
-  - imported syntax classes in this batch preserve upstream `ch.njol.skript.doc.*` annotations
-  - latest verified runtime-surface additions now also include 27 upstream-backed conditions:
+  - latest verified import bundle now also adds 46 upstream `ch/njol/skript` classes:
+    - `expressions`: `ExprBlockHardness`, `ExprBookAuthor`, `ExprBookPages`, `ExprBookTitle`, `ExprBrushableItem`, `ExprCharges`, `ExprCustomModelData`, `ExprDamagedItem`, `ExprDurability`, `ExprEgg`, plus `EventValueExpression`
+    - `conditions`: `CondEndermanStaredAt`, `CondHasCustomModelData`, `CondHasLineOfSight`, `CondIsCharged`, `CondIsDancing`, `CondIsEating`, `CondIsFireResistant`, `CondIsJumping`, `CondIsPersistent`, `CondIsTicking`, `CondIsValid`, `CondLidState`
+    - `effects`: `EffCommandBlockConditional`, `EffEndermanTeleport`, `EffEnforceWhitelist`, `EffForceAttack`, `EffGlowingText`, `EffPathfind`, `EffPersistent`, `EffRespawn`, `EffToggleFlight`, `EffTransform`, `EffVehicle`, `EffZombify`
+    - `events/helpers`: `EvtCommand`, `EvtExperienceChange`, `EvtFirstJoin`, `EvtLevel`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtSpectate`, `EvtTeleport`, `FabricEffectEventHandles`, `FabricPlayerEventHandles`
+  - these landed as parser/unit-verified compatibility imports and shortfall reduction; they are not all bootstrapped into the active Fabric runtime registration set yet
+  - imported syntax classes in this batch preserve upstream `ch.njol.skript.doc.*` annotations where present
+  - latest verified runtime-surface additions underneath that import layer still include 27 upstream-backed conditions:
     - `CondCanFly`, `CondCanPickUpItems`, `CondHasScoreboardTag`, `CondIsBlocking`, `CondIsClimbing`, `CondIsFlying`, `CondIsGliding`, `CondIsHandRaised`, `CondIsLeftHanded`, `CondIsOnGround`, `CondIsRiptiding`, `CondIsSleeping`, `CondIsSneaking`, `CondIsSwimming`, `CondIsTamed`, `CondIsBlock`, `CondIsBlockRedstonePowered`, `CondIsCommandBlockConditional`, `CondIsEdible`, `CondIsFlammable`, `CondIsInfinite`, `CondIsInteractable`, `CondIsOccluding`, `CondIsPassable`, `CondIsSolid`, `CondIsTransparent`, `CondIsVectorNormalized`
   - latest verified runtime-surface additions now also include 20 upstream-backed effects:
     - `EffCustomName`, `EffEating`, `EffHandedness`, `EffIgnite`, `EffLeash`, `EffMakeFly`, `EffPlayingDead`, `EffShear`, `EffTame`, `EffToggleCanPickUpItems`, `EffActionBar`, `EffBroadcast`, `EffKick`, `EffMessage`, `EffOp`, `EffPlaySound`, `EffResetTitle`, `EffSendResourcePack`, `EffSendTitle`, `EffStopSound`
@@ -58,11 +55,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `478`
+  - local `ch/njol/skript`: `524`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `711`
+  - current shortfall: `665`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a 38-class condition/expression syntax batch on top of the earlier condition/effect closure
+  - latest shortfall-focused closure restored a 46-class import-heavy expressions/conditions/effects/events batch on top of the earlier runtime-facing closures
 
 Primary registration sources:
 
@@ -105,9 +102,16 @@ Related tracking docs:
 | Furnace smelt | `on furnace smelt` | furnace block, smelted item, result |
 | Furnace extract | `on furnace extract` | furnace block, extracted item, player |
 
-### Registered, but not runtime-backed yet
+### Imported compatibility events not yet bootstrapped into the active runtime
 
-None in the current Fabric registration set.
+- command / command list send
+  - representative forms: `command %strings%`, `send[ing] [of [the]] [server] command[s] list`
+- player lifecycle and level
+  - representative forms: `first join`, `player level up`, `player level down`, `player experience increase`, `player experience decrease`
+- movement and world transitions
+  - representative forms: `player move`, `player rotate`, `player enters a chunk`, `%entitytypes% teleport`
+- spectating
+  - representative forms: `player start spectating [of %-*entitydatas%]`, `player stop spectating`, `player swap spectating`
 
 ### Known event-syntax gaps
 
@@ -237,6 +241,15 @@ None in the current Fabric registration set.
 - other mob state
   - representative forms: `%livingentities% are playing dead`, `%livingentities% are screaming`, `%livingentities% are shivering`
 
+### Imported compatibility checks not yet bootstrapped into the active runtime
+
+- enderman / lid / ticking state
+  - representative forms: `%livingentities% have been stared at`, `the lids of %blocks% are open`, `%entities% are ticking`
+- custom model / sight / validity state
+  - representative forms: `%itemtypes% have custom model data`, `%livingentities% have line of sight to %entities/locations%`, `%entities/scripts% are valid`
+- movement / persistence / charge state
+  - representative forms: `%livingentities% are dancing`, `%livingentities% are eating`, `%livingentities% are jumping`, `%entities/blocks% are persistent`, `%entities% are charged`, `%itemtypes% are fire resistant`
+
 ### Breeding
 
 - `can age`
@@ -344,6 +357,15 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `fall distance of %entities%`, `level progress of %players%`
 - fire and freezing timers
   - representative forms: `burning time of %entities%`, `maximum burning time of %entities%`, `freeze time of %entities%`, `maximum freeze time of %entities%`
+
+### Imported compatibility expressions not yet bootstrapped into the active runtime
+
+- book and item metadata
+  - representative forms: `author of %itemtypes%`, `pages of %itemtypes%`, `title of %itemtypes%`, `custom model data of %itemtypes%`
+- durability and charge state
+  - representative forms: `durability of %slots/itemtypes%`, `remaining durability of %itemtypes%`, `charges of %itemtypes%`, `damaged item from %itemtypes%`
+- block / brushable / entity item payload
+  - representative forms: `hardness of %blocks/itemtypes%`, `brushable item of %blocks%`, `egg of %entities%`
 
 ### Breeding
 
@@ -532,6 +554,15 @@ The list below groups the active syntax by domain and calls out the representati
 - strider shivering toggle
   - representative forms: `make %livingentities% start shivering`, `force %livingentities% to stop shivering`
 - fishing approach-angle setter
+
+### Imported compatibility effects not yet bootstrapped into the active runtime
+
+- movement and vehicle control
+  - representative forms: `make %livingentities% teleport randomly`, `make %livingentities% pathfind towards %livingentity/location%`, `make %entities% ride %entity/entitydata%`, `eject passengers of %entities%`
+- server / player control
+  - representative forms: `enforce [the] whitelist`, `unenforce [the] whitelist`, `force %players% to respawn`, `allow flight for %players%`, `disallow flight for %players%`
+- state and presentation control
+  - representative forms: `make command block[s] %blocks% conditional`, `make %objects% have glowing text`, `make %entities/blocks% persistent`, `transform {list::*} with %objects%`, `zombify %livingentities%`, `unzombify %livingentities% after %-timespan%`
 
 ### Breeding
 

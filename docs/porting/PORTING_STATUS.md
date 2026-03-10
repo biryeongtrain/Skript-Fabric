@@ -38,12 +38,14 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged a 38-class runtime-facing syntax closure on 2026-03-10:
-    - `conditions`: 27 new upstream-backed classes across entity-behavior and server/item-state bundles
-    - `expressions`: 11 new upstream-backed entity-property classes
-    - imported syntax classes now preserve upstream `ch.njol.skript.doc.*` annotations
-  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall with a larger verified syntax batch
-  - the raw `ch/njol/skript` local snapshot moved to `478 / 1189`, reducing the measured shortfall to `711`
+  - coordinator merged a 46-class upstream-import bundle on 2026-03-10:
+    - `expressions`: 10 item/block expressions plus the shared `EventValueExpression` base
+    - `conditions`: 12 state/property conditions
+    - `effects/events`: 12 effects, 9 events, and 2 local handle scaffolds for parser/unit verification
+    - imported syntax classes in this batch preserve upstream `ch.njol.skript.doc.*` annotations where present
+  - these additions currently reduce raw upstream shortfall and carry targeted compatibility coverage; they are not all wired into the active Fabric runtime bootstrap yet
+  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall to `524 / 1189`
+  - the measured shortfall is now `665`
 
 ## Priority Shift On 2026-03-08
 
@@ -65,8 +67,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `478` Java files
-- net missing local surface relative to that snapshot: `711` Java files
+- local `src/main/java/ch/njol/skript`: `524` Java files
+- net missing local surface relative to that snapshot: `665` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -80,8 +82,8 @@ Key local package counts versus upstream:
 
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
-- `expressions`: local `51`, upstream `391`
-- `conditions`: local `75`, upstream `135`
+- `expressions`: local `67`, upstream `391`
+- `conditions`: local `89`, upstream `135`
 - `classes`: local `21`, upstream `28`
 - `util`: local `29`, upstream `57`
 - `variables`: local `6`, upstream `11`
@@ -93,8 +95,8 @@ Key local package counts versus upstream:
 - `structures`: local `6`, upstream `10`
 - `localization`: local `11`, upstream `11`
 - `literals`: local `15`, upstream `16`
-- `effects`: local `34`, upstream `123`
-- `events`: local `6`, upstream `53`
+- `effects`: local `48`, upstream `123`
+- `events`: local `16`, upstream `53`
 - `entity`: local `37`, upstream `34`
 - `doc`: local `14`, upstream `18`
 - `update`: local `9`, upstream `10`
