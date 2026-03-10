@@ -32,6 +32,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "xyz.nucleoid:stimuli:${project.stimuli_version}"
     modImplementation include("eu.pb4:placeholder-api:2.7.2+1.21.8")
+    modImplementation include("eu.pb4:sgui:1.10.2+1.21.8")
     compileOnly "net.luckperms:api:5.5"
 
     testImplementation platform("org.junit:junit-bom:${project.junit_version}")

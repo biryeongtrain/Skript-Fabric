@@ -585,6 +585,7 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `ban %offlineplayers/strings% [for %-timespan%] [because %-string%]`, `cancel [the] event`, `cancel [the] drops`, `cancel item use`, `stop server`, `restart server`, `load %worlds%`, `save %worlds%`, `load [the] server icon from %string%`
 - player inventory and presentation control
   - representative forms: `open %inventories% for %players%`, `open %itemtypes% for %players%`, `hide %players% from [the] [server] [player] list`, `show %players% in [the] player info list`, `make %players% look at %locations/entities%`, `make %itemtypes% hide/show [the] tooltip`
+  - Fabric backend note: `EffOpenInventory` and `FabricInventory` now open through Patbox `sgui`, with the backing `Container` bridged into redirected SGUI slots instead of the earlier vanilla `SimpleMenuProvider` path
 - entity and block manipulation
   - representative forms: `make %livingentities% duplicate`, `make %livingentities% ram %entities/locations%`, `make %creepers% explode`, `make %livingentities% swing [their] [main/off] hand`, `push %entities% [in] %-vector%`, `knock %entities% back by %number%`, `break %blocks% naturally [using %-itemtype%]`, `ring %blocks%`, `show %blocks% as %itemtypes% to %players%`
 

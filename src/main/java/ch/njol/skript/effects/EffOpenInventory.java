@@ -9,16 +9,7 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.AnvilMenu;
-import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.CraftingMenu;
-import net.minecraft.world.inventory.DispenserMenu;
-import net.minecraft.world.inventory.HopperMenu;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricInventory;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -100,42 +91,11 @@ public final class EffOpenInventory extends Effect {
         if (menuType == null) {
             return;
         }
-        player.openMenu(new SimpleMenuProvider((id, inventory, owner) -> createMenu(id, inventory), Component.empty()));
+        FabricInventory.menu(menuType).open(player);
     }
 
     private void openInventory(ServerPlayer player, FabricInventory target) {
-        player.openMenu(new SimpleMenuProvider(
-                (id, inventory, owner) -> createMenu(id, inventory, target),
-                Component.empty()
-        ));
-    }
-
-    private @Nullable AbstractContainerMenu createMenu(int id, Inventory inventory) {
-        return switch (menuType) {
-            case "crafting" -> new CraftingMenu(id, inventory);
-            case "chest" -> ChestMenu.threeRows(id, inventory);
-            case "anvil" -> new AnvilMenu(id, inventory);
-            case "hopper" -> new HopperMenu(id, inventory);
-            case "dropper", "dispenser" -> new DispenserMenu(id, inventory);
-            default -> null;
-        };
-    }
-
-    private @Nullable AbstractContainerMenu createMenu(int id, Inventory inventory, FabricInventory target) {
-        int size = target.container().getContainerSize();
-        if (size == 5) {
-            return new HopperMenu(id, inventory, target.container());
-        }
-        if (size == 9) {
-            return new DispenserMenu(id, inventory, target.container());
-        }
-        if (size == 27) {
-            return ChestMenu.threeRows(id, inventory, target.container());
-        }
-        if (size == 54) {
-            return ChestMenu.sixRows(id, inventory, target.container());
-        }
-        return null;
+        target.open(player);
     }
 
     @Override
