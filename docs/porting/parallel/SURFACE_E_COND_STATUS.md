@@ -9,6 +9,35 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
+- landed 13 more upstream-backed condition imports/adaptations on the current Fabric compat surface:
+  - `CondCanSee`
+  - `CondGlowingText`
+  - `CondIsLoaded`
+  - `CondIsPathfinding`
+  - `CondIsRiding`
+  - `CondIsRinging`
+  - `CondIsSaddled`
+  - `CondPlayedBefore`
+  - `CondTooltip`
+  - `CondCanHold`
+  - `CondIsStackable`
+  - `CondIsWithin`
+  - `CondWithinRadius`
+- added `ConditionSurfaceEConditionCompatibilityTest` covering constructor reachability, legacy `toString(...)` shapes, and focused runtime checks for tooltip, hold-space, stackability, and radius behavior
+- preserved upstream doc annotations on the newly restored condition classes
+- kept these out of the closure because the local surface still does not expose the needed runtime/event support:
+  - `CondHasClientWeather`
+  - `CondHasResourcePack`
+  - `CondIncendiary`
+  - `CondIsFuel`
+  - `CondWillHatch`
+  - `CondLeashWillDrop`
+  - `CondIsEnchanted`
+- `CondHasClientWeather` and `CondHasResourcePack` need player-state tracking that is not currently surfaced through the Fabric runtime
+- `CondIsFuel` still needs a stable zero-context hook into the server's current `FuelValues` surface before it can match the upstream condition cleanly
+- `CondIncendiary`, `CondWillHatch`, and `CondLeashWillDrop` still need local event/runtime handles equivalent to the upstream Bukkit events
+- `CondIsEnchanted` is still blocked by the missing local `EnchantmentType` compat class and its parser type registration
+
 - landed 12 upstream-backed condition imports adapted to the current Fabric compat surface:
   - `CondEndermanStaredAt`
   - `CondHasCustomModelData`
