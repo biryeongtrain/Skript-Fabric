@@ -13,6 +13,8 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
+- imported upstream-shaped `VariablesStorage` and `FlatFileStorage`, plus the minimal `Variables` / `SerializedVariable` / scheduler compatibility needed to compile them in the Fabric port
+- added `FlatFileStorageTest` to lock the upstream CSV split and hex encode/decode helpers behind a focused variable-storage test slice
 - added `LitEternity` as the now-unblocked infinite `Timespan` literal, matching upstream patterns for `an eternity`, `forever`, and `an infinite timespan`
 - extended `LiteralsCompatibilityTest` to prove the literal parses to `Timespan.infinite()` through the registry-backed parser path
 - created the first local `aliases` package foundation with upstream-backed `MatchQuality`, `InvalidMinecraftIdException`, and package scaffolding
@@ -26,16 +28,20 @@ Last updated: 2026-03-10
 - result: passed
 - command: `./gradlew -q test --no-daemon --console plain --tests '*StructEventCompatibilityTest' --tests '*StructExampleCompatibilityTest' --tests '*StructVariablesCompatibilityTest' --tests '*SecIfCompatibilityTest' --rerun-tasks`
 - result: passed
+- command: `./gradlew -q compileJava`
+- result: passed
+- command: `./gradlew -q test --no-daemon --console plain --tests '*FlatFileStorageTest' --rerun-tasks`
+- result: passed
 
 ## Next Lead
 
 - remaining literal and structure follow-ups are still blocked outside Lane C:
 - `LitAt` needs upstream `ch/njol/skript/util/Direction`
 - `LitConsole` depends on Bukkit console sender surface
-- remaining upstream `variables` classes are the storage backends (`VariablesStorage`, `FlatFileStorage`, `SQLStorage`, `SQLiteStorage`, `MySQLStorage`) and pull in Lane B `util` / config scaffolding plus database/runtime work
+- remaining upstream `variables` backend follow-up is SQL storage only: `SQLStorage`, `SQLiteStorage`, and `MySQLStorage` are blocked here by absent local `lib.PatPeter.SQLibrary` classes and no vendored SQLibrary dependency in this worktree
 - `StructFunction` is blocked on missing local `FunctionParser.parse(...)` / upstream function-signature parsing glue, which is Lane D-owned `lang/function` work
 - remaining upstream `sections` / `structures` classes (`EffSecShoot`, `EffSecSpawn`, `ExprSecCreateWorldBorder`, `SecCatchErrors`, `SecFilter`, `SecFor`, `SecLoop`, `SecWhile`, `StructAliases`, `StructAutoReload`, `StructCommand`) still cross into effects, entity, aliases, or wider runtime ownership
-- next lane-local continuation inside `aliases` is likely `package-info`-adjacent scaffolding only if it can stay decoupled from item/runtime classes; otherwise Lane C is waiting on `Direction`, console sender, storage backends, or broader alias runtime imports
+- next lane-local continuation inside `aliases` is currently blocked sooner than expected: even the smallest remaining alias core (`AliasesMap`, `AliasesProvider`, `ScriptAliases`) still pulls in missing `ItemData`, `ItemType`, `MaterialName`, and `AliasesParser` runtime surfaces outside this slice
 
 ## Merge Notes
 
