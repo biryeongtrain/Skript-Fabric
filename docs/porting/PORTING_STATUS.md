@@ -38,9 +38,9 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator added `ExprAmount`, `ExprFormatDate`, `ExprIndices`, and `ExprInverse` on 2026-03-10
-  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while extending the pure-local Lane E expression utility surface
-  - the raw `ch/njol/skript` local snapshot moved to `357 / 1189`, reducing the measured shortfall to `832`
+  - coordinator added a mixed Lane E closure on 2026-03-10: compatibility shims `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, plus runtime-registered `ExprRandomCharacter` and `ExprTimes`
+  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while extending the upstream `ch/njol/skript` condition/expression surface
+  - the raw `ch/njol/skript` local snapshot moved to `370 / 1189`, reducing the measured shortfall to `819`
 
 ## Priority Shift On 2026-03-08
 
@@ -62,8 +62,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `357` Java files
-- net missing local surface relative to that snapshot: `832` Java files
+- local `src/main/java/ch/njol/skript`: `370` Java files
+- net missing local surface relative to that snapshot: `819` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -78,8 +78,8 @@ Key local package counts versus upstream:
 
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
-- `expressions`: local `41`, upstream `391`
-- `conditions`: local `14`, upstream `135`
+- `expressions`: local `45`, upstream `391`
+- `conditions`: local `23`, upstream `135`
 - `classes`: local `21`, upstream `28`
 - `util`: local `29`, upstream `57`
 - `variables`: local `6`, upstream `11`

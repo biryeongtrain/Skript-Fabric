@@ -9,9 +9,11 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
-- imported `ExprAmount`, `ExprFormatDate`, `ExprIndices`, and `ExprInverse` as a pure-local expression utility closure
-- kept the slice off aliases, container closures, Bukkit-only APIs, and new external libraries
-- prior `CondPermission` runtime syntax remains merged underneath this helper batch
+- imported a mixed closure around nearby low-dependency condition/expression compatibility shims:
+  - `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`
+  - `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`
+- registered `ExprRandomCharacter` and `ExprTimes` on the Fabric bootstrap after runtime parsing passed
+- left `ExprRandom` support-surface only after `%*classinfo%` runtime parsing still misresolved `"string"` through the item-type path during init
 
 ## Verification
 
@@ -23,14 +25,18 @@ Last updated: 2026-03-10
   - passed
 - `./gradlew test --tests ch.njol.skript.conditions.ConditionValueCompatibilityTest --tests ch.njol.skript.expressions.ExpressionValueCompatibilityTest --rerun-tasks`
   - passed
+- `./gradlew test --tests ch.njol.skript.conditions.ConditionEffectClosureCompatibilityTest --tests ch.njol.skript.expressions.ExpressionClosureCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.RandomExpressionSyntaxTest --rerun-tasks`
+  - passed
+- `./gradlew build --rerun-tasks`
+  - passed
 
 ## Next Lead
 
-- next importable Lane E bundle is still the nearby low-dependency expression/condition surface that avoids aliases or inventory/container crossings; `CondContains` still looks worse than adjacent bundles because it pulls aliases/container logic back into scope, so the next low-risk follow-up after this helper batch is another pure-local numeric/text cluster before container-aware conditions
+- next importable Lane E bundle is still the nearby low-dependency expression/condition surface that avoids aliases or inventory/container crossings; retry `ExprRandom` runtime registration only after the `%*classinfo%` parser path is fixed, otherwise keep moving on adjacent pure-local numeric/text bundles before container-aware conditions
 
 ## Merge Notes
 
 - likely conflicts:
   - `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
-  - `src/main/java/ch/njol/skript/lang/SimplifiedCondition.java`
-  - `src/main/java/ch/njol/skript/Skript.java`
+  - `src/main/java/ch/njol/skript/conditions/**`
+  - `src/main/java/ch/njol/skript/expressions/**`

@@ -2,6 +2,8 @@ package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.conditions.CondPermission;
+import ch.njol.skript.expressions.ExprRandomCharacter;
+import ch.njol.skript.expressions.ExprTimes;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
@@ -690,6 +692,19 @@ public final class SkriptFabricBootstrap {
                         "event damage source",
                         "the event-damage source",
                         "the event damage source"
+                );
+                Skript.registerExpression(
+                        ExprRandomCharacter.class,
+                        String.class,
+                        "[a|%-integer%] random [:alphanumeric] character[s] (from|between) %string% (to|and) %string%"
+                );
+                Skript.registerExpression(
+                        ExprTimes.class,
+                        Long.class,
+                        "%number% time[s]",
+                        "once",
+                        "twice",
+                        "thrice"
                 );
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();

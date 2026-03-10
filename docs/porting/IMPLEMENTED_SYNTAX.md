@@ -26,9 +26,10 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - latest verified runtime-surface addition is still `CondPermission`, registered on the Fabric bootstrap against the official LuckPerms API/provider path used by LuckPerms Fabric for `%players% has permission %strings%`
-  - latest verified support-surface additions behind that unchanged `230 / 230` GameTest baseline now also include `ExprAmount`, `ExprFormatDate`, `ExprIndices`, and `ExprInverse`
-  - the earlier Lane E helper bundle (`CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`) remains merged underneath it
+  - latest verified runtime-surface additions now also include `ExprRandomCharacter` and `ExprTimes`, registered on the Fabric bootstrap and covered by `RandomExpressionSyntaxTest`
+  - latest verified support-surface additions behind that unchanged `230 / 230` GameTest baseline now also include `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, and `ExprRandom`
+  - `ExprRandom` was intentionally left off the active runtime inventory after verification showed the `%*classinfo%` parse path still misresolves `"string"` through the item-type path during init
+  - the earlier Lane E helper bundles (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`) remain merged underneath it
   - the experimental variable storage backend / `FlatFileStorage` slice was intentionally excluded from the final green batch after runtime regression
 
 ## Stage 8 Audit Snapshot
@@ -42,11 +43,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `357`
+  - local `ch/njol/skript`: `370`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `832`
+  - current shortfall: `819`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a pure-local Lane E expression utility batch (`ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`) while keeping the regressing storage-backend slice excluded
+  - latest shortfall-focused closure restored a mixed Lane E compatibility/runtime batch (`CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) while keeping the regressing storage-backend slice excluded
 
 Primary registration sources:
 
@@ -276,6 +277,8 @@ The list below groups the active syntax by domain and calls out the representati
   - `%material%` / `%materials%` now resolve again through user-pattern classinfo aliases on the active compatibility path
 - random-number helpers
   - representative forms: `a random integer between 1 and 3`, `5 random numbers from 0 to 1`
+- random-character / times helpers
+  - representative forms: `3 random alphanumeric characters between "0" and "C"`, `3 times`, `once`, `twice`, `thrice`
 - amount / inverse helpers
   - representative forms: `amount of %objects%`, `the inverse of %booleans%`
 - date / index helpers
