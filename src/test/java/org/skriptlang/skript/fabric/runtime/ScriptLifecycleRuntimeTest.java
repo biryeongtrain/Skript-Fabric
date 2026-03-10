@@ -58,6 +58,28 @@ final class ScriptLifecycleRuntimeTest {
         assertEquals(List.of("load", "unload"), EVENTS);
     }
 
+    @Test
+    void skriptStartAndStopEventsExecuteOnRuntimeTransitions() throws IOException {
+        Path script = Files.createTempFile("evt-skript", ".sk");
+        Files.writeString(
+                script,
+                """
+                on skript start:
+                    record lifecycle "start"
+
+                on skript stop:
+                    record lifecycle "stop"
+                """
+        );
+
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        runtime.loadFromPath(script);
+        assertEquals(List.of("start"), EVENTS);
+
+        runtime.clearScripts();
+        assertEquals(List.of("start", "stop"), EVENTS);
+    }
+
     public static final class RecordLifecycleEffect extends Effect {
 
         private Expression<String> value;

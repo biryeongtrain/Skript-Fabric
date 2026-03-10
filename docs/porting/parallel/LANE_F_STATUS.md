@@ -10,29 +10,31 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
-- imported the small upstream control-flow effect cluster with local-style `EffContinue` and `EffExit`
-- adapted both effects onto the current `ExecutionIntent` / `TriggerItem.walk(...)` surface so loop/section exits use the existing stop-section plumbing without new runtime bridge edits
-- extended `EffectCompatibilityTest` with parser-context coverage for:
-  - `continue the 1st loop`
-  - `stop 2 loops`
-  - `stop trigger`
-- adjacent Lane F blockers are unchanged:
-  - `EffGoatHorns` still cannot be imported exactly because Mojang exposes only `addHorns()` / `removeHorns()` rather than per-side horn setters
-  - `EffEndermanTeleport` is still blocked because `EnderMan.teleport()` is `protected` and `teleportTowards(...)` is package-private on the current mapped class
+- imported upstream-style script lifecycle events:
+  - `ch/njol/skript/events/EvtScript`
+  - `ch/njol/skript/events/EvtSkript`
+- wired `on load` / `on unload` through the existing `Structure.postLoad()` and `Structure.unload()` path with no new Fabric bridge layer
+- wired `on skript start` / `on skript stop` at the runtime transition boundary:
+  - start fires once when the in-memory runtime goes from empty to loaded
+  - stop fires before `clearScripts()` begins unloading structures
+- extended targeted compatibility/runtime coverage for parser rendering plus runtime execution of all four lifecycle triggers
+- nearest same-scope follow-ons are currently blocked by missing clean local scheduler/player/world bridges:
+  - `EvtPeriodical` depends on scheduled world-aware events and task cancellation surfaces that do not exist in the Fabric runtime yet
+  - `EvtRealTime` depends on delayed main-thread scheduling and a synthetic timed event surface
+  - `EvtFirstJoin` and the wider `SimpleEvents` cluster depend on larger player/server event bridges outside this closure
 
 ## Verification
 
-- `./gradlew testClasses --rerun-tasks`
-  - passed
-- `./gradlew isolatedEffectCompatibilityTest --rerun-tasks`
+- `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ScriptLifecycleRuntimeTest`
   - passed
 
 ## Next Lead
 
-- next importable Lane F bundle is whichever additional `effects` or `events` cluster binds to existing mapped handles without new `org/...` bridge edits; with the control-flow base effects now landed, the safer continuation is still a small event/effect cluster that reuses existing shared scaffolding rather than the blocked goat/enderman follow-ups
+- next importable Lane F bundle should stay on event/effect/entity surfaces that already have a concrete Fabric handle or pure structure lifecycle route; the remaining nearby event backlog is no longer a small closure without adding scheduler/player/world bridges
 
 ## Merge Notes
 
 - likely conflicts:
-  - `src/main/java/ch/njol/skript/effects/Eff*.java`
-  - `src/test/java/ch/njol/skript/effects/EffectCompatibilityTest.java`
+  - `src/main/java/ch/njol/skript/events/*.java`
+  - `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptFabricBootstrap.java`
+  - `src/main/java/org/skriptlang/skript/fabric/runtime/SkriptRuntime.java`

@@ -2,6 +2,7 @@ package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
+import ch.njol.skript.events.EvtSkript;
 import ch.njol.skript.config.Config;
 import ch.njol.skript.config.EntryNode;
 import ch.njol.skript.config.Node;
@@ -40,6 +41,9 @@ public final class SkriptRuntime {
 
     public synchronized void clearScripts() {
         List<Script> snapshot = new ArrayList<>(scripts);
+        if (!snapshot.isEmpty()) {
+            EvtSkript.onSkriptStop();
+        }
         scripts.clear();
         for (Script script : snapshot) {
             List<Structure> structures = orderedStructures(script.getStructures());
@@ -99,6 +103,7 @@ public final class SkriptRuntime {
 
     private Script loadScript(String scriptName, String fileName, @Nullable java.io.File file, String source) {
         SkriptFabricBootstrap.bootstrap();
+        boolean wasEmpty = scripts.isEmpty();
 
         SectionNode root = parseScript(source, scriptName);
         Config config = new Config(stripExtension(scriptName), fileName, file);
@@ -150,6 +155,9 @@ public final class SkriptRuntime {
         }
 
         scripts.add(script);
+        if (wasEmpty) {
+            EvtSkript.onSkriptStart();
+        }
         return script;
     }
 

@@ -27,6 +27,7 @@ final class EventCompatibilityTest {
         EvtBreeding.register();
         EvtBucketCatch.register();
         EvtScript.register();
+        EvtSkript.register();
     }
 
     @Test
@@ -60,6 +61,13 @@ final class EventCompatibilityTest {
         EvtScript event = parseEvent("on async script load", EvtScript.class);
 
         assertEquals("async script load", event.toString(null, false));
+    }
+
+    @Test
+    void skriptEventParsesServerStartPattern() {
+        EvtSkript event = parseEvent("on server start", EvtSkript.class);
+
+        assertEquals("on skript start", event.toString(null, false));
     }
 
     private <T> T parseEvent(String input, Class<T> type) {
