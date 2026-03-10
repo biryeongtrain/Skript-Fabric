@@ -38,10 +38,10 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged the verified Lane A/B/D/E/F upstream-core bundle batch on 2026-03-10; Lane C storage work was excluded after runtime regression
-  - the merged batch restored serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages` and numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes
+  - coordinator merged a verified Lane E pure-local helper bundle on 2026-03-10
+  - the merged batch restored `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
   - coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract, so the latest closure is support-surface reduction first, not new default-runtime syntax registration
-  - the raw `ch/njol/skript` local snapshot moved to `344 / 1189`, reducing the measured shortfall to `845`
+  - the raw `ch/njol/skript` local snapshot moved to `352 / 1189`, reducing the measured shortfall to `837`
 
 ## Priority Shift On 2026-03-08
 
@@ -63,8 +63,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `344` Java files
-- net missing local surface relative to that snapshot: `845` Java files
+- local `src/main/java/ch/njol/skript`: `352` Java files
+- net missing local surface relative to that snapshot: `837` Java files
 
 Top-level upstream packages missing locally entirely:
 

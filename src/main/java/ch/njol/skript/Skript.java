@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.skriptlang.skript.lang.experiment.ExperimentRegistry;
@@ -26,6 +27,10 @@ public class Skript implements SkriptAddon {
     private static final Skript INSTANCE = new Skript();
     private static volatile boolean acceptRegistrations = false;
     private static volatile boolean debug = false;
+    private static volatile @Nullable ch.njol.skript.util.Version minecraftVersion;
+
+    public static final double EPSILON = 1e-10;
+    public static final double EPSILON_MULT = 1.00001;
 
     private final SyntaxRegistryService syntaxRegistryService = new SyntaxRegistryService();
     private final ExperimentRegistry experimentRegistry = new ExperimentRegistry(this);
@@ -69,6 +74,27 @@ public class Skript implements SkriptAddon {
 
     public static void setDebug(boolean value) {
         debug = value;
+    }
+
+    public static ch.njol.skript.util.Version getMinecraftVersion() {
+        ch.njol.skript.util.Version cached = minecraftVersion;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (Skript.class) {
+            if (minecraftVersion == null) {
+                minecraftVersion = new ch.njol.skript.util.Version("1.21.8");
+            }
+            return minecraftVersion;
+        }
+    }
+
+    public static boolean isRunningMinecraft(ch.njol.skript.util.Version version) {
+        return getMinecraftVersion().compareTo(version) >= 0;
+    }
+
+    public static boolean isRunningMinecraft(int... version) {
+        return getMinecraftVersion().compareTo(version) >= 0;
     }
 
     public static ExperimentRegistry experiments() {

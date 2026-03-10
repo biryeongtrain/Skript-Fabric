@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `344 / 1189`, shortfall `845`
+- upstream `ch/njol/skript` snapshot: local `352 / 1189`, shortfall `837`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,10 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head merges the new Lane A/B/D/E/F upstream-core bundle batch on top of the existing `lang-core` baseline; Lane C storage work was excluded after runtime regression
+- current verified head adds a Lane E pure-local helper follow-up on top of the existing upstream-core baseline
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest bundle batch restored serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages` and numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes
-- coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract; pure-Java registrars are verified outside bootstrap and Lane C storage backend work remains unmerged
+- the latest bundle batch restored `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
+- coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract; pure-Java registrars stay outside bootstrap and Lane C storage backend work remains unmerged
 
 ## Recent Closed Prereqs
 

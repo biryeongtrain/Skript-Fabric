@@ -31,7 +31,7 @@ Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
 - local `ch/njol/skript`: `344`
-- local shortfall versus the captured upstream snapshot: `845`
+- local shortfall versus the captured upstream snapshot: `837`
 
 Local top-level packages currently present:
 
@@ -151,8 +151,11 @@ That means the real gap is behavior, not class presence.
 - coordinator narrowed the default Fabric runtime bootstrap back to the prior `230 / 230` baseline contract, so these additions currently land as upstream-core closure work rather than new default-runtime syntax registrations
 - merged verification on 2026-03-10:
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `344 / 1189`, shortfall `845`
+- raw `ch/njol/skript` snapshot after that merge: `352 / 1189`, shortfall `837`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
+- latest verified Lane E pure-local follow-up on 2026-03-10:
+  - restored `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
+  - targeted verification: `./gradlew test --tests ch.njol.skript.conditions.ConditionValueCompatibilityTest --tests ch.njol.skript.expressions.ExpressionValueCompatibilityTest --rerun-tasks`
 
 ## Latest Merged Syntax-Import Batch
 

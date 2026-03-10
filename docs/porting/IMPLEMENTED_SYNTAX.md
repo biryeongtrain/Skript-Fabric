@@ -26,8 +26,8 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - no new default-runtime syntax families were kept in the latest upstream-core batch; coordinator preserved the existing `230 / 230` runtime bootstrap surface to keep `./gradlew build --rerun-tasks` green
-  - latest verified support-surface additions behind that unchanged runtime include serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages`, numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes
+  - no new default-runtime syntax families were kept in the latest Lane E helper batch; coordinator preserved the existing `230 / 230` runtime bootstrap surface to keep `./gradlew build --rerun-tasks` green
+  - latest verified support-surface additions behind that unchanged runtime include `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
   - the experimental variable storage backend / `FlatFileStorage` slice was intentionally excluded from the final green batch after runtime regression
 
 ## Stage 8 Audit Snapshot
@@ -41,11 +41,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `344`
+  - local `ch/njol/skript`: `352`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `845`
+  - current shortfall: `837`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored serializer-free `SkriptClasses`, pure-Java class/function registrars, `ChatMessages` and numeric/localization helpers, common-function bridge pieces, source-level date/time helper classes, and script lifecycle event classes, while excluding the regressing storage-backend slice
+  - latest shortfall-focused closure restored a pure-local Lane E helper batch while keeping the regressing storage-backend slice excluded
 
 Primary registration sources:
 
