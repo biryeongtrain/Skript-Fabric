@@ -5,7 +5,6 @@ import ch.njol.skript.effects.Delay;
 import ch.njol.skript.effects.EffDoIf;
 import ch.njol.skript.effects.EffEquip;
 import ch.njol.skript.effects.EffHealth;
-import ch.njol.skript.effects.EffReturn;
 import org.skriptlang.skript.bukkit.breeding.elements.EffAllowAging;
 import org.skriptlang.skript.bukkit.breeding.elements.EffBreedable;
 import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
@@ -42,7 +41,6 @@ final class SkriptFabricAdditionalEffects {
         EffDoIf.register();
         EffEquip.register();
         EffHealth.register();
-        EffReturn.register();
         Skript.registerEffect(
                 EffAllowAging.class,
                 "lock age of %entities%",

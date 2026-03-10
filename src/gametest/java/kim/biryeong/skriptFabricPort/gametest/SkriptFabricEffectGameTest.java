@@ -363,35 +363,6 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
     }
 
     @GameTest
-    public void returnEffectExecutesRealScript(GameTestHelper helper) {
-        SkriptRuntime runtime = SkriptRuntime.instance();
-        BlockPos absoluteTarget = new BlockPos(1, 80, 1);
-        AtomicBoolean loaded = new AtomicBoolean(false);
-        helper.succeedWhen(() -> {
-            if (!loaded.get()) {
-                helper.assertTrue(
-                        RUNTIME_LOCK.compareAndSet(false, true),
-                        Component.literal("Waiting for exclusive Skript runtime access.")
-                );
-                Variables.clearAll();
-                GameTestRuntimeContext.withHelper(helper, () -> {
-                    runtime.clearScripts();
-                    helper.getLevel().setBlockAndUpdate(absoluteTarget, Blocks.AIR.defaultBlockState());
-                    runtime.loadFromResource("skript/gametest/effect/return_function_sets_block.sk");
-                    loaded.set(true);
-                });
-            }
-            helper.assertTrue(
-                    helper.getLevel().getBlockState(absoluteTarget).is(Blocks.EMERALD_BLOCK),
-                    Component.literal("Expected return effect to feed the function result back into the calling trigger.")
-            );
-            runtime.clearScripts();
-            Variables.clearAll();
-            RUNTIME_LOCK.set(false);
-        });
-    }
-
-    @GameTest
     public void brewingConsumeEffectExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();

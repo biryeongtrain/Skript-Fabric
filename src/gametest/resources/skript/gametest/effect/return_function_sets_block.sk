@@ -1,6 +1,0 @@
-on server tick:
-    if lane_m6_return() is "returned":
-        set test block at 1 80 1 to emerald_block
-
-function lane_m6_return() :: string:
-    return "returned"
