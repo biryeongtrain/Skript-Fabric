@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `637 / 1189`, shortfall `552`
+- upstream `ch/njol/skript` snapshot: local `662 / 1189`, shortfall `527`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,20 +29,28 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- latest verified active runtime closure adds a 10-class inventory/container bundle:
-  - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
-  - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
+- latest verified syntax-core worker batch adds 40 upstream classes:
+  - `conditions`: `CondEntityStorageIsFull`, `CondIsFuel`, `CondIsOfType`, `CondIsResonating`, `CondItemEnchantmentGlint`, `CondWillHatch`
+  - `expressions`: `ExprAttacked`, `ExprAttacker`, `ExprCommandBlockCommand`, `ExprDamage`, `ExprDamageCause`, `ExprExperience`, `ExprFinalDamage`, `ExprHealReason`, `ExprItemCooldown`, `ExprLastDamageCause`
+  - `effects`: `EffApplyBoneMeal`, `EffConnect`, `EffDetonate`, `EffEntityUnload`, `EffForceEnchantmentGlint`, `EffKeepInventory`, `EffLog`, `EffMakeSay`, `EffReplace`, `EffRun`, `EffScriptFile`, `EffSuppressTypeHints`, `EffSuppressWarnings`, `EffWorldBorderExpand`
+  - `events`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtEntity`, `EvtEntityBlockChange`, `EvtGrow`, `EvtItem`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
+  - runtime-registered on `SkriptFabricBootstrap`:
+    - conditions `6`, expressions `10`, effects `10`
+  - import-only in this batch:
+    - events `10`
+    - effects `EffConnect`, `EffKeepInventory`, `EffMakeSay`, `EffScriptFile`
   - targeted verification:
-    - `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryCompatibilityTest --tests ch.njol.skript.conditions.ConditionInventoryCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.InventorySyntaxTest --rerun-tasks`
-  - this slice is runtime-registered on `SkriptFabricBootstrap` rather than import-only
-- current verified head adds a 100-class upstream-import closure:
-  - `expressions`: `ExprAmountOfItems`, `ExprItemAmount`, `ExprItemWithLore`, `ExprItemWithTooltip`, `ExprItemWithCustomModelData`, `ExprItemWithEnchantmentGlint`, `ExprItems`, `ExprExactItem`, `ExprActiveItem`, `ExprAge`, `ExprAllayJukebox`, `ExprArrowsStuck`, `ExprBeehiveFlower`, `ExprBeehiveHoneyLevel`, `ExprBreakSpeed`, `ExprCreeperMaxFuseTicks`, `ExprDomestication`, `ExprDuplicateCooldown`, `ExprEntityItemUseTime`, `ExprEntityOwner`, `ExprEntitySize`, `ExprExperienceCooldown`, `ExprEyeLocation`, `ExprFoodLevel`, `ExprGlidingState`, `ExprHealth`, `ExprNoDamageTime`, `ExprPortalCooldown`, `ExprRemainingAir`
-  - `conditions`: `CondCanHold`, `CondCanSee`, `CondGlowingText`, `CondIsLoaded`, `CondIsPathfinding`, `CondIsRiding`, `CondIsRinging`, `CondIsSaddled`, `CondIsStackable`, `CondIsWithin`, `CondPlayedBefore`, `CondTooltip`, `CondWithinRadius`
-  - `effects`: `EffAllayCanDuplicate`, `EffAllayDuplicate`, `EffBan`, `EffBlockUpdate`, `EffBreakNaturally`, `EffCancelCooldown`, `EffCancelDrops`, `EffCancelEvent`, `EffCancelItemUse`, `EffCharge`, `EffCommand`, `EffDancing`, `EffDropLeash`, `EffExplodeCreeper`, `EffFireResistant`, `EffGoatHorns`, `EffGoatRam`, `EffHidePlayerFromServerList`, `EffIncendiary`, `EffItemDespawn`, `EffKnockback`, `EffLidState`, `EffLightning`, `EffLoadServerIcon`, `EffLook`, `EffMakeEggHatch`, `EffOpenBook`, `EffOpenInventory`, `EffPlayerInfoVisibility`, `EffPush`, `EffPvP`, `EffRing`, `EffSendBlockChange`, `EffStopServer`, `EffSwingHand`, `EffTooltip`, `EffWardenDisturbance`, `EffWorldLoad`, `EffWorldSave`
-  - `events`: `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntityShootBow`, `EvtEntityTarget`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtFirework`, `EvtGameMode`, `EvtHarvestBlock`, `EvtHealing`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtResourcePackResponse`, `EvtWeatherChange`, `EvtWorld`
+    - `ConditionSyntaxS1CompatibilityTest`
+    - `ExpressionCombatContextCompatibilityTest`
+    - `ExpressionSyntaxS2CompatibilityTest` through `isolatedExpressionSyntaxS2CompatibilityTest`
+    - `EffectMutationCompatibilityTest`
+    - `EffectWorldServerCompatibilityTest`
+  - final integration excluded `ExprFireworkEffect` and `EffExplosion`
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `552`
-- these imports carry targeted parser/unit verification and upstream `doc` annotations where present, but they are not all wired into the active Fabric runtime bootstrap yet
+- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `527`
+- the active/import-only split is now explicit:
+  - active runtime surface: conditions, expressions, and a 10-effect subset
+  - import-only surface: the new event bundle plus `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile`
 - no missing-library rollback was needed in this slice
 - the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`, `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) remains merged underneath it
 
@@ -60,8 +68,10 @@ These are already closed. Do not reopen without a new reproducer.
 ## Next Targets
 
 1. remaining `variables` + `sections` + `structures` + `aliases` closure after the now-verified `LitEternity` / alias foundation follow-up, with the storage-backend / `FlatFileStorage` slice retried separately from the last reverted runtime regression
-2. decide whether to bootstrap the newly imported `effects` / `events` compatibility bundles into the active Fabric runtime, or keep using them strictly as shortfall-reduction imports while continuing upstream closure work
-3. next `expressions` + `conditions` bundle after the new inventory/container closure, but keep the location/world expression family deferred until there is an explicit compat-type decision around `FabricLocation` / `FabricBlock`
+2. decide whether to bootstrap the syntax-core import-only remainder into the active Fabric runtime:
+   - `events`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtEntity`, `EvtEntityBlockChange`, `EvtGrow`, `EvtItem`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
+   - `effects`: `EffConnect`, `EffKeepInventory`, `EffMakeSay`, `EffScriptFile`
+3. next `expressions` + `conditions` bundle after the new syntax-core worker batch, but keep the location/world expression family deferred until there is an explicit compat-type decision around `FabricLocation` / `FabricBlock`
 4. remaining `classes` / `registrations` follow-up after the pure-Java default class-data helpers, still avoiding `yggdrasil` or Bukkit data imports where possible
 5. remaining `util` / `lang` blocker imports, especially `Direction` / `StructureType` and the next parser/runtime closure that unblocks `StructFunction`
 

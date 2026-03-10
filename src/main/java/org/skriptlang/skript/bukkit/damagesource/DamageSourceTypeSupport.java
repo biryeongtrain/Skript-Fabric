@@ -23,9 +23,17 @@ public final class DamageSourceTypeSupport {
                     .unwrapKey()
                     .map(ResourceKey::location)
                     .map(MinecraftResourceParser::display)
-                    .orElse(damageSource.getMsgId());
+                    .orElseGet(() -> fallbackDisplay(damageSource));
         } catch (RuntimeException ignored) {
+            return fallbackDisplay(damageSource);
+        }
+    }
+
+    private static String fallbackDisplay(DamageSource damageSource) {
+        try {
             return damageSource.getMsgId();
+        } catch (RuntimeException ignored) {
+            return "generic";
         }
     }
 

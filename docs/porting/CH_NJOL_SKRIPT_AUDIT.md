@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `637`
-- local shortfall versus the captured upstream snapshot: `552`
+- local `ch/njol/skript`: `662`
+- local shortfall versus the captured upstream snapshot: `527`
 
 Local top-level packages currently present:
 
@@ -142,22 +142,18 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- latest verified runtime inventory/container closure on 2026-03-10 restores 10 upstream classes:
-  - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
-  - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
-  - this batch is runtime-registered on `SkriptFabricBootstrap` and verified through targeted parser/unit coverage
-- previous import-heavy closure on 2026-03-10 restores 100 upstream classes:
-  - `expressions`: 30 item/entity/property expression classes
-  - `conditions`: 13 state/property condition classes
-  - `effects`: 39 effect classes
-  - `events`: 18 event classes
-  - local helper scaffolds added alongside that batch: `FabricEggThrowEventHandle`, `FabricEntityUnleashEventHandle`, `FabricExplosionPrimeEventHandle`, `EventClassInfoRegistrar`, `EventSyntaxRegistry`, `FabricEventCompatHandles`
+- latest verified syntax-core worker batch on 2026-03-10 restores 40 upstream classes:
+  - `conditions`: `6`
+  - `expressions`: `10`
+  - `effects`: `14`
+  - `events`: `10`
+  - local support scaffolds and coordinator glue added alongside that batch: `Math2`, `Executable`, `DamageSourceTypeSupport` fallback hardening, `EntityData` / `EntityType` class-info re-registration, `StringUtils` replace helpers, and additional `FabricEventCompatHandles` coverage
   - imported syntax classes preserve upstream `ch.njol.skript.doc.*` annotations where present
-  - this batch reduces raw shortfall and carries targeted parser/unit verification; it does not yet wire every imported syntax class into the active Fabric runtime bootstrap
+  - active bootstrap registration from this batch covers the 6 conditions, 10 expressions, and 10 effects; the 10 events plus `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile` remain import-only
+  - coordinator intentionally excluded `ExprFireworkEffect` and `EffExplosion` from final integration because they do not currently fit the local Fabric surface cleanly
 - merged verification on 2026-03-10:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryCompatibilityTest --tests ch.njol.skript.conditions.ConditionInventoryCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.InventorySyntaxTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `637 / 1189`, shortfall `552`
+- raw `ch/njol/skript` snapshot after that merge: `662 / 1189`, shortfall `527`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
 
 ## Previous Merged Syntax-Import Batch

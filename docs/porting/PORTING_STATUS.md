@@ -38,12 +38,15 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - latest verified inventory/container closure on 2026-03-10 adds 10 upstream classes:
-    - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
-    - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
-  - these additions are registered on the active Fabric runtime bootstrap and verified through targeted parser/unit coverage
-  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall to `637 / 1189`
-  - the measured shortfall is now `552`
+  - latest verified syntax-core worker batch on 2026-03-10 adds 40 upstream classes:
+    - `conditions`: `CondEntityStorageIsFull`, `CondIsFuel`, `CondIsOfType`, `CondIsResonating`, `CondItemEnchantmentGlint`, `CondWillHatch`
+    - `expressions`: `ExprAttacked`, `ExprAttacker`, `ExprCommandBlockCommand`, `ExprDamage`, `ExprDamageCause`, `ExprExperience`, `ExprFinalDamage`, `ExprHealReason`, `ExprItemCooldown`, `ExprLastDamageCause`
+    - `effects`: `EffApplyBoneMeal`, `EffConnect`, `EffDetonate`, `EffEntityUnload`, `EffForceEnchantmentGlint`, `EffKeepInventory`, `EffLog`, `EffMakeSay`, `EffReplace`, `EffRun`, `EffScriptFile`, `EffSuppressTypeHints`, `EffSuppressWarnings`, `EffWorldBorderExpand`
+    - `events`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtEntity`, `EvtEntityBlockChange`, `EvtGrow`, `EvtItem`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
+  - active Fabric runtime bootstrap now registers the 6 conditions, 10 expressions, and 10 effect forms from that batch; the 10 event classes and the effect-side `EffConnect`, `EffKeepInventory`, `EffMakeSay`, `EffScriptFile` remain import-only for now
+  - final integration intentionally excluded `ExprFireworkEffect` and `EffExplosion` because they do not fit the current local Fabric surface cleanly yet
+  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while reducing the upstream core shortfall to `662 / 1189`
+  - the measured shortfall is now `527`
 
 ## Priority Shift On 2026-03-08
 
@@ -65,8 +68,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `637` Java files
-- net missing local surface relative to that snapshot: `552` Java files
+- local `src/main/java/ch/njol/skript`: `662` Java files
+- net missing local surface relative to that snapshot: `527` Java files
 
 Top-level upstream packages missing locally entirely:
 

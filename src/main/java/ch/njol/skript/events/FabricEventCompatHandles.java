@@ -105,4 +105,63 @@ public final class FabricEventCompatHandles {
 
     public record BookEdit(boolean signing) {
     }
+
+    public record BeaconEffect(boolean primary, @Nullable Object effectType) {
+    }
+
+    public record BeaconToggle(boolean activated) {
+    }
+
+    public enum BlockAction {
+        BREAK,
+        BURN,
+        PLACE,
+        FADE,
+        FORM,
+        DROP
+    }
+
+    public record Block(
+            BlockAction action,
+            @Nullable BlockState blockState,
+            @Nullable ItemStack itemStack,
+            boolean dropped
+    ) {
+    }
+
+    public record EntityLifecycle(Entity entity, boolean spawn) {
+    }
+
+    public record EntityBlockChange(Entity entity, @Nullable BlockState from, @Nullable BlockState to) {
+    }
+
+    public record Grow(@Nullable BlockState from, @Nullable BlockState to, @Nullable String structureType) {
+    }
+
+    public enum ItemAction {
+        DISPENSE,
+        SPAWN,
+        DROP,
+        PREPARE_CRAFT,
+        CRAFT,
+        PICKUP,
+        CONSUME,
+        INVENTORY_CLICK,
+        DESPAWN,
+        MERGE,
+        INVENTORY_MOVE,
+        STONECUTTING
+    }
+
+    public record Item(ItemAction action, @Nullable ItemStack itemStack, boolean entityEvent) {
+    }
+
+    public record PlantGrowth(@Nullable BlockState from, @Nullable BlockState to) {
+    }
+
+    public record PressurePlate(boolean tripwire) {
+    }
+
+    public record VehicleCollision(@Nullable BlockState blockState, @Nullable Entity entity) {
+    }
 }

@@ -23,7 +23,7 @@ public abstract class EntityData<E extends Entity> {
 
     public static synchronized void register() {
         EntityDataRegistry.ensureInitialized();
-        if (registered) {
+        if (registered && Classes.getExactClassInfo(EntityData.class) != null) {
             return;
         }
         Classes.registerClassInfo(new ClassInfo<>(EntityData.class, "entitydata")

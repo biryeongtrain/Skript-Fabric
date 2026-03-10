@@ -2,6 +2,8 @@ package ch.njol.util;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class StringUtils {
 
@@ -110,5 +112,21 @@ public final class StringUtils {
             return -1;
         }
         return Double.parseDouble(input.subSequence(Math.min(first, last), Math.max(first, last) + 1).toString());
+    }
+
+    public static String replace(String haystack, String needle, String replacement, boolean caseSensitive) {
+        if (caseSensitive) {
+            return haystack.replace(needle, replacement);
+        }
+        return Pattern.compile(Pattern.quote(needle), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
+                .matcher(haystack)
+                .replaceAll(Matcher.quoteReplacement(replacement));
+    }
+
+    public static String replaceFirst(String haystack, String needle, String replacement, boolean caseSensitive) {
+        if (caseSensitive) {
+            return haystack.replaceFirst(Pattern.quote(needle), replacement);
+        }
+        return haystack.replaceFirst("(?ui)" + Pattern.quote(needle), replacement);
     }
 }

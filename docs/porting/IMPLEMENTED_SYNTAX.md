@@ -26,6 +26,15 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
+  - latest verified syntax-core worker batch now also adds 40 upstream `ch/njol/skript` classes:
+    - `conditions`: `CondEntityStorageIsFull`, `CondIsFuel`, `CondIsOfType`, `CondIsResonating`, `CondItemEnchantmentGlint`, `CondWillHatch`
+    - `expressions`: `ExprAttacked`, `ExprAttacker`, `ExprCommandBlockCommand`, `ExprDamage`, `ExprDamageCause`, `ExprExperience`, `ExprFinalDamage`, `ExprHealReason`, `ExprItemCooldown`, `ExprLastDamageCause`
+    - `effects`: `EffApplyBoneMeal`, `EffConnect`, `EffDetonate`, `EffEntityUnload`, `EffForceEnchantmentGlint`, `EffKeepInventory`, `EffLog`, `EffMakeSay`, `EffReplace`, `EffRun`, `EffScriptFile`, `EffSuppressTypeHints`, `EffSuppressWarnings`, `EffWorldBorderExpand`
+    - `events`: `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtEntity`, `EvtEntityBlockChange`, `EvtGrow`, `EvtItem`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
+  - active runtime registration from that batch now covers the 6 conditions, 10 expressions, and 10 effects through `SkriptFabricBootstrap`
+  - the new event bundle plus `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile` remain import-only in this batch
+  - final coordinator integration intentionally excluded `ExprFireworkEffect` and `EffExplosion` because they do not yet fit the local Fabric runtime cleanly
+  - the registry-sensitive `ExpressionSyntaxS2CompatibilityTest` suite now runs through the dedicated `isolatedExpressionSyntaxS2CompatibilityTest` task so the final `build` path stays green
   - latest verified active runtime inventory/container closure now also adds 10 upstream `ch/njol/skript` classes:
     - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
     - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
@@ -59,11 +68,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `637`
+  - local `ch/njol/skript`: `662`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `552`
+  - current shortfall: `527`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a runtime inventory/container batch on top of the earlier 100-class import-heavy expressions/conditions/effects/events batch
+  - latest shortfall-focused closure restored a 40-class syntax-core worker batch on top of the earlier inventory/container and import-heavy expressions/conditions/effects/events batches
 
 Primary registration sources:
 
@@ -122,6 +131,10 @@ Related tracking docs:
   - representative forms: `gamemode change [to %gamemode%]`, `healing [of %-entitydatas%] [by %-strings%]`, `portal`, `resource pack accepted/declined/failed`, `weather change [to %-strings%]`, `world load/save/init/unload`
 - combat and interaction compatibility events
   - representative forms: `entity shoot[ing] [a] bow`, `entity target`, `entity transform`, `experience spawn`, `firework explode`, `player leash/unleash`, `armor change`, `move on %itemtypes%`, `block harvest`
+- beacon, block, and growth compatibility events
+  - representative forms: `primary beacon effect [of %-potioneffecttypes%]`, `secondary beacon effect`, `beacon toggle`, `block breaking [of %-itemtypes/blockdatas%]`, `grow[th] from %itemtypes/blockdatas%`, `grow[th] into %structuretypes/itemtypes/blockdatas%`, `plant grow[th]`
+- entity, item, and vehicle compatibility events
+  - representative forms: `death [of %-entitydatas%]`, `spawn[ing] [of %-entitydatas%]`, `dispensing [of %-itemtypes%]`, `item spawning [of %-itemtypes%]`, `item stack merging`, `pressure plate`, `vehicle collision [(with|of) ...]`, `vehicle block collision`, `vehicle entity collision`
 
 ### Known event-syntax gaps
 
@@ -237,10 +250,14 @@ Related tracking docs:
   - representative forms: `%livingentities% are charging a fireball`, `%entities%' custom names are visible`, `custom name of %entities% is visible`
 - item and block state
   - representative forms: `%players% have cooldown on %itemtypes%`, `%players% have %itemtypes% on cooldown`, `%itemtypes% are unbreakable`, `respawn anchors work in %worlds%`
+- type, fuel, and storage state
+  - representative forms: `[the] entity storage of %blocks% is full`, `%itemtypes% are furnace fuel`, `%itemstacks/entities% are of type %itemtypes/entitydatas%`, `%blocks% are resonating`, `%itemtypes% have enchantment glint overridden`, `%itemtypes% are forced to glint`, `%itemtypes% are forced to not glint`
 - leash, taming, and damageability state
   - representative forms: `%livingentities% are leashed`, `%livingentities% are tameable`, `%livingentities% are sheared`
 - equipment state
   - representative forms: `%livingentities% are holding %itemtypes%`, `%livingentities% are holding %itemtypes% in off-hand`, `%livingentities% are wearing %itemtypes%`
+- event-restricted state
+  - representative forms: `the egg will hatch`, `the egg won't hatch`
 
 ### Mob-specific state
 
@@ -377,6 +394,8 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `fall distance of %entities%`, `level progress of %players%`
 - fire and freezing timers
   - representative forms: `burning time of %entities%`, `maximum burning time of %entities%`, `freeze time of %entities%`, `maximum freeze time of %entities%`
+- damage and healing event context
+  - representative forms: `attacked`, `victim`, `attacker`, `damager`, `damage`, `final damage`, `damage cause`, `heal reason`, `spawned experience`, `last damage cause of %livingentities%`
 
 ### Inventory and container state
 
@@ -388,6 +407,8 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `holder of %inventories%`, `amount of rows of %inventories%`, `amount of slots of %inventories%`
 - inventory slots and contents
   - representative forms: `slot %numbers% of %inventory%`, `first empty slot in %inventories%`, `items in %inventories%`, `%itemtypes% in %inventories%`
+- command and cooldown state
+  - representative forms: `command of %blocks/entities%`, `command block command of %blocks/entities%`, `item cooldown of %itemtypes% for %players%`, `%players%' item cooldown for %itemtypes%`
 
 ### Imported compatibility expressions not yet bootstrapped into the active runtime
 
@@ -590,6 +611,8 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `make %livingentities% start rolling`, `force %livingentities% to stop rolling`
 - strider shivering toggle
   - representative forms: `make %livingentities% start shivering`, `force %livingentities% to stop shivering`
+- syntax-core mutation and diagnostics
+  - representative forms: `apply [%-number%] bone meals to %blocks%`, `detonate %entities%`, `make %entities% not despawnable on chunk unload`, `force %itemtypes% to glint`, `replace %strings% in %objects%`, `log %strings% [(to|in) [file[s]] %-strings%]`, `run %task% [async]`, `suppress [the] ... warnings`, `suppress type hints [for] %strings%`, `expand world border of %players/worlds% by/to %number% [over %-timespan%]`
 - fishing approach-angle setter
 
 ### Imported compatibility effects not yet bootstrapped into the active runtime
@@ -607,6 +630,8 @@ The list below groups the active syntax by domain and calls out the representati
   - Fabric backend note: `EffOpenInventory` and `FabricInventory` now open through Patbox `sgui`, with the backing `Container` bridged into redirected SGUI slots instead of the earlier vanilla `SimpleMenuProvider` path
 - entity and block manipulation
   - representative forms: `make %livingentities% duplicate`, `make %livingentities% ram %entities/locations%`, `make %creepers% explode`, `make %livingentities% swing [their] [main/off] hand`, `push %entities% [in] %-vector%`, `knock %entities% back by %number%`, `break %blocks% naturally [using %-itemtype%]`, `ring %blocks%`, `show %blocks% as %itemtypes% to %players%`
+- script / proxy / death-state compatibility effects
+  - representative forms: `connect %players% to proxy server %string%`, `transfer %players% to server %string% [on port %number%]`, `keep inventory`, `keep experience`, `make %players% say %strings%`, `reload script %strings%`, `enable script file %strings%`, `disable script file %strings%`, `unload script file %strings%`
 
 ### Breeding
 

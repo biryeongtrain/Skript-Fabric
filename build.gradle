@@ -103,6 +103,10 @@ def isolatedRegistrySuites = [
                 className: 'org.skriptlang.skript.fabric.runtime.RecoveredExpressionBundleSyntaxTest'
         ],
         [
+                taskName: 'isolatedExpressionSyntaxS2CompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionSyntaxS2CompatibilityTest'
+        ],
+        [
                 taskName: 'isolatedEffectRuntimeClosureCompatibilityTest',
                 className: 'ch.njol.skript.effects.EffectRuntimeClosureCompatibilityTest'
         ],

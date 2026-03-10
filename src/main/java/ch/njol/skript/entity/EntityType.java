@@ -35,7 +35,7 @@ public class EntityType implements Cloneable {
 
     public static synchronized void register() {
         EntityData.register();
-        if (registered) {
+        if (registered && Classes.getExactClassInfo(EntityType.class) != null) {
             return;
         }
         Classes.registerClassInfo(new ClassInfo<>(EntityType.class, "entitytype")

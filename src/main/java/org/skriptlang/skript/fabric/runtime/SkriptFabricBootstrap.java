@@ -273,6 +273,7 @@ public final class SkriptFabricBootstrap {
                         "%livingentities% (isn't|is not|aren't|are not) wearing %itemtypes%"
                 );
                 CondPermission.register();
+                initializeRecoveredConditionBundle();
                 Skript.registerCondition(
                         CondBrewingConsume.class,
                         "[the] brewing stand will consume [the] fuel",
@@ -793,6 +794,7 @@ public final class SkriptFabricBootstrap {
                         "twice",
                         "thrice"
                 );
+                initializeRecoveredSyntaxCoreExpressionBundle();
                 initializeRecoveredExpressionBundle();
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();
@@ -906,6 +908,7 @@ public final class SkriptFabricBootstrap {
                         "reset %object%",
                         "delete %object%"
                 );
+                registerRecoveredEffectBundle();
             } finally {
                 Skript.setAcceptRegistrations(false);
             }
@@ -950,6 +953,28 @@ public final class SkriptFabricBootstrap {
         }
     }
 
+    private static void initializeRecoveredConditionBundle() {
+        forceInitialize(ch.njol.skript.conditions.CondEntityStorageIsFull.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsFuel.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsOfType.class);
+        forceInitialize(ch.njol.skript.conditions.CondIsResonating.class);
+        forceInitialize(ch.njol.skript.conditions.CondItemEnchantmentGlint.class);
+        forceInitialize(ch.njol.skript.conditions.CondWillHatch.class);
+    }
+
+    private static void initializeRecoveredSyntaxCoreExpressionBundle() {
+        forceInitialize(ch.njol.skript.expressions.ExprAttacked.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAttacker.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCommandBlockCommand.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDamage.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDamageCause.class);
+        forceInitialize(ch.njol.skript.expressions.ExprExperience.class);
+        forceInitialize(ch.njol.skript.expressions.ExprFinalDamage.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHealReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemCooldown.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLastDamageCause.class);
+    }
+
     private static void initializeRecoveredExpressionBundle() {
         forceInitialize(ExprAI.class);
         forceInitialize(ExprAttackCooldown.class);
@@ -962,6 +987,19 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ExprLastDamage.class);
         forceInitialize(ExprLevelProgress.class);
         forceInitialize(ExprMaxFreezeTicks.class);
+    }
+
+    private static void registerRecoveredEffectBundle() {
+        ch.njol.skript.effects.EffApplyBoneMeal.register();
+        ch.njol.skript.effects.EffEntityUnload.register();
+        ch.njol.skript.effects.EffForceEnchantmentGlint.register();
+        ch.njol.skript.effects.EffReplace.register();
+        ch.njol.skript.effects.EffDetonate.register();
+        ch.njol.skript.effects.EffLog.register();
+        ch.njol.skript.effects.EffRun.register();
+        ch.njol.skript.effects.EffSuppressWarnings.register();
+        ch.njol.skript.effects.EffSuppressTypeHints.register();
+        ch.njol.skript.effects.EffWorldBorderExpand.register();
     }
 
     private static void forceInitialize(Class<?> type) {
