@@ -5,13 +5,15 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.KeyedValue;
 import ch.njol.skript.registrations.Classes;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 /**
  * Legacy function abstraction for script and Java function calls.
  */
-public abstract class Function<T> {
+public abstract class Function<T> implements org.skriptlang.skript.common.function.Function<T> {
 
     /**
      * Execute functions even when some parameters are missing.
@@ -25,6 +27,11 @@ public abstract class Function<T> {
     }
 
     public Signature<T> getSignature() {
+        return signature;
+    }
+
+    @Override
+    public org.skriptlang.skript.common.function.@NotNull Signature<T> signature() {
         return signature;
     }
 
@@ -98,6 +105,37 @@ public abstract class Function<T> {
             return null;
         }
         return returned;
+    }
+
+    @Override
+    public T execute(@NotNull FunctionEvent<?> event, @NotNull org.skriptlang.skript.common.function.FunctionArguments arguments) {
+        LinkedHashMap<String, Object> ordered = new LinkedHashMap<>();
+        for (org.skriptlang.skript.common.function.Parameter<?> parameter : signature.parameters().all()) {
+            ordered.put(parameter.name(), arguments.get(parameter.name()));
+        }
+
+        Object[][] values = new Object[ordered.size()][];
+        int index = 0;
+        for (Object value : ordered.values()) {
+            if (value == null) {
+                values[index++] = null;
+            } else if (value instanceof Object[] array) {
+                values[index++] = array;
+            } else {
+                values[index++] = new Object[]{value};
+            }
+        }
+
+        T[] returned = execute(event, values);
+        if (type() == null || returned == null || returned.length == 0) {
+            return null;
+        }
+        if (returned.length == 1) {
+            return returned[0];
+        }
+        @SuppressWarnings("unchecked")
+        T plural = (T) returned;
+        return plural;
     }
 
     private Object @Nullable [] evaluateDefault(@Nullable Expression<?> expression, SkriptEvent event) {

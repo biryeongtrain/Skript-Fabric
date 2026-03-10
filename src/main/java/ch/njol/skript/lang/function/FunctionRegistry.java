@@ -175,6 +175,15 @@ public final class FunctionRegistry implements Registry<Function<?>> {
         return getFunctions(globalNamespace, name, args);
     }
 
+    public @Unmodifiable @NotNull Set<Signature<?>> getSignatures(@Nullable String namespace, @NotNull String name) {
+        Set<Signature<?>> results = new HashSet<>();
+        if (namespace != null) {
+            collectNamedSignatures(results, namespaceId(namespace), name);
+        }
+        collectNamedSignatures(results, globalNamespace, name);
+        return Collections.unmodifiableSet(results);
+    }
+
     private Retrieval<Signature<?>> getSignatures(NamespaceIdentifier namespace, String name, Class<?>[] args) {
         List<Signature<?>> candidates = new ArrayList<>();
         collectMatchingSignatures(candidates, namespace, name, args);
@@ -223,6 +232,23 @@ public final class FunctionRegistry implements Registry<Function<?>> {
             Function<?> function = data.functions.get(identifier);
             if (function != null) {
                 candidates.add(function);
+            }
+        }
+    }
+
+    private void collectNamedSignatures(Set<Signature<?>> candidates, NamespaceIdentifier namespace, String name) {
+        NamespaceData data = namespaces.get(namespace);
+        if (data == null) {
+            return;
+        }
+        Set<FunctionIdentifier> identifiers = data.identifiers.get(name);
+        if (identifiers == null) {
+            return;
+        }
+        for (FunctionIdentifier identifier : identifiers) {
+            Signature<?> signature = data.signatures.get(identifier);
+            if (signature != null) {
+                candidates.add(signature);
             }
         }
     }

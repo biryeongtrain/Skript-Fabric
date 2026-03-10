@@ -1,6 +1,7 @@
 package ch.njol.skript.lang.function;
 
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.util.Contract;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Function signature: name, parameter types and optional return type.
  */
-public class Signature<T> {
+public class Signature<T> implements org.skriptlang.skript.common.function.Signature<T> {
 
     final @Nullable String script;
     final String name;
@@ -26,6 +27,7 @@ public class Signature<T> {
     final Class<?> returns;
     final boolean single;
     final Collection<Object> calls;
+    final @Nullable Contract contract;
     @Nullable String originClassPath;
 
     static Class<?> getReturns(boolean single, Class<?> clazz) {
@@ -40,7 +42,7 @@ public class Signature<T> {
             @Nullable ClassInfo<T> returnType,
             boolean single
     ) {
-        this(script, name, parameters, local, returnType, single, "");
+        this(script, name, parameters, local, returnType, single, "", null);
     }
 
     public Signature(
@@ -52,6 +54,31 @@ public class Signature<T> {
             boolean single,
             String originClassPath
     ) {
+        this(script, name, parameters, local, returnType, single, originClassPath, null);
+    }
+
+    public Signature(
+            @Nullable String script,
+            String name,
+            Parameter<?>[] parameters,
+            boolean local,
+            @Nullable ClassInfo<T> returnType,
+            boolean single,
+            @Nullable Contract contract
+    ) {
+        this(script, name, parameters, local, returnType, single, "", contract);
+    }
+
+    public Signature(
+            @Nullable String script,
+            String name,
+            Parameter<?>[] parameters,
+            boolean local,
+            @Nullable ClassInfo<T> returnType,
+            boolean single,
+            String originClassPath,
+            @Nullable Contract contract
+    ) {
         this.script = script;
         this.name = name;
         this.parameters = initParameters(parameters);
@@ -60,6 +87,7 @@ public class Signature<T> {
         this.single = single;
         this.returns = returnType == null ? null : getReturns(single, returnType.getC());
         this.calls = Collections.newSetFromMap(new WeakHashMap<>());
+        this.contract = contract;
         this.originClassPath = originClassPath;
     }
 
@@ -69,6 +97,17 @@ public class Signature<T> {
             Map<String, Parameter<?>> parameters,
             Class<T> returnType,
             boolean local
+    ) {
+        this(script, name, parameters, returnType, local, null);
+    }
+
+    public Signature(
+            @Nullable String script,
+            String name,
+            Map<String, Parameter<?>> parameters,
+            Class<T> returnType,
+            boolean local,
+            @Nullable Contract contract
     ) {
         this.script = script;
         this.name = name;
@@ -85,6 +124,42 @@ public class Signature<T> {
             this.single = true;
         }
         this.calls = Collections.newSetFromMap(new WeakHashMap<>());
+        this.contract = contract;
+    }
+
+    public Signature(
+            @Nullable String script,
+            String name,
+            org.skriptlang.skript.common.function.Parameter<?>[] parameters,
+            Class<T> returnType,
+            boolean single,
+            @Nullable Contract contract
+    ) {
+        this.script = script;
+        this.name = name;
+        this.parameters = initParameters(parameters);
+        this.local = false;
+        this.returns = returnType;
+        if (returnType != null) {
+            @SuppressWarnings("unchecked")
+            ClassInfo<T> info = (ClassInfo<T>) ch.njol.skript.registrations.Classes.getSuperClassInfo(componentType(returnType));
+            this.returnType = info;
+        } else {
+            this.returnType = null;
+        }
+        this.single = single;
+        this.calls = Collections.newSetFromMap(new WeakHashMap<>());
+        this.contract = contract;
+    }
+
+    private static Map<String, Parameter<?>> initParameters(org.skriptlang.skript.common.function.Parameter<?>[] params) {
+        Map<String, Parameter<?>> map = new LinkedHashMap<>();
+        if (params != null) {
+            for (org.skriptlang.skript.common.function.Parameter<?> parameter : params) {
+                map.put(parameter.name(), toOldParameter(parameter));
+            }
+        }
+        return map;
     }
 
     private static Map<String, Parameter<?>> initParameters(Parameter<?>[] params) {
@@ -139,8 +214,22 @@ public class Signature<T> {
         return parameters.values().toArray(Parameter[]::new);
     }
 
-    public Collection<Parameter<?>> parameters() {
+    public Collection<Parameter<?>> legacyParameters() {
         return Collections.unmodifiableCollection(parameters.values());
+    }
+
+    @Override
+    public org.skriptlang.skript.common.function.Parameters parameters() {
+        LinkedHashMap<String, org.skriptlang.skript.common.function.Parameter<?>> mapped = new LinkedHashMap<>();
+        for (Parameter<?> parameter : parameters.values()) {
+            mapped.put(parameter.name(), toCommonParameter(parameter));
+        }
+        return new org.skriptlang.skript.common.function.Parameters(mapped);
+    }
+
+    @Override
+    public @Nullable Contract contract() {
+        return contract;
     }
 
     public int getMaxParameters() {
@@ -158,6 +247,11 @@ public class Signature<T> {
     }
 
     public void addCall(Object reference) {
+        calls.add(reference);
+    }
+
+    @Override
+    public void addCall(org.skriptlang.skript.common.function.FunctionReference<?> reference) {
         calls.add(reference);
     }
 
@@ -227,5 +321,51 @@ public class Signature<T> {
 
     private static Class<?> componentType(Class<?> type) {
         return type.isArray() ? type.getComponentType() : type;
+    }
+
+    static Parameter<?> toOldParameter(org.skriptlang.skript.common.function.Parameter<?> parameter) {
+        if (parameter == null) {
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        ClassInfo<Object> classInfo = (ClassInfo<Object>) ch.njol.skript.registrations.Classes.getSuperClassInfo(componentType(parameter.type()));
+        Parameter.Modifier[] modifiers = parameter.modifiers().stream()
+                .map(Signature::toLegacyModifier)
+                .filter(java.util.Objects::nonNull)
+                .toArray(Parameter.Modifier[]::new);
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Parameter<?> legacy = new Parameter(parameter.name(), classInfo, !parameter.type().isArray(), null, modifiers);
+        return legacy;
+    }
+
+    private static org.skriptlang.skript.common.function.Parameter<?> toCommonParameter(Parameter<?> parameter) {
+        java.util.LinkedHashSet<org.skriptlang.skript.common.function.Parameter.Modifier> modifiers = new java.util.LinkedHashSet<>();
+        if (parameter.hasModifier(Parameter.Modifier.OPTIONAL)) {
+            modifiers.add(org.skriptlang.skript.common.function.Parameter.Modifier.OPTIONAL);
+        }
+        if (parameter.hasModifier(Parameter.Modifier.KEYED)) {
+            modifiers.add(org.skriptlang.skript.common.function.Parameter.Modifier.KEYED);
+        }
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        org.skriptlang.skript.common.function.ScriptParameter<?> common = new org.skriptlang.skript.common.function.ScriptParameter(
+                parameter.name(),
+                parameter.type(),
+                modifiers,
+                parameter.getDefaultExpression()
+        );
+        return common;
+    }
+
+    private static @Nullable Parameter.Modifier toLegacyModifier(
+            org.skriptlang.skript.common.function.Parameter.Modifier modifier
+    ) {
+        if (modifier == org.skriptlang.skript.common.function.Parameter.Modifier.OPTIONAL) {
+            return Parameter.Modifier.OPTIONAL;
+        }
+        if (modifier == org.skriptlang.skript.common.function.Parameter.Modifier.KEYED) {
+            return Parameter.Modifier.KEYED;
+        }
+        return null;
     }
 }
