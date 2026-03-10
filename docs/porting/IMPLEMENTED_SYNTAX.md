@@ -26,11 +26,11 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - latest verified import bundle now also adds 46 upstream `ch/njol/skript` classes:
-    - `expressions`: `ExprBlockHardness`, `ExprBookAuthor`, `ExprBookPages`, `ExprBookTitle`, `ExprBrushableItem`, `ExprCharges`, `ExprCustomModelData`, `ExprDamagedItem`, `ExprDurability`, `ExprEgg`, plus `EventValueExpression`
-    - `conditions`: `CondEndermanStaredAt`, `CondHasCustomModelData`, `CondHasLineOfSight`, `CondIsCharged`, `CondIsDancing`, `CondIsEating`, `CondIsFireResistant`, `CondIsJumping`, `CondIsPersistent`, `CondIsTicking`, `CondIsValid`, `CondLidState`
-    - `effects`: `EffCommandBlockConditional`, `EffEndermanTeleport`, `EffEnforceWhitelist`, `EffForceAttack`, `EffGlowingText`, `EffPathfind`, `EffPersistent`, `EffRespawn`, `EffToggleFlight`, `EffTransform`, `EffVehicle`, `EffZombify`
-    - `events/helpers`: `EvtCommand`, `EvtExperienceChange`, `EvtFirstJoin`, `EvtLevel`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtSpectate`, `EvtTeleport`, `FabricEffectEventHandles`, `FabricPlayerEventHandles`
+  - latest verified import bundle now also adds 100 upstream `ch/njol/skript` classes:
+    - `expressions`: `ExprAmountOfItems`, `ExprItemAmount`, `ExprItemWithLore`, `ExprItemWithTooltip`, `ExprItemWithCustomModelData`, `ExprItemWithEnchantmentGlint`, `ExprItems`, `ExprExactItem`, `ExprActiveItem`, `ExprAge`, `ExprAllayJukebox`, `ExprArrowsStuck`, `ExprBeehiveFlower`, `ExprBeehiveHoneyLevel`, `ExprBreakSpeed`, `ExprCreeperMaxFuseTicks`, `ExprDomestication`, `ExprDuplicateCooldown`, `ExprEntityItemUseTime`, `ExprEntityOwner`, `ExprEntitySize`, `ExprExperienceCooldown`, `ExprEyeLocation`, `ExprFoodLevel`, `ExprGlidingState`, `ExprHealth`, `ExprNoDamageTime`, `ExprPortalCooldown`, `ExprRemainingAir`
+    - `conditions`: `CondCanHold`, `CondCanSee`, `CondGlowingText`, `CondIsLoaded`, `CondIsPathfinding`, `CondIsRiding`, `CondIsRinging`, `CondIsSaddled`, `CondIsStackable`, `CondIsWithin`, `CondPlayedBefore`, `CondTooltip`, `CondWithinRadius`
+    - `effects`: `EffAllayCanDuplicate`, `EffAllayDuplicate`, `EffBan`, `EffBlockUpdate`, `EffBreakNaturally`, `EffCancelCooldown`, `EffCancelDrops`, `EffCancelEvent`, `EffCancelItemUse`, `EffCharge`, `EffCommand`, `EffDancing`, `EffDropLeash`, `EffExplodeCreeper`, `EffFireResistant`, `EffGoatHorns`, `EffGoatRam`, `EffHidePlayerFromServerList`, `EffIncendiary`, `EffItemDespawn`, `EffKnockback`, `EffLidState`, `EffLightning`, `EffLoadServerIcon`, `EffLook`, `EffMakeEggHatch`, `EffOpenBook`, `EffOpenInventory`, `EffPlayerInfoVisibility`, `EffPush`, `EffPvP`, `EffRing`, `EffSendBlockChange`, `EffStopServer`, `EffSwingHand`, `EffTooltip`, `EffWardenDisturbance`, `EffWorldLoad`, `EffWorldSave`
+    - `events/helpers`: `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntityShootBow`, `EvtEntityTarget`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtFirework`, `EvtGameMode`, `EvtHarvestBlock`, `EvtHealing`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtResourcePackResponse`, `EvtWeatherChange`, `EvtWorld`, plus local helper scaffolds `FabricEggThrowEventHandle`, `FabricEntityUnleashEventHandle`, `FabricExplosionPrimeEventHandle`, `EventClassInfoRegistrar`, `EventSyntaxRegistry`, and `FabricEventCompatHandles`
   - these landed as parser/unit-verified compatibility imports and shortfall reduction; they are not all bootstrapped into the active Fabric runtime registration set yet
   - imported syntax classes in this batch preserve upstream `ch.njol.skript.doc.*` annotations where present
   - latest verified runtime-surface additions underneath that import layer still include 27 upstream-backed conditions:
@@ -55,11 +55,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `524`
+  - local `ch/njol/skript`: `612`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `665`
+  - current shortfall: `577`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a 46-class import-heavy expressions/conditions/effects/events batch on top of the earlier runtime-facing closures
+  - latest shortfall-focused closure restored a 100-class import-heavy expressions/conditions/effects/events batch on top of the earlier runtime-facing closures
 
 Primary registration sources:
 
@@ -112,6 +112,12 @@ Related tracking docs:
   - representative forms: `player move`, `player rotate`, `player enters a chunk`, `%entitytypes% teleport`
 - spectating
   - representative forms: `player start spectating [of %-*entitydatas%]`, `player stop spectating`, `player swap spectating`
+- book, click, and input-style events
+  - representative forms: `book edit`, `book sign`, `click`, `left click`, `right click`
+- player/entity/world compatibility events
+  - representative forms: `gamemode change [to %gamemode%]`, `healing [of %-entitydatas%] [by %-strings%]`, `portal`, `resource pack accepted/declined/failed`, `weather change [to %-strings%]`, `world load/save/init/unload`
+- combat and interaction compatibility events
+  - representative forms: `entity shoot[ing] [a] bow`, `entity target`, `entity transform`, `experience spawn`, `firework explode`, `player leash/unleash`, `armor change`, `move on %itemtypes%`, `block harvest`
 
 ### Known event-syntax gaps
 
@@ -249,6 +255,12 @@ Related tracking docs:
   - representative forms: `%itemtypes% have custom model data`, `%livingentities% have line of sight to %entities/locations%`, `%entities/scripts% are valid`
 - movement / persistence / charge state
   - representative forms: `%livingentities% are dancing`, `%livingentities% are eating`, `%livingentities% are jumping`, `%entities/blocks% are persistent`, `%entities% are charged`, `%itemtypes% are fire resistant`
+- position, loading, and ownership checks
+  - representative forms: `%entities/blocks% are loaded`, `%entities% are riding`, `%livingentities% are pathfinding`, `%livingentities% are saddled`, `%players% have played before`
+- inventory and tooltip checks
+  - representative forms: `%inventories% can hold %itemtypes%`, `%itemstacks% are stackable`, `%itemtypes% have [a] hidden tooltip`, `%objects% have glowing text`
+- spatial checks
+  - representative forms: `%locations/entities% are within %number% blocks around %location%`, `%locations/entities% are within %location% and %location%`, `%entities% can see %entities/locations%`
 
 ### Breeding
 
@@ -366,6 +378,12 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `durability of %slots/itemtypes%`, `remaining durability of %itemtypes%`, `charges of %itemtypes%`, `damaged item from %itemtypes%`
 - block / brushable / entity item payload
   - representative forms: `hardness of %blocks/itemtypes%`, `brushable item of %blocks%`, `egg of %entities%`
+- item transformations and inventory expressions
+  - representative forms: `amount of %itemtypes% in %inventories%`, `exact %itemtypes%`, `%itemtypes% with lore %strings%`, `%itemtypes% with hidden tooltip`, `%itemtypes% with custom model data %objects%`, `all items`
+- entity property and cooldown state
+  - representative forms: `active item of %livingentities%`, `owner of %entities%`, `size of %entities%`, `health of %livingentities%`, `remaining air of %entities%`, `portal cooldown of %entities%`, `xp pickup cooldown of %players%`
+- block, mob, and timer state
+  - representative forms: `age of %entities/blocks%`, `honey level of %blocks%`, `flower of %beehives%`, `jukebox of %allays%`, `arrows stuck in %livingentities%`, `maximum fuse time of %creepers%`, `domestication of %livingentities%`, `break speed of %players%`
 
 ### Breeding
 
@@ -563,6 +581,12 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `enforce [the] whitelist`, `unenforce [the] whitelist`, `force %players% to respawn`, `allow flight for %players%`, `disallow flight for %players%`
 - state and presentation control
   - representative forms: `make command block[s] %blocks% conditional`, `make %objects% have glowing text`, `make %entities/blocks% persistent`, `transform {list::*} with %objects%`, `zombify %livingentities%`, `unzombify %livingentities% after %-timespan%`
+- server, world, and UI control
+  - representative forms: `ban %offlineplayers/strings% [for %-timespan%] [because %-string%]`, `cancel [the] event`, `cancel [the] drops`, `cancel item use`, `stop server`, `restart server`, `load %worlds%`, `save %worlds%`, `load [the] server icon from %string%`
+- player inventory and presentation control
+  - representative forms: `open %inventories% for %players%`, `open %itemtypes% for %players%`, `hide %players% from [the] [server] [player] list`, `show %players% in [the] player info list`, `make %players% look at %locations/entities%`, `make %itemtypes% hide/show [the] tooltip`
+- entity and block manipulation
+  - representative forms: `make %livingentities% duplicate`, `make %livingentities% ram %entities/locations%`, `make %creepers% explode`, `make %livingentities% swing [their] [main/off] hand`, `push %entities% [in] %-vector%`, `knock %entities% back by %number%`, `break %blocks% naturally [using %-itemtype%]`, `ring %blocks%`, `show %blocks% as %itemtypes% to %players%`
 
 ### Breeding
 

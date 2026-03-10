@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `524 / 1189`, shortfall `665`
+- upstream `ch/njol/skript` snapshot: local `612 / 1189`, shortfall `577`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,13 +29,13 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head adds a 46-class upstream-import closure:
-  - `expressions`: `ExprBlockHardness`, `ExprBookAuthor`, `ExprBookPages`, `ExprBookTitle`, `ExprBrushableItem`, `ExprCharges`, `ExprCustomModelData`, `ExprDamagedItem`, `ExprDurability`, `ExprEgg`, plus `EventValueExpression`
-  - `conditions`: `CondEndermanStaredAt`, `CondHasCustomModelData`, `CondHasLineOfSight`, `CondIsCharged`, `CondIsDancing`, `CondIsEating`, `CondIsFireResistant`, `CondIsJumping`, `CondIsPersistent`, `CondIsTicking`, `CondIsValid`, `CondLidState`
-  - `effects`: `EffCommandBlockConditional`, `EffEndermanTeleport`, `EffEnforceWhitelist`, `EffForceAttack`, `EffGlowingText`, `EffPathfind`, `EffPersistent`, `EffRespawn`, `EffToggleFlight`, `EffTransform`, `EffVehicle`, `EffZombify`
-  - `events`: `EvtCommand`, `EvtExperienceChange`, `EvtFirstJoin`, `EvtLevel`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtSpectate`, `EvtTeleport`
+- current verified head adds a 100-class upstream-import closure:
+  - `expressions`: `ExprAmountOfItems`, `ExprItemAmount`, `ExprItemWithLore`, `ExprItemWithTooltip`, `ExprItemWithCustomModelData`, `ExprItemWithEnchantmentGlint`, `ExprItems`, `ExprExactItem`, `ExprActiveItem`, `ExprAge`, `ExprAllayJukebox`, `ExprArrowsStuck`, `ExprBeehiveFlower`, `ExprBeehiveHoneyLevel`, `ExprBreakSpeed`, `ExprCreeperMaxFuseTicks`, `ExprDomestication`, `ExprDuplicateCooldown`, `ExprEntityItemUseTime`, `ExprEntityOwner`, `ExprEntitySize`, `ExprExperienceCooldown`, `ExprEyeLocation`, `ExprFoodLevel`, `ExprGlidingState`, `ExprHealth`, `ExprNoDamageTime`, `ExprPortalCooldown`, `ExprRemainingAir`
+  - `conditions`: `CondCanHold`, `CondCanSee`, `CondGlowingText`, `CondIsLoaded`, `CondIsPathfinding`, `CondIsRiding`, `CondIsRinging`, `CondIsSaddled`, `CondIsStackable`, `CondIsWithin`, `CondPlayedBefore`, `CondTooltip`, `CondWithinRadius`
+  - `effects`: `EffAllayCanDuplicate`, `EffAllayDuplicate`, `EffBan`, `EffBlockUpdate`, `EffBreakNaturally`, `EffCancelCooldown`, `EffCancelDrops`, `EffCancelEvent`, `EffCancelItemUse`, `EffCharge`, `EffCommand`, `EffDancing`, `EffDropLeash`, `EffExplodeCreeper`, `EffFireResistant`, `EffGoatHorns`, `EffGoatRam`, `EffHidePlayerFromServerList`, `EffIncendiary`, `EffItemDespawn`, `EffKnockback`, `EffLidState`, `EffLightning`, `EffLoadServerIcon`, `EffLook`, `EffMakeEggHatch`, `EffOpenBook`, `EffOpenInventory`, `EffPlayerInfoVisibility`, `EffPush`, `EffPvP`, `EffRing`, `EffSendBlockChange`, `EffStopServer`, `EffSwingHand`, `EffTooltip`, `EffWardenDisturbance`, `EffWorldLoad`, `EffWorldSave`
+  - `events`: `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntityShootBow`, `EvtEntityTarget`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtFirework`, `EvtGameMode`, `EvtHarvestBlock`, `EvtHealing`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtResourcePackResponse`, `EvtWeatherChange`, `EvtWorld`
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `665`
+- the latest focused follow-up keeps the existing `230 / 230` baseline while reducing the raw shortfall to `577`
 - these imports carry targeted parser/unit verification and upstream `doc` annotations where present, but they are not all wired into the active Fabric runtime bootstrap yet
 - no missing-library rollback was needed in this slice
 - the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`, `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) remains merged underneath it
