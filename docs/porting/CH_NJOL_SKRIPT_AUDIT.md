@@ -30,8 +30,8 @@ For every future slice:
 Measured Java source counts:
 
 - upstream `ch/njol/skript`: `1189`
-- local `ch/njol/skript`: `612`
-- local shortfall versus the captured upstream snapshot: `577`
+- local `ch/njol/skript`: `637`
+- local shortfall versus the captured upstream snapshot: `552`
 
 Local top-level packages currently present:
 
@@ -72,13 +72,13 @@ Upstream top-level packages currently absent locally:
 | `bukkitutil` | `26` | `0` | absent | `P3` | Bukkit-specific helpers; audit only when a Fabric replacement path is justified |
 | `classes` | `28` | `21` | partial shim | `P1` | foundational for parsing and stringification; the local tree now also restores serializer-free `SkriptClasses`, legacy parser/converter wrappers, and pure-Java registrars, but the layer is still far thinner than upstream |
 | `command` | `9` | `0` | absent | `P2` | command/runtime integration depends on core parser and function closure first |
-| `conditions` | `135` | `102` | partial shim | `P2` | very large missing surface; date, permission, helper checks, the entity/player-state bundle, the recovered entity-behavior bundle, the server/item-state condition closure, and the latest 13-class spatial/property condition bundle are now present, but the remaining user-visible condition surface is still large |
+| `conditions` | `135` | `105` | partial shim | `P2` | very large missing surface; date, permission, helper checks, the entity/player-state bundle, the recovered entity-behavior bundle, the server/item-state condition closure, the latest 13-class spatial/property condition bundle, and the new inventory/equipment condition closure are now present, but the remaining user-visible condition surface is still large |
 | `config` | `20` | `20` | present but behavior-incomplete | `P1` | count parity is now closed, but broader runtime behavior still needs upstream comparison |
 | `doc` | `18` | `14` | partial shim | `P3` | low runtime value overall, but the common documentation annotations and generator base are now present in addition to `Documentable`; the heavier ID/generator surfaces are still open |
 | `effects` | `123` | `87` | partial shim | `P2` | base package now has a wider verified effect surface through the entity-control bundle, the player/server feedback effects, and the latest dual Lane F entity/server-world import closures, but most user-visible runtime forms are still missing |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
 | `events` | `53` | `37` | partial shim | `P2` | script lifecycle events plus the latest 18-class player/entity/world event compatibility bundle are now present, but real Fabric backend wiring is still missing for many imported event classes |
-| `expressions` | `391` | `97` | partial shim | `P2` | larger collection, date/time, unix/date, text-character, amount/format/index helpers, the latest random/times compatibility closure, and the new 30-class item/entity/property expression bundle are now landed, but the remaining user-visible surface is still very large |
+| `expressions` | `391` | `104` | partial shim | `P2` | larger collection, date/time, unix/date, text-character, amount/format/index helpers, the latest random/times compatibility closure, the 30-class item/entity/property expression bundle, and the new runtime-registered inventory/container expression closure are now landed, but the remaining user-visible surface is still very large |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
 | `lang` | `85` | `86` | present but behavior-incomplete | `P0` | local count now exceeds upstream by one because the legacy `ch/njol/skript/lang/function/FunctionParser` compatibility facade is local-only; the remaining gap is still foundational behavior, not raw presence |
 | `literals` | `16` | `15` | partial shim | `P2` | most low-dependency numeric/special literal helpers are present and `LitEternity` is now landed, but the package is still not fully closed |
@@ -142,7 +142,11 @@ That means the real gap is behavior, not class presence.
 
 ## Latest Merged Upstream-Core Batch
 
-- latest verified import-heavy closure on 2026-03-10 restores 100 upstream classes:
+- latest verified runtime inventory/container closure on 2026-03-10 restores 10 upstream classes:
+  - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
+  - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
+  - this batch is runtime-registered on `SkriptFabricBootstrap` and verified through targeted parser/unit coverage
+- previous import-heavy closure on 2026-03-10 restores 100 upstream classes:
   - `expressions`: 30 item/entity/property expression classes
   - `conditions`: 13 state/property condition classes
   - `effects`: 39 effect classes
@@ -151,8 +155,9 @@ That means the real gap is behavior, not class presence.
   - imported syntax classes preserve upstream `ch.njol.skript.doc.*` annotations where present
   - this batch reduces raw shortfall and carries targeted parser/unit verification; it does not yet wire every imported syntax class into the active Fabric runtime bootstrap
 - merged verification on 2026-03-10:
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryCompatibilityTest --tests ch.njol.skript.conditions.ConditionInventoryCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.InventorySyntaxTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `612 / 1189`, shortfall `577`
+- raw `ch/njol/skript` snapshot after that merge: `637 / 1189`, shortfall `552`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
 
 ## Previous Merged Syntax-Import Batch

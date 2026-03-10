@@ -26,6 +26,10 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
+  - latest verified active runtime inventory/container closure now also adds 10 upstream `ch/njol/skript` classes:
+    - `expressions`: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
+    - `conditions`: `CondContains`, `CondItemInHand`, `CondIsWearing`
+  - this inventory/container slice is registered on `SkriptFabricBootstrap` and covered by `ExpressionInventoryCompatibilityTest`, `ConditionInventoryCompatibilityTest`, and `InventorySyntaxTest`
   - latest verified import bundle now also adds 100 upstream `ch/njol/skript` classes:
     - `expressions`: `ExprAmountOfItems`, `ExprItemAmount`, `ExprItemWithLore`, `ExprItemWithTooltip`, `ExprItemWithCustomModelData`, `ExprItemWithEnchantmentGlint`, `ExprItems`, `ExprExactItem`, `ExprActiveItem`, `ExprAge`, `ExprAllayJukebox`, `ExprArrowsStuck`, `ExprBeehiveFlower`, `ExprBeehiveHoneyLevel`, `ExprBreakSpeed`, `ExprCreeperMaxFuseTicks`, `ExprDomestication`, `ExprDuplicateCooldown`, `ExprEntityItemUseTime`, `ExprEntityOwner`, `ExprEntitySize`, `ExprExperienceCooldown`, `ExprEyeLocation`, `ExprFoodLevel`, `ExprGlidingState`, `ExprHealth`, `ExprNoDamageTime`, `ExprPortalCooldown`, `ExprRemainingAir`
     - `conditions`: `CondCanHold`, `CondCanSee`, `CondGlowingText`, `CondIsLoaded`, `CondIsPathfinding`, `CondIsRiding`, `CondIsRinging`, `CondIsSaddled`, `CondIsStackable`, `CondIsWithin`, `CondPlayedBefore`, `CondTooltip`, `CondWithinRadius`
@@ -55,11 +59,11 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `612`
+  - local `ch/njol/skript`: `637`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `577`
+  - current shortfall: `552`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
-  - latest shortfall-focused closure restored a 100-class import-heavy expressions/conditions/effects/events batch on top of the earlier runtime-facing closures
+  - latest shortfall-focused closure restored a runtime inventory/container batch on top of the earlier 100-class import-heavy expressions/conditions/effects/events batch
 
 Primary registration sources:
 
@@ -211,6 +215,8 @@ Related tracking docs:
 - generic comparison
   - representative forms: `%objects% is %objects%`
   - current audit note: ambiguous bare item-id equality is not parity-complete yet
+- contains
+  - representative forms: `%inventories% contain %itemtypes%`, `%strings% contain %strings%`, `%objects% contain %objects%`
 
 ### Server and account state
 
@@ -233,6 +239,8 @@ Related tracking docs:
   - representative forms: `%players% have cooldown on %itemtypes%`, `%players% have %itemtypes% on cooldown`, `%itemtypes% are unbreakable`, `respawn anchors work in %worlds%`
 - leash, taming, and damageability state
   - representative forms: `%livingentities% are leashed`, `%livingentities% are tameable`, `%livingentities% are sheared`
+- equipment state
+  - representative forms: `%livingentities% are holding %itemtypes%`, `%livingentities% are holding %itemtypes% in off-hand`, `%livingentities% are wearing %itemtypes%`
 
 ### Mob-specific state
 
@@ -369,6 +377,17 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `fall distance of %entities%`, `level progress of %players%`
 - fire and freezing timers
   - representative forms: `burning time of %entities%`, `maximum burning time of %entities%`, `freeze time of %entities%`, `maximum freeze time of %entities%`
+
+### Inventory and container state
+
+- custom inventories
+  - representative forms: `chest inventory named %string% with %number% rows`, `chest inventory with %number% rows`, `chest inventory named %string%`
+- player inventories
+  - representative forms: `inventory of %players%`, `ender chest of %players%`
+- inventory metadata
+  - representative forms: `holder of %inventories%`, `amount of rows of %inventories%`, `amount of slots of %inventories%`
+- inventory slots and contents
+  - representative forms: `slot %numbers% of %inventory%`, `first empty slot in %inventories%`, `items in %inventories%`, `%itemtypes% in %inventories%`
 
 ### Imported compatibility expressions not yet bootstrapped into the active runtime
 

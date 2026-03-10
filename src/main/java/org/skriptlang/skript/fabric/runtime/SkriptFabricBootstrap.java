@@ -1,15 +1,25 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.conditions.CondContains;
+import ch.njol.skript.conditions.CondItemInHand;
+import ch.njol.skript.conditions.CondIsWearing;
 import ch.njol.skript.conditions.CondPermission;
 import ch.njol.skript.expressions.ExprAI;
 import ch.njol.skript.expressions.ExprAttackCooldown;
+import ch.njol.skript.expressions.ExprChestInventory;
+import ch.njol.skript.expressions.ExprEnderChest;
 import ch.njol.skript.expressions.ExprExhaustion;
 import ch.njol.skript.expressions.ExprFallDistance;
 import ch.njol.skript.expressions.ExprFireTicks;
+import ch.njol.skript.expressions.ExprFirstEmptySlot;
 import ch.njol.skript.expressions.ExprFlightMode;
 import ch.njol.skript.expressions.ExprFreezeTicks;
 import ch.njol.skript.expressions.ExprGravity;
+import ch.njol.skript.expressions.ExprInventory;
+import ch.njol.skript.expressions.ExprInventoryInfo;
+import ch.njol.skript.expressions.ExprInventorySlot;
+import ch.njol.skript.expressions.ExprItemsIn;
 import ch.njol.skript.expressions.ExprLastDamage;
 import ch.njol.skript.expressions.ExprLevelProgress;
 import ch.njol.skript.expressions.ExprMaxFreezeTicks;
@@ -239,6 +249,29 @@ public final class SkriptFabricBootstrap {
                         "%players% (is|are) sprinting",
                         "%players% (isn't|is not|aren't|are not) sprinting"
                 );
+                Skript.registerCondition(
+                        CondContains.class,
+                        "%inventories% (has|have) %itemtypes% [in [(the[ir]|his|her|its)] inventory]",
+                        "%inventories% (doesn't|does not|do not|don't) have %itemtypes% [in [(the[ir]|his|her|its)] inventory]",
+                        "%inventories/strings/objects% contain[(1¦s)] %itemtypes/strings/objects%",
+                        "%inventories/strings/objects% (doesn't|does not|do not|don't) contain %itemtypes/strings/objects%"
+                );
+                Skript.registerCondition(
+                        CondItemInHand.class,
+                        "[%livingentities%] ha(s|ve) %itemtypes% in [main] hand",
+                        "[%livingentities%] (is|are) holding %itemtypes% [in main hand]",
+                        "[%livingentities%] ha(s|ve) %itemtypes% in off[(-| )]hand",
+                        "[%livingentities%] (is|are) holding %itemtypes% in off[(-| )]hand",
+                        "[%livingentities%] (ha(s|ve) not|do[es]n't have) %itemtypes% in [main] hand",
+                        "[%livingentities%] (is not|isn't) holding %itemtypes% [in main hand]",
+                        "[%livingentities%] (ha(s|ve) not|do[es]n't have) %itemtypes% in off[(-| )]hand",
+                        "[%livingentities%] (is not|isn't) holding %itemtypes% in off[(-| )]hand"
+                );
+                Skript.registerCondition(
+                        CondIsWearing.class,
+                        "%livingentities% (is|are) wearing %itemtypes%",
+                        "%livingentities% (isn't|is not|aren't|are not) wearing %itemtypes%"
+                );
                 CondPermission.register();
                 Skript.registerCondition(
                         CondBrewingConsume.class,
@@ -408,6 +441,49 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
                 Skript.registerEvent(EvtUseItem.class, "on use item");
+                Skript.registerExpression(
+                        ExprChestInventory.class,
+                        org.skriptlang.skript.fabric.compat.FabricInventory.class,
+                        "[a] [new] chest inventory (named|with name) %string% [with %-number% row[s]]",
+                        "[a] [new] chest inventory with %number% row[s] [(named|with name) %-string%]"
+                );
+                Skript.registerExpression(
+                        ExprEnderChest.class,
+                        org.skriptlang.skript.fabric.compat.FabricInventory.class,
+                        "[the] ender[ ]chest[s] of %players%",
+                        "%players%'[s] ender[ ]chest[s]"
+                );
+                Skript.registerExpression(
+                        ExprInventory.class,
+                        org.skriptlang.skript.fabric.compat.FabricInventory.class,
+                        "[the] inventor(y|ies) of %players%",
+                        "%players%'[s] inventor(y|ies)"
+                );
+                Skript.registerExpression(
+                        ExprInventoryInfo.class,
+                        Object.class,
+                        "(1¦holder[s]|2¦[amount of] rows|3¦[amount of] slots) of %inventories%",
+                        "%inventories%'[s] (1¦holder[s]|2¦[amount of] rows|3¦[amount of] slots)"
+                );
+                Skript.registerExpression(
+                        ExprInventorySlot.class,
+                        net.minecraft.world.inventory.Slot.class,
+                        "[the] slot[s] %numbers% of %inventory%",
+                        "%inventory%'[s] slot[s] %numbers%"
+                );
+                Skript.registerExpression(
+                        ExprItemsIn.class,
+                        net.minecraft.world.inventory.Slot.class,
+                        "[all [[of] the]] items ([with]in|of|contained in|out of) [1:inventor(y|ies)] %inventories%",
+                        "all [[of] the] %itemtypes% ([with]in|of|contained in|out of) [1:inventor(y|ies)] %inventories%"
+                );
+                Skript.registerExpression(
+                        ExprFirstEmptySlot.class,
+                        net.minecraft.world.inventory.Slot.class,
+                        "[the] first empty slot[s] of %inventories%",
+                        "%inventories%'[s] first empty slot[s]",
+                        "[the] first empty slot[s] in %inventories%"
+                );
                 Skript.registerExpression(
                         ExprLoveTime.class,
                         ch.njol.skript.util.Timespan.class,

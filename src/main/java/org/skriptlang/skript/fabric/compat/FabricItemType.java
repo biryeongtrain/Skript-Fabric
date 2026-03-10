@@ -125,6 +125,27 @@ public final class FabricItemType {
         return true;
     }
 
+    public boolean isOfType(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !stack.is(item)) {
+            return false;
+        }
+        if (prototype != null) {
+            ItemStack expected = prototype.copy();
+            expected.setCount(stack.getCount());
+            return ItemStack.isSameItemSameComponents(expected, stack);
+        }
+        if (customName != null && !customName.isBlank()) {
+            Component stackName = stack.get(DataComponents.CUSTOM_NAME);
+            if (stackName == null || !customName.equals(stackName.getString())) {
+                return false;
+            }
+        }
+        if (equippable != null && !Objects.equals(equippable, stack.get(DataComponents.EQUIPPABLE))) {
+            return false;
+        }
+        return true;
+    }
+
     public String itemId() {
         ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         return key != null ? MinecraftResourceParser.display(key) : item.toString();

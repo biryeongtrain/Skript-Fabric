@@ -16,19 +16,25 @@ public final class FabricInventory {
     private final Container container;
     private final MenuType<?> menuType;
     private final Component title;
+    private final @Nullable Object holder;
 
     public FabricInventory(Container container) {
-        this(container, inferMenuType(container.getContainerSize()), Component.empty());
+        this(container, inferMenuType(container.getContainerSize()), Component.empty(), null);
     }
 
     public FabricInventory(Container container, MenuType<?> menuType) {
-        this(container, menuType, Component.empty());
+        this(container, menuType, Component.empty(), null);
     }
 
     public FabricInventory(Container container, MenuType<?> menuType, @Nullable Component title) {
+        this(container, menuType, title, null);
+    }
+
+    public FabricInventory(Container container, MenuType<?> menuType, @Nullable Component title, @Nullable Object holder) {
         this.container = Objects.requireNonNull(container, "container");
         this.menuType = Objects.requireNonNull(menuType, "menuType");
         this.title = title != null ? title : Component.empty();
+        this.holder = holder;
     }
 
     public Container container() {
@@ -41,6 +47,10 @@ public final class FabricInventory {
 
     public Component title() {
         return title;
+    }
+
+    public @Nullable Object holder() {
+        return holder;
     }
 
     public int virtualSize() {
@@ -63,6 +73,10 @@ public final class FabricInventory {
     }
 
     public static FabricInventory chest(int rows) {
+        return chest(rows, Component.empty());
+    }
+
+    public static FabricInventory chest(int rows, @Nullable Component title) {
         int normalizedRows = Math.clamp(rows, 1, 6);
         return new FabricInventory(
                 new SimpleContainer(normalizedRows * 9),
@@ -73,7 +87,8 @@ public final class FabricInventory {
                     case 4 -> MenuType.GENERIC_9x4;
                     case 5 -> MenuType.GENERIC_9x5;
                     default -> MenuType.GENERIC_9x6;
-                }
+                },
+                title
         );
     }
 

@@ -9,6 +9,10 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
+- added a runtime-registered inventory/container closure on top of the earlier mixed expression/condition shims:
+  - expressions: `ExprChestInventory`, `ExprEnderChest`, `ExprInventory`, `ExprInventoryInfo`, `ExprInventorySlot`, `ExprItemsIn`, `ExprFirstEmptySlot`
+  - conditions: `CondContains`, `CondItemInHand`, `CondIsWearing`
+  - bootstrap registration now parses the active runtime forms for custom chest creation, player inventory access, inventory slot/item queries, contains checks, hand checks, and wearing checks
 - recovered the uncommitted fallback-heavy condition bundle under `src/main/java/ch/njol/skript/conditions/**` with only narrow API-alignment fixes needed for mergeability:
   - replaced removed `NameAndId` wrappers with direct `GameProfile` ban/op/whitelist checks
   - switched server whitelist mode lookup to `PlayerList`
@@ -35,12 +39,14 @@ Last updated: 2026-03-10
   - passed
 - `./gradlew test --tests ch.njol.skript.conditions.ConditionEffectClosureCompatibilityTest --tests ch.njol.skript.expressions.ExpressionClosureCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.RandomExpressionSyntaxTest --rerun-tasks`
   - passed
+- `./gradlew test --tests ch.njol.skript.expressions.ExpressionInventoryCompatibilityTest --tests ch.njol.skript.conditions.ConditionInventoryCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.InventorySyntaxTest --rerun-tasks`
+  - passed
 - `./gradlew build --rerun-tasks`
   - passed
 
 ## Next Lead
 
-- next Lane E lead is still the nearby low-dependency expression/condition surface that avoids aliases or inventory/container crossings; retry `ExprRandom` runtime registration only after the `%*classinfo%` parser path is fixed, and keep an eye on server-backed condition bundles like ban/op/whitelist/online for runtime semantics because this recovery only verified compile alignment plus the unbreakable branch
+- next Lane E lead can stay near the container/equipment neighborhood or move back to another low-dependency expression/condition closure; retry `ExprRandom` runtime registration only after the `%*classinfo%` parser path is fixed, and keep the location/world family deferred until there is a compat-type decision around `FabricLocation` / `FabricBlock`
 
 ## Merge Notes
 
