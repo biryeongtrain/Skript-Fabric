@@ -1,13 +1,22 @@
 package ch.njol.skript.variables;
 
 import ch.njol.skript.lang.Variable;
+import ch.njol.skript.registrations.Classes;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import ch.njol.skript.Skript;
 
 /**
  * Minimal variable storage bridge for legacy {@code ch.njol.skript.lang.Variable}.
@@ -16,6 +25,9 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public final class Variables {
 
     public static boolean caseInsensitiveVariables = true;
+    static final ReadWriteLock variablesLock = new ReentrantReadWriteLock(true);
+    static final List<VariablesStorage> STORAGES = new ArrayList<>();
+    static final Queue<VariableChange> changeQueue = new ConcurrentLinkedQueue<>();
     private static final Map<Object, VariablesMap> LOCAL_VARIABLES =
             Collections.synchronizedMap(new WeakHashMap<>());
     private static final VariablesMap GLOBAL_VARIABLES = new VariablesMap();
@@ -28,9 +40,28 @@ public final class Variables {
             return null;
         }
         String normalized = normalizeName(name);
-        VariablesMap map = local ? localMap(event, false) : GLOBAL_VARIABLES;
-        synchronized (map) {
-            return map.getVariable(normalized);
+        if (local) {
+            VariablesMap map = localMap(event, false);
+            synchronized (map) {
+                return map.getVariable(normalized);
+            }
+        }
+        variablesLock.readLock().lock();
+        try {
+            if (!changeQueue.isEmpty()) {
+                VariableChange latest = null;
+                for (VariableChange change : changeQueue) {
+                    if (change.name.equals(normalized)) {
+                        latest = change;
+                    }
+                }
+                if (latest != null) {
+                    return latest.value;
+                }
+            }
+            return GLOBAL_VARIABLES.getVariable(normalized);
+        } finally {
+            variablesLock.readLock().unlock();
         }
     }
 
@@ -43,10 +74,59 @@ public final class Variables {
             removePrefix(normalized.substring(0, normalized.length() - 1), event, local);
             return;
         }
-        VariablesMap map = local ? localMap(event, true) : GLOBAL_VARIABLES;
-        synchronized (map) {
-            map.setVariable(normalized, value);
+        if (local) {
+            VariablesMap map = localMap(event, true);
+            synchronized (map) {
+                map.setVariable(normalized, value);
+            }
+            return;
         }
+        setGlobalVariable(normalized, value);
+    }
+
+    public static void deleteVariable(String name, @Nullable SkriptEvent event, boolean local) {
+        setVariable(name, null, event, local);
+    }
+
+    static Lock getReadLock() {
+        return variablesLock.readLock();
+    }
+
+    static java.util.TreeMap<String, Object> getVariables() {
+        return GLOBAL_VARIABLES.treeMap;
+    }
+
+    static void processChangeQueue() {
+        while (true) {
+            VariableChange change = changeQueue.poll();
+            if (change == null) {
+                return;
+            }
+            GLOBAL_VARIABLES.setVariable(change.name, change.value);
+            saveVariableChange(change.name, change.value);
+        }
+    }
+
+    static boolean variableLoaded(String name, @Nullable Object value, VariablesStorage source) {
+        if (value == null || name == null || name.isBlank()) {
+            return false;
+        }
+        String normalized = normalizeName(name);
+        variablesLock.writeLock().lock();
+        try {
+            GLOBAL_VARIABLES.setVariable(normalized, value);
+        } finally {
+            variablesLock.writeLock().unlock();
+        }
+        if (STORAGES.isEmpty()) {
+            return true;
+        }
+        for (VariablesStorage storage : STORAGES) {
+            if (storage.accept(normalized)) {
+                return true;
+            }
+        }
+        return source.accept(normalized);
     }
 
     public static void removePrefix(String prefix, @Nullable SkriptEvent event, boolean local) {
@@ -90,7 +170,14 @@ public final class Variables {
     }
 
     public static void clearAll() {
-        GLOBAL_VARIABLES.clear();
+        variablesLock.writeLock().lock();
+        try {
+            GLOBAL_VARIABLES.clear();
+            changeQueue.clear();
+            STORAGES.clear();
+        } finally {
+            variablesLock.writeLock().unlock();
+        }
         LOCAL_VARIABLES.clear();
     }
 
@@ -142,6 +229,16 @@ public final class Variables {
         return name.split(java.util.regex.Pattern.quote(Variable.SEPARATOR));
     }
 
+    static void registerLoadedStorage(VariablesStorage storage) {
+        if (!STORAGES.contains(storage)) {
+            STORAGES.add(storage);
+        }
+    }
+
+    static void unregisterLoadedStorage(VariablesStorage storage) {
+        STORAGES.remove(storage);
+    }
+
     private static Object eventScopeKey(@Nullable SkriptEvent event) {
         if (event == null) {
             return Variables.class;
@@ -154,5 +251,45 @@ public final class Variables {
             return name;
         }
         return name.toLowerCase(Locale.ENGLISH);
+    }
+
+    private static void setGlobalVariable(String name, @Nullable Object value) {
+        if (variablesLock.writeLock().tryLock()) {
+            try {
+                if (!changeQueue.isEmpty()) {
+                    processChangeQueue();
+                }
+                GLOBAL_VARIABLES.setVariable(name, value);
+                saveVariableChange(name, value);
+            } finally {
+                variablesLock.writeLock().unlock();
+            }
+            return;
+        }
+        changeQueue.add(new VariableChange(name, value));
+    }
+
+    private static void saveVariableChange(String name, @Nullable Object value) {
+        if (STORAGES.isEmpty()) {
+            return;
+        }
+        SerializedVariable.Value serializedValue = SerializedVariable.serialize(value);
+        if (value != null && serializedValue == null) {
+            return;
+        }
+        for (VariablesStorage storage : STORAGES) {
+            if (!storage.accept(name)) {
+                continue;
+            }
+            try {
+                storage.save(new SerializedVariable(name, serializedValue));
+            } catch (Exception ex) {
+                Skript.exception(ex, "Error saving variable named " + name);
+            }
+            return;
+        }
+    }
+
+    private record VariableChange(String name, @Nullable Object value) {
     }
 }

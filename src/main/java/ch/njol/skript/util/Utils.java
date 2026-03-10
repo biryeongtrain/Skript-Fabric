@@ -49,6 +49,11 @@ public final class Utils {
         }
     }
 
+<<<<<<< HEAD
+    public static String replaceChatStyles(String value) {
+        return value;
+    }
+
     public static @Nullable String parseHexColor(String value) {
         if (value == null) {
             return null;
