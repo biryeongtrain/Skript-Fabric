@@ -17,7 +17,7 @@ Last updated: 2026-03-10
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `352 / 1189`, shortfall `837`
+- upstream `ch/njol/skript` snapshot: local `353 / 1189`, shortfall `836`
 - immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
 ## Local Upstream Reference
@@ -29,10 +29,10 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- current verified head adds a Lane E pure-local helper follow-up on top of the existing upstream-core baseline
+- current verified head adds `CondPermission` through the official LuckPerms API/provider path exposed by LuckPerms Fabric
 - latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest bundle batch restored `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
-- coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract; pure-Java registrars stay outside bootstrap and Lane C storage backend work remains unmerged
+- the latest focused follow-up keeps the existing `230 / 230` baseline while extending default runtime syntax with `%players% has permission %strings%`
+- the prior Lane E helper bundle (`CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`) remains merged underneath it
 
 ## Recent Closed Prereqs
 

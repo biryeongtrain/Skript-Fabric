@@ -38,10 +38,9 @@ Last updated: 2026-03-10
   - build path executed `runGameTest` successfully on 2026-03-10
   - `230 / 230` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
-  - coordinator merged a verified Lane E pure-local helper bundle on 2026-03-10
-  - the merged batch restored `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
-  - coordinator kept the default Fabric runtime bootstrap on the existing `230 / 230` baseline contract, so the latest closure is support-surface reduction first, not new default-runtime syntax registration
-  - the raw `ch/njol/skript` local snapshot moved to `352 / 1189`, reducing the measured shortfall to `837`
+  - coordinator added `CondPermission` on 2026-03-10 using the official LuckPerms API/provider path exposed by LuckPerms Fabric
+  - the latest change keeps the existing `230 / 230` Fabric GameTest baseline while extending default runtime syntax with `%players% has permission %strings%`
+  - the raw `ch/njol/skript` local snapshot moved to `353 / 1189`, reducing the measured shortfall to `836`
 
 ## Priority Shift On 2026-03-08
 
@@ -63,8 +62,8 @@ Baseline reference used for the new audit:
 Measured source counts:
 
 - upstream `src/main/java/ch/njol/skript`: `1189` Java files
-- local `src/main/java/ch/njol/skript`: `352` Java files
-- net missing local surface relative to that snapshot: `837` Java files
+- local `src/main/java/ch/njol/skript`: `353` Java files
+- net missing local surface relative to that snapshot: `836` Java files
 
 Top-level upstream packages missing locally entirely:
 
@@ -80,7 +79,7 @@ Key local package counts versus upstream:
 - `aliases`: local `3`, upstream `12`
 - `lang`: local `86`, upstream `85`
 - `expressions`: local `32`, upstream `391`
-- `conditions`: local `10`, upstream `135`
+- `conditions`: local `11`, upstream `135`
 - `classes`: local `21`, upstream `28`
 - `util`: local `29`, upstream `57`
 - `variables`: local `6`, upstream `11`

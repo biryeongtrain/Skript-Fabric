@@ -1,6 +1,7 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.conditions.CondPermission;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
@@ -225,6 +226,7 @@ public final class SkriptFabricBootstrap {
                         "%players% (is|are) sprinting",
                         "%players% (isn't|is not|aren't|are not) sprinting"
                 );
+                CondPermission.register();
                 Skript.registerCondition(
                         CondBrewingConsume.class,
                         "[the] brewing stand will consume [the] fuel",

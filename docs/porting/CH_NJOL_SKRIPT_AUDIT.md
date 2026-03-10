@@ -151,11 +151,11 @@ That means the real gap is behavior, not class presence.
 - coordinator narrowed the default Fabric runtime bootstrap back to the prior `230 / 230` baseline contract, so these additions currently land as upstream-core closure work rather than new default-runtime syntax registrations
 - merged verification on 2026-03-10:
   - `./gradlew build --rerun-tasks`
-- raw `ch/njol/skript` snapshot after that merge: `352 / 1189`, shortfall `837`
+- raw `ch/njol/skript` snapshot after that merge: `353 / 1189`, shortfall `836`
 - current verified Fabric runtime baseline after that merge: `230 / 230`
-- latest verified Lane E pure-local follow-up on 2026-03-10:
-  - restored `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
-  - targeted verification: `./gradlew test --tests ch.njol.skript.conditions.ConditionValueCompatibilityTest --tests ch.njol.skript.expressions.ExpressionValueCompatibilityTest --rerun-tasks`
+- latest verified Lane E permission follow-up on 2026-03-10:
+  - restored `CondPermission` with a Fabric-native backend through the official LuckPerms API/provider path exposed by LuckPerms Fabric
+  - targeted verification: `./gradlew test --tests ch.njol.skript.conditions.CondPermissionCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.PermissionSyntaxTest --rerun-tasks`
 
 ## Latest Merged Syntax-Import Batch
 

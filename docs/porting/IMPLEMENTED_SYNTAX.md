@@ -26,8 +26,8 @@ It is not:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
-  - no new default-runtime syntax families were kept in the latest Lane E helper batch; coordinator preserved the existing `230 / 230` runtime bootstrap surface to keep `./gradlew build --rerun-tasks` green
-  - latest verified support-surface additions behind that unchanged runtime include `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
+  - latest verified runtime-surface addition is `CondPermission`, registered on the Fabric bootstrap against the official LuckPerms API/provider path used by LuckPerms Fabric for `%players% has permission %strings%`
+  - latest verified support-surface additions behind that unchanged `230 / 230` GameTest baseline also include `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, and `ExprTimespanDetails`
   - the experimental variable storage backend / `FlatFileStorage` slice was intentionally excluded from the final green batch after runtime regression
 
 ## Stage 8 Audit Snapshot
@@ -41,9 +41,9 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `352`
+  - local `ch/njol/skript`: `353`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - current shortfall: `837`
+  - current shortfall: `836`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
   - latest shortfall-focused closure restored a pure-local Lane E helper batch while keeping the regressing storage-backend slice excluded
 
@@ -176,6 +176,9 @@ None in the current Fabric registration set.
   - representative forms: `%entities% are silent`, `%entities% are not silent`
 - `is invulnerable`
   - representative forms: `%entities% are invulnerable`, `%entities% are invincible`, `%entities% are vulnerable`
+- `has permission`
+  - representative forms: `%players% has permission %strings%`, `%players% does not have permission %strings%`
+  - Fabric backend note: checks route through the official LuckPerms API/provider path exposed by LuckPerms Fabric and preserve upstream `skript.*` wildcard fallback semantics
 - chance condition
   - representative forms: `chance of 50%`, `chance of 0.25`, `chance of 25% failed`
 - generic comparison
