@@ -175,6 +175,7 @@ Reasoning:
 5. resolve integration fallout in the coordinator worktree only
 6. rerun full verification
 7. update canonical docs with exact counts, exact scope, and exact test results
+   coordinator must also update `docs/porting/IMPLEMENTED_SYNTAX.md` with the newly landed user-visible syntax as concrete inventory entries and representative forms, not headline-only notes
 8. refresh root pointer headlines if the headline numbers changed
 
 ## Stop Conditions

@@ -202,6 +202,41 @@ None in the current Fabric registration set.
   - representative forms: `%objects% is %objects%`
   - current audit note: ambiguous bare item-id equality is not parity-complete yet
 
+### Server and account state
+
+- banned / IP-banned checks
+  - representative forms: `%offlineplayers% are banned`, `%players% are IP-banned`, `"127.0.0.1" is banned`
+- online / offline / connected checks
+  - representative forms: `%offlineplayers% are online`, `%offlineplayers% are offline`, `%offlineplayers% are connected`
+- operator and whitelist checks
+  - representative forms: `%offlineplayers% are operators`, `%offlineplayers% are whitelisted`, `the server is whitelisted`, `the server whitelist is enforced`
+- PvP state
+  - representative forms: `PvP is enabled`, `PvP is disabled in %worlds%`
+
+### Entity, item, and world state
+
+- environment and movement state
+  - representative forms: `%entities% are wet`, `%entities% are in water`, `%entities% are in lava`, `%entities% are in a bubble column`, `%entities% are in rain`, `%entities% are frozen`, `%livingentities% are dashing`
+- control and visibility state
+  - representative forms: `%livingentities% are charging a fireball`, `%entities%' custom names are visible`, `custom name of %entities% is visible`
+- item and block state
+  - representative forms: `%players% have cooldown on %itemtypes%`, `%players% have %itemtypes% on cooldown`, `%itemtypes% are unbreakable`, `respawn anchors work in %worlds%`
+- leash, taming, and damageability state
+  - representative forms: `%livingentities% are leashed`, `%livingentities% are tameable`, `%livingentities% are sheared`
+
+### Mob-specific state
+
+- allay duplication
+  - representative forms: `%livingentities% can duplicate`, `%livingentities% cannot duplicate`
+- goat horns
+  - representative forms: `%livingentities% have a horn`, `%livingentities% have a left horn`, `%livingentities% have a right horn`, `%livingentities% have both horns`
+- creeper ignition
+  - representative forms: `creeper %livingentities% is going to explode`, `creeper %livingentities% is in the ignition process`, `creeper %livingentities% is ignited`
+- panda state
+  - representative forms: `%livingentities% are on their backs`, `%livingentities% are rolling`, `%livingentities% are scared`, `%livingentities% are sneezing`
+- other mob state
+  - representative forms: `%livingentities% are playing dead`, `%livingentities% are screaming`, `%livingentities% are shivering`
+
 ### Breeding
 
 - `can age`
@@ -298,6 +333,17 @@ The list below groups the active syntax by domain and calls out the representati
   - representative forms: `amount of %objects%`, `the inverse of %booleans%`
 - date / index helpers
   - representative forms: `%dates% formatted as "yyyy-MM-dd"`, `sorted indices of %objects%`, `indices of %objects%`
+
+### Entity and player state
+
+- AI, gravity, and flight state
+  - representative forms: `AI of %livingentities%`, `gravity of %entities%`, `flight mode of %players%`
+- combat and survival state
+  - representative forms: `attack cooldown of %players%`, `last damage of %livingentities%`, `exhaustion of %players%`
+- movement and world-interaction state
+  - representative forms: `fall distance of %entities%`, `level progress of %players%`
+- fire and freezing timers
+  - representative forms: `burning time of %entities%`, `maximum burning time of %entities%`, `freeze time of %entities%`, `maximum freeze time of %entities%`
 
 ### Breeding
 
