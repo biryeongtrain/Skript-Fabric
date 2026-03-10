@@ -12,6 +12,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 
 final class EventCompatibilityTest {
 
@@ -19,11 +20,13 @@ final class EventCompatibilityTest {
     static void bootstrapMinecraft() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
+        SkriptFabricBootstrap.bootstrap();
         EntityData.register();
         EntityType.register();
         EvtDamage.register();
         EvtBreeding.register();
         EvtBucketCatch.register();
+        EvtScript.register();
     }
 
     @Test
@@ -50,6 +53,13 @@ final class EventCompatibilityTest {
 
         assertEquals("axolotl", readArray(event, "entityTypes"));
         assertEquals("bucket catch of axolotl", event.toString(null, false));
+    }
+
+    @Test
+    void scriptEventParsesAsyncLoadPattern() {
+        EvtScript event = parseEvent("on async script load", EvtScript.class);
+
+        assertEquals("async script load", event.toString(null, false));
     }
 
     private <T> T parseEvent(String input, Class<T> type) {

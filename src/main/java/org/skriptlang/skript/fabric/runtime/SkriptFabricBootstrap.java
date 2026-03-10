@@ -7,6 +7,7 @@ import ch.njol.skript.classes.data.DefaultFunctions;
 import ch.njol.skript.classes.data.DefaultOperations;
 import ch.njol.skript.classes.data.JavaClasses;
 import ch.njol.skript.classes.data.SkriptClasses;
+import ch.njol.skript.events.EvtScript;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.bukkit.base.types.BlockClassInfo;
@@ -416,6 +417,7 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEvent(EvtFabricGameTest.class, "on gametest");
                 Skript.registerEvent(EvtFishing.class, EvtFishing.patterns());
                 Skript.registerEvent(EvtPlayerInput.class, EvtPlayerInput.patterns());
+                EvtScript.register();
                 Skript.registerEvent(EvtFabricServerTick.class, "on server tick");
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
