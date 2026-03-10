@@ -11,6 +11,14 @@ Last updated: 2026-03-10
 
 ## Latest Slice
 
+- `StructureType` remains blocked for this worktree because upstream depends on Bukkit `TreeType`; no clean local compile-safe adaptation surfaced, so this slice stayed on fully local util/localization closure
+- landed `feat(util): restore chat message parser helpers`
+- local `util.chat` now includes upstream-backed `ChatMessages`, adapted to this Fabric branch by keeping chat colors as plain strings instead of Bungee chat colors and by preserving the existing string-backed `MessageComponent` model
+- `Utils` now restores the upstream-style `parseHexColor(...)` helper needed for hex tag parsing and legacy `&x`/`§x` color decoding
+- expanded `ChatSupportCompatibilityTest` coverage for tag parsing, legacy color parsing, link detection, JSON serialization, style copying, parsed-string decoding, addon chat-code registration, and style stripping
+- landed `feat(localization): restore shared numeric parsing helpers`
+- `ch.njol.util.StringUtils` now restores upstream-style `numberAfter(...)`, `numberBefore(...)`, and `numberAt(...)`, and `PluralizingArgsMessage` now delegates back to that shared helper instead of its reduced local parser
+- expanded `LocalizationCompatibilityTest` coverage for numeric parsing boundaries and pluralization behavior around ordinal-like text
 - attempted a primary adapted `Direction` / `WeatherType` / `AABB` util import bundle first, but reverted it after a hard branch-local compile blocker: this worktree has no `org.bukkit.*` compile classpath at all, so even trimmed upstream Bukkit util classes cannot land here yet
 - landed `feat(util): restore local chat support leaf types`
 - local `util` now includes upstream-backed `chat.LinkParseMode`, `chat.ChatCode`, `chat.MessageComponent`, `chat.SkriptChatCode`, and `chat.package-info`, adapted to this Fabric branch by storing color metadata as plain strings instead of Bungee chat types
@@ -31,6 +39,7 @@ Last updated: 2026-03-10
 - result: failed at `:compileJava` because this branch currently has no `org.bukkit.*` classes on the compile classpath, so the primary adapted util bundle was reverted instead of partially landed
 - `./gradlew test --tests ch.njol.skript.util.chat.ChatSupportCompatibilityTest --rerun-tasks` passed
 - `./gradlew test --tests ch.njol.skript.util.chat.ChatSupportCompatibilityTest --tests ch.njol.skript.util.DateCompatibilityTest --rerun-tasks` passed
+- `./gradlew test --tests ch.njol.skript.util.chat.ChatSupportCompatibilityTest --tests ch.njol.skript.localization.LocalizationCompatibilityTest --rerun-tasks` passed
 
 ## Next Lead
 

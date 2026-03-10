@@ -52,4 +52,63 @@ public final class StringUtils {
         }
         return input.repeat(count);
     }
+
+    public static double numberAfter(final CharSequence input, final int index) {
+        return numberAt(input, index, true);
+    }
+
+    public static double numberBefore(final CharSequence input, final int index) {
+        return numberAt(input, index, false);
+    }
+
+    public static double numberAt(final CharSequence input, final int index, final boolean forward) {
+        if (input == null || index < 0 || index >= input.length()) {
+            return -1;
+        }
+        final int direction = forward ? 1 : -1;
+        boolean stillWhitespace = true;
+        boolean hasDot = false;
+        int first = -1;
+        int last = -1;
+        for (int i = index; i >= 0 && i < input.length(); i += direction) {
+            final char current = input.charAt(i);
+            if (Character.isDigit(current)) {
+                if (first == -1) {
+                    first = last = i;
+                } else {
+                    first += direction;
+                }
+                stillWhitespace = false;
+            } else if (current == '.') {
+                if (hasDot) {
+                    break;
+                }
+                if (first == -1) {
+                    first = last = i;
+                } else {
+                    first += direction;
+                }
+                hasDot = true;
+                stillWhitespace = false;
+            } else if (Character.isWhitespace(current)) {
+                if (stillWhitespace) {
+                    continue;
+                }
+                break;
+            } else {
+                break;
+            }
+        }
+        if (first == -1) {
+            return -1;
+        }
+        if (input.charAt(Math.min(first, last)) == '.') {
+            return -1;
+        }
+        int boundary = first + direction;
+        if (boundary > 0 && boundary < input.length() && !Character.isWhitespace(input.charAt(boundary))) {
+            return -1;
+        }
+        return Double.parseDouble(input.subSequence(Math.min(first, last), Math.max(first, last) + 1).toString());
+    }
 }

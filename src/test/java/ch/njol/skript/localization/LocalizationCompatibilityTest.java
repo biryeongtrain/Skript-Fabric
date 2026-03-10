@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.njol.util.StringUtils;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -81,6 +82,16 @@ class LocalizationCompatibilityTest {
 
         assertArrayEquals(new String[]{"red", "green", "blue"}, Language.getList("colors"));
         assertEquals(" and ", Language.getSpaced("and"));
+    }
+
+    @Test
+    void pluralizationUsesUpstreamNumericParsingHelpers() {
+        assertEquals(12.5, StringUtils.numberAfter(" 12.5 shelves", 0));
+        assertEquals(12.5, StringUtils.numberBefore("12.5 shelves", 4));
+        assertEquals(-1, StringUtils.numberAfter("2nd shelf", 0));
+        assertEquals("1 shelf", PluralizingArgsMessage.format("1 shel¦f¦ves¦"));
+        assertEquals("2 shelves", PluralizingArgsMessage.format("2 shel¦f¦ves¦"));
+        assertEquals("2nd shelf", PluralizingArgsMessage.format("2nd shel¦f¦ves¦"));
     }
 
     private static Map<String, String> defaultEntries() {
