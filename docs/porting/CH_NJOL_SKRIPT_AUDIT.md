@@ -7,8 +7,8 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `286`
-- Exact-path expressions missing: `100`
+- Exact-path missing in local tree: `282`
+- Exact-path expressions missing: `96`
 - Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
 ## Priority Matrix
@@ -88,23 +88,19 @@ Baseline snapshot date: 2026-03-08
 ## Latest Verified Merge
 
 - Landed:
-  - syntax1 world helpers `ExprGameRule`, `ExprWorldBorderWarningTime`, `ExprWeather`
-  - syntax2 vector and text helpers `ExprVectorCylindrical`, `ExprVectorFromDirection`, `ExprVectorFromYawAndPitch`, `ExprVectorSpherical`, `ExprStringCase`, `ExprColoured`, `ExprRawString`, `ExprStringColor`, `ExprTernary`
-  - syntax3 villager and item expressions `ExprLore`, `ExprTimePlayed`, `ExprTotalExperience`, `ExprUnbreakable`, `ExprVillagerLevel`, `ExprVillagerProfession`, `ExprVillagerType`
-  - syntax4 identity and relation expressions `ExprFromUUID`, `ExprMemory`, `ExprProjectileCriticalState`, `ExprAllBannedEntries`
-  - exact-path event closure `EvtRealTime`, `SimpleEvents`, `ExperienceSpawnEvent`, `PreScriptLoadEvent`, `events/bukkit/package-info`
-  - compat accessor migration for `PrivateAllayAccess` and `PrivateItemEntityAccess`
+  - syntax1 utility expressions `ExprTool`, `ExprWithFireResistance`
+  - syntax2 utility expressions `ExprTimeState`, `ExprSlotIndex`
+  - bootstrap/binding closure for that syntax subset
+  - remaining compat cleanup in `PrivateItemEntityAccess`
 - Deferred:
-  - `PrivateFishingHookAccess.currentState` migration stayed out after the GameTest mixin accessor descriptor failure repeated
+  - teleport-cause and spawn-reason event hooks stayed out after worker write failures
+  - `PrivateFishingHookAccess.currentState` migration stayed out after the GameTest mixin accessor descriptor failure remained unresolved
 - Added compatibility coverage:
-  - `ExpressionVectorGeometryCompatibilityTest`
-  - `ExpressionSyntaxS2CompatibilityTest`
-  - `ExpressionSyntaxS3CompatibilityTest`
-  - `ExpressionSyntaxS4CompatibilityTest`
-  - `ScheduledEventRuntimeTest`
-  - `ExperienceSpawnRuntimeTest`
-  - `ScriptLifecycleRuntimeTest`
+  - `ExpressionCycle20260312CSyntax1CompatibilityTest`
+  - `ExpressionCycle20260312DSyntax2CompatibilityTest`
+  - `ExpressionCycle20260312DBindingCompatibilityTest`
+  - `CompatAccessorMigrationUnitTest`
 - Verification passed on 2026-03-12:
-  - targeted cycle JUnit suite covering syntax S1/S2/S3/S4, mixed runtime binding, event compatibility/runtime, and compat accessor migration
+  - targeted cycle JUnit suite covering syntax S1, syntax2 D, bootstrap/binding D, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks`
 - Verified runtime baseline after that merge: `260 / 260`

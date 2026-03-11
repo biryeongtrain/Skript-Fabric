@@ -20,22 +20,23 @@ Last full verification: 2026-03-12
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `903`, upstream `1189`, shortfall `286`
+- Upstream `ch/njol/skript` baseline: exact-path present `907`, upstream `1189`, shortfall `282`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax S1/S2/S3/S4, event compatibility/runtime, mixed runtime binding, and compat accessor migration
+  - targeted cycle JUnit suite passed for syntax S1, syntax2 D, bootstrap/binding D, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Most Recent Merged Slice
 
-- syntax1 world helpers `ExprGameRule`, `ExprWorldBorderWarningTime`, `ExprWeather`
-- syntax2 vector and text helpers plus syntax3 villager/item subset and syntax4 identity/relation subset
-- exact-path event closure for `EvtRealTime`, `SimpleEvents`, `ExperienceSpawnEvent`, and `PreScriptLoadEvent`
-- allay and item-entity compat accessors
-- `PrivateFishingHookAccess.currentState` migration deferred again after the GameTest mixin accessor descriptor failure
+- syntax1 utility helpers `ExprTool`, `ExprWithFireResistance`
+- syntax2 utility helpers `ExprTimeState`, `ExprSlotIndex`
+- bootstrap/binding closure for the 2026-03-12d syntax subset
+- remaining `PrivateItemEntityAccess` reflection fallback removal
+- teleport-cause, spawn-reason, and `PrivateFishingHookAccess.currentState` stayed deferred
 
 ## Do Next
 
-- Continue exact-path closure from `286` overall missing with focus on expressions `100` and the remaining non-event buckets.
+- Continue exact-path closure from `282` overall missing with focus on expressions `96` and the remaining non-event buckets.
+- Resume the blocked next-smallest slices in this order: `ExprReadiedArrow`, `ExprAppliedEffect`, teleport cause, spawn reason.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.

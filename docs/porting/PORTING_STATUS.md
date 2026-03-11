@@ -6,8 +6,8 @@ Last full verification: 2026-03-12
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `286`
-  - expressions missing: `100`
+  - overall missing: `282`
+  - expressions missing: `96`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -27,10 +27,10 @@ Last full verification: 2026-03-12
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `903`
-  - shortfall: `286`
+  - exact-path present locally: `907`
+  - shortfall: `282`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax S1/S2/S3/S4, event compatibility/runtime, mixed runtime binding, and compat accessor migration
+  - targeted cycle JUnit suite passed for syntax S1, syntax2 D, bootstrap/binding D, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Active Priority
@@ -43,15 +43,14 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed expression slice:
-  - syntax1 world helpers: `ExprGameRule`, `ExprWorldBorderWarningTime`, `ExprWeather`
-  - syntax2 vector and text helpers: `ExprVectorCylindrical`, `ExprVectorFromDirection`, `ExprVectorFromYawAndPitch`, `ExprVectorSpherical`, `ExprStringCase`, `ExprColoured`, `ExprRawString`, `ExprStringColor`, `ExprTernary`
-  - syntax3 villager and item subset: `ExprLore`, `ExprTimePlayed`, `ExprTotalExperience`, `ExprUnbreakable`, `ExprVillagerLevel`, `ExprVillagerProfession`, `ExprVillagerType`
-  - syntax4 identity and relation subset: `ExprFromUUID`, `ExprMemory`, `ExprProjectileCriticalState`, `ExprAllBannedEntries`
+  - syntax1 utility subset: `ExprTool`, `ExprWithFireResistance`
+  - syntax2 utility subset: `ExprTimeState`, `ExprSlotIndex`
 - Latest landed infra slice:
-  - exact-path event closure: `EvtRealTime`, `SimpleEvents`, `ExperienceSpawnEvent`, `PreScriptLoadEvent`, `events/bukkit/package-info`
-  - compat access migration: `PrivateAllayAccess` and `PrivateItemEntityAccess`
+  - bootstrap and binding coverage for the 2026-03-12d syntax subset
+  - remaining `PrivateItemEntityAccess` reflection fallback removal
 - Deferred from the same cycle:
-  - `PrivateFishingHookAccess.currentState` migration stayed out of `main` after the GameTest mixin accessor descriptor failure repeated
+  - teleport-cause and spawn-reason event hooks stayed out after worker write failures
+  - `PrivateFishingHookAccess.currentState` migration stayed out after the GameTest mixin accessor descriptor failure remained unresolved
 - Landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 
 ## Open Gaps
