@@ -1,135 +1,47 @@
 # Next Agent Handoff
 
-Last updated: 2026-03-11
+Last condensed: 2026-03-11
+Last full verification: 2026-03-11
 
 ## Read Order
 
 1. [README.md](README.md)
 2. this file
-3. [PORTING_STATUS.md](PORTING_STATUS.md)
-4. [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md)
-5. [CODEX_PARALLEL_WORKFLOW.md](CODEX_PARALLEL_WORKFLOW.md) if running parallel workers
-6. [CODEX_PARALLEL_PROMPTS.md](CODEX_PARALLEL_PROMPTS.md) if running parallel workers
+3. [CH_NJOL_SKRIPT_AUDIT.md](CH_NJOL_SKRIPT_AUDIT.md)
+4. [FABRIC_PORT_STAGES.md](FABRIC_PORT_STAGES.md)
+5. [FABRIC_EVENT_MAPPING.md](FABRIC_EVENT_MAPPING.md)
+6. [IMPLEMENTED_SYNTAX.md](IMPLEMENTED_SYNTAX.md)
+7. [CODEX_PARALLEL_WORKFLOW.md](CODEX_PARALLEL_WORKFLOW.md) and [CODEX_PARALLEL_PROMPTS.md](CODEX_PARALLEL_PROMPTS.md) only for parallel runs
 
-## Current Headline
+## Current State
 
-- latest verified runtime baseline: `246 / 246`
-- latest full verification:
+- Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
+- Stage 5 event backend rows active: `22 / 22`
+- Stage 8 package-local audit: `23 / 214`
+- Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
+- Remaining package-local Stage 8 scope: `191 / 214`
+- Upstream `ch/njol/skript` baseline: local `140`, upstream `1189`, shortfall `1049`
+- Latest full verification:
+  - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
   - `./gradlew build --rerun-tasks` passed
-- Stage 8 package-local audit remains frozen at `23 / 214`
-- upstream `ch/njol/skript` snapshot: local `845 / 1189`, shortfall `367`
-- immediate priority: reduce the raw `ch/njol/skript` shortfall by closing upstream package bundles, not polishing already-landed syntax
 
-## Local Upstream Reference
+## Most Recent Merged Slice
 
-Use local upstream sources only. Do not browse.
+- legacy `parseStatic` expression-placeholder flags restored
+- explicit-literal-only `Classes.getPatternInfos(...)` restored
+- keyed plural default behavior in `Function.execute(...)` restored
+- runtime implementation overload choice locked with regression coverage
 
-- `/tmp/skript-upstream-e6ec744-2`
-- `/tmp/upstream-skript`
+## Do Next
 
-## Latest Closed Slice
+- Continue `Part 1A` only if you can reproduce a concrete parser/loader mismatch.
+- Prefer tight `Part 1B` gaps in `Variables`, `Classes`, `config`, `log`, or adjacent helpers.
+- Keep Stage 8 package counts unchanged unless you actually audit another package.
+- If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.
 
-- latest verified concrete-event activation follow-up promotes `EvtGrow` and `EvtPlantGrowth` to active runtime status:
-  - new real `.sk` GameTest `cropGrowthProducerExecutesLoadedScript` grows a live wheat crop through `CropBlock.performBonemeal(...)`
-  - targeted worker verification:
-    - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --rerun-tasks`
-    - `./gradlew runGameTest --rerun-tasks`
-  - coordinator final verification:
-    - `./gradlew build --rerun-tasks`
-  - runtime baseline is now `246 / 246`
-  - raw upstream shortfall remains `845 / 1189`, shortfall `367`
-- the active/import-only split is now explicit:
-  - active runtime surface: conditions `10`, expressions `20`, effects `4`, events `13`
-  - import-only surface: the blocked mixed-batch effect remainder plus the older `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile`
-- no missing-library rollback was needed in this slice
-- the prior expression-harvest import-only batch remains merged underneath this follow-up:
-  - imported expressions `26`:
-    - inventory/item: `ExprItemFlags`
-    - parser/queue: `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
-    - world/property: `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
-  - coordinator kept that slice import-only because representative real `.sk` GameTest coverage is still missing for active world/property use
-- the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`, `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) remains merged underneath it
+## Guardrails
 
-## Recent Closed Prereqs
-
-These are already closed. Do not reopen without a new reproducer.
-
-- legacy `parseStatic(...)` expression-placeholder flags
-- explicit-literal-only `Classes.getPatternInfos(...)` candidate filtering
-- case-sensitive classinfo lookup
-- exact-type overload preference in `FunctionRegistry`
-- split exact-overload ambiguity retention
-- required omitted-placeholder fail-fast parsing
-
-## Next Targets
-
-1. live-activate the remaining imported concrete events that still have no runtime producer:
-   - `EvtEntityBlockChange`, `EvtPressurePlate`, `EvtVehicleCollision`
-2. broaden the partial active event classes instead of re-importing them:
-   - `EvtBlock` beyond break-only backing
-   - `EvtItem` beyond spawn-only backing
-   - `EvtEntity` beyond spawn/death lifecycle backing
-   - finer reason coverage for `EvtEntityTransform` and `EvtHealing`
-   - `EvtGrow` structure-type coverage beyond the current crop/block producer
-3. resolve or continue the import-only mixed-batch effect remainder:
-   - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
-4. run the next syntax-heavy mixed-runtime worker batch for new `conditions` / `expressions` / `effects`, keeping worker targets at `10-20` syntax classes each and favoring still-missing expression families after this import-only worker harvest
-5. after the next syntax batch, return to the remaining `variables` + `sections` + `structures` + `aliases` closure and the next `classes` / `util` / `lang` blocker imports
-
-## Parallel Defaults
-
-- keep `Coordinator + 6 workers`
-- worker reasoning default: `medium`
-- use local upstream snapshot only
-- one primary bundle plus one fallback bundle per lane
-- if both still leave owned work open, continue into the next same-scope sub-bundle before stopping
-- allow multiple commits per lane if they stay inside the owned bundle
-- do not stop after the first small win; aim for at least `20` class-equivalent additions/restorations and preferably roughly `20-60`, or `2-4` verifiable commits unless the bundle is blocked or exhausted
-- no web
-- worker docs stay minimal
-- for syntax-heavy mixed-runtime cycles, assign at least `100` syntax-class or live-activation targets across the six workers when that much plausible surface remains
-- for syntax-heavy runtime batches, prefer mixed-runtime sub-lanes instead of falling back to the old package A-F split:
-  - `Lane 1`: event activation / remaining concrete event producers
-  - `Lane 2`: remaining or adjacent condition closures
-  - `Lane 3`: event-payload expressions
-  - `Lane 4`: property / player expressions
-  - `Lane 5`: item / entity mutation effects
-  - `Lane 6`: utility / storage / server effects
-
-## Lane Status Format
-
-Lane files under `docs/porting/parallel/` should stay short:
-
-1. scope
-2. latest slice
-3. verification
-4. next lead
-5. merge notes
-
-## Verification
-
-Optional targeted verification while narrowing a lane:
-
-```bash
-./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks
-```
-
-Full verification:
-
-```bash
-./gradlew build --rerun-tasks
-```
-
-## Main Worktree Notes
-
-Keep unrelated dirty files untouched in `/Users/qf/IdeaProjects/Skript-Fabric-port`:
-
-- `.codex/environments/environment-2.toml`
-- `.codex/environments/environment.toml`
-- `scripts/`
-
-## Transition Note
-
-- there is an older syntax-import batch under `/private/tmp/skript-impl-20260309150545`
-- do not let that legacy batch define the next phase
-- close or park it cleanly, then relaunch workers under the new package-bundle ownership model
+- Do not claim parity complete.
+- Do not re-expand these docs with long logs.
+- Do not revive the 5-lane parallel doc expansion.
+- Preserve exact counts and exact verification outcomes.

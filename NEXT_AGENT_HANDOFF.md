@@ -6,11 +6,11 @@ Read this root file first if a prompt references it, then continue in the canoni
 
 Current headline:
 
-- keep Stage 8 package-local audit state frozen at `23 / 214`
+- keep Stage 8 package-local audit frozen at `23 / 214`
 - do not start the next Bukkit package-local audit slice yet
-- immediate priority is reducing the raw `ch/njol/skript` shortfall by closing larger upstream package bundles
-- latest verified runtime baseline is `230 / 230`
-- latest closed slice is the current verified bundle merge inside `ch/njol/skript`, bringing the raw snapshot to `323 / 1189`
+- immediate priority is upstream `ch/njol/skript` closure first
+- latest verified runtime baseline is `230 / 230` on 2026-03-11
+- latest closed slice is legacy `parseStatic` flags, explicit-literal-only `Classes.getPatternInfos(...)`, and keyed plural default behavior
 - Codex parallel-session docs:
   - `docs/porting/CODEX_PARALLEL_WORKFLOW.md`
   - `docs/porting/CODEX_PARALLEL_PROMPTS.md`

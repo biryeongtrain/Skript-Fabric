@@ -1,29 +1,10 @@
 # Parallel Lane Docs
 
-Last updated: 2026-03-09
+Last condensed: 2026-03-11
 
-This directory is for worker-lane notes during a parallel Codex session.
-
-Rules:
+Lane files are short, lane-local notes for parallel Codex runs.
 
 - Workers update only their own lane file.
-- Coordinator reads all lane files, merges branches, and then updates canonical docs under `docs/porting/`.
-- Keep lane docs short.
-- Keep numbers exact.
-- Record exact commands and exact results.
-- Keep pushing inside the owned bundle; do not stop after a trivial single-class win unless the bundle is blocked or exhausted.
-- Preferred format:
-  - `Scope`
-  - `Latest Slice`
-  - `Verification`
-  - `Next Lead`
-  - `Merge Notes`
-
-Lane files:
-
-- `LANE_A_STATUS.md`
-- `LANE_B_STATUS.md`
-- `LANE_C_STATUS.md`
-- `LANE_D_STATUS.md`
-- `LANE_E_STATUS.md`
-- `LANE_F_STATUS.md`
+- Coordinator reads lane files, merges branches, then updates `docs/porting/*.md`.
+- Keep exact commands and results.
+- Keep conflict notes explicit.
