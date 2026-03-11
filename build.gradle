@@ -115,6 +115,18 @@ def isolatedRegistrySuites = [
                 className: 'ch.njol.skript.expressions.ExpressionPlayerServerCompatibilityTest'
         ],
         [
+                taskName: 'isolatedExpressionPlayerServerBundleCompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionPlayerServerBundleCompatibilityTest'
+        ],
+        [
+                taskName: 'isolatedExpressionLaneBCompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionLaneBCompatibilityTest'
+        ],
+        [
+                taskName: 'isolatedExpressionLaneBBindingTest',
+                className: 'org.skriptlang.skript.fabric.runtime.ExpressionLaneBBindingTest'
+        ],
+        [
                 taskName: 'isolatedExpressionEventContextBundleCompatibilityTest',
                 className: 'ch.njol.skript.expressions.ExpressionEventContextBundleCompatibilityTest'
         ],

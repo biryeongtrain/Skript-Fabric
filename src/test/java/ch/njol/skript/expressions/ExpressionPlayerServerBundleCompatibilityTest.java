@@ -23,13 +23,16 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+@Tag("isolated-registry")
 final class ExpressionPlayerServerBundleCompatibilityTest {
 
     private static boolean syntaxRegistered;
@@ -53,6 +56,11 @@ final class ExpressionPlayerServerBundleCompatibilityTest {
         for (SyntaxInfo<?> info : originalExpressions) {
             Skript.instance().syntaxRegistry().register(SyntaxRegistry.EXPRESSION, info);
         }
+    }
+
+    @AfterEach
+    void cleanupParserState() {
+        ParserInstance.get().deleteCurrentEvent();
     }
 
     private static void ensureSyntax() {

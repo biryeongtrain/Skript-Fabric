@@ -1,0 +1,5 @@
+on gametest lane b context:
+    set {laneb::platform_version} to craftbukkit version
+    set {laneb::fabric_version} to fabric version
+    set {laneb::minecraft_version} to minecraft version
+    set {laneb::skript_version} to skript version

@@ -1,0 +1,2 @@
+on gametest lane b context:
+    set {laneb::non_ops::*} to all non-operators

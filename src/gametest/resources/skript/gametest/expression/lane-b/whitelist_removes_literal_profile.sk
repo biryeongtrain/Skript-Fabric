@@ -1,0 +1,3 @@
+on gametest lane b context:
+    remove "LaneBListed" from whitelist
+    set {laneb::whitelist_after_remove::*} to whitelist

@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::simulation_distance} to simulation distance of lane-a-world

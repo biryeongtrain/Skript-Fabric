@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::location_at} to location at x = __TARGET_X__, y = __TARGET_Y__, and z = __TARGET_Z__ in world lane-a-world

@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::chunk_x} to chunk x-coordinate of chunk of lane-a-location

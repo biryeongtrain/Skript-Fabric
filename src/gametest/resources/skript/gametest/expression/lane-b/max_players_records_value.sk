@@ -1,0 +1,2 @@
+on gametest lane b context:
+    set {laneb::max_players} to max players count

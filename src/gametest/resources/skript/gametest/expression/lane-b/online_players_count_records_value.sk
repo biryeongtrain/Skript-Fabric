@@ -1,0 +1,2 @@
+on gametest lane b context:
+    set {laneb::online_players_count} to online player count

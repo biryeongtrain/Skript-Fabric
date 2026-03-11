@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::location_of} to location of event-block

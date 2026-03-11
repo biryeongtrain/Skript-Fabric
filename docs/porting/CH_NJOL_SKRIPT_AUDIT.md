@@ -7,8 +7,9 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Local `ch/njol/skript`: `140`
-- Local shortfall: `1049`
+- Exact-path missing in local tree: `361`
+- Exact-path expressions missing: `163`
+- Exact-path events / sections / command / aliases missing: `12 / 8 / 9 / 9`
 
 ## Priority Matrix
 
@@ -54,6 +55,13 @@ Baseline snapshot date: 2026-03-08
   - AI
   - sprinting
   - glowing
+  - lane B server/session slice:
+    - `ExprMOTD`
+    - `ExprOnlinePlayersCount`
+    - `ExprOps`
+    - `ExprVersion`
+    - `ExprViewDistance`
+    - `ExprWhitelist`
 - Most upstream condition/effect/expression families are still absent and stay behind `Part 1A` / `Part 1B`.
 
 ## Part Tracker
@@ -72,12 +80,15 @@ Baseline snapshot date: 2026-03-08
   - legacy `parseStatic(...)` flags
   - explicit-literal-only `Classes.getPatternInfos(...)`
   - keyed plural default behavior in `Function.execute(...)`
+- Landed:
+  - lane B server/session expressions `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
 - Added regression coverage:
   - `SkriptParserStaticFlagsCompatibilityTest`
   - `FunctionOverloadDisambiguationImplementationTest`
   - `FunctionDefaultKeyedParameterCompatibilityTest`
 - Verification passed on 2026-03-11:
+  - `./gradlew isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest`
   - targeted parser/registry/function suites
   - `./gradlew runGameTest --rerun-tasks`
   - `./gradlew build --rerun-tasks`
-- Verified runtime baseline after that merge: `230 / 230`
+- Verified runtime baseline after that merge: `251 / 251`

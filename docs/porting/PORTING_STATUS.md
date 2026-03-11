@@ -5,6 +5,14 @@ Last full verification: 2026-03-11
 
 ## Snapshot
 
+- Exact-path snapshot against upstream `e6ec744`:
+  - overall missing: `361`
+  - expressions missing: `163`
+  - events missing: `12`
+  - sections missing: `8`
+  - command missing: `9`
+  - aliases missing: `9`
+  - exact-path missing in `conditions`, `effects`, `lang`, `config`, `patterns`, `registrations`: `0`
 - Source ports complete:
   - conditions: `28 / 28`
   - expressions: `84 / 84`
@@ -22,7 +30,8 @@ Last full verification: 2026-03-11
   - local `ch/njol/skript`: `140`
   - shortfall: `1049`
 - Latest full verification:
-  - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
+  - `./gradlew isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `251 / 251`
   - `./gradlew build --rerun-tasks` passed
 
 ## Active Priority
@@ -37,6 +46,9 @@ Last full verification: 2026-03-11
 - `SkriptParser.parseStatic(...)` now matches with `ALL_FLAGS`, so legacy `SyntaxElementInfo` paths accept expression-only placeholders again.
 - `Classes.getPatternInfos(...)` now matches upstream by considering only explicit literal patterns and preserving registration order.
 - `Function.execute(...)` now matches upstream keyed plural default behavior instead of zipping multi-value defaults into keyed pairs.
+- Latest landed expression slice:
+  - lane B server/session snapshot expressions: `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
+  - landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 - New regressions lock:
   - `SkriptParserStaticFlagsCompatibilityTest`
   - `FunctionOverloadDisambiguationImplementationTest`

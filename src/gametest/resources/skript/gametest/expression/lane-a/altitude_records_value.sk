@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::altitude} to altitude of lane-a-location

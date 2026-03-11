@@ -182,6 +182,48 @@ class ExpressionBlockWorldLocationCompatibilityTest {
         ExprSimulationDistance simulationDistance = new ExprSimulationDistance();
         assertInstanceOf(Class[].class, simulationDistance.acceptChange(ChangeMode.SET));
         assertEquals(Integer.class, simulationDistance.acceptChange(ChangeMode.SET)[0]);
+
+        ExprBlockData blockData = new ExprBlockData();
+        assertInstanceOf(Class[].class, blockData.acceptChange(ChangeMode.SET));
+        assertEquals(net.minecraft.world.level.block.state.BlockState.class, blockData.acceptChange(ChangeMode.SET)[0]);
+
+        ExprSpawn spawn = new ExprSpawn();
+        assertInstanceOf(Class[].class, spawn.acceptChange(ChangeMode.SET));
+        assertEquals(FabricLocation.class, spawn.acceptChange(ChangeMode.SET)[0]);
+    }
+
+    @Test
+    void lightLevelSupportsOfLocationWithoutDirection() {
+        ExprLightLevel lightLevel = new ExprLightLevel();
+        SkriptParser.ParseResult parseResult = parseResult("block light level of lane-m5-location");
+        parseResult.mark = 2;
+        assertTrue(lightLevel.init(
+                new Expression[]{new SimpleLiteral<>(new FabricLocation(null, Vec3.ZERO), false), null},
+                0,
+                Kleenean.FALSE,
+                parseResult
+        ));
+        assertNull(lightLevel.getSingle(SkriptEvent.EMPTY));
+
+        ExprLightLevel alternateShape = new ExprLightLevel();
+        assertTrue(alternateShape.init(
+                new Expression[]{null, new SimpleLiteral<>(new FabricLocation(null, Vec3.ZERO), false)},
+                0,
+                Kleenean.FALSE,
+                parseResult
+        ));
+        assertNull(alternateShape.getSingle(SkriptEvent.EMPTY));
+    }
+
+    @Test
+    void directPropertyExpressionsCaptureTheirSourceExpression() {
+        ExprSeed seed = new ExprSeed();
+        assertTrue(seed.init(new Expression[]{new TestWorldExpression()}, 0, Kleenean.FALSE, parseResult("seed of lane-m5-world")));
+        assertNotNull(seed.getExpr());
+
+        ExprSpawn spawn = new ExprSpawn();
+        assertTrue(spawn.init(new Expression[]{new TestWorldExpression()}, 0, Kleenean.FALSE, parseResult("spawn location of lane-m5-world")));
+        assertNotNull(spawn.getExpr());
     }
 
     private static void ensureSyntax() {

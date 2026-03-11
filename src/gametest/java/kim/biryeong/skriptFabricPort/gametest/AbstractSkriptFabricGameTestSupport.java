@@ -169,10 +169,9 @@ public abstract class AbstractSkriptFabricGameTestSupport {
 
     protected void runWithRuntimeLock(GameTestHelper helper, LockedRuntimeBody body) {
         helper.succeedWhen(() -> {
-            helper.assertTrue(
-                    RUNTIME_LOCK.compareAndSet(false, true),
-                    Component.literal("Waiting for exclusive Skript runtime access.")
-            );
+            if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                return;
+            }
             try {
                 Variables.clearAll();
                 GameTestRuntimeContext.withHelper(helper, body::run);

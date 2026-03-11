@@ -2,7 +2,9 @@ package ch.njol.skript.expressions.base;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.util.LiteralUtils;
 import com.google.common.base.Preconditions;
 import java.util.Arrays;
 import org.jetbrains.annotations.NotNull;
@@ -12,6 +14,7 @@ import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.util.Priority;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import ch.njol.util.Kleenean;
 
 /**
  * Compatibility base for expressions that expose a property of another expression.
@@ -74,6 +77,20 @@ public abstract class PropertyExpression<F, T> extends SimpleExpression<T> {
 
     public final Expression<? extends F> getExpr() {
         return expr;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        if (expressions.length == 0 || expressions[0] == null) {
+            return false;
+        }
+        if (LiteralUtils.hasUnparsedLiteral(expressions[0])) {
+            setExpr((Expression<? extends F>) LiteralUtils.defendExpression(expressions[0]));
+            return LiteralUtils.canInitSafely(getExpr());
+        }
+        setExpr((Expression<? extends F>) expressions[0]);
+        return true;
     }
 
     @Override

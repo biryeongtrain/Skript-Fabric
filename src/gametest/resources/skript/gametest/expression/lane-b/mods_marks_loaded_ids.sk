@@ -1,0 +1,2 @@
+on gametest lane b context:
+    set {laneb::mods::*} to loaded mods

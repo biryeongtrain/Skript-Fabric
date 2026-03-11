@@ -79,9 +79,21 @@ final class ExpressionPlayerServerCompatibilityTest {
         assertInstanceOf(ExprLastLoginTime.class, parseExpression("last login of lane-e-m3-offlineplayer", ch.njol.skript.util.Date.class));
         assertInstanceOf(ExprLastLoginTime.class, parseExpression("first login of lane-e-m3-offlineplayer", ch.njol.skript.util.Date.class));
         assertInstanceOf(ExprMaxPlayers.class, parseExpression("max players count", Integer.class));
+        assertInstanceOf(ExprMods.class, parseExpression("loaded mods", String.class));
         assertInstanceOf(ExprPing.class, parseExpression("ping of lane-e-m3-player", Long.class));
         assertInstanceOf(ExprPlayerProtocolVersion.class, parseExpression("protocol version of lane-e-m3-player", Integer.class));
         assertInstanceOf(ExprProtocolVersion.class, parseExpression("protocol version", Long.class));
+    }
+
+    @Test
+    void modsExpressionReturnsLoadedFabricIds() {
+        ExprMods mods = new ExprMods();
+        assertTrue(mods.init(new Expression[0], 0, ch.njol.util.Kleenean.FALSE, parseResult("loaded mods")));
+        String[] ids = mods.getArray(SkriptEvent.EMPTY);
+        assertNotNull(ids);
+        List<String> idList = List.of(ids);
+        assertTrue(!mods.isSingle());
+        assertEquals(idList.size(), new java.util.LinkedHashSet<>(idList).size());
     }
 
     @Test
@@ -168,6 +180,7 @@ final class ExpressionPlayerServerCompatibilityTest {
         new ExprLastLoginTime();
         new ExprLastResourcePackResponse();
         new ExprMaxPlayers();
+        new ExprMods();
         new ExprPing();
         new ExprPlayerProtocolVersion();
         new ExprProtocolVersion();

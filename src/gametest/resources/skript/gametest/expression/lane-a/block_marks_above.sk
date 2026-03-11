@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set test block above event-block to diamond_block

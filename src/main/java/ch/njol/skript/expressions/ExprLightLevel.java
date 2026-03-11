@@ -27,7 +27,12 @@ public class ExprLightLevel extends PropertyExpression<FabricLocation, Byte> {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        setExpr(Direction.combine((Expression<? extends Direction>) exprs[0], (Expression<? extends FabricLocation>) exprs[1]));
+        if (exprs.length < 2 || exprs[0] == null || exprs[1] == null) {
+            Expression<?> location = exprs.length > 1 && exprs[1] != null ? exprs[1] : exprs[0];
+            setExpr((Expression<? extends FabricLocation>) location);
+        } else {
+            setExpr(Direction.combine((Expression<? extends Direction>) exprs[0], (Expression<? extends FabricLocation>) exprs[1]));
+        }
         lightType = parseResult.mark == 0 ? ANY : parseResult.mark;
         return true;
     }

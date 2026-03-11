@@ -1,0 +1,2 @@
+on gametest lane b context:
+    set {laneb::view_distance} to view distance of event-player

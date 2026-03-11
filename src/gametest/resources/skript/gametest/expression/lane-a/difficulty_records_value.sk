@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::difficulty} to difficulty of lane-a-world

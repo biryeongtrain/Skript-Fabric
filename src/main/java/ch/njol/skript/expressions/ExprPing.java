@@ -5,7 +5,6 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
-import java.lang.reflect.Field;
 import net.minecraft.server.level.ServerPlayer;
 
 @Name("Ping")
@@ -20,13 +19,7 @@ public class ExprPing extends SimplePropertyExpression<ServerPlayer, Long> {
 
     @Override
     public Long convert(ServerPlayer player) {
-        try {
-            Field field = ServerPlayer.class.getDeclaredField("latency");
-            field.setAccessible(true);
-            return ((Number) field.get(player)).longValue();
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to read player latency.", exception);
-        }
+        return (long) player.connection.latency();
     }
 
     @Override

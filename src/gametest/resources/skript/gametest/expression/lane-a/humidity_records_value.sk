@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::humidity} to humidity of event-block
