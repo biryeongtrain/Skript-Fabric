@@ -27,6 +27,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.Direction;
@@ -149,6 +153,7 @@ import org.skriptlang.skript.fabric.runtime.FabricUseItemHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.WXYZHandler;
+import kim.biryeong.skriptFabric.mixin.ServerGamePacketListenerImplAccessor;
 import ch.njol.util.Kleenean;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -157,6 +162,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.joml.Quaternionf;
@@ -550,6 +556,28 @@ public abstract class AbstractSkriptFabricGameTestSupport {
 
     protected void sendPlayerInput(ServerPlayer player, Input input) {
         player.connection.handlePlayerInput(new ServerboundPlayerInputPacket(input));
+    }
+
+    protected void sendPlayerMove(ServerPlayer player, Vec3 position, float yaw, float pitch) {
+        preparePlayerForMovementPackets(player);
+        player.connection.resetPosition();
+        player.connection.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(position, yaw, pitch, true, false));
+    }
+
+    protected void sendResourcePackResponse(ServerPlayer player, ServerboundResourcePackPacket.Action action) {
+        player.connection.handleResourcePackResponse(new ServerboundResourcePackPacket(UUID.randomUUID(), action));
+    }
+
+    protected void preparePlayerForMovementPackets(ServerPlayer player) {
+        if (!player.hasClientLoaded()) {
+            player.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
+        }
+        ServerGamePacketListenerImplAccessor accessor = (ServerGamePacketListenerImplAccessor) player.connection;
+        if (accessor.skript$getAwaitingPositionFromClient() != null) {
+            player.connection.handleAcceptTeleportPacket(
+                    new ServerboundAcceptTeleportationPacket(accessor.skript$getAwaitingTeleport())
+            );
+        }
     }
 
     protected void invokeArrowPostHurtEffects(Arrow arrow, LivingEntity target) {

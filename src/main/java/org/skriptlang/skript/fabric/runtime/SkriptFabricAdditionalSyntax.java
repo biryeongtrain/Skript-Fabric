@@ -118,7 +118,10 @@ final class SkriptFabricAdditionalSyntax {
         forceInitialize(ch.njol.skript.conditions.CondResourcePack.class);
         ch.njol.skript.events.EvtEntityBlockChange.register();
         ch.njol.skript.events.EvtGrow.register();
+        ch.njol.skript.events.EvtMove.register();
         ch.njol.skript.events.EvtPlantGrowth.register();
+        ch.njol.skript.events.EvtPlayerChunkEnter.register();
+        ch.njol.skript.events.EvtPlayerCommandSend.register();
         ch.njol.skript.events.EvtPressurePlate.register();
         ch.njol.skript.events.EvtResourcePackResponse.register();
         ch.njol.skript.events.EvtVehicleCollision.register();

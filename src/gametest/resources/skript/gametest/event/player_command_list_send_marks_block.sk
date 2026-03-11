@@ -1,0 +1,2 @@
+on sending of the server command list:
+    set test block under player event-player to redstone_block

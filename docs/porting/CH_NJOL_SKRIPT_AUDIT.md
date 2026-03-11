@@ -82,6 +82,8 @@ Baseline snapshot date: 2026-03-08
   - keyed plural default behavior in `Function.execute(...)`
 - Landed:
   - lane B server/session expressions `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
+  - live player-session event backends `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`
+  - compat accessor migration for `PrivateBlockEntityAccess` and `PrivateFurnaceAccess`
 - Added regression coverage:
   - `SkriptParserStaticFlagsCompatibilityTest`
   - `FunctionOverloadDisambiguationImplementationTest`

@@ -1,0 +1,2 @@
+on player enters a chunk:
+    set test name of entity event-player to "chunk enter"

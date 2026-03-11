@@ -49,6 +49,9 @@ Last full verification: 2026-03-11
 - Latest landed expression slice:
   - lane B server/session snapshot expressions: `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
   - landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
+- Latest landed infra slice:
+  - live player-session event backends: `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`
+  - compat access migration: `PrivateBlockEntityAccess` and `PrivateFurnaceAccess` now use mixin accessors instead of reflection
 - New regressions lock:
   - `SkriptParserStaticFlagsCompatibilityTest`
   - `FunctionOverloadDisambiguationImplementationTest`

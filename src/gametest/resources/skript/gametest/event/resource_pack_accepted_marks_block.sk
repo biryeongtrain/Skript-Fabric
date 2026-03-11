@@ -1,0 +1,2 @@
+on resource pack accepted:
+    set test block under player event-player to diamond_block

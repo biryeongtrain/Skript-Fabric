@@ -1,9 +1,11 @@
 package kim.biryeong.skriptFabric.mixin;
 
+import java.util.Locale;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.skriptlang.skript.fabric.runtime.FabricPlayerClientState;
+import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,6 +18,10 @@ abstract class ServerCommonPacketListenerImplMixin {
     private void skript$trackResourcePackResponse(ServerboundResourcePackPacket packet, CallbackInfo callbackInfo) {
         if ((Object) this instanceof ServerGamePacketListenerImpl listener) {
             FabricPlayerClientState.setResourcePackStatus(listener.player, packet.action());
+            SkriptFabricEventBridge.dispatchResourcePackResponse(
+                    listener.player,
+                    packet.action().name().toLowerCase(Locale.ENGLISH)
+            );
         }
     }
 }

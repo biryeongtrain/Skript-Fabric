@@ -19,6 +19,7 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneBGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEffectGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEventGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricPlayerEventInfraGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricFeedGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInvisibleGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInvulnerableGameTest",

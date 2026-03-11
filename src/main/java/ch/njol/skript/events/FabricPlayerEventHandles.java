@@ -9,9 +9,57 @@ import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 
-final class FabricPlayerEventHandles {
+public final class FabricPlayerEventHandles {
 
     private FabricPlayerEventHandles() {
+    }
+
+    public static Object command(String command) {
+        return new Command(command);
+    }
+
+    public static Object firstJoin(boolean firstJoin) {
+        return new FirstJoin(firstJoin);
+    }
+
+    public static Object level(int oldLevel, int newLevel) {
+        return new Level(oldLevel, newLevel);
+    }
+
+    public static Object move(
+            Entity entity,
+            @Nullable FabricLocation from,
+            @Nullable FabricLocation to,
+            float fromYaw,
+            float fromPitch,
+            float toYaw,
+            float toPitch
+    ) {
+        return new Move(entity, from, to, fromYaw, fromPitch, toYaw, toPitch);
+    }
+
+    public static Object commandSend(Collection<String> commands) {
+        return new CommandSend(commands);
+    }
+
+    public static Object spectate(
+            SpectateAction action,
+            @Nullable Entity currentTarget,
+            @Nullable Entity newTarget
+    ) {
+        return new Spectate(action, currentTarget, newTarget);
+    }
+
+    public static Object teleport(
+            Entity entity,
+            @Nullable FabricLocation from,
+            @Nullable FabricLocation to
+    ) {
+        return new Teleport(entity, from, to);
+    }
+
+    public static Object experienceChange(ServerPlayer player, int amount) {
+        return new ExperienceChange(player, amount);
     }
 
     record Command(String command) {

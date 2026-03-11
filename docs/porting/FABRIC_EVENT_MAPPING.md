@@ -5,10 +5,10 @@ Last full verification: 2026-03-11
 
 ## Snapshot
 
-- Active event rows: `22`
-- No tracked event family is currently registered without a live Fabric/Mojang backend.
+- Active event rows: `26`
+- Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest full verification:
-  - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
+  - `./gradlew runGameTest --rerun-tasks` passed with `255 / 255`
   - `./gradlew build --rerun-tasks` passed
 
 ## Active Rows
@@ -33,6 +33,10 @@ Last full verification: 2026-03-11
 | `on fishing` | `FishingHook` lifecycle mixins |
 | `on loot generate` | `LootTable#getRandomItems(LootContext)` return path |
 | `on player input` | `ServerGamePacketListenerImpl.handlePlayerInput` |
+| `on resource pack response` | `ServerCommonPacketListenerImpl.handleResourcePackResponse` |
+| `on player move` | `ServerGamePacketListenerImpl.handleMovePlayer` |
+| `on player chunk enter` | `ServerGamePacketListenerImpl.handleMovePlayer` chunk boundary check |
+| `on sending of the server command list` | `Commands.sendCommands(ServerPlayer)` |
 | `on fuel burn` | `AbstractFurnaceBlockEntity.serverTick` fuel-ignite path |
 | `on smelting start` | `AbstractFurnaceBlockEntity.serverTick` cook-start path |
 | `on furnace smelt` | `AbstractFurnaceBlockEntity.serverTick` recipe-complete path |
@@ -40,5 +44,6 @@ Last full verification: 2026-03-11
 
 ## Open Parity Note
 
-- Remaining cross-cutting gap is not an event-dispatch gap:
+- Remaining cross-cutting gap is not limited to dispatch:
   - ambiguous bare item-id compare, for example `event-item is wheat`
+  - several implemented event syntaxes still rely on synthetic handles instead of live backends

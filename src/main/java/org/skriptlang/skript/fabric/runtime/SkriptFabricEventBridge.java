@@ -1,6 +1,7 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import java.util.Collections;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 import ch.njol.skript.events.FabricEventCompatHandles;
+import ch.njol.skript.events.FabricPlayerEventHandles;
 import org.skriptlang.skript.bukkit.loottables.LootTable;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
 import org.skriptlang.skript.fabric.compat.FabricBreedingItemSource;
@@ -600,6 +602,52 @@ public final class SkriptFabricEventBridge {
         ServerLevel level = player.level();
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricPlayerInputHandle(level, player, normalizeInput(previousInput), normalizeInput(currentInput)),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchPlayerMove(
+            ServerPlayer player,
+            Vec3 fromPosition,
+            Vec3 toPosition,
+            float fromYaw,
+            float fromPitch,
+            float toYaw,
+            float toPitch
+    ) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.move(
+                        player,
+                        new FabricLocation(level, fromPosition),
+                        new FabricLocation(level, toPosition),
+                        fromYaw,
+                        fromPitch,
+                        toYaw,
+                        toPitch
+                ),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchPlayerCommandSend(ServerPlayer player, Collection<String> commands) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.commandSend(commands),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchResourcePackResponse(ServerPlayer player, @Nullable String status) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ResourcePackResponse(status),
                 level.getServer(),
                 level,
                 player
