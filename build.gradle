@@ -107,6 +107,10 @@ def isolatedRegistrySuites = [
                 className: 'ch.njol.skript.expressions.ExpressionSyntaxS2CompatibilityTest'
         ],
         [
+                taskName: 'isolatedExpressionSyntaxS3CompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionSyntaxS3CompatibilityTest'
+        ],
+        [
                 taskName: 'isolatedMixedRuntimeSyntaxBatchTest',
                 className: 'org.skriptlang.skript.fabric.runtime.MixedRuntimeSyntaxBatchTest'
         ],
