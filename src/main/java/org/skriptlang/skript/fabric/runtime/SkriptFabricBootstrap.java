@@ -1082,6 +1082,7 @@ public final class SkriptFabricBootstrap {
     }
 
     private static void registerRecoveredEventActivationBundle() {
+        ch.njol.skript.events.EvtAtTime.register();
         ch.njol.skript.events.EvtBeaconEffect.register();
         ch.njol.skript.events.EvtBeaconToggle.register();
         ch.njol.skript.events.EvtBlock.register();
@@ -1093,6 +1094,7 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtExperienceSpawn.register();
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();
+        ch.njol.skript.events.EvtPeriodical.register();
     }
 
     private static void forceInitialize(Class<?> type) {

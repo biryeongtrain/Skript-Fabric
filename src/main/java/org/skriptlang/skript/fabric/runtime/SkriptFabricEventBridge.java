@@ -97,6 +97,20 @@ public final class SkriptFabricEventBridge {
                 server.overworld(),
                 null
         ));
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricScheduledTickHandle(null, server.overworld().getGameTime(), server.overworld().getDayTime()),
+                server,
+                null,
+                null
+        ));
+        for (ServerLevel level : server.getAllLevels()) {
+            SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                    new FabricScheduledTickHandle(level, level.getGameTime(), level.getDayTime()),
+                    server,
+                    level,
+                    null
+            ));
+        }
     }
 
     private static void dispatchBlockBreak(Level level, net.minecraft.world.entity.player.Player player, BlockPos pos, BlockState state, BlockEntity blockEntity) {

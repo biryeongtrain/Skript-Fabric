@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.fabric.runtime.FabricScheduledTickHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 
 final class EventCompatibilityTest {
@@ -30,6 +31,7 @@ final class EventCompatibilityTest {
         EntityData.register();
         EntityType.register();
         EvtDamage.register();
+        EvtAtTime.register();
         EvtBreeding.register();
         EvtBucketCatch.register();
         EvtScript.register();
@@ -38,6 +40,7 @@ final class EventCompatibilityTest {
         EvtFirstJoin.register();
         EvtLevel.register();
         EvtMove.register();
+        EvtPeriodical.register();
         EvtPlayerChunkEnter.register();
         EvtPlayerCommandSend.register();
         EvtSpectate.register();
@@ -92,6 +95,32 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void atTimeEventParsesAndChecksConfiguredBoundary() {
+        EvtAtTime event = parseEvent("at 6:00", EvtAtTime.class);
+
+        assertEquals("at 6:00", event.toString(null, false));
+        assertEquals(1, event.getEventClasses().length);
+        assertEquals(
+                false,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricScheduledTickHandle(null, 5, 5),
+                        null,
+                        null,
+                        null
+                ))
+        );
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricScheduledTickHandle(null, 24000, 0),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
     void bucketCatchEventParsesEntityDataFilter() throws Exception {
         EvtBucketCatch event = parseEvent("bucket catching of axolotls", EvtBucketCatch.class);
 
@@ -124,6 +153,49 @@ final class EventCompatibilityTest {
                 true,
                 event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
                         new FabricPlayerEventHandles.Command("/stop now please"),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void periodicalEventParsesAndChecksTickCadence() {
+        EvtPeriodical event = parseEvent("every 2 ticks", EvtPeriodical.class);
+
+        assertEquals(1, event.getEventClasses().length);
+        assertEquals(
+                false,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricScheduledTickHandle(null, 1, 0),
+                        null,
+                        null,
+                        null
+                ))
+        );
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricScheduledTickHandle(null, 2, 0),
+                        null,
+                        null,
+                        null
+                ))
+        );
+        assertEquals(
+                false,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricScheduledTickHandle(null, 3, 0),
+                        null,
+                        null,
+                        null
+                ))
+        );
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricScheduledTickHandle(null, 4, 0),
                         null,
                         null,
                         null
