@@ -6,6 +6,7 @@ import ch.njol.util.Math2;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.PrivateBeaconAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public class ExprBeaconRange extends SimplePropertyExpression<FabricBlock, Double> {
@@ -71,25 +72,11 @@ public class ExprBeaconRange extends SimplePropertyExpression<FabricBlock, Doubl
 
     private @Nullable Integer levels(FabricBlock block) {
         BeaconBlockEntity beacon = beacon(block);
-        if (beacon == null) {
-            return null;
-        }
-        try {
-            java.lang.reflect.Field field = BeaconBlockEntity.class.getDeclaredField("levels");
-            field.setAccessible(true);
-            return field.getInt(beacon);
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
+        return beacon == null ? null : PrivateBeaconAccess.levels(beacon);
     }
 
     private void setLevels(BeaconBlockEntity beacon, int levels) {
-        try {
-            java.lang.reflect.Field field = BeaconBlockEntity.class.getDeclaredField("levels");
-            field.setAccessible(true);
-            field.setInt(beacon, levels);
-            beacon.setChanged();
-        } catch (ReflectiveOperationException ignored) {
-        }
+        PrivateBeaconAccess.setLevels(beacon, levels);
+        beacon.setChanged();
     }
 }

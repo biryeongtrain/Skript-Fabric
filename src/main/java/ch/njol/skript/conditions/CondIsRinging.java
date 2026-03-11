@@ -7,6 +7,7 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.PrivateBellAccess;
 
 @Name("Bell Is Ringing")
 @Description("Checks to see if a bell is currently ringing. A bell typically rings for 50 game ticks.")
@@ -23,11 +24,7 @@ public class CondIsRinging extends PropertyCondition<FabricBlock> {
         if (!(value.level().getBlockEntity(value.position()) instanceof BellBlockEntity bell)) {
             return false;
         }
-        try {
-            return (Boolean) BellBlockEntity.class.getMethod("isShaking").invoke(bell);
-        } catch (ReflectiveOperationException ignored) {
-            return false;
-        }
+        return PrivateBellAccess.isRinging(bell);
     }
 
     @Override

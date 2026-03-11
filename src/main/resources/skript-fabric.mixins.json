@@ -11,6 +11,8 @@
     "AxolotlPotionCauseMixin",
     "ArrowPotionCauseMixin",
     "BeaconPotionCauseMixin",
+    "BeaconBlockEntityAccessor",
+    "BellBlockEntityAccessor",
     "BlockItemMixin",
     "BookEditMixin",
     "BrewingStandBlockEntityAccessor",

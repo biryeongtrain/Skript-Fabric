@@ -5,7 +5,6 @@ import ch.njol.skript.expressions.base.PropertyExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.Holder;
@@ -14,6 +13,7 @@ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.PrivateBeaconAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public class ExprBeaconEffects extends PropertyExpression<FabricBlock, Holder<MobEffect>> {
@@ -63,14 +63,12 @@ public class ExprBeaconEffects extends PropertyExpression<FabricBlock, Holder<Mo
             if (beacon == null) {
                 continue;
             }
-            try {
-                Field field = BeaconBlockEntity.class.getDeclaredField(primary ? "primaryPower" : "secondaryPower");
-                field.setAccessible(true);
-                field.set(beacon, resolved);
-                beacon.setChanged();
-            } catch (ReflectiveOperationException ignored) {
-                return;
+            if (primary) {
+                PrivateBeaconAccess.setPrimaryPower(beacon, resolved);
+            } else {
+                PrivateBeaconAccess.setSecondaryPower(beacon, resolved);
             }
+            beacon.setChanged();
         }
     }
 
@@ -89,13 +87,7 @@ public class ExprBeaconEffects extends PropertyExpression<FabricBlock, Holder<Mo
         if (beacon == null) {
             return null;
         }
-        try {
-            Field field = BeaconBlockEntity.class.getDeclaredField(primary ? "primaryPower" : "secondaryPower");
-            field.setAccessible(true);
-            return (Holder<MobEffect>) field.get(beacon);
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
+        return primary ? PrivateBeaconAccess.primaryPower(beacon) : PrivateBeaconAccess.secondaryPower(beacon);
     }
 
     private @Nullable BeaconBlockEntity beacon(FabricBlock block) {

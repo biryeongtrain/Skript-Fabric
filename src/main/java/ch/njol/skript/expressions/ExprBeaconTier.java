@@ -4,6 +4,7 @@ import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.PrivateBeaconAccess;
 
 public class ExprBeaconTier extends SimplePropertyExpression<FabricBlock, Integer> {
 
@@ -16,16 +17,7 @@ public class ExprBeaconTier extends SimplePropertyExpression<FabricBlock, Intege
         BeaconBlockEntity beacon = block.level() == null
                 ? null
                 : (block.level().getBlockEntity(block.position()) instanceof BeaconBlockEntity found ? found : null);
-        if (beacon == null) {
-            return null;
-        }
-        try {
-            java.lang.reflect.Field field = BeaconBlockEntity.class.getDeclaredField("levels");
-            field.setAccessible(true);
-            return field.getInt(beacon);
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
+        return beacon == null ? null : PrivateBeaconAccess.levels(beacon);
     }
 
     @Override

@@ -5,10 +5,9 @@ import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
-import java.lang.reflect.Field;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
-import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.PrivateBellAccess;
 
 @Name("Bell Is Resonating")
 @Description({
@@ -19,37 +18,20 @@ import org.skriptlang.skript.fabric.compat.FabricBlock;
 @Since("2.9.0")
 public class CondIsResonating extends PropertyCondition<FabricBlock> {
 
-	private static final @Nullable Field RESONATING_FIELD = resolveResonatingField();
-
 	static {
 		register(CondIsResonating.class, "resonating", "blocks");
 	}
 
 	@Override
 	public boolean check(FabricBlock value) {
-		if (!(value.level().getBlockEntity(value.position()) instanceof BellBlockEntity bell) || RESONATING_FIELD == null) {
+		if (!(value.level().getBlockEntity(value.position()) instanceof BellBlockEntity bell)) {
 			return false;
 		}
-		try {
-			return RESONATING_FIELD.getBoolean(bell);
-		} catch (IllegalAccessException ignored) {
-			return false;
-		}
+		return PrivateBellAccess.isResonating(bell);
 	}
 
 	@Override
 	protected String getPropertyName() {
 		return "resonating";
 	}
-
-	private static @Nullable Field resolveResonatingField() {
-		try {
-			Field field = BellBlockEntity.class.getDeclaredField("resonating");
-			field.setAccessible(true);
-			return field;
-		} catch (ReflectiveOperationException ignored) {
-			return null;
-		}
-	}
-
 }
