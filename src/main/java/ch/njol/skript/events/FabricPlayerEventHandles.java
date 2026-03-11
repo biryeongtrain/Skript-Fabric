@@ -107,7 +107,7 @@ public final class FabricPlayerEventHandles {
     ) {
     }
 
-    enum SpectateAction {
+    public enum SpectateAction {
         START,
         SWAP,
         STOP

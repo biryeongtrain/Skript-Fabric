@@ -48,6 +48,9 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
+import xyz.nucleoid.stimuli.Stimuli;
+import xyz.nucleoid.stimuli.event.EventResult;
+import xyz.nucleoid.stimuli.event.player.PlayerCommandEvent;
 import ch.njol.skript.events.FabricEventCompatHandles;
 import ch.njol.skript.events.FabricPlayerEventHandles;
 import org.skriptlang.skript.bukkit.loottables.LootTable;
@@ -85,6 +88,10 @@ public final class SkriptFabricEventBridge {
             ServerLivingEntityEvents.ALLOW_DAMAGE.register(SkriptFabricEventBridge::dispatchDamage);
             ServerLivingEntityEvents.AFTER_DEATH.register(SkriptFabricEventBridge::dispatchDeath);
             ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
+            Stimuli.global().listen(PlayerCommandEvent.EVENT, (player, command) -> {
+                dispatchCommand((ServerPlayer) player, command);
+                return EventResult.PASS;
+            });
             registered = true;
         }
     }
@@ -648,6 +655,64 @@ public final class SkriptFabricEventBridge {
         ServerLevel level = player.level();
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.ResourcePackResponse(status),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchCommand(ServerPlayer player, String command) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.command(command),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchLevelChange(ServerPlayer player, int oldLevel, int newLevel) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.level(oldLevel, newLevel),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchTeleport(Entity entity, ServerLevel level, Vec3 fromPosition, Vec3 toPosition) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.teleport(
+                        entity,
+                        new FabricLocation(level, fromPosition),
+                        new FabricLocation(level, toPosition)
+                ),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer player ? player : null
+        ));
+    }
+
+    public static void dispatchSpectate(
+            ServerPlayer player,
+            FabricPlayerEventHandles.SpectateAction action,
+            @Nullable Entity currentTarget,
+            @Nullable Entity newTarget
+    ) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.spectate(action, currentTarget, newTarget),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchExperienceChange(ServerPlayer player, int amount) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.experienceChange(player, amount),
                 level.getServer(),
                 level,
                 player

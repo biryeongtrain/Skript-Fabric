@@ -2,6 +2,7 @@ package ch.njol.skript.events;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
@@ -56,5 +57,42 @@ final class FabricPlayerEventHandlesUnitTest {
 
         assertEquals(List.of("help", "stop"), List.copyOf(handle.commands()));
         assertFalse(handle.commands().contains("reload"));
+    }
+
+    @Test
+    void teleportFactoryPreservesEntityAndLocations() {
+        FabricLocation from = new FabricLocation(null, null);
+        FabricLocation to = new FabricLocation(null, null);
+
+        FabricPlayerEventHandles.Teleport handle = (FabricPlayerEventHandles.Teleport) FabricPlayerEventHandles.teleport(null, from, to);
+
+        assertNull(handle.entity());
+        assertEquals(from, handle.from());
+        assertEquals(to, handle.to());
+    }
+
+    @Test
+    void spectateFactoryPreservesTargetsAndAction() {
+        FabricPlayerEventHandles.Spectate handle = (FabricPlayerEventHandles.Spectate) FabricPlayerEventHandles.spectate(
+                FabricPlayerEventHandles.SpectateAction.SWAP,
+                null,
+                null
+        );
+
+        assertEquals(FabricPlayerEventHandles.SpectateAction.SWAP, handle.action());
+        assertNull(handle.currentTarget());
+        assertNull(handle.newTarget());
+    }
+
+    @Test
+    void levelAndExperienceFactoriesPreserveAmounts() {
+        FabricPlayerEventHandles.Level level = (FabricPlayerEventHandles.Level) FabricPlayerEventHandles.level(2, 5);
+        FabricPlayerEventHandles.ExperienceChange experience =
+                (FabricPlayerEventHandles.ExperienceChange) FabricPlayerEventHandles.experienceChange(null, -3);
+
+        assertEquals(2, level.oldLevel());
+        assertEquals(5, level.newLevel());
+        assertNull(experience.player());
+        assertEquals(-3, experience.amount());
     }
 }
