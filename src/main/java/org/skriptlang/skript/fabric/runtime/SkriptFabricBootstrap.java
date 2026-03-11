@@ -1036,8 +1036,11 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprSeaLevel.class);
         forceInitialize(ch.njol.skript.expressions.ExprSeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSimulationDistance.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSlotIndex.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTimeState.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTool.class);
         forceInitialize(ch.njol.skript.expressions.ExprVersion.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorBetweenLocations.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorCrossProduct.class);
@@ -1046,6 +1049,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprVectorNormalize.class);
         forceInitialize(ch.njol.skript.expressions.ExprViewDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprWhitelist.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWithFireResistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprXYZComponent.class);
         forceInitialize(ch.njol.skript.expressions.ExprYawPitch.class);
     }

@@ -2,6 +2,7 @@ package org.skriptlang.skript.fabric.compat;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -93,6 +94,7 @@ final class CompatAccessorMigrationUnitTest {
     @Test
     void privateItemEntityAccessNoLongerCachesReflectionMembers() {
         assertNoReflectionCaches(PrivateItemEntityAccess.class);
+        assertNoDeclaredMethodNamed(PrivateItemEntityAccess.class, "field");
     }
 
     @Test
@@ -115,5 +117,12 @@ final class CompatAccessorMigrationUnitTest {
             assertFalse(Field.class.isAssignableFrom(fieldType), () -> type.getSimpleName() + " still caches reflection fields");
             assertFalse(Method.class.isAssignableFrom(fieldType), () -> type.getSimpleName() + " still caches reflection methods");
         }
+    }
+
+    private static void assertNoDeclaredMethodNamed(Class<?> type, String name) {
+        assertTrue(
+                java.util.Arrays.stream(type.getDeclaredMethods()).noneMatch(method -> method.getName().equals(name)),
+                () -> type.getSimpleName() + " still exposes reflection helper '" + name + "'"
+        );
     }
 }
