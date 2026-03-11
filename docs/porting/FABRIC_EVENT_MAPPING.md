@@ -5,11 +5,10 @@ Last full verification: 2026-03-11
 
 ## Snapshot
 
-- Active event rows: `26`
+- Active event rows: `31`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest full verification:
-  - `./gradlew runGameTest --rerun-tasks` passed with `255 / 255`
-  - `./gradlew build --rerun-tasks` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Active Rows
 
@@ -36,6 +35,11 @@ Last full verification: 2026-03-11
 | `on resource pack response` | `ServerCommonPacketListenerImpl.handleResourcePackResponse` |
 | `on player move` | `ServerGamePacketListenerImpl.handleMovePlayer` |
 | `on player chunk enter` | `ServerGamePacketListenerImpl.handleMovePlayer` chunk boundary check |
+| `on command` | `Commands.performPrefixedCommand(CommandSourceStack, String)` |
+| `on teleport` | `Entity.teleportTo(...)` mixin path |
+| `on player start/swap/stop spectating` | `ServerPlayer.setCamera(Entity)` mixin path |
+| `on level change` | `ServerPlayer.giveExperienceLevels(int)` delta bridge |
+| `on experience decrease` | `ServerPlayer.giveExperiencePoints(int)` delta bridge |
 | `on sending of the server command list` | `Commands.sendCommands(ServerPlayer)` |
 | `on fuel burn` | `AbstractFurnaceBlockEntity.serverTick` fuel-ignite path |
 | `on smelting start` | `AbstractFurnaceBlockEntity.serverTick` cook-start path |

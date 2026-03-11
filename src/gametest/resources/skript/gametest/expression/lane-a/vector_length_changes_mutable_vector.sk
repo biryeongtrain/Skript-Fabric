@@ -1,0 +1,4 @@
+on gametest lane a context:
+    set vector length of lane-a-mutable-vector to 5
+    set {lanea::vector_length} to vector length of lane-a-mutable-vector
+    set {lanea::vector_after_length} to lane-a-mutable-vector

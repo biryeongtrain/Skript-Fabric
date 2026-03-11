@@ -984,6 +984,8 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprChunkZ.class);
         forceInitialize(ch.njol.skript.expressions.ExprClientViewDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommandBlockCommand.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCommand.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCommandSender.class);
         forceInitialize(ch.njol.skript.expressions.ExprDamage.class);
         forceInitialize(ch.njol.skript.expressions.ExprDamageCause.class);
         forceInitialize(ch.njol.skript.expressions.ExprDifficulty.class);
@@ -999,8 +1001,11 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLightLevel.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocation.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocationAt.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLocationFromVector.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocationOf.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLocationVectorOffset.class);
         forceInitialize(ch.njol.skript.expressions.ExprMOTD.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMidpoint.class);
         forceInitialize(ch.njol.skript.expressions.ExprAffectedEntities.class);
         forceInitialize(ch.njol.skript.expressions.ExprBarterInput.class);
         forceInitialize(ch.njol.skript.expressions.ExprConsumedItem.class);
@@ -1034,8 +1039,15 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprSpeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
         forceInitialize(ch.njol.skript.expressions.ExprVersion.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorBetweenLocations.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorCrossProduct.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorDotProduct.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorLength.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorNormalize.class);
         forceInitialize(ch.njol.skript.expressions.ExprViewDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprWhitelist.class);
+        forceInitialize(ch.njol.skript.expressions.ExprXYZComponent.class);
+        forceInitialize(ch.njol.skript.expressions.ExprYawPitch.class);
     }
 
     private static void initializeRecoveredExpressionBundle() {

@@ -42,6 +42,7 @@
     "ServerGamePacketListenerImplMixin",
     "ServerPlayerSpectateMixin",
     "SpiderPotionCauseMixin",
+    "StoredUserEntryAccessor",
     "SplashPotionCauseMixin",
     "TextDisplayAccessor",
     "VillagerPotionCauseMixin",

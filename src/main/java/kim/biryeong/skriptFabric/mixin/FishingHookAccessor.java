@@ -37,12 +37,6 @@ public interface FishingHookAccessor {
     @Accessor("biting")
     void skript$setBiting(boolean value);
 
-    @Accessor("currentState")
-    Enum<?> skript$getCurrentState();
-
-    @Accessor("currentState")
-    void skript$setCurrentState(Enum<?> value);
-
     @Accessor("lureSpeed")
     int skript$getLureSpeed();
 

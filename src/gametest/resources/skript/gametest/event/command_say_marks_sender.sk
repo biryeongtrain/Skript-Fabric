@@ -1,0 +1,3 @@
+on command "say":
+    set test name of entity command sender to full command
+    set test block under player command sender to emerald_block

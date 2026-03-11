@@ -3,6 +3,7 @@ package kim.biryeong.skriptFabricPort.gametest;
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.variables.Variables;
 import com.mojang.authlib.GameProfile;
 import java.nio.charset.StandardCharsets;
@@ -139,8 +140,12 @@ public final class SkriptFabricExpressionLaneBGameTest extends AbstractSkriptFab
                     "skript/gametest/expression/lane-b/whitelist_adds_literal_profile.sk"
             );
             helper.assertTrue(
-                    helper.getLevel().getServer().getPlayerList().isWhiteListed(listed),
+                    helper.getLevel().getServer().getPlayerList().getWhiteList().isWhiteListed(listed),
                     Component.literal("Expected whitelist expression to add the literal offline player to the server whitelist.")
+            );
+            helper.assertTrue(
+                    containsProfile(java.util.List.of(runtimeWhitelist(helper)), listed),
+                    Component.literal("Expected runtime whitelist helper to contain the added literal offline player.")
             );
             assertProfileListContains(helper, "laneb::whitelist_after_add::", listed);
 
@@ -153,7 +158,7 @@ public final class SkriptFabricExpressionLaneBGameTest extends AbstractSkriptFab
                     "skript/gametest/expression/lane-b/whitelist_removes_literal_profile.sk"
             );
             helper.assertTrue(
-                    !helper.getLevel().getServer().getPlayerList().isWhiteListed(listed),
+                    !helper.getLevel().getServer().getPlayerList().getWhiteList().isWhiteListed(listed),
                     Component.literal("Expected whitelist expression to remove the literal offline player from the server whitelist.")
             );
             assertProfileListMissing(helper, "laneb::whitelist_after_remove::", listed);
@@ -194,6 +199,7 @@ public final class SkriptFabricExpressionLaneBGameTest extends AbstractSkriptFab
             return;
         }
         Skript.registerEvent(GameTestLaneBContextEvent.class, "gametest lane b context");
+        Skript.registerExpression(LaneBListedProfileExpression.class, GameProfile.class, "lane-b-listed-profile");
     }
 
     private static void loadScripts(SkriptRuntime runtime, String... paths) {
@@ -243,15 +249,16 @@ public final class SkriptFabricExpressionLaneBGameTest extends AbstractSkriptFab
     private static void assertText(GameTestHelper helper, String variable, Object expected) {
         Object value = Variables.getVariable(variable, null, false);
         helper.assertTrue(
-                expected != null && expected.equals(value),
+                java.util.Objects.equals(expected, value),
                 Component.literal("Expected " + variable + " to equal " + expected + " but got " + value + ".")
         );
     }
 
     private static void assertProfileListContains(GameTestHelper helper, String prefix, GameProfile expected) {
+        Collection<Object> values = profileValues(prefix);
         helper.assertTrue(
-                containsProfile(profileValues(prefix), expected),
-                Component.literal("Expected " + prefix + " to contain " + expected.getName() + ".")
+                containsProfile(values, expected),
+                Component.literal("Expected " + prefix + " to contain " + expected.getName() + " but got " + describeValues(values) + ".")
         );
     }
 
@@ -285,6 +292,36 @@ public final class SkriptFabricExpressionLaneBGameTest extends AbstractSkriptFab
         return false;
     }
 
+    private static GameProfile[] runtimeWhitelist(GameTestHelper helper) {
+        try {
+            Class<?> supportClass = Class.forName("ch.njol.skript.expressions.ExpressionRuntimeSupport");
+            java.lang.reflect.Method method = supportClass.getDeclaredMethod("whitelist", net.minecraft.server.MinecraftServer.class);
+            method.setAccessible(true);
+            return (GameProfile[]) method.invoke(null, helper.getLevel().getServer());
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError("Failed to read runtime whitelist helper", exception);
+        }
+    }
+
+    private static String describeValues(Collection<Object> values) {
+        StringBuilder builder = new StringBuilder("[");
+        boolean first = true;
+        for (Object value : values) {
+            if (!first) {
+                builder.append(", ");
+            }
+            first = false;
+            if (value instanceof GameProfile profile) {
+                builder.append(profile.getName()).append("/").append(profile.getId());
+            } else if (value == null) {
+                builder.append("null");
+            } else {
+                builder.append(value.getClass().getSimpleName()).append(":").append(value);
+            }
+        }
+        return builder.append("]").toString();
+    }
+
     private static GameProfile offlineProfile(String name) {
         UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8));
         return new GameProfile(uuid, name);
@@ -313,6 +350,28 @@ public final class SkriptFabricExpressionLaneBGameTest extends AbstractSkriptFab
         @Override
         public String toString(@Nullable SkriptEvent event, boolean debug) {
             return "gametest lane b context";
+        }
+    }
+
+    public static final class LaneBListedProfileExpression extends SimpleExpression<GameProfile> {
+        @Override
+        protected GameProfile[] get(SkriptEvent event) {
+            return new GameProfile[]{offlineProfile("LaneBListed")};
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends GameProfile> getReturnType() {
+            return GameProfile.class;
+        }
+
+        @Override
+        public String toString(@Nullable SkriptEvent event, boolean debug) {
+            return "lane-b-listed-profile";
         }
     }
 }

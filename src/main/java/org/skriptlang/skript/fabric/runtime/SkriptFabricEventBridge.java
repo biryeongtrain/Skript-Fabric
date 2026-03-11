@@ -48,9 +48,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.stimuli.Stimuli;
-import xyz.nucleoid.stimuli.event.EventResult;
-import xyz.nucleoid.stimuli.event.player.PlayerCommandEvent;
 import ch.njol.skript.events.FabricEventCompatHandles;
 import ch.njol.skript.events.FabricPlayerEventHandles;
 import org.skriptlang.skript.bukkit.loottables.LootTable;
@@ -88,10 +85,6 @@ public final class SkriptFabricEventBridge {
             ServerLivingEntityEvents.ALLOW_DAMAGE.register(SkriptFabricEventBridge::dispatchDamage);
             ServerLivingEntityEvents.AFTER_DEATH.register(SkriptFabricEventBridge::dispatchDeath);
             ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
-            Stimuli.global().listen(PlayerCommandEvent.EVENT, (player, command) -> {
-                dispatchCommand((ServerPlayer) player, command);
-                return EventResult.PASS;
-            });
             registered = true;
         }
     }

@@ -1,6 +1,7 @@
 package ch.njol.skript.events;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.entity.EntityData;
 import ch.njol.skript.entity.EntityType;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptEvent;
@@ -12,8 +13,8 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 @SuppressWarnings("unchecked")
 public class EvtTeleport extends SkriptEvent {
 
-    private @Nullable Literal<EntityType> entitiesLiteral;
-    private EntityType @Nullable [] entities;
+    private @Nullable Literal<?> entitiesLiteral;
+    private EntityData<?> @Nullable [] entities;
 
     public static synchronized void register() {
         if (isRegistered()) {
@@ -34,8 +35,17 @@ public class EvtTeleport extends SkriptEvent {
     @Override
     public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
         if (args[0] != null) {
-            entitiesLiteral = (Literal<EntityType>) args[0];
-            entities = entitiesLiteral.getAll(null);
+            entitiesLiteral = args[0];
+            Object[] values = entitiesLiteral.getAll(null);
+            entities = new EntityData<?>[values.length];
+            for (int index = 0; index < values.length; index++) {
+                Object value = values[index];
+                if (value instanceof EntityType entityType) {
+                    entities[index] = entityType.data;
+                } else if (value instanceof EntityData<?> entityData) {
+                    entities[index] = entityData;
+                }
+            }
         }
         return true;
     }
@@ -48,8 +58,8 @@ public class EvtTeleport extends SkriptEvent {
         if (entities == null) {
             return true;
         }
-        for (EntityType entityType : entities) {
-            if (entityType != null && entityType.isInstance(handle.entity())) {
+        for (EntityData<?> entityData : entities) {
+            if (entityData != null && entityData.isInstance(handle.entity())) {
                 return true;
             }
         }

@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::vector_dot} to vector(1, 2, 3) dot vector(4, 5, 6)

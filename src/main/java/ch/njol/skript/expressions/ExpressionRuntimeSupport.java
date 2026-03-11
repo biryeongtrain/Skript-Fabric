@@ -1,13 +1,16 @@
 package ch.njol.skript.expressions;
 
 import com.mojang.authlib.GameProfile;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import kim.biryeong.skriptFabric.mixin.StoredUserEntryAccessor;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.players.StoredUserList;
+import net.minecraft.server.players.UserWhiteList;
+import net.minecraft.server.players.UserWhiteListEntry;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +55,7 @@ final class ExpressionRuntimeSupport {
     }
 
     static @Nullable String motd(MinecraftServer server) {
-        Object value = invokeNoArg(server, "getMotd");
+        Object value = invokeNoArg(server, "getMotd", "getServerMotd");
         return value instanceof String string ? string : null;
     }
 
@@ -92,25 +95,17 @@ final class ExpressionRuntimeSupport {
     }
 
     static GameProfile[] whitelist(MinecraftServer server) {
-        return configEntriesAsProfiles(invokeNoArg(server.getPlayerList(), "getWhitelist", "getWhiteList"));
+        return configEntriesAsProfiles(server.getPlayerList().getWhiteList());
     }
 
     static void addWhitelist(MinecraftServer server, GameProfile profile) {
-        Object whitelist = invokeNoArg(server.getPlayerList(), "getWhitelist", "getWhiteList");
-        Object entry = newWhitelistEntry(profile);
-        if (whitelist == null || entry == null) {
-            return;
-        }
-        invokeSingleArg(whitelist, entry, "add");
+        UserWhiteList whitelist = server.getPlayerList().getWhiteList();
+        whitelist.add(new UserWhiteListEntry(profile));
         reloadWhitelist(server);
     }
 
     static void removeWhitelist(MinecraftServer server, GameProfile profile) {
-        Object whitelist = invokeNoArg(server.getPlayerList(), "getWhitelist", "getWhiteList");
-        if (whitelist == null) {
-            return;
-        }
-        invokeSingleArg(whitelist, profile, "remove");
+        server.getPlayerList().getWhiteList().remove(profile);
         reloadWhitelist(server);
     }
 
@@ -121,14 +116,11 @@ final class ExpressionRuntimeSupport {
     }
 
     static void reloadWhitelist(MinecraftServer server) {
-        invokeNoArg(server.getPlayerList(), "reloadWhitelist");
+        server.getPlayerList().reloadWhiteList();
     }
 
     static void setWhitelistEnabled(MinecraftServer server, boolean enabled) {
-        if (invokeBooleanSetter(server, enabled, "setUsingWhitelist", "setUsingWhiteList")) {
-            return;
-        }
-        invokeBooleanSetter(server.getPlayerList(), enabled, "setWhitelistEnabled", "setUsingWhitelist", "setUsingWhiteList");
+        server.getPlayerList().setUsingWhiteList(enabled);
     }
 
     static void kickUnlistedPlayers(MinecraftServer server) {
@@ -164,13 +156,20 @@ final class ExpressionRuntimeSupport {
         if (configList == null) {
             return new GameProfile[0];
         }
-        Collection<?> entries = invokeCollection(configList, "values", "getEntries");
+        Collection<?> entries;
+        if (configList instanceof StoredUserList<?, ?> storedUserList) {
+            entries = storedUserList.getEntries();
+        } else {
+            entries = invokeCollection(configList, "values", "getEntries");
+        }
         if (entries == null || entries.isEmpty()) {
             return new GameProfile[0];
         }
         List<GameProfile> profiles = new ArrayList<>();
         for (Object entry : entries) {
-            Object key = invokeNoArg(entry, "getKey");
+            Object key = entry instanceof StoredUserEntryAccessor accessor
+                    ? accessor.skript$getUser()
+                    : invokeNoArg(entry, "getKey", "getUser");
             if (key instanceof GameProfile profile) {
                 profiles.add(profile);
             }
@@ -178,29 +177,17 @@ final class ExpressionRuntimeSupport {
         return profiles.toArray(GameProfile[]::new);
     }
 
-    private static @Nullable Object newWhitelistEntry(GameProfile profile) {
-        for (String className : new String[]{
-                "net.minecraft.server.WhitelistEntry",
-                "net.minecraft.server.players.WhitelistEntry",
-                "net.minecraft.server.players.UserWhiteListEntry"
-        }) {
-            try {
-                Class<?> type = Class.forName(className);
-                Constructor<?> constructor = type.getConstructor(GameProfile.class);
-                return constructor.newInstance(profile);
-            } catch (ReflectiveOperationException ignored) {
-            }
-        }
-        return null;
-    }
-
     private static @Nullable Object invokeNoArg(@Nullable Object target, String... methodNames) {
         if (target == null) {
             return null;
         }
         for (String methodName : methodNames) {
+            Method method = findNoArgMethod(target.getClass(), methodName);
+            if (method == null) {
+                continue;
+            }
             try {
-                Method method = target.getClass().getMethod(methodName);
+                method.setAccessible(true);
                 return method.invoke(target);
             } catch (ReflectiveOperationException ignored) {
             }
@@ -274,6 +261,20 @@ final class ExpressionRuntimeSupport {
             }
         }
         return false;
+    }
+
+    private static @Nullable Method findNoArgMethod(Class<?> type, String methodName) {
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+            try {
+                return current.getDeclaredMethod(methodName);
+            } catch (NoSuchMethodException ignored) {
+            }
+        }
+        try {
+            return type.getMethod(methodName);
+        } catch (NoSuchMethodException ignored) {
+            return null;
+        }
     }
 
     private static Class<?> wrap(Class<?> type) {

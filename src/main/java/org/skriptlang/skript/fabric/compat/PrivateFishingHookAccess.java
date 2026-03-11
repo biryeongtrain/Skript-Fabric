@@ -1,6 +1,7 @@
 package org.skriptlang.skript.fabric.compat;
 
 import kim.biryeong.skriptFabric.mixin.FishingHookAccessor;
+import java.lang.reflect.Field;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.FishingHook;
@@ -47,9 +48,14 @@ public final class PrivateFishingHookAccess {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void setCurrentState(FishingHook hook, String stateName) {
-        FishingHookAccessor accessor = accessor(hook);
-        Class<? extends Enum> enumClass = (Class<? extends Enum>) accessor.skript$getCurrentState().getClass();
-        accessor.skript$setCurrentState(Enum.valueOf(enumClass, stateName));
+        try {
+            Field currentStateField = currentStateField();
+            Enum<?> current = (Enum<?>) currentStateField.get(hook);
+            Class<? extends Enum> enumClass = (Class<? extends Enum>) current.getDeclaringClass();
+            currentStateField.set(hook, Enum.valueOf(enumClass, stateName));
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Unable to set fishing hook currentState", exception);
+        }
     }
 
     public static boolean lureApplied(FishingHook hook) {
@@ -82,5 +88,15 @@ public final class PrivateFishingHookAccess {
 
     private static FishingHookAccessor accessor(FishingHook hook) {
         return (FishingHookAccessor) hook;
+    }
+
+    private static Field currentStateField() {
+        try {
+            Field field = FishingHook.class.getDeclaredField("currentState");
+            field.setAccessible(true);
+            return field;
+        } catch (ReflectiveOperationException exception) {
+            throw new ExceptionInInitializerError(exception);
+        }
     }
 }

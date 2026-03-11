@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::vector_cross} to vector(1, 0, 0) cross vector(0, 1, 0)

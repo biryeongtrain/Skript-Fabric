@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::vector_normalized} to normalized vector(0, 3, 4)

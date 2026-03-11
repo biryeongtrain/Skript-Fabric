@@ -1,3 +1,3 @@
 on gametest lane b context:
-    add "LaneBListed" to whitelist
+    add lane-b-listed-profile to whitelist
     set {laneb::whitelist_after_add::*} to whitelist

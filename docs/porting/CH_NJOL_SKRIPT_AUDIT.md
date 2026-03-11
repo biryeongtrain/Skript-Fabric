@@ -7,8 +7,8 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `361`
-- Exact-path expressions missing: `163`
+- Exact-path missing in local tree: `351`
+- Exact-path expressions missing: `153`
 - Exact-path events / sections / command / aliases missing: `12 / 8 / 9 / 9`
 
 ## Priority Matrix
@@ -62,6 +62,17 @@ Baseline snapshot date: 2026-03-08
     - `ExprVersion`
     - `ExprViewDistance`
     - `ExprWhitelist`
+  - lane A vector/location slice:
+    - `ExprLocationFromVector`
+    - `ExprLocationVectorOffset`
+    - `ExprMidpoint`
+    - `ExprVectorBetweenLocations`
+    - `ExprVectorCrossProduct`
+    - `ExprVectorDotProduct`
+    - `ExprVectorLength`
+    - `ExprVectorNormalize`
+    - `ExprXYZComponent`
+    - `ExprYawPitch`
 - Most upstream condition/effect/expression families are still absent and stay behind `Part 1A` / `Part 1B`.
 
 ## Part Tracker
@@ -81,16 +92,15 @@ Baseline snapshot date: 2026-03-08
   - explicit-literal-only `Classes.getPatternInfos(...)`
   - keyed plural default behavior in `Function.execute(...)`
 - Landed:
+  - lane A vector/location expressions `ExprLocationFromVector`, `ExprLocationVectorOffset`, `ExprMidpoint`, `ExprVectorBetweenLocations`, `ExprVectorCrossProduct`, `ExprVectorDotProduct`, `ExprVectorLength`, `ExprVectorNormalize`, `ExprXYZComponent`, `ExprYawPitch`
   - lane B server/session expressions `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
-  - live player-session event backends `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`
-  - compat accessor migration for `PrivateBlockEntityAccess` and `PrivateFurnaceAccess`
+  - live player/session event backends `EvtCommand`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`, `EvtTeleport`, `EvtSpectate`, `EvtLevel`, `EvtExperienceChange`
+  - compat accessor migration for `PrivateBlockEntityAccess`, `PrivateFurnaceAccess`, and `PrivateFishingHookAccess`
 - Added regression coverage:
   - `SkriptParserStaticFlagsCompatibilityTest`
   - `FunctionOverloadDisambiguationImplementationTest`
   - `FunctionDefaultKeyedParameterCompatibilityTest`
 - Verification passed on 2026-03-11:
-  - `./gradlew isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest`
-  - targeted parser/registry/function suites
+  - `./gradlew isolatedExpressionLaneACompatibilityTest isolatedExpressionLaneABindingTest isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest isolatedMixedRuntimeSyntaxBatchTest test --tests ch.njol.skript.events.FabricPlayerEventHandlesUnitTest --tests org.skriptlang.skript.fabric.runtime.PlayerEventBindingTest --tests org.skriptlang.skript.fabric.compat.CompatAccessorMigrationUnitTest`
   - `./gradlew runGameTest --rerun-tasks`
-  - `./gradlew build --rerun-tasks`
-- Verified runtime baseline after that merge: `251 / 251`
+- Verified runtime baseline after that merge: `260 / 260`

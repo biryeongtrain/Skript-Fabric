@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
 
 public final class FabricPlayerEventHandles {
 
@@ -79,7 +80,7 @@ public final class FabricPlayerEventHandles {
             float fromPitch,
             float toYaw,
             float toPitch
-    ) {
+    ) implements FabricEntityEventHandle {
     }
 
     static final class CommandSend {
@@ -117,7 +118,7 @@ public final class FabricPlayerEventHandles {
             Entity entity,
             @Nullable FabricLocation from,
             @Nullable FabricLocation to
-    ) {
+    ) implements FabricEntityEventHandle {
     }
 
     record ExperienceChange(ServerPlayer player, int amount) {

@@ -1,0 +1,8 @@
+on player start spectating of armor stand:
+    set test name of entity event-player to "spectate start"
+
+on player swap spectating of armor stand:
+    set test block under player event-player to gold_block
+
+on player stop spectating of armor stand:
+    set test block under player event-player to diamond_block

@@ -17,18 +17,23 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
 import com.mojang.authlib.GameProfile;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.UserWhiteList;
+import net.minecraft.server.players.UserWhiteListEntry;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -64,6 +69,9 @@ final class ExpressionLaneBCompatibilityTest {
     void cleanupParserState() {
         ParserInstance.get().deleteCurrentEvent();
     }
+
+    @TempDir
+    java.nio.file.Path tempDir;
 
     @Test
     void laneBServerStateExpressionsParseWithRegisteredSources() {
@@ -138,6 +146,24 @@ final class ExpressionLaneBCompatibilityTest {
         assertNotNull(viewDistance.acceptChange(ChangeMode.SET));
         assertNotNull(viewDistance.acceptChange(ChangeMode.ADD));
         assertNotNull(viewDistance.acceptChange(ChangeMode.RESET));
+    }
+
+    @Test
+    void whitelistRuntimeHelperExtractsProfilesFromWhitelistEntries() throws Exception {
+        UserWhiteList whitelist = new UserWhiteList(tempDir.resolve("whitelist.json").toFile());
+        GameProfile expected = new GameProfile(
+                UUID.nameUUIDFromBytes("OfflinePlayer:LaneBListed".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                "LaneBListed"
+        );
+        whitelist.add(new UserWhiteListEntry(expected));
+
+        Method helper = ExpressionRuntimeSupport.class.getDeclaredMethod("configEntriesAsProfiles", Object.class);
+        helper.setAccessible(true);
+        GameProfile[] profiles = (GameProfile[]) helper.invoke(null, whitelist);
+
+        assertEquals(1, profiles.length);
+        assertEquals(expected.getId(), profiles[0].getId());
+        assertEquals(expected.getName(), profiles[0].getName());
     }
 
     private static void ensureSyntax() {

@@ -1,0 +1,2 @@
+on player level up:
+    set test name of entity event-player to "level up"

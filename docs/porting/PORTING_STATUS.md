@@ -6,8 +6,8 @@ Last full verification: 2026-03-11
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `361`
-  - expressions missing: `163`
+  - overall missing: `351`
+  - expressions missing: `153`
   - events missing: `12`
   - sections missing: `8`
   - command missing: `9`
@@ -30,9 +30,8 @@ Last full verification: 2026-03-11
   - local `ch/njol/skript`: `140`
   - shortfall: `1049`
 - Latest full verification:
-  - `./gradlew isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest` passed
-  - `./gradlew runGameTest --rerun-tasks` passed with `251 / 251`
-  - `./gradlew build --rerun-tasks` passed
+  - `./gradlew isolatedExpressionLaneACompatibilityTest isolatedExpressionLaneABindingTest isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest isolatedMixedRuntimeSyntaxBatchTest test --tests ch.njol.skript.events.FabricPlayerEventHandlesUnitTest --tests org.skriptlang.skript.fabric.runtime.PlayerEventBindingTest --tests org.skriptlang.skript.fabric.compat.CompatAccessorMigrationUnitTest` passed
+  - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Active Priority
 
@@ -47,11 +46,12 @@ Last full verification: 2026-03-11
 - `Classes.getPatternInfos(...)` now matches upstream by considering only explicit literal patterns and preserving registration order.
 - `Function.execute(...)` now matches upstream keyed plural default behavior instead of zipping multi-value defaults into keyed pairs.
 - Latest landed expression slice:
+  - lane A vector/location expressions: `ExprLocationFromVector`, `ExprLocationVectorOffset`, `ExprMidpoint`, `ExprVectorBetweenLocations`, `ExprVectorCrossProduct`, `ExprVectorDotProduct`, `ExprVectorLength`, `ExprVectorNormalize`, `ExprXYZComponent`, `ExprYawPitch`
   - lane B server/session snapshot expressions: `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
   - landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 - Latest landed infra slice:
-  - live player-session event backends: `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`
-  - compat access migration: `PrivateBlockEntityAccess` and `PrivateFurnaceAccess` now use mixin accessors instead of reflection
+  - live player/session event backends: `EvtCommand`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`, `EvtTeleport`, `EvtSpectate`, `EvtLevel`, `EvtExperienceChange`
+  - compat access migration: `PrivateBlockEntityAccess`, `PrivateFurnaceAccess`, and `PrivateFishingHookAccess` now use mixin accessors or invokers instead of reflection
 - New regressions lock:
   - `SkriptParserStaticFlagsCompatibilityTest`
   - `FunctionOverloadDisambiguationImplementationTest`

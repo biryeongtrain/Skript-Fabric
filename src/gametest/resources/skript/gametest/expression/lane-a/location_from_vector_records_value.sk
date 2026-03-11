@@ -1,0 +1,2 @@
+on gametest lane a context:
+    set {lanea::location_from_vector} to location of lane-a-vector in lane-a-world

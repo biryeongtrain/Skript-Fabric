@@ -16,13 +16,13 @@ abstract class ServerPlayerSpectateMixin {
     @Unique
     private Entity skript$previousCamera;
 
-    @Inject(method = "setCameraEntity", at = @At("HEAD"))
+    @Inject(method = "setCamera", at = @At("HEAD"))
     private void skript$captureCamera(Entity camera, CallbackInfo callbackInfo) {
         ServerPlayer self = (ServerPlayer) (Object) this;
         skript$previousCamera = self.getCamera();
     }
 
-    @Inject(method = "setCameraEntity", at = @At("TAIL"))
+    @Inject(method = "setCamera", at = @At("TAIL"))
     private void skript$dispatchSpectate(Entity camera, CallbackInfo callbackInfo) {
         ServerPlayer self = (ServerPlayer) (Object) this;
         Entity previousCamera = skript$previousCamera;

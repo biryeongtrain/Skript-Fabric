@@ -127,6 +127,10 @@ def isolatedRegistrySuites = [
                 className: 'ch.njol.skript.expressions.ExpressionLaneACompatibilityTest'
         ],
         [
+                taskName: 'isolatedExpressionLaneABindingTest',
+                className: 'org.skriptlang.skript.fabric.runtime.ExpressionLaneABindingTest'
+        ],
+        [
                 taskName: 'isolatedExpressionLaneBBindingTest',
                 className: 'org.skriptlang.skript.fabric.runtime.ExpressionLaneBBindingTest'
         ],
