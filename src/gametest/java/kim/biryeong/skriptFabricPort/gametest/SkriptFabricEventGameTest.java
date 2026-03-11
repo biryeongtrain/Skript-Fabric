@@ -76,6 +76,7 @@ import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.WitherRoseBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
@@ -282,6 +283,41 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(3, 1, 0))).is(Blocks.GOLD_BLOCK),
                     Component.literal("Expected grow compat bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void cropGrowthProducerExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/plant_growth_sets_blocks.sk");
+
+            BlockPos cropAbsolute = helper.absolutePos(new BlockPos(0, 1, 0));
+            BlockPos plantGrowthMarker = cropAbsolute.above();
+            BlockPos growMarker = helper.absolutePos(new BlockPos(3, 1, 0));
+            CropBlock crop = (CropBlock) Blocks.WHEAT;
+            var initialState = crop.defaultBlockState();
+
+            helper.getLevel().setBlockAndUpdate(plantGrowthMarker, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(growMarker, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(cropAbsolute, initialState);
+
+            crop.performBonemeal(helper.getLevel(), helper.getLevel().getRandom(), cropAbsolute, initialState);
+
+            helper.assertTrue(
+                    !helper.getLevel().getBlockState(cropAbsolute).equals(initialState),
+                    Component.literal("Expected bonemeal to grow the crop before asserting Skript event hooks.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(plantGrowthMarker).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected the crop growth producer to fire the plant growth Skript event.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(growMarker).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected the crop growth producer to fire the grow Skript event.")
             );
             runtime.clearScripts();
         });
