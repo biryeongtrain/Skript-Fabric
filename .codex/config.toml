@@ -1,6 +1,11 @@
+approval_policy = "never"
+sandbox_mode = "workspace_write"
 [agents]
 max_threads = 12
 max_depth = 1
 
 [agents.worker]
 config_file = "agents/workers.toml"
+
+[agents.explorer]
+config_file = "agents/explorer.toml"
