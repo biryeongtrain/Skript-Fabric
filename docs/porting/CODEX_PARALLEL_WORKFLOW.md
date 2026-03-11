@@ -1,6 +1,6 @@
 # Codex Parallel Workflow
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 ## Goal
 
@@ -33,11 +33,12 @@ If only five workers are available, add `Lane E` before `Lane F`.
 
 1. `docs/porting/README.md`
 2. `docs/porting/NEXT_AGENT_HANDOFF.md`
-3. `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
-4. `docs/porting/FABRIC_PORT_STAGES.md`
-5. this file
-6. `docs/porting/CODEX_PARALLEL_PROMPTS.md`
-7. the assigned lane file under `docs/porting/parallel/`
+3. `docs/porting/EXTERNAL_LIBRARY_GAPS.md`
+4. `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
+5. `docs/porting/FABRIC_PORT_STAGES.md`
+6. this file
+7. `docs/porting/CODEX_PARALLEL_PROMPTS.md`
+8. the assigned lane file under `docs/porting/parallel/`
 
 ## Worktree Setup
 
@@ -97,6 +98,9 @@ Coordinator can stay on the main repo path:
 - If user-visible `.sk` behavior changes, add or update real `.sk` coverage and run the narrowest matching runtime tests; coordinator handles final `./gradlew build --rerun-tasks`.
 - Import-only syntax closure may stop at parser/unit coverage, but any syntax that becomes active in the Fabric runtime through bootstrap registration or equivalent live activation must also gain representative real `.sk` GameTest coverage in the same batch.
 - Parser/bootstrap-only tests are not sufficient for newly active runtime syntax.
+- If a lane hits an external library or external API blocker that forces a delete, rollback, or skipped import, the worker records it in the lane status file and hands it back to the coordinator instead of silently removing it.
+- Silent delete for external-library-driven blockers is forbidden.
+- Coordinator must record every external-library-driven delete, rollback, or skipped import in `docs/porting/EXTERNAL_LIBRARY_GAPS.md`, including the suggested external library or alternative path.
 - Work in package bundles, not one-off syntax slices.
 - A lane may land multiple commits in one batch if they stay inside its owned bundle and keep moving the same closure track forward.
 - Use one primary bundle and one fallback bundle inside the same ownership area, and if both still leave owned work open, continue into the next same-scope sub-bundle before declaring no-op.
@@ -105,6 +109,7 @@ Coordinator can stay on the main repo path:
 - Surface-package lanes should prefer shared base classes, abstract helpers, import-enabling scaffolding, and common runtime glue before leaf syntax classes.
 - Record exact commands and exact counts in the lane status file.
 - If a lane needs a file owned by another lane, stop and hand it back to the coordinator instead of freelancing into overlap.
+- Before launching more workers, reuse or close stale unified exec sessions so the Codex app does not hit the 60-process pruning limit mid-batch.
 
 ## Worker Output Contract
 
@@ -125,11 +130,34 @@ Workers do not update:
 - `docs/porting/PORTING_STATUS.md`
 - `docs/porting/NEXT_AGENT_HANDOFF.md`
 - `docs/porting/CH_NJOL_SKRIPT_AUDIT.md`
+- `docs/porting/EXTERNAL_LIBRARY_GAPS.md`
 - `docs/porting/FABRIC_PORT_STAGES.md`
 - `docs/porting/IMPLEMENTED_SYNTAX.md`
 - root pointer docs
 
 Those are coordinator-owned.
+
+If a lane encountered an external-library or external-API blocker, its status file must
+name the affected upstream class or syntax family and the attempted fallback.
+
+## External Library Gap Ledger
+
+- canonical file: `docs/porting/EXTERNAL_LIBRARY_GAPS.md`
+- owner: `Coordinator`
+- use it only for external-library or external-API blockers that forced one of these final decisions:
+  - `deleted`
+  - `reverted to import-only`
+  - `not imported`
+- each row should record:
+  - `date / batch`
+  - `upstream class or syntax family`
+  - `local decision`
+  - `missing library or API`
+  - `attempted fallback / adaptation`
+  - `suggested external library or alternative path`
+  - `owner lane`
+  - `commit / note`
+  - `revisit trigger`
 
 ## Suggested Validation Split
 
@@ -180,8 +208,9 @@ Reasoning:
 6. rerun full verification
 7. update canonical docs with exact counts, exact scope, and exact test results
    coordinator must also update `docs/porting/IMPLEMENTED_SYNTAX.md` with the newly landed user-visible syntax as concrete inventory entries and representative forms, not headline-only notes
-8. before closing the batch, confirm every newly active runtime syntax family has representative real `.sk` GameTest coverage; if that coverage is missing, add it in the coordinator pass or keep the syntax import-only instead of claiming it as active
-9. refresh root pointer headlines if the headline numbers changed
+8. if the batch had any external-library-driven delete, rollback, or skipped import, update `docs/porting/EXTERNAL_LIBRARY_GAPS.md` with the final decision and suggested path forward
+9. before closing the batch, confirm every newly active runtime syntax family has representative real `.sk` GameTest coverage; if that coverage is missing, add it in the coordinator pass or keep the syntax import-only instead of claiming it as active
+10. refresh root pointer headlines if the headline numbers changed
 
 ## Stop Conditions
 
