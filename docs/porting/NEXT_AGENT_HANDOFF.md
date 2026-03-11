@@ -20,22 +20,23 @@ Last full verification: 2026-03-11
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: local `140`, upstream `1189`, shortfall `1049`
+- Upstream `ch/njol/skript` baseline: exact-path present `875`, upstream `1189`, shortfall `314`
 - Latest full verification:
-  - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
-  - `./gradlew build --rerun-tasks` passed
+  - targeted cycle JUnit suite passed for vector geometry, syntax S2/S3/S4, mixed runtime binding, event compatibility, scheduled/experience/script lifecycle runtime, and compat accessor migration
+  - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Most Recent Merged Slice
 
-- legacy `parseStatic` expression-placeholder flags restored
-- explicit-literal-only `Classes.getPatternInfos(...)` restored
-- keyed plural default behavior in `Function.execute(...)` restored
-- runtime implementation overload choice locked with regression coverage
+- vector geometry expressions plus world/time and world-border expressions
+- syntax3 property expressions plus syntax4 entity relation expressions
+- scheduled, experience, and script lifecycle event hooks
+- beacon and bell compat accessors
+- `PrivateFishingHookAccess.currentState` migration deferred after a GameTest mixin accessor failure
 
 ## Do Next
 
-- Continue `Part 1A` only if you can reproduce a concrete parser/loader mismatch.
-- Prefer tight `Part 1B` gaps in `Variables`, `Classes`, `config`, `log`, or adjacent helpers.
+- Continue exact-path closure from `314` overall missing with focus on expressions `123` and events `5`.
+- Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.
 

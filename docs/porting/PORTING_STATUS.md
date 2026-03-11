@@ -6,9 +6,9 @@ Last full verification: 2026-03-11
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `351`
-  - expressions missing: `153`
-  - events missing: `12`
+  - overall missing: `314`
+  - expressions missing: `123`
+  - events missing: `5`
   - sections missing: `8`
   - command missing: `9`
   - aliases missing: `9`
@@ -27,10 +27,10 @@ Last full verification: 2026-03-11
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - local `ch/njol/skript`: `140`
-  - shortfall: `1049`
+  - exact-path present locally: `875`
+  - shortfall: `314`
 - Latest full verification:
-  - `./gradlew isolatedExpressionLaneACompatibilityTest isolatedExpressionLaneABindingTest isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest isolatedMixedRuntimeSyntaxBatchTest test --tests ch.njol.skript.events.FabricPlayerEventHandlesUnitTest --tests org.skriptlang.skript.fabric.runtime.PlayerEventBindingTest --tests org.skriptlang.skript.fabric.compat.CompatAccessorMigrationUnitTest` passed
+  - targeted cycle JUnit suite passed for vector geometry, syntax S2/S3/S4, mixed runtime binding, event compatibility, scheduled/experience/script lifecycle runtime, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Active Priority
@@ -42,20 +42,17 @@ Last full verification: 2026-03-11
 
 ## Latest Closed Core Slice
 
-- `SkriptParser.parseStatic(...)` now matches with `ALL_FLAGS`, so legacy `SyntaxElementInfo` paths accept expression-only placeholders again.
-- `Classes.getPatternInfos(...)` now matches upstream by considering only explicit literal patterns and preserving registration order.
-- `Function.execute(...)` now matches upstream keyed plural default behavior instead of zipping multi-value defaults into keyed pairs.
 - Latest landed expression slice:
-  - lane A vector/location expressions: `ExprLocationFromVector`, `ExprLocationVectorOffset`, `ExprMidpoint`, `ExprVectorBetweenLocations`, `ExprVectorCrossProduct`, `ExprVectorDotProduct`, `ExprVectorLength`, `ExprVectorNormalize`, `ExprXYZComponent`, `ExprYawPitch`
-  - lane B server/session snapshot expressions: `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
-  - landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
+  - vector geometry: `ExprVectorAngleBetween`, `ExprVectorFromXYZ`, `ExprVectorOfLocation`, `ExprVectorProjection`, `ExprVectorRandom`, `ExprVectorSquaredLength`
+  - world/time and border: `ExprTemperature`, `ExprTime`, `ExprWorld`, `ExprWorldEnvironment`, `ExprWorldFromName`, `ExprWorlds`, `ExprWorldBorder`, `ExprWorldBorderCenter`, `ExprWorldBorderSize`, `ExprWorldBorderDamageAmount`, `ExprWorldBorderDamageBuffer`, `ExprWorldBorderWarningDistance`
+  - syntax3 property subset: `ExprUUID`, `ExprVelocity`, `ExprTimeLived`, `ExprScoreboardTags`, `ExprGameMode`, `ExprSaturation`
+  - syntax4 relation subset: `ExprPassenger`, `ExprVehicle`, `ExprShooter`, `ExprTarget`, `ExprTransformReason`, `ExprUnleashReason`
 - Latest landed infra slice:
-  - live player/session event backends: `EvtCommand`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`, `EvtTeleport`, `EvtSpectate`, `EvtLevel`, `EvtExperienceChange`
-  - compat access migration: `PrivateBlockEntityAccess`, `PrivateFurnaceAccess`, and `PrivateFishingHookAccess` now use mixin accessors or invokers instead of reflection
-- New regressions lock:
-  - `SkriptParserStaticFlagsCompatibilityTest`
-  - `FunctionOverloadDisambiguationImplementationTest`
-  - `FunctionDefaultKeyedParameterCompatibilityTest`
+  - scheduled and lifecycle event backends: `EvtPeriodical`, `EvtAtTime`, `ExperienceSpawnEvent`, `ScriptEvent`, `SkriptStartEvent`, `SkriptStopEvent`
+  - compat access migration: `PrivateBeaconAccess` and `PrivateBellAccess`
+- Deferred from the same cycle:
+  - `PrivateFishingHookAccess.currentState` migration stayed out of `main` after a GameTest mixin accessor failure
+- Landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 
 ## Open Gaps
 

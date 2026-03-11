@@ -7,9 +7,9 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `351`
-- Exact-path expressions missing: `153`
-- Exact-path events / sections / command / aliases missing: `12 / 8 / 9 / 9`
+- Exact-path missing in local tree: `314`
+- Exact-path expressions missing: `123`
+- Exact-path events / sections / command / aliases missing: `5 / 8 / 9 / 9`
 
 ## Priority Matrix
 
@@ -87,20 +87,24 @@ Baseline snapshot date: 2026-03-08
 
 ## Latest Verified Merge
 
-- Restored:
-  - legacy `parseStatic(...)` flags
-  - explicit-literal-only `Classes.getPatternInfos(...)`
-  - keyed plural default behavior in `Function.execute(...)`
 - Landed:
-  - lane A vector/location expressions `ExprLocationFromVector`, `ExprLocationVectorOffset`, `ExprMidpoint`, `ExprVectorBetweenLocations`, `ExprVectorCrossProduct`, `ExprVectorDotProduct`, `ExprVectorLength`, `ExprVectorNormalize`, `ExprXYZComponent`, `ExprYawPitch`
-  - lane B server/session expressions `ExprMOTD`, `ExprOnlinePlayersCount`, `ExprOps`, `ExprVersion`, `ExprViewDistance`, `ExprWhitelist`
-  - live player/session event backends `EvtCommand`, `EvtMove`, `EvtPlayerChunkEnter`, `EvtPlayerCommandSend`, `EvtResourcePackResponse`, `EvtTeleport`, `EvtSpectate`, `EvtLevel`, `EvtExperienceChange`
-  - compat accessor migration for `PrivateBlockEntityAccess`, `PrivateFurnaceAccess`, and `PrivateFishingHookAccess`
-- Added regression coverage:
-  - `SkriptParserStaticFlagsCompatibilityTest`
-  - `FunctionOverloadDisambiguationImplementationTest`
-  - `FunctionDefaultKeyedParameterCompatibilityTest`
+  - vector geometry expressions `ExprVectorAngleBetween`, `ExprVectorFromXYZ`, `ExprVectorOfLocation`, `ExprVectorProjection`, `ExprVectorRandom`, `ExprVectorSquaredLength`
+  - world/time and border expressions `ExprTemperature`, `ExprTime`, `ExprWorld`, `ExprWorldEnvironment`, `ExprWorldFromName`, `ExprWorlds`, `ExprWorldBorder`, `ExprWorldBorderCenter`, `ExprWorldBorderSize`, `ExprWorldBorderDamageAmount`, `ExprWorldBorderDamageBuffer`, `ExprWorldBorderWarningDistance`
+  - syntax3 property expressions `ExprUUID`, `ExprVelocity`, `ExprTimeLived`, `ExprScoreboardTags`, `ExprGameMode`, `ExprSaturation`
+  - syntax4 relation expressions `ExprPassenger`, `ExprVehicle`, `ExprShooter`, `ExprTarget`, `ExprTransformReason`, `ExprUnleashReason`
+  - scheduled and lifecycle event backends `EvtPeriodical`, `EvtAtTime`, `ExperienceSpawnEvent`, `ScriptEvent`, `SkriptStartEvent`, `SkriptStopEvent`
+  - compat accessor migration for `PrivateBeaconAccess` and `PrivateBellAccess`
+- Deferred:
+  - `PrivateFishingHookAccess.currentState` migration stayed out after a GameTest mixin accessor failure
+- Added compatibility coverage:
+  - `ExpressionVectorGeometryCompatibilityTest`
+  - `ExpressionSyntaxS2CompatibilityTest`
+  - `ExpressionSyntaxS3CompatibilityTest`
+  - `ExpressionSyntaxS4CompatibilityTest`
+  - `ScheduledEventRuntimeTest`
+  - `ExperienceSpawnRuntimeTest`
+  - `ScriptLifecycleRuntimeTest`
 - Verification passed on 2026-03-11:
-  - `./gradlew isolatedExpressionLaneACompatibilityTest isolatedExpressionLaneABindingTest isolatedExpressionLaneBCompatibilityTest isolatedExpressionLaneBBindingTest isolatedMixedRuntimeSyntaxBatchTest test --tests ch.njol.skript.events.FabricPlayerEventHandlesUnitTest --tests org.skriptlang.skript.fabric.runtime.PlayerEventBindingTest --tests org.skriptlang.skript.fabric.compat.CompatAccessorMigrationUnitTest`
+  - targeted cycle JUnit suite covering vector geometry, syntax S2/S3/S4, mixed runtime binding, event compatibility, scheduled/experience/script lifecycle runtime, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks`
 - Verified runtime baseline after that merge: `260 / 260`
