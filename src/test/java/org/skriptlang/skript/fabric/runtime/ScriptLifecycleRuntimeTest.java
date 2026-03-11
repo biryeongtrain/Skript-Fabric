@@ -3,8 +3,6 @@ package org.skriptlang.skript.fabric.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.events.EvtScript;
-import ch.njol.skript.events.EvtSkript;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -29,15 +27,15 @@ final class ScriptLifecycleRuntimeTest {
     static void bootstrapMinecraft() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
-        EvtScript.register();
-        EvtSkript.register();
+        SkriptFabricBootstrap.bootstrap();
         Skript.registerEffect(RecordLifecycleEffect.class, "record lifecycle %string%");
+        Skript.registerEffect(RecordLifecycleHandleEffect.class, "record lifecycle-handle");
     }
 
     @AfterEach
     void clearRuntime() {
-        EVENTS.clear();
         SkriptRuntime.instance().clearScripts();
+        EVENTS.clear();
     }
 
     @Test
@@ -48,18 +46,20 @@ final class ScriptLifecycleRuntimeTest {
                 """
                 on load:
                     record lifecycle "load"
+                    record lifecycle-handle
 
                 on unload:
                     record lifecycle "unload"
+                    record lifecycle-handle
                 """
         );
 
         SkriptRuntime runtime = SkriptRuntime.instance();
         runtime.loadFromPath(script);
-        assertEquals(List.of("load"), EVENTS);
+        assertEquals(List.of("load", "ScriptEvent"), EVENTS);
 
         runtime.clearScripts();
-        assertEquals(List.of("load", "unload"), EVENTS);
+        assertEquals(List.of("load", "ScriptEvent", "unload", "ScriptEvent"), EVENTS);
     }
 
     @Test
@@ -70,18 +70,20 @@ final class ScriptLifecycleRuntimeTest {
                 """
                 on skript start:
                     record lifecycle "start"
+                    record lifecycle-handle
 
                 on skript stop:
                     record lifecycle "stop"
+                    record lifecycle-handle
                 """
         );
 
         SkriptRuntime runtime = SkriptRuntime.instance();
         runtime.loadFromPath(script);
-        assertEquals(List.of("start"), EVENTS);
+        assertEquals(List.of("start", "SkriptStartEvent"), EVENTS);
 
         runtime.clearScripts();
-        assertEquals(List.of("start", "stop"), EVENTS);
+        assertEquals(List.of("start", "SkriptStartEvent", "stop", "SkriptStopEvent"), EVENTS);
     }
 
     public static final class RecordLifecycleEffect extends Effect {
@@ -106,6 +108,25 @@ final class ScriptLifecycleRuntimeTest {
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "record lifecycle " + value.toString(event, debug);
+        }
+    }
+
+    public static final class RecordLifecycleHandleEffect extends Effect {
+
+        @Override
+        public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+            return expressions.length == 0;
+        }
+
+        @Override
+        protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            Object handle = event.handle();
+            EVENTS.add(handle == null ? "null" : handle.getClass().getSimpleName());
+        }
+
+        @Override
+        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
+            return "record lifecycle-handle";
         }
     }
 }

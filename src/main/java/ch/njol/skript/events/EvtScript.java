@@ -1,6 +1,7 @@
 package ch.njol.skript.events;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.events.bukkit.ScriptEvent;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptEvent;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -44,7 +45,7 @@ public class EvtScript extends SkriptEvent {
     @Override
     public boolean postLoad() {
         if (load) {
-            trigger.execute(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY);
+            trigger.execute(new org.skriptlang.skript.lang.event.SkriptEvent(new ScriptEvent(), null, null, null));
         }
         return true;
     }
@@ -52,7 +53,7 @@ public class EvtScript extends SkriptEvent {
     @Override
     public void unload() {
         if (!load) {
-            trigger.execute(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY);
+            trigger.execute(new org.skriptlang.skript.lang.event.SkriptEvent(new ScriptEvent(), null, null, null));
         }
     }
 

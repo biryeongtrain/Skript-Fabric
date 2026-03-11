@@ -1095,6 +1095,8 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();
         ch.njol.skript.events.EvtPeriodical.register();
+        ch.njol.skript.events.EvtScript.register();
+        ch.njol.skript.events.EvtSkript.register();
     }
 
     private static void forceInitialize(Class<?> type) {

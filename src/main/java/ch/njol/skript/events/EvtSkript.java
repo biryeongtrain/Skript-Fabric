@@ -1,6 +1,8 @@
 package ch.njol.skript.events;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.events.bukkit.SkriptStartEvent;
+import ch.njol.skript.events.bukkit.SkriptStopEvent;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptEvent;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -41,17 +43,17 @@ public class EvtSkript extends SkriptEvent {
     }
 
     public static void onSkriptStart() {
-        fire(START);
+        fire(START, new SkriptStartEvent());
     }
 
     public static void onSkriptStop() {
-        fire(STOP);
+        fire(STOP, new SkriptStopEvent());
     }
 
-    private static void fire(List<Trigger> triggers) {
+    private static void fire(List<Trigger> triggers, Object handle) {
         synchronized (triggers) {
             for (Trigger trigger : triggers) {
-                trigger.execute(org.skriptlang.skript.lang.event.SkriptEvent.EMPTY);
+                trigger.execute(new org.skriptlang.skript.lang.event.SkriptEvent(handle, null, null, null));
             }
             triggers.clear();
         }
