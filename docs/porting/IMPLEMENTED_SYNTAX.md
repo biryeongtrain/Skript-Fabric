@@ -31,6 +31,36 @@ It is not:
       - inventory/item: `ExprItemFlags`
       - parser/queue: `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
       - world/property: `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
+    - representative syntax from this batch:
+      - inventory/item:
+        - `item flags of %itemtypes%`
+        - `set item flags of %itemtypes% to %strings%`
+      - parser/queue:
+        - `last caught runtime errors`
+        - `dequeued %queue%`, `unrolled %queue%`
+        - `event-%classinfo%`
+        - `%objects% where [<condition>]`
+        - `the function named %string%`, `functions named %strings%`, `the functions from %script%`
+        - `keyed %objects%`
+        - `loop-iteration`, `loop-iteration-2`
+        - `%number% percent of %numbers%`
+        - `a queue`, `a queue of %objects%`
+        - `start of %queue%`, `end of %queue%`
+        - `recursive %objects%`
+        - `%strings% repeated %integer% times`
+        - `rounded %numbers%`, `floored %numbers%`, `%numbers% rounded up`
+        - `every %classinfo%`, `all of the %classinfo%`
+      - world/property:
+        - `chunk x-coordinate of %chunks%`, `chunk z-coordinate of %chunks%`
+        - `humidity of %blocks%`
+        - `event-location`, `location north of %location%`
+        - `location at x = %number%, y = %number%, and z = %number% [in %world%]`
+        - `location of %locations/blocks/entities/chunks%`
+        - `redstone power of %blocks%`
+        - `sea level of %worlds%`
+        - `seed of %worlds%`
+        - `simulation distance of %worlds%`
+        - `spawn location of %worlds%`
     - targeted verification:
       - `isolatedExpressionSyntaxS2CompatibilityTest`
       - `ExpressionItemCompatibilityTest`
