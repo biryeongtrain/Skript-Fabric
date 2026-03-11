@@ -1,0 +1,6 @@
+[agents]
+max_threads = 12
+max_depth = 1
+
+[agents.worker]
+config_file = "agents/workers.toml"
