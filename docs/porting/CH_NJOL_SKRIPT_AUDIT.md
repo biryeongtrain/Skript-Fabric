@@ -1,6 +1,6 @@
 # `ch/njol/skript` Audit And Closure Plan
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 ## Scope
 
@@ -77,7 +77,7 @@ Upstream top-level packages currently absent locally:
 | `doc` | `18` | `14` | partial shim | `P3` | low runtime value overall, but the common documentation annotations and generator base are now present in addition to `Documentable`; the heavier ID/generator surfaces are still open |
 | `effects` | `123` | `120` | partial shim | `P2` | base package now has a wider verified effect surface through the entity-control bundle, the player/server feedback effects, the Patbox `sgui`-backed inventory opening path, the earlier entity/server-world import closures, and the latest mixed-runtime imports plus utility/runtime registrations, but some blocked effect families still remain import-only |
 | `entity` | `34` | `37` | partial shim | `P2` | the local count now exceeds upstream because `ClassEntityData` was added as compatibility glue while the remaining upstream entity leaf wrappers were imported; broader behavior paths still remain |
-| `events` | `53` | `47` | partial shim | `P2` | script lifecycle events plus the larger compatibility event bundle are now present, and the mixed-runtime coordinator batch live-activates 11 of those imported event classes, but several event families still need dedicated Fabric producers or broader partial-backend coverage |
+| `events` | `53` | `47` | partial shim | `P2` | script lifecycle events plus the larger compatibility event bundle are now present, the mixed-runtime coordinator batch live-activates 11 of those imported event classes, and the crop-growth follow-up now proves `EvtGrow` plus `EvtPlantGrowth` through a live producer path; several event families still need dedicated Fabric producers or broader partial-backend coverage |
 | `expressions` | `391` | `160` | partial shim | `P2` | larger collection, date/time, unix/date, text-character, amount/format/index helpers, the random/times compatibility closure, the item/entity/property expression bundle, the runtime-registered inventory/container expression closure, the mixed-runtime event-payload/property expression closure, and the latest inventory/parser-queue/world-property import-only worker harvest are now landed, but the remaining user-visible surface is still very large |
 | `hooks` | `32` | `0` | absent | `P3` | external integration layer; defer |
 | `lang` | `85` | `86` | present but behavior-incomplete | `P0` | local count now exceeds upstream by one because the legacy `ch/njol/skript/lang/function/FunctionParser` compatibility facade is local-only; the remaining gap is still foundational behavior, not raw presence |
@@ -139,6 +139,19 @@ That means the real gap is behavior, not class presence.
 | `Part 1B` | `variables` / `classes` / `config` / `patterns` / `registrations` / `log` dependency closure | `in_progress` | already started because options, class-registry, and variable-storage behavior is now being tightened |
 | `Part 2` | import or replace missing user-visible upstream syntax in priority order | `in_progress` | base entity-state/control plus `%material%`, `feed`, invisible/visible condition and effect forms, burning/on-fire forms, AI forms, and sprinting condition/effect forms are landed; keep importing syntax only where it rides on the larger package-bundle closure plan instead of leading it |
 | `Part 3` | low-priority support packages (`doc`, `test`, `timings`, `update`, selected hooks/utilities) | `pending` | only after runtime-relevant surfaces are settled |
+
+## Latest Verified Runtime Follow-up
+
+- latest verified concrete-event follow-up on 2026-03-11:
+  - live-activates `EvtGrow` and `EvtPlantGrowth`
+  - real `.sk` GameTest now grows a live wheat crop through `CropBlock.performBonemeal(...)`
+  - verification:
+    - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --rerun-tasks`
+    - `./gradlew runGameTest --rerun-tasks`
+    - `./gradlew build --rerun-tasks`
+  - current active runtime surface after this follow-up: conditions `10`, expressions `20`, effects `4`, events `13`
+  - current verified Fabric runtime baseline: `246 / 246`
+  - raw `ch/njol/skript` snapshot stays `845 / 1189`, shortfall `367`
 
 ## Latest Merged Upstream-Core Batch
 

@@ -21,11 +21,21 @@ It is not:
 - Source-level condition port: `28 / 28`
 - Source-level expression port: `84 / 84`
 - Source-level effect port: `24 / 24`
-- Verified Fabric GameTests: `245 / 245`
+- Verified Fabric GameTests: `246 / 246`
 - Latest full verification:
   - `./gradlew build --rerun-tasks`
   - build path executed `runGameTest`
 - Recent verified additions:
+  - latest verified concrete-event activation follow-up now keeps the raw upstream shortfall at `845 / 1189` while promoting 2 imported event classes into the active runtime inventory:
+    - live-activated events `2`: `EvtGrow`, `EvtPlantGrowth`
+    - representative syntax from this follow-up:
+      - `on plant growth`
+      - `on growth`
+      - `on growth of wheat`
+      - `on growth from wheat into wheat`
+    - real `.sk` verification:
+      - `cropGrowthProducerExecutesLoadedScript` grows a live wheat crop through `CropBlock.performBonemeal(...)`
+    - current active runtime registration now covers conditions `10`, expressions `20`, effects `4`, and events `13`
   - latest verified worker-harvest expression batch now reduces the raw upstream shortfall to `845 / 1189`:
     - newly imported expressions `26`:
       - inventory/item: `ExprItemFlags`
@@ -74,7 +84,7 @@ It is not:
     - newly imported conditions `10`: `CondCancelled`, `CondDamageCause`, `CondEntityUnload`, `CondIncendiary`, `CondItemDespawn`, `CondIsPreferredTool`, `CondIsSedated`, `CondLeashWillDrop`, `CondRespawnLocation`, `CondScriptLoaded`
     - newly imported expressions `20`: `ExprAffectedEntities`, `ExprBarterInput`, `ExprConsumedItem`, `ExprExperienceCooldownChangeReason`, `ExprExplodedBlocks`, `ExprHatchingNumber`, `ExprHatchingType`, `ExprHealAmount`, `ExprLastAttacker`, `ExprLeashHolder`, `ExprLevel`, `ExprMaxDurability`, `ExprMaxHealth`, `ExprMaxItemUseTime`, `ExprMaxStack`, `ExprNoDamageTicks`, `ExprItemOwner`, `ExprItemThrower`, `ExprRawName`, `ExprSpeed`
     - newly imported effects `19` unique: `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`, `EffCopy`, `EffSort`, `EffToggle`, `EffExceptionDebug`
-  - active runtime registration from that batch now covers conditions `10`, expressions `20`, effects `4`, and events `11` through `SkriptFabricBootstrap`
+  - current active runtime registration now covers conditions `10`, expressions `20`, effects `4`, and events `13` through `SkriptFabricBootstrap`
   - the blocked mixed-batch effect remainder stays import-only for now:
     - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
   - coordinator stabilization in the batch:
@@ -114,7 +124,7 @@ It is not:
 - Cross-cutting Stage 8 gap outside those packages:
   - generic compare for ambiguous bare item ids is not parity-complete yet, for example `event-item is wheat`
 - Separate upstream core audit now also active:
-  - local `ch/njol/skript`: `727`
+  - local `ch/njol/skript`: `845`
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - current shortfall: `367`
   - active closure slices: `Part 1A: lang parser/runtime closure`, `Part 1B: dependency closure`
@@ -169,8 +179,10 @@ Related tracking docs:
 | Entity compatibility | `on spawning of zombie`, `on death of zombie` | entity lifecycle handle; currently active only for spawn/death |
 | Entity transform | `on zombie transforming due to "curing"` | transforming entity plus coarse reason string |
 | Experience spawn | `on experience orb spawn` | spawned experience amount |
+| Grow | `on growth`, `on growth of wheat`, `on growth from wheat into wheat` | crop/block growth handle from the live `CropBlock` producer path; `%structuretypes%` variants remain unbacked |
 | Healing | `on healing of zombie by "magic"` | healed entity, coarse reason string, heal amount |
 | Item compatibility | `on item spawn of stick` | compat item handle; currently active only for item-spawn dispatch |
+| Plant growth | `on plant growth`, `on crop growth of wheat` | crop/block growth handle from the live `CropBlock` producer path; exposes `event-block` plus crop/item filters |
 
 ### Imported compatibility events not yet bootstrapped into the active runtime
 
@@ -187,17 +199,18 @@ Related tracking docs:
 - combat and interaction compatibility events
   - representative forms: `entity shoot[ing] [a] bow`, `entity target`, `firework explode`, `player leash/unleash`, `armor change`, `move on %itemtypes%`, `block harvest`
 - remaining concrete Fabric hook candidates from the imported event batch
-  - representative forms: `entity block change`, `grow[th] from %itemtypes/blockdatas%`, `grow[th] into %structuretypes/itemtypes/blockdatas%`, `plant grow[th]`, `pressure plate`, `vehicle collision [(with|of) ...]`, `vehicle block collision`, `vehicle entity collision`
+  - representative forms: `entity block change`, `pressure plate`, `vehicle collision [(with|of) ...]`, `vehicle block collision`, `vehicle entity collision`
 
 ### Known event-syntax gaps
 
 - Partial active rows that still need broader backing:
   - `EvtBlock` is currently break-backed only
+  - `EvtGrow` is currently verified only for crop/block growth from the `CropBlock` producer path; `%structuretypes%` variants remain open
   - `EvtItem` is currently item-spawn-backed only
   - `EvtEntity` is currently lifecycle spawn/death-backed only
   - `EvtEntityTransform` and `EvtHealing` still use coarse reason strings
 - Still missing dedicated live producers for the imported event classes:
-  - `EvtEntityBlockChange`, `EvtGrow`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
+  - `EvtEntityBlockChange`, `EvtPressurePlate`, `EvtVehicleCollision`
 - Generic status-effect type parsing is registry-backed: `bare id` values default to `minecraft`, explicit namespaces are preserved, and real `.sk` coverage now includes `minecraft:poison`.
 - Package-local Stage 8 parity-complete slice now covers `breeding (12 / 12)`, `input (5 / 5)`, and `interactions (6 / 6)`.
 - A cross-cutting base-surface gap still remains outside those packages: ambiguous bare item-id equality through generic compare, for example `event-item is wheat`.
@@ -822,6 +835,6 @@ The current loader/runtime also supports:
 
 ## Immediate Known Gaps
 
-- Several imported event classes are now active but still partial, and `EvtEntityBlockChange`, `EvtGrow`, `EvtPlantGrowth`, `EvtPressurePlate`, and `EvtVehicleCollision` still need dedicated Fabric producers.
+- Several imported event classes are now active but still partial, `EvtGrow` still needs `%structuretypes%` coverage, and `EvtEntityBlockChange`, `EvtPressurePlate`, plus `EvtVehicleCollision` still need dedicated Fabric producers.
 - Deprecated-unused `PATROL_CAPTAIN` was intentionally dropped instead of emulated.
 - Full Stage 8 parity audit is not complete yet.

@@ -1,14 +1,14 @@
 # Fabric Event Mapping
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 This file tracks the current event bridge status.
 It is not a parity claim.
 
 Current bridge counts:
 
-- active event mapping rows: `33`
-- latest runtime verification: `230 / 230` Fabric GameTests on 2026-03-10
+- active event mapping rows: `35`
+- latest runtime verification: `246 / 246` Fabric GameTests on 2026-03-11
 
 ## Current bridge slice
 
@@ -35,6 +35,8 @@ Current bridge counts:
 | `on entity` | compat bridge dispatch | entity lifecycle bridge on load + post-death dispatch | active | partial; current active backing only covers spawn/death lifecycle forms |
 | `on entity transform` | compat bridge dispatch | compat transform producer into `FabricEventCompatHandles.EntityTransform` | active | active with coarse string reason support |
 | `on experience spawn` | compat bridge dispatch | experience-orb load bridge | active | active for experience-orb spawn forms |
+| `on grow` | mixin callback | `CropBlock.randomTick` / `CropBlock.performBonemeal` changed-state hook | active | verified by real `.sk` + GameTest on a live wheat crop; currently covers crop/block growth while `%structuretypes%` variants remain unbacked |
+| `on plant growth` | mixin callback | `CropBlock.randomTick` / `CropBlock.performBonemeal` changed-state hook | active | verified by real `.sk` + GameTest on a live wheat crop; exposes `event-block` plus crop/item filters from the changed-state bridge |
 | `on fishing` | mixin callback | `FishingHook` constructor / hit / state / retrieve lifecycle | active | verified by real `.sk` + GameTest for plain `on fishing` plus original cast/caught/entity-hook/in-ground/lured/bite/escape/reel-in/state-change variants; carries hook entity, state, and event entity when available |
 | `on fuel burn` | mixin callback | `AbstractFurnaceBlockEntity.serverTick` fuel-ignite path | active | verified by real `.sk` + GameTest, including item-filter forms; carries furnace block, source item, and fuel item |
 | `on smelting start` | mixin callback | `AbstractFurnaceBlockEntity.serverTick` first cooking-progress increment | active | verified by real `.sk` + GameTest, including item-filter forms; `total cook time` changer now persists through the same furnace tick |
@@ -54,10 +56,11 @@ Current bridge counts:
   - none
 - Partial parity in existing families:
   - `EvtBlock` is active but currently break-backed only
+  - `EvtGrow` is active for crop/block growth backed by `CropBlock`, but `%structuretypes%` variants are still unbacked
   - `EvtItem` is active but currently spawn-backed only
   - `EvtEntity` is active but currently lifecycle spawn/death-backed only
   - `EvtEntityTransform` and `EvtHealing` are active but still use coarse reason support
-  - dedicated live producers are still missing for `EvtEntityBlockChange`, `EvtGrow`, `EvtPlantGrowth`, `EvtPressurePlate`, and `EvtVehicleCollision`
+  - dedicated live producers are still missing for `EvtEntityBlockChange`, `EvtPressurePlate`, and `EvtVehicleCollision`
   - one cross-cutting Stage 8 gap remains outside event mapping in base generic-compare handling for ambiguous bare item ids such as `event-item is wheat`
 - Deprecated residue intentionally not carried over:
   - `PATROL_CAPTAIN` potion cause (modern vanilla/Paper no longer uses it)

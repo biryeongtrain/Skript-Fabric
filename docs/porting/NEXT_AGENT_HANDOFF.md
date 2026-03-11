@@ -13,7 +13,7 @@ Last updated: 2026-03-11
 
 ## Current Headline
 
-- latest verified runtime baseline: `245 / 245`
+- latest verified runtime baseline: `246 / 246`
 - latest full verification:
   - `./gradlew build --rerun-tasks` passed
 - Stage 8 package-local audit remains frozen at `23 / 214`
@@ -29,27 +29,25 @@ Use local upstream sources only. Do not browse.
 
 ## Latest Closed Slice
 
-- latest verified worker-harvest expression batch reduces the raw shortfall to `845 / 1189`:
-  - newly imported expressions `26`:
+- latest verified concrete-event activation follow-up promotes `EvtGrow` and `EvtPlantGrowth` to active runtime status:
+  - new real `.sk` GameTest `cropGrowthProducerExecutesLoadedScript` grows a live wheat crop through `CropBlock.performBonemeal(...)`
+  - targeted worker verification:
+    - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --rerun-tasks`
+    - `./gradlew runGameTest --rerun-tasks`
+  - coordinator final verification:
+    - `./gradlew build --rerun-tasks`
+  - runtime baseline is now `246 / 246`
+  - raw upstream shortfall remains `845 / 1189`, shortfall `367`
+- the active/import-only split is now explicit:
+  - active runtime surface: conditions `10`, expressions `20`, effects `4`, events `13`
+  - import-only surface: the blocked mixed-batch effect remainder plus the older `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile`
+- no missing-library rollback was needed in this slice
+- the prior expression-harvest import-only batch remains merged underneath this follow-up:
+  - imported expressions `26`:
     - inventory/item: `ExprItemFlags`
     - parser/queue: `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
     - world/property: `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
-  - targeted coordinator verification:
-    - `isolatedExpressionSyntaxS2CompatibilityTest`
-    - `ExpressionItemCompatibilityTest`
-    - `ExpressionBlockWorldLocationCompatibilityTest`
-    - `ExpressionMixedRuntimeM6CompatibilityTest`
-  - coordinator kept this batch import-only:
-    - `ExprItemFlags`
-    - `ExprCaughtErrors`, `ExprDequeuedQueue`, `ExprEventExpression`, `ExprFilter`, `ExprFunction`, `ExprKeyed`, `ExprLoopIteration`, `ExprPercent`, `ExprQueue`, `ExprQueueStartEnd`, `ExprRecursive`, `ExprRepeat`, `ExprRound`, `ExprSets`
-    - `ExprChunkX`, `ExprChunkZ`, `ExprHumidity`, `ExprLocation`, `ExprLocationAt`, `ExprLocationOf`, `ExprRedstoneBlockPower`, `ExprSeaLevel`, `ExprSeed`, `ExprSimulationDistance`, `ExprSpawn`
-  - world/property expressions were intentionally not left active because representative real `.sk` GameTest coverage is still missing
-- latest verified full run remains `./gradlew build --rerun-tasks`
-- the latest focused follow-up keeps the existing `245 / 245` baseline while reducing the raw shortfall to `367`
-- the active/import-only split is now explicit:
-  - active runtime surface: conditions `10`, expressions `20`, effects `4`, events `11`
-  - import-only surface: the blocked mixed-batch effect remainder plus the older `EffConnect`, `EffKeepInventory`, `EffMakeSay`, and `EffScriptFile`
-- no missing-library rollback was needed in this slice
+  - coordinator kept that slice import-only because representative real `.sk` GameTest coverage is still missing for active world/property use
 - the prior Lane E runtime/support surface (`CondPermission`, `CondIsDivisibleBy`, `CondMinecraftVersion`, `CondIsUsingFeature`, `ExprARGB`, `ExprAngle`, `ExprDebugInfo`, `ExprHash`, `ExprTimespanDetails`, `ExprAmount`, `ExprFormatDate`, `ExprIndices`, `ExprInverse`, `CondAI`, `CondCompare`, `CondIsAlive`, `CondIsBurning`, `CondIsEmpty`, `CondIsInvisible`, `CondIsInvulnerable`, `CondIsSilent`, `CondIsSprinting`, `ExprGlowing`, `ExprRandom`, `ExprRandomCharacter`, `ExprTimes`) remains merged underneath it
 
 ## Recent Closed Prereqs
@@ -66,12 +64,13 @@ These are already closed. Do not reopen without a new reproducer.
 ## Next Targets
 
 1. live-activate the remaining imported concrete events that still have no runtime producer:
-   - `EvtEntityBlockChange`, `EvtGrow`, `EvtPlantGrowth`, `EvtPressurePlate`, `EvtVehicleCollision`
+   - `EvtEntityBlockChange`, `EvtPressurePlate`, `EvtVehicleCollision`
 2. broaden the partial active event classes instead of re-importing them:
    - `EvtBlock` beyond break-only backing
    - `EvtItem` beyond spawn-only backing
    - `EvtEntity` beyond spawn/death lifecycle backing
    - finer reason coverage for `EvtEntityTransform` and `EvtHealing`
+   - `EvtGrow` structure-type coverage beyond the current crop/block producer
 3. resolve or continue the import-only mixed-batch effect remainder:
    - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
 4. run the next syntax-heavy mixed-runtime worker batch for new `conditions` / `expressions` / `effects`, keeping worker targets at `10-20` syntax classes each and favoring still-missing expression families after this import-only worker harvest

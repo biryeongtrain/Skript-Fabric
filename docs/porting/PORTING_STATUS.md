@@ -1,6 +1,6 @@
 # Skript-Fabric Porting Status
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 ## Goal
 
@@ -22,7 +22,7 @@ Last updated: 2026-03-10
 - Source-level condition port: `28 / 28` complete.
 - Source-level expression port: `84 / 84` complete.
 - Source-level effect port: `24 / 24` complete.
-- Stage 5 event backend closure: `33 / 33` tracked rows active.
+- Stage 5 event backend closure: `35 / 35` tracked rows active.
 - Stage 8 parity audit: `in_progress`.
 - Package-local Stage 8 audit progress: `23 / 214`.
 - Package-local parity-complete slice:
@@ -34,28 +34,31 @@ Last updated: 2026-03-10
 - Cross-cutting Stage 8 gap still open:
   - ambiguous bare item-id generic compare is not parity-complete yet, for example `event-item is wheat`
 - Latest runtime verification:
-  - `./gradlew build --rerun-tasks` passed on 2026-03-10
-  - build path executed `runGameTest` successfully on 2026-03-10
-  - `230 / 230` scheduled Fabric GameTests completed without build failure
+  - `./gradlew build --rerun-tasks` passed on 2026-03-11
+  - build path executed `runGameTest` successfully on 2026-03-11
+  - `246 / 246` scheduled Fabric GameTests completed without build failure
 - Latest implementation batch:
+  - latest verified concrete-event follow-up on 2026-03-11 live-activates 2 previously imported event classes:
+    - `EvtGrow`, `EvtPlantGrowth`
+  - the same follow-up proves the live producer path with a real `.sk` GameTest that grows a wheat crop through `CropBlock.performBonemeal(...)`
+  - active Fabric runtime bootstrap now registers the runtime-safe subset from the current mixed-runtime event surface:
+    - conditions `10`
+    - expressions `20`
+    - effects `4`
+    - events `13`
   - latest verified mixed-runtime coordinator batch on 2026-03-10 live-activates 11 previously imported event classes:
     - `EvtBeaconEffect`, `EvtBeaconToggle`, `EvtBlock`, `EvtBookEdit`, `EvtBookSign`, `EvtClick`, `EvtEntity`, `EvtEntityTransform`, `EvtExperienceSpawn`, `EvtHealing`, `EvtItem`
   - the same batch also imports the remaining worker-lane syntax surface:
     - `conditions`: `CondCancelled`, `CondDamageCause`, `CondEntityUnload`, `CondIncendiary`, `CondItemDespawn`, `CondIsPreferredTool`, `CondIsSedated`, `CondLeashWillDrop`, `CondRespawnLocation`, `CondScriptLoaded`
     - `expressions`: `ExprAffectedEntities`, `ExprBarterInput`, `ExprConsumedItem`, `ExprExperienceCooldownChangeReason`, `ExprExplodedBlocks`, `ExprHatchingNumber`, `ExprHatchingType`, `ExprHealAmount`, `ExprLastAttacker`, `ExprLeashHolder`, `ExprLevel`, `ExprMaxDurability`, `ExprMaxHealth`, `ExprMaxItemUseTime`, `ExprMaxStack`, `ExprNoDamageTicks`, `ExprItemOwner`, `ExprItemThrower`, `ExprRawName`, `ExprSpeed`
     - `effects`: `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`, `EffCopy`, `EffSort`, `EffToggle`, `EffExceptionDebug`
-  - active Fabric runtime bootstrap now registers the runtime-safe subset from that batch:
-    - conditions `10`
-    - expressions `20`
-    - effects `4`
-    - events `11`
   - import-only remainder from the same batch currently stays unregistered:
     - `EffColorItems`, `EffEnchant`, `EffEquip`, `EffDrop`, `EffHealth`, `EffTeleport`, `EffWakeupSleep`, `EffFireworkLaunch`, `EffElytraBoostConsume`, `EffExplosion`, `EffTree`, `EffEntityVisibility`, `EffClearEntityStorage`, `EffInsertEntityStorage`, `EffReleaseEntityStorage`
   - coordinator-only stabilization in the merge batch:
     - `ExpressionEventContextBundleCompatibilityTest` now runs isolated
     - `MixedRuntimeSyntaxBatchTest` was added as a dedicated isolated runtime parser suite
     - the healing bridge now passes the compat-handle amount payload end-to-end
-  - the latest coordinator worker-harvest batch keeps the existing `245 / 245` Fabric GameTest baseline while reducing the upstream core shortfall to `845 / 1189`
+  - the latest coordinator worker-harvest batch kept the then-current `245 / 245` Fabric GameTest baseline while reducing the upstream core shortfall to `845 / 1189`
   - the measured shortfall is now `367`
   - latest verified import-only expression closures add `26` upstream `ch/njol/skript` classes:
     - inventory/item: `ExprItemFlags`
@@ -383,6 +386,9 @@ Targeted verification completed on 2026-03-08:
 - `./gradlew test --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after restoring `Classes` default-expression lookup helpers, direct-parent variable null sentinels, pattern graph string/combinations parity, and statement-fallback section-line hint retention
 - `./gradlew test --tests ch.njol.skript.classes.LegacyWrapperCompatibilityTest --tests ch.njol.skript.variables.TypeHintsCompatibilityTest --tests ch.njol.skript.variables.VariablesCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --tests ch.njol.skript.patterns.PatternCompilerCompatibilityTest --tests ch.njol.skript.lang.SkriptParserRegistryTest --tests ch.njol.skript.log.LogHandlerCompatibilityTest --tests ch.njol.skript.registrations.ClassesCompatibilityTest --tests ch.njol.skript.ScriptLoaderCompatibilityTest --rerun-tasks` passed after restoring the legacy log-handler stack, `patterns.Keyword`, `variables.TypeHints`, and parser/converter wrapper surfaces
 - `./gradlew test --tests ch.njol.skript.ScriptLoaderCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCoreCompatibilityTest --tests ch.njol.skript.lang.function.FunctionImplementationCompatibilityTest --tests ch.njol.skript.lang.function.FunctionCallCompatibilityTest --tests ch.njol.skript.lang.VariableCompatibilityTest --rerun-tasks` passed after restoring local function-first registry fallback, section-scope hint clearing, effect-candidate ownership reset, and retained section diagnostics on statement fallback success
+- `./gradlew test --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --rerun-tasks` passed after adding a producer-path crop growth GameTest for `EvtGrow` and `EvtPlantGrowth`
+- `./gradlew runGameTest --rerun-tasks` passed with `246 / 246`
+- `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `246 / 246` scheduled Fabric GameTests
 - `./gradlew runGameTest --rerun-tasks` passed with `230 / 230`
 - `./gradlew build --rerun-tasks` passed, including the full Fabric GameTest path and `230 / 230` scheduled Fabric GameTests
 
