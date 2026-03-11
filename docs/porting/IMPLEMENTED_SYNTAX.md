@@ -492,16 +492,32 @@ The list below groups the active syntax by domain and calls out the representati
 
 - book and item metadata
   - representative forms: `author of %itemtypes%`, `pages of %itemtypes%`, `title of %itemtypes%`, `custom model data of %itemtypes%`
+- item flag metadata
+  - representative forms: `item flags of %itemtypes%`, `set item flags of %itemtypes% to %strings%`
 - durability and charge state
   - representative forms: `durability of %slots/itemtypes%`, `remaining durability of %itemtypes%`, `charges of %itemtypes%`, `damaged item from %itemtypes%`
 - block / brushable / entity item payload
   - representative forms: `hardness of %blocks/itemtypes%`, `brushable item of %blocks%`, `egg of %entities%`
 - item transformations and inventory expressions
   - representative forms: `amount of %itemtypes% in %inventories%`, `exact %itemtypes%`, `%itemtypes% with lore %strings%`, `%itemtypes% with hidden tooltip`, `%itemtypes% with custom model data %objects%`, `all items`
+- parser/runtime diagnostics
+  - representative forms: `last caught runtime errors`, `event-%classinfo%`
+- queue construction and traversal
+  - representative forms: `a queue`, `a queue of %objects%`, `dequeued %queue%`, `unrolled %queue%`, `start of %queue%`, `end of %queue%`
+- reflection, filtering, and recursive helpers
+  - representative forms: `%objects% where [<condition>]`, `the function named %string%`, `functions named %strings%`, `the functions from %script%`, `keyed %objects%`, `recursive %objects%`
+- loop and aggregate helpers
+  - representative forms: `loop-iteration`, `loop-iteration-2`, `%number% percent of %numbers%`, `%strings% repeated %integer% times`, `rounded %numbers%`, `floored %numbers%`, `%numbers% rounded up`, `every %classinfo%`, `all of the %classinfo%`
 - entity property and cooldown state
   - representative forms: `active item of %livingentities%`, `owner of %entities%`, `size of %entities%`, `health of %livingentities%`, `remaining air of %entities%`, `portal cooldown of %entities%`, `xp pickup cooldown of %players%`
 - block, mob, and timer state
   - representative forms: `age of %entities/blocks%`, `honey level of %blocks%`, `flower of %beehives%`, `jukebox of %allays%`, `arrows stuck in %livingentities%`, `maximum fuse time of %creepers%`, `domestication of %livingentities%`, `break speed of %players%`
+- world coordinate and environment state
+  - representative forms: `chunk x-coordinate of %chunks%`, `chunk z-coordinate of %chunks%`, `humidity of %blocks%`, `redstone power of %blocks%`
+- world location builders and lookups
+  - representative forms: `event-location`, `location north of %location%`, `location at x = %number%, y = %number%, and z = %number% [in %world%]`, `location of %locations/blocks/entities/chunks%`
+- world metadata
+  - representative forms: `sea level of %worlds%`, `seed of %worlds%`, `simulation distance of %worlds%`, `spawn location of %worlds%`
 
 ### Breeding
 
