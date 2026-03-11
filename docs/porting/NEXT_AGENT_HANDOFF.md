@@ -1,7 +1,7 @@
 # Next Agent Handoff
 
-Last condensed: 2026-03-11
-Last full verification: 2026-03-11
+Last condensed: 2026-03-12
+Last full verification: 2026-03-12
 
 ## Read Order
 
@@ -20,22 +20,22 @@ Last full verification: 2026-03-11
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `875`, upstream `1189`, shortfall `314`
+- Upstream `ch/njol/skript` baseline: exact-path present `903`, upstream `1189`, shortfall `286`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for vector geometry, syntax S2/S3/S4, mixed runtime binding, event compatibility, scheduled/experience/script lifecycle runtime, and compat accessor migration
+  - targeted cycle JUnit suite passed for syntax S1/S2/S3/S4, event compatibility/runtime, mixed runtime binding, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Most Recent Merged Slice
 
-- vector geometry expressions plus world/time and world-border expressions
-- syntax3 property expressions plus syntax4 entity relation expressions
-- scheduled, experience, and script lifecycle event hooks
-- beacon and bell compat accessors
-- `PrivateFishingHookAccess.currentState` migration deferred after a GameTest mixin accessor failure
+- syntax1 world helpers `ExprGameRule`, `ExprWorldBorderWarningTime`, `ExprWeather`
+- syntax2 vector and text helpers plus syntax3 villager/item subset and syntax4 identity/relation subset
+- exact-path event closure for `EvtRealTime`, `SimpleEvents`, `ExperienceSpawnEvent`, and `PreScriptLoadEvent`
+- allay and item-entity compat accessors
+- `PrivateFishingHookAccess.currentState` migration deferred again after the GameTest mixin accessor descriptor failure
 
 ## Do Next
 
-- Continue exact-path closure from `314` overall missing with focus on expressions `123` and events `5`.
+- Continue exact-path closure from `286` overall missing with focus on expressions `100` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.

@@ -1,14 +1,14 @@
 # Skript-Fabric Porting Status
 
-Last condensed: 2026-03-11
-Last full verification: 2026-03-11
+Last condensed: 2026-03-12
+Last full verification: 2026-03-12
 
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `314`
-  - expressions missing: `123`
-  - events missing: `5`
+  - overall missing: `286`
+  - expressions missing: `100`
+  - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
   - aliases missing: `9`
@@ -27,10 +27,10 @@ Last full verification: 2026-03-11
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `875`
-  - shortfall: `314`
+  - exact-path present locally: `903`
+  - shortfall: `286`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for vector geometry, syntax S2/S3/S4, mixed runtime binding, event compatibility, scheduled/experience/script lifecycle runtime, and compat accessor migration
+  - targeted cycle JUnit suite passed for syntax S1/S2/S3/S4, event compatibility/runtime, mixed runtime binding, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
 
 ## Active Priority
@@ -43,15 +43,15 @@ Last full verification: 2026-03-11
 ## Latest Closed Core Slice
 
 - Latest landed expression slice:
-  - vector geometry: `ExprVectorAngleBetween`, `ExprVectorFromXYZ`, `ExprVectorOfLocation`, `ExprVectorProjection`, `ExprVectorRandom`, `ExprVectorSquaredLength`
-  - world/time and border: `ExprTemperature`, `ExprTime`, `ExprWorld`, `ExprWorldEnvironment`, `ExprWorldFromName`, `ExprWorlds`, `ExprWorldBorder`, `ExprWorldBorderCenter`, `ExprWorldBorderSize`, `ExprWorldBorderDamageAmount`, `ExprWorldBorderDamageBuffer`, `ExprWorldBorderWarningDistance`
-  - syntax3 property subset: `ExprUUID`, `ExprVelocity`, `ExprTimeLived`, `ExprScoreboardTags`, `ExprGameMode`, `ExprSaturation`
-  - syntax4 relation subset: `ExprPassenger`, `ExprVehicle`, `ExprShooter`, `ExprTarget`, `ExprTransformReason`, `ExprUnleashReason`
+  - syntax1 world helpers: `ExprGameRule`, `ExprWorldBorderWarningTime`, `ExprWeather`
+  - syntax2 vector and text helpers: `ExprVectorCylindrical`, `ExprVectorFromDirection`, `ExprVectorFromYawAndPitch`, `ExprVectorSpherical`, `ExprStringCase`, `ExprColoured`, `ExprRawString`, `ExprStringColor`, `ExprTernary`
+  - syntax3 villager and item subset: `ExprLore`, `ExprTimePlayed`, `ExprTotalExperience`, `ExprUnbreakable`, `ExprVillagerLevel`, `ExprVillagerProfession`, `ExprVillagerType`
+  - syntax4 identity and relation subset: `ExprFromUUID`, `ExprMemory`, `ExprProjectileCriticalState`, `ExprAllBannedEntries`
 - Latest landed infra slice:
-  - scheduled and lifecycle event backends: `EvtPeriodical`, `EvtAtTime`, `ExperienceSpawnEvent`, `ScriptEvent`, `SkriptStartEvent`, `SkriptStopEvent`
-  - compat access migration: `PrivateBeaconAccess` and `PrivateBellAccess`
+  - exact-path event closure: `EvtRealTime`, `SimpleEvents`, `ExperienceSpawnEvent`, `PreScriptLoadEvent`, `events/bukkit/package-info`
+  - compat access migration: `PrivateAllayAccess` and `PrivateItemEntityAccess`
 - Deferred from the same cycle:
-  - `PrivateFishingHookAccess.currentState` migration stayed out of `main` after a GameTest mixin accessor failure
+  - `PrivateFishingHookAccess.currentState` migration stayed out of `main` after the GameTest mixin accessor descriptor failure repeated
 - Landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 
 ## Open Gaps

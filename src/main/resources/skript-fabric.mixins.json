@@ -4,6 +4,7 @@
   "package": "kim.biryeong.skriptFabric.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AllayAccessor",
     "AbstractArrowMixin",
     "AbstractFurnaceBlockEntityAccessor",
     "AbstractFurnaceBlockEntityMixin",
@@ -31,6 +32,7 @@
     "FurnaceResultSlotMixin",
     "IllusionerPotionCauseMixin",
     "InteractionAccessor",
+    "ItemEntityAccessor",
     "ItemDisplayAccessor",
     "LivingEntityHealingMixin",
     "LivingEntityPotionMixin",

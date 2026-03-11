@@ -8,12 +8,12 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import com.mojang.authlib.GameProfile;
-import java.util.UUID;
-import java.lang.reflect.Field;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.PrivateItemEntityAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import java.util.UUID;
 
 @Name("Dropped Item Owner")
 @Description("""
@@ -36,13 +36,7 @@ public class ExprItemOwner extends SimplePropertyExpression<ItemEntity, UUID> {
 
     @Override
     public @Nullable UUID convert(ItemEntity item) {
-        try {
-            Field ownerField = findOwnerField();
-            ownerField.setAccessible(true);
-            return (UUID) ownerField.get(item);
-        } catch (ReflectiveOperationException exception) {
-            return null;
-        }
+        return PrivateItemEntityAccess.owner(item);
     }
 
     @Override
@@ -79,24 +73,7 @@ public class ExprItemOwner extends SimplePropertyExpression<ItemEntity, UUID> {
     }
 
     private void setOwner(ItemEntity item, @Nullable UUID uuid) {
-        try {
-            item.setTarget(uuid);
-        } catch (NoSuchMethodError error) {
-            try {
-                Field ownerField = findOwnerField();
-                ownerField.setAccessible(true);
-                ownerField.set(item, uuid);
-            } catch (ReflectiveOperationException ignored) {
-            }
-        }
-    }
-
-    private Field findOwnerField() throws NoSuchFieldException {
-        try {
-            return ItemEntity.class.getDeclaredField("target");
-        } catch (NoSuchFieldException ignored) {
-            return ItemEntity.class.getDeclaredField("owner");
-        }
+        PrivateItemEntityAccess.setOwner(item, uuid);
     }
 
     @Override

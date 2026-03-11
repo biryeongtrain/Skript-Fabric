@@ -11,11 +11,13 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.SyntaxStringBuilder;
 import ch.njol.skript.util.Timespan;
 import ch.njol.util.Kleenean;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.compat.PrivateAllayAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Dance")
@@ -78,10 +80,9 @@ public class EffDancing extends Effect {
         }
         for (LivingEntity entity : entities.getArray(event)) {
             if (entity instanceof Allay allay) {
-                if (!start) {
-                    allay.setDancing(false);
-                } else {
-                    allay.setDancing(true);
+                allay.setDancing(start);
+                if (start && danceLocation != null) {
+                    PrivateAllayAccess.setJukeboxPos(allay, BlockPos.containing(danceLocation.position()));
                 }
             } else if (entity instanceof Piglin piglin) {
                 if (danceTime > 0L) {
@@ -89,9 +90,6 @@ public class EffDancing extends Effect {
                 } else {
                     piglin.setDancing(start);
                 }
-            }
-            if (start && danceLocation != null) {
-                EffectRuntimeSupport.setField(entity, "jukeboxPos", danceLocation.position());
             }
         }
     }

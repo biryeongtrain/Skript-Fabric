@@ -1,15 +1,15 @@
 # `ch/njol/skript` Audit And Closure Plan
 
-Last condensed: 2026-03-11
+Last condensed: 2026-03-12
 Baseline snapshot date: 2026-03-08
 
 ## Baseline
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `314`
-- Exact-path expressions missing: `123`
-- Exact-path events / sections / command / aliases missing: `5 / 8 / 9 / 9`
+- Exact-path missing in local tree: `286`
+- Exact-path expressions missing: `100`
+- Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
 ## Priority Matrix
 
@@ -88,14 +88,14 @@ Baseline snapshot date: 2026-03-08
 ## Latest Verified Merge
 
 - Landed:
-  - vector geometry expressions `ExprVectorAngleBetween`, `ExprVectorFromXYZ`, `ExprVectorOfLocation`, `ExprVectorProjection`, `ExprVectorRandom`, `ExprVectorSquaredLength`
-  - world/time and border expressions `ExprTemperature`, `ExprTime`, `ExprWorld`, `ExprWorldEnvironment`, `ExprWorldFromName`, `ExprWorlds`, `ExprWorldBorder`, `ExprWorldBorderCenter`, `ExprWorldBorderSize`, `ExprWorldBorderDamageAmount`, `ExprWorldBorderDamageBuffer`, `ExprWorldBorderWarningDistance`
-  - syntax3 property expressions `ExprUUID`, `ExprVelocity`, `ExprTimeLived`, `ExprScoreboardTags`, `ExprGameMode`, `ExprSaturation`
-  - syntax4 relation expressions `ExprPassenger`, `ExprVehicle`, `ExprShooter`, `ExprTarget`, `ExprTransformReason`, `ExprUnleashReason`
-  - scheduled and lifecycle event backends `EvtPeriodical`, `EvtAtTime`, `ExperienceSpawnEvent`, `ScriptEvent`, `SkriptStartEvent`, `SkriptStopEvent`
-  - compat accessor migration for `PrivateBeaconAccess` and `PrivateBellAccess`
+  - syntax1 world helpers `ExprGameRule`, `ExprWorldBorderWarningTime`, `ExprWeather`
+  - syntax2 vector and text helpers `ExprVectorCylindrical`, `ExprVectorFromDirection`, `ExprVectorFromYawAndPitch`, `ExprVectorSpherical`, `ExprStringCase`, `ExprColoured`, `ExprRawString`, `ExprStringColor`, `ExprTernary`
+  - syntax3 villager and item expressions `ExprLore`, `ExprTimePlayed`, `ExprTotalExperience`, `ExprUnbreakable`, `ExprVillagerLevel`, `ExprVillagerProfession`, `ExprVillagerType`
+  - syntax4 identity and relation expressions `ExprFromUUID`, `ExprMemory`, `ExprProjectileCriticalState`, `ExprAllBannedEntries`
+  - exact-path event closure `EvtRealTime`, `SimpleEvents`, `ExperienceSpawnEvent`, `PreScriptLoadEvent`, `events/bukkit/package-info`
+  - compat accessor migration for `PrivateAllayAccess` and `PrivateItemEntityAccess`
 - Deferred:
-  - `PrivateFishingHookAccess.currentState` migration stayed out after a GameTest mixin accessor failure
+  - `PrivateFishingHookAccess.currentState` migration stayed out after the GameTest mixin accessor descriptor failure repeated
 - Added compatibility coverage:
   - `ExpressionVectorGeometryCompatibilityTest`
   - `ExpressionSyntaxS2CompatibilityTest`
@@ -104,7 +104,7 @@ Baseline snapshot date: 2026-03-08
   - `ScheduledEventRuntimeTest`
   - `ExperienceSpawnRuntimeTest`
   - `ScriptLifecycleRuntimeTest`
-- Verification passed on 2026-03-11:
-  - targeted cycle JUnit suite covering vector geometry, syntax S2/S3/S4, mixed runtime binding, event compatibility, scheduled/experience/script lifecycle runtime, and compat accessor migration
+- Verification passed on 2026-03-12:
+  - targeted cycle JUnit suite covering syntax S1/S2/S3/S4, mixed runtime binding, event compatibility/runtime, and compat accessor migration
   - `./gradlew runGameTest --rerun-tasks`
 - Verified runtime baseline after that merge: `260 / 260`

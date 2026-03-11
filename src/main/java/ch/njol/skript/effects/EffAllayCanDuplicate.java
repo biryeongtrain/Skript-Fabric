@@ -12,6 +12,7 @@ import ch.njol.util.Kleenean;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.allay.Allay;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.PrivateAllayAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Allay Duplicate")
@@ -53,7 +54,7 @@ public class EffAllayCanDuplicate extends Effect {
     protected void execute(SkriptEvent event) {
         for (LivingEntity entity : entities.getArray(event)) {
             if (entity instanceof Allay allay) {
-                EffectRuntimeSupport.invokeCompatible(allay, "setCanDuplicate", duplicate);
+                PrivateAllayAccess.setCanDuplicate(allay, duplicate);
             }
         }
     }

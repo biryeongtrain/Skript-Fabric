@@ -8,10 +8,10 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
-import java.lang.reflect.Field;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.allay.Allay;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.PrivateAllayAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Allay Duplication Cooldown")
@@ -26,8 +26,6 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("reset the cloning cool down time of last spawned allay")
 @Since("2.11")
 public class ExprDuplicateCooldown extends SimplePropertyExpression<LivingEntity, Timespan> {
-
-    private static final Field DUPLICATION_COOLDOWN = findField();
     private static final long DEFAULT_DUPLICATION_COOLDOWN = 6000L;
 
     static {
@@ -39,11 +37,7 @@ public class ExprDuplicateCooldown extends SimplePropertyExpression<LivingEntity
         if (!(entity instanceof Allay allay)) {
             return null;
         }
-        try {
-            return new Timespan(TimePeriod.TICK, DUPLICATION_COOLDOWN.getLong(allay));
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to read allay duplication cooldown.", exception);
-        }
+        return new Timespan(TimePeriod.TICK, PrivateAllayAccess.duplicationCooldown(allay));
     }
 
     @Override
@@ -60,18 +54,14 @@ public class ExprDuplicateCooldown extends SimplePropertyExpression<LivingEntity
             if (!(entity instanceof Allay allay)) {
                 continue;
             }
-            try {
-                long current = DUPLICATION_COOLDOWN.getLong(allay);
-                long next = switch (mode) {
-                    case SET, DELETE -> ticks;
-                    case ADD -> current + ticks;
-                    case REMOVE -> current - ticks;
-                    case RESET -> DEFAULT_DUPLICATION_COOLDOWN;
-                };
-                DUPLICATION_COOLDOWN.setLong(allay, Math.max(0L, next));
-            } catch (ReflectiveOperationException exception) {
-                throw new IllegalStateException("Unable to change allay duplication cooldown.", exception);
-            }
+            long current = PrivateAllayAccess.duplicationCooldown(allay);
+            long next = switch (mode) {
+                case SET, DELETE -> ticks;
+                case ADD -> current + ticks;
+                case REMOVE -> current - ticks;
+                case RESET -> DEFAULT_DUPLICATION_COOLDOWN;
+            };
+            PrivateAllayAccess.setDuplicationCooldown(allay, Math.max(0L, next));
         }
     }
 
@@ -83,15 +73,5 @@ public class ExprDuplicateCooldown extends SimplePropertyExpression<LivingEntity
     @Override
     protected String getPropertyName() {
         return "duplicate cooldown time";
-    }
-
-    private static Field findField() {
-        try {
-            Field field = Allay.class.getDeclaredField("duplicationCooldown");
-            field.setAccessible(true);
-            return field;
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to access allay duplication cooldown.", exception);
-        }
     }
 }

@@ -7,10 +7,10 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import ch.njol.skript.util.Timespan;
-import java.lang.reflect.Field;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.PrivateItemEntityAccess;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Pickup Delay")
@@ -18,8 +18,6 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("set pickup delay of last dropped item to 5 seconds")
 @Since("2.7")
 public final class ExprPickupDelay extends SimplePropertyExpression<Entity, Timespan> {
-
-    private static final @Nullable Field PICKUP_DELAY_FIELD = resolvePickupDelayField();
 
     static {
         register(ExprPickupDelay.class, Timespan.class, "pick[ ]up delay", "entities");
@@ -30,17 +28,7 @@ public final class ExprPickupDelay extends SimplePropertyExpression<Entity, Time
         if (!(entity instanceof ItemEntity itemEntity)) {
             return null;
         }
-        Object value = ReflectiveHandleAccess.invokeNoArg(itemEntity, "getPickUpDelay", "getPickupDelay");
-        if (value instanceof Number number) {
-            return new Timespan(Timespan.TimePeriod.TICK, number.intValue());
-        }
-        if (PICKUP_DELAY_FIELD != null) {
-            try {
-                return new Timespan(Timespan.TimePeriod.TICK, PICKUP_DELAY_FIELD.getInt(itemEntity));
-            } catch (IllegalAccessException ignored) {
-            }
-        }
-        return null;
+        return new Timespan(Timespan.TimePeriod.TICK, PrivateItemEntityAccess.pickupDelay(itemEntity));
     }
 
     @Override
@@ -67,15 +55,7 @@ public final class ExprPickupDelay extends SimplePropertyExpression<Entity, Time
                 case DELETE, RESET -> 0;
                 default -> current;
             };
-            next = Math.max(0, next);
-            ReflectiveHandleAccess.invokeSingleArg(itemEntity, "setPickUpDelay", next);
-            ReflectiveHandleAccess.invokeSingleArg(itemEntity, "setPickupDelay", next);
-            if (PICKUP_DELAY_FIELD != null) {
-                try {
-                    PICKUP_DELAY_FIELD.setInt(itemEntity, next);
-                } catch (IllegalAccessException ignored) {
-                }
-            }
+            PrivateItemEntityAccess.setPickupDelay(itemEntity, Math.max(0, next));
         }
     }
 
@@ -87,15 +67,5 @@ public final class ExprPickupDelay extends SimplePropertyExpression<Entity, Time
     @Override
     protected String getPropertyName() {
         return "pickup delay";
-    }
-
-    private static @Nullable Field resolvePickupDelayField() {
-        try {
-            Field field = ItemEntity.class.getDeclaredField("pickupDelay");
-            field.setAccessible(true);
-            return field;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
     }
 }
