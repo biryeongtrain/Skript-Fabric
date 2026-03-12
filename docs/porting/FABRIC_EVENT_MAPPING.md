@@ -5,11 +5,11 @@ Last full verification: 2026-03-12
 
 ## Snapshot
 
-- Active event rows: `63`
+- Active event rows: `70`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `300` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.WorldLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.ItemLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.InventoryMoveRuntimeTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `306` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 
 ## Active Rows
 
@@ -68,6 +68,10 @@ Last full verification: 2026-03-12
 | `on craft` | `ResultSlot.onTake(Player, ItemStack)` |
 | `on pickup` / `on entity pickup` | `ItemEntity.playerTouch(Player)` and `LivingEntity.onItemPickup(ItemEntity)` |
 | `on consume` | `ItemStack.finishUsingItem(Level, LivingEntity)` |
+| `on item despawn` | `ItemEntity.tick()` age-expiry path |
+| `on item merge` | `ItemEntity.mergeWithNeighbours()` |
+| `on inventory item move` | `HopperBlockEntity.ejectItems(Level, BlockPos, HopperBlockEntity)` transfer path |
+| `on stonecutting` | `StonecutterMenu.quickMoveStack(Player, int)` |
 | `on player egg throw` | `ThrownEgg.onHit(HitResult)` mixin path |
 | `on piglin barter` | `PiglinAi.stopHoldingOffHandItem(ServerLevel, Piglin, boolean)` mixin path |
 | `on level change` | `ServerPlayer.giveExperienceLevels(int)` delta bridge |
@@ -78,24 +82,24 @@ Last full verification: 2026-03-12
 | `on smelting start` | `AbstractFurnaceBlockEntity.serverTick` cook-start path |
 | `on furnace smelt` | `AbstractFurnaceBlockEntity.serverTick` recipe-complete path |
 | `on furnace extract` | `FurnaceResultSlot.checkTakeAchievements` |
+| `on world initialization` | `MinecraftServer.createLevels(ChunkProgressListener)` one-shot mixin path |
+| `on world unloading` | `ServerWorldEvents.UNLOAD` |
+| `on world loading` | `ServerWorldEvents.LOAD` |
 
 ## Open Parity Note
 
 - `Evt*.java` runtime audit:
-  - runtime-backed: `44 / 53`
-  - synthetic/partial: `4 / 53`
+  - runtime-backed: `45 / 53`
+  - synthetic/partial: `3 / 53`
   - non-runtime/manual: `5 / 53`
 - Remaining synthetic/partial event syntax focus:
   - `EvtBlock`
     live: `burn`, `fade`, `form`, `drop`
     remaining: `break`, `mine`, `place`
   - `EvtItem`
-    live: `dispense`, `spawn`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`
-    remaining: `inventory click`, `despawn`, `merge`, `inventory move`, `stonecutting`
+    live: `dispense`, `spawn`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `despawn`, `merge`, `inventory move`, `stonecutting`
+    remaining: `inventory click`
   - `EvtHarvestBlock`
-  - `EvtWorld`
-    live: `save`
-    remaining: `init`, `unload`, `load`
 - Remaining event-facing synthetic alias:
   - `gametest hanging break`
 - Remaining cross-cutting gap is not limited to dispatch:

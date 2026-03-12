@@ -17,8 +17,8 @@ Last full verification: 2026-03-12
   - conditions: `28 / 28`
   - expressions: `84 / 84`
   - effects: `24 / 24`
-- Runtime-backed `Evt*.java`: `44 / 53`
-- Synthetic/partial `Evt*.java`: `4 / 53`
+- Runtime-backed `Evt*.java`: `45 / 53`
+- Synthetic/partial `Evt*.java`: `3 / 53`
 - Non-runtime/manual `Evt*.java`: `5 / 53`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
@@ -32,8 +32,8 @@ Last full verification: 2026-03-12
   - exact-path present locally: `925`
   - shortfall: `264`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `300` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.WorldLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.ItemLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.InventoryMoveRuntimeTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `306` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 
 ## Active Priority
 
@@ -47,13 +47,16 @@ Last full verification: 2026-03-12
 - Latest landed runtime/GameTest slice:
   - public `on area cloud effect:`, `on player experience cooldown change:`, and `on block fertilize:` now use public syntax with dedicated real-trigger GameTests instead of `gametest ...` aliases
   - `EvtBlock` now has live producers for `burn`, `fade`, `form`, and `drop`
-  - `EvtItem` now has live producers for `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, and `consume`
-  - public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path, and `on world saving:` now uses the real `ServerLevel.save(...)` path
+  - `EvtItem` now has live producers for `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `item despawn`, `item merge`, `inventory item move`, and `stonecutting`
+  - public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path, and `EvtWorld` now has live `save`, `initialization`, `loading`, and `unloading` producers
+  - runtime bootstrap now force-initializes the recovered event activation bundle so full GameTest startup sees the recovered public event syntaxes
   - mixed event backfill coverage was reduced so live block/item families no longer rely on helper-only aliases
 - Deferred from the same cycle:
-  - partial event families are now limited to `EvtBlock`, `EvtItem`, `EvtHarvestBlock`, and `EvtWorld`
+  - partial event families are now limited to `EvtBlock`, `EvtItem`, and `EvtHarvestBlock`
+  - `EvtItem` still needs a live `inventory click` producer before the family is fully runtime-backed
+  - sweet berry harvest was attempted for `EvtHarvestBlock` but not landed because it introduced new full-suite GameTest regressions
   - the remaining event-facing synthetic alias is `gametest hanging break`
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `300` GameTests with only the unrelated `ExprNumbers` baseline failure
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `306` GameTests with only the unrelated `ExprNumbers` baseline failure
 
 ## Open Gaps
 
