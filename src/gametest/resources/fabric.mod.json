@@ -9,6 +9,9 @@
   "license": "All-Rights-Reserved",
   "environment": "server",
   "entrypoints": {
+    "main": [
+      "kim.biryeong.skriptFabricPort.gametest.WorldInitializationGameTestBootstrap"
+    ],
     "fabric-gametest": [
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricAIGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricBaseGameTest",

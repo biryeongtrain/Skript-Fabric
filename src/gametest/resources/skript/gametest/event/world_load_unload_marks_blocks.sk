@@ -1,0 +1,5 @@
+on world loading:
+    set test block at 0 1 0 to emerald_block
+
+on world unloading:
+    set test block at 1 1 0 to gold_block

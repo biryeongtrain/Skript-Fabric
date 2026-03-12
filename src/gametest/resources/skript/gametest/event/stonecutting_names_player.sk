@@ -1,0 +1,2 @@
+on stonecutting of stone slab:
+    set test name of entity event-player to "stonecutting"

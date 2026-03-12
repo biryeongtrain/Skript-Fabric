@@ -1120,14 +1120,34 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtEntityShootBow.register();
         ch.njol.skript.events.EvtEntityTransform.register();
         ch.njol.skript.events.EvtExplosionPrime.register();
+        ch.njol.skript.events.EvtExperienceChange.register();
+        ch.njol.skript.events.EvtExperienceCooldownChange.register();
         ch.njol.skript.events.EvtExperienceSpawn.register();
+        ch.njol.skript.events.EvtFirstJoin.register();
+        ch.njol.skript.events.EvtGameMode.register();
+        ch.njol.skript.events.EvtGrow.register();
+        ch.njol.skript.events.EvtHarvestBlock.register();
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();
         ch.njol.skript.events.EvtLeash.register();
+        ch.njol.skript.events.EvtMove.register();
+        ch.njol.skript.events.EvtMoveOn.register();
+        ch.njol.skript.events.EvtPiglinBarter.register();
+        ch.njol.skript.events.EvtPlayerArmorChange.register();
+        ch.njol.skript.events.EvtPlayerChunkEnter.register();
+        ch.njol.skript.events.EvtPlayerCommandSend.register();
         ch.njol.skript.events.EvtPlayerEggThrow.register();
         ch.njol.skript.events.EvtPeriodical.register();
+        ch.njol.skript.events.EvtPortal.register();
+        ch.njol.skript.events.EvtPressurePlate.register();
+        ch.njol.skript.events.EvtResourcePackResponse.register();
+        ch.njol.skript.events.EvtRespawn.register();
         ch.njol.skript.events.EvtScript.register();
         ch.njol.skript.events.EvtSkript.register();
+        ch.njol.skript.events.EvtSpectate.register();
+        ch.njol.skript.events.EvtTeleport.register();
+        ch.njol.skript.events.EvtVehicleCollision.register();
+        ch.njol.skript.events.EvtWeatherChange.register();
         ch.njol.skript.events.EvtWorld.register();
     }
 

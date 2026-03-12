@@ -1,0 +1,2 @@
+on item despawn of apple:
+    set test block at 6 1 0 to emerald_block

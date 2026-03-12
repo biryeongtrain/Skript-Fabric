@@ -21,6 +21,7 @@ import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -81,6 +82,7 @@ import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.inventory.ResultSlot;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.StonecutterMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -102,6 +104,7 @@ import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.minecraft.world.level.block.entity.DispenserBlockEntity;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -230,6 +233,44 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                     Component.literal("Expected the real world save path to execute the loaded world save script.")
             );
             runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void worldLoadAndUnloadEventsExecuteLifecycleScripts(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            runtime.loadFromResource("skript/gametest/event/world_load_unload_marks_blocks.sk");
+
+            BlockPos loadMarker = helper.absolutePos(new BlockPos(0, 1, 0));
+            BlockPos unloadMarker = helper.absolutePos(new BlockPos(1, 1, 0));
+            helper.getLevel().setBlockAndUpdate(loadMarker, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(unloadMarker, Blocks.AIR.defaultBlockState());
+
+            ServerWorldEvents.LOAD.invoker().onWorldLoad(helper.getLevel().getServer(), helper.getLevel());
+            ServerWorldEvents.UNLOAD.invoker().onWorldUnload(helper.getLevel().getServer(), helper.getLevel());
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(loadMarker).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected the world load callback path to execute the loaded world lifecycle script.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(unloadMarker).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected the world unload callback path to execute the loaded world lifecycle script.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void worldInitializationEventExecutesStartupScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            helper.assertTrue(
+                    WorldInitializationGameTestBootstrap.initializationCount(helper.getLevel().dimension()) == 1,
+                    Component.literal("Expected the preloaded world initialization script to execute exactly once during the real createLevels path.")
+            );
         });
     }
 
@@ -1895,6 +1936,98 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void stonecuttingEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/stonecutting_names_player.sk");
+
+            BlockPos stonecutterAbsolute = helper.absolutePos(new BlockPos(17, 1, 1));
+            helper.getLevel().setBlockAndUpdate(stonecutterAbsolute, Blocks.STONECUTTER.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(stonecutterAbsolute.getX() + 0.5D, stonecutterAbsolute.getY() + 1.0D, stonecutterAbsolute.getZ() + 1.5D);
+
+            StonecutterMenu menu = new StonecutterMenu(0, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), stonecutterAbsolute));
+            menu.getSlot(0).set(new ItemStack(Items.STONE));
+            menu.slotsChanged(menu.getSlot(0).container);
+
+            boolean selectedStoneSlab = false;
+            for (int i = 0; i < menu.getNumberOfVisibleRecipes(); i++) {
+                menu.clickMenuButton(player, i);
+                if (menu.getSlot(1).getItem().is(Items.STONE_SLAB)) {
+                    selectedStoneSlab = true;
+                    break;
+                }
+            }
+
+            helper.assertTrue(
+                    selectedStoneSlab,
+                    Component.literal("Expected the real stonecutter menu to expose a stone slab recipe for stone input.")
+            );
+
+            ItemStack moved = menu.quickMoveStack(player, 1);
+
+            helper.assertTrue(
+                    moved.is(Items.STONE_SLAB) && moved.getCount() > 0,
+                    Component.literal("Expected the stonecutter quick-move path to return the selected stone slab output.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "stonecutting".equals(player.getCustomName().getString()),
+                    Component.literal("Expected stonecutting event script to rename the player during the real stonecutter quick-move path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void inventoryMoveEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            runtime.loadFromResource("skript/gametest/event/inventory_move_sets_variable.sk");
+
+            BlockPos hopperAbsolute = helper.absolutePos(new BlockPos(19, 1, 1));
+            BlockPos chestAbsolute = hopperAbsolute.above();
+            helper.getLevel().setBlockAndUpdate(hopperAbsolute, Blocks.HOPPER.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(chestAbsolute, Blocks.CHEST.defaultBlockState());
+
+            HopperBlockEntity hopper = (HopperBlockEntity) helper.getLevel().getBlockEntity(hopperAbsolute);
+            ChestBlockEntity chest = (ChestBlockEntity) helper.getLevel().getBlockEntity(chestAbsolute);
+            helper.assertTrue(
+                    hopper != null && chest != null,
+                    Component.literal("Expected hopper and chest block entities to exist for the real inventory move path.")
+            );
+            if (hopper == null || chest == null) {
+                throw new IllegalStateException("Inventory move test containers were not created.");
+            }
+
+            chest.setItem(0, new ItemStack(Items.STICK));
+            chest.setChanged();
+
+            HopperBlockEntity.pushItemsTick(
+                    helper.getLevel(),
+                    hopperAbsolute,
+                    helper.getLevel().getBlockState(hopperAbsolute),
+                    hopper
+            );
+
+            helper.assertTrue(
+                    hopper.getItem(0).is(Items.STICK),
+                    Component.literal("Expected the real hopper pull path to move the stick into the hopper inventory.")
+            );
+            helper.assertTrue(
+                    Boolean.TRUE.equals(Variables.getVariable("gametest::inventory_move_seen", null, false)),
+                    Component.literal("Expected the real hopper transfer path to execute the inventory move script.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+        });
+    }
+
+    @GameTest
     public void playerLeashEventExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -3337,6 +3470,52 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                     spawnedApple.getCustomName() != null && "spawned apple".equals(spawnedApple.getCustomName().getString()),
                     Component.literal("Expected apple item spawn event script to rename the spawned item.")
             );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void itemDespawnOfAppleExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/item_despawn_of_apple_marks_block.sk");
+
+            ItemEntity itemEntity = new ItemEntity(helper.getLevel(), 0.5D, 1.0D, 0.5D, new ItemStack(Items.APPLE));
+            helper.getLevel().addFreshEntity(itemEntity);
+            setIntField(itemEntity, "age", 5999);
+
+            itemEntity.tick();
+
+            helper.assertTrue(
+                    itemEntity.isRemoved(),
+                    Component.literal("Expected item despawn test setup to remove the aged item entity on tick.")
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(6, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void itemMergeOfAppleExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/item_merge_of_apple_marks_block.sk");
+
+            ItemEntity source = new ItemEntity(helper.getLevel(), 0.5D, 1.0D, 0.5D, new ItemStack(Items.APPLE));
+            ItemEntity target = new ItemEntity(helper.getLevel(), 0.5D, 1.0D, 0.5D, new ItemStack(Items.APPLE));
+            helper.getLevel().addFreshEntity(source);
+            helper.getLevel().addFreshEntity(target);
+            setIntField(source, "age", 40);
+            setIntField(target, "age", 40);
+
+            source.tick();
+            if (!target.isRemoved()) {
+                target.tick();
+            }
+
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(7, 1, 0));
             runtime.clearScripts();
         });
     }

@@ -1,0 +1,3 @@
+on inventory item move:
+    if event-item is stick:
+        set {gametest::inventory_move_seen} to true

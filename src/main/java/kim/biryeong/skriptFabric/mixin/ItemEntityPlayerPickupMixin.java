@@ -5,6 +5,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,6 +37,36 @@ abstract class ItemEntityPlayerPickupMixin {
                     (ItemEntity) (Object) this,
                     itemStack.copyWithCount(pickedUpCount)
             );
+        }
+    }
+
+    @Inject(
+            method = "tick()V",
+            at = @At("TAIL")
+    )
+    private void skript$dispatchItemDespawn(CallbackInfo ci) {
+        ItemEntity itemEntity = (ItemEntity) (Object) this;
+        if (itemEntity.level() instanceof ServerLevel level
+                && itemEntity.isRemoved()
+                && itemEntity.getAge() >= 6000
+                && !itemEntity.getItem().isEmpty()) {
+            SkriptFabricEventBridge.dispatchItemDespawn(level, itemEntity.blockPosition(), itemEntity.getItem());
+        }
+    }
+
+    @Inject(
+            method = "merge(Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;)V",
+            at = @At("HEAD")
+    )
+    private static void skript$dispatchItemMerge(
+            ItemEntity targetEntity,
+            ItemStack targetStack,
+            ItemEntity sourceEntity,
+            ItemStack sourceStack,
+            CallbackInfo ci
+    ) {
+        if (sourceEntity.level() instanceof ServerLevel level && !sourceStack.isEmpty()) {
+            SkriptFabricEventBridge.dispatchItemMerge(level, sourceEntity.blockPosition(), sourceStack);
         }
     }
 }

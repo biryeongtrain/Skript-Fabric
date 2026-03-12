@@ -1,0 +1,2 @@
+on item merge of apple:
+    set test block at 7 1 0 to gold_block

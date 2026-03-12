@@ -22,6 +22,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -56,6 +57,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.Container;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -111,6 +113,8 @@ public final class SkriptFabricEventBridge {
             ServerLivingEntityEvents.ALLOW_DAMAGE.register(SkriptFabricEventBridge::dispatchDamage);
             ServerLivingEntityEvents.AFTER_DEATH.register(SkriptFabricEventBridge::dispatchDeath);
             ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
+            ServerWorldEvents.LOAD.register(SkriptFabricEventBridge::dispatchWorldLoad);
+            ServerWorldEvents.UNLOAD.register(SkriptFabricEventBridge::dispatchWorldUnload);
             registered = true;
         }
     }
@@ -468,6 +472,44 @@ public final class SkriptFabricEventBridge {
         );
     }
 
+    public static void dispatchStonecutting(ServerLevel level, BlockPos pos, ServerPlayer player, ItemStack result) {
+        dispatchCompatItem(
+                level,
+                pos.immutable(),
+                FabricEventCompatHandles.ItemAction.STONECUTTING,
+                result,
+                false,
+                player
+        );
+    }
+
+    public static void dispatchInventoryMove(Container source, Container destination, ItemStack movedStack) {
+        ServerLevel level = inventoryMoveLevel(destination);
+        BlockPos pos = inventoryMovePos(destination);
+        if (level == null || pos == null) {
+            level = inventoryMoveLevel(source);
+            pos = inventoryMovePos(source);
+        }
+        if (level == null || pos == null || movedStack.isEmpty()) {
+            return;
+        }
+        dispatchInventoryMove(level, pos, movedStack);
+    }
+
+    public static void dispatchInventoryMove(ServerLevel level, BlockPos pos, ItemStack movedStack) {
+        if (movedStack.isEmpty()) {
+            return;
+        }
+        dispatchCompatItem(
+                level,
+                pos.immutable(),
+                FabricEventCompatHandles.ItemAction.INVENTORY_MOVE,
+                movedStack,
+                false,
+                null
+        );
+    }
+
     public static void dispatchEntityShootBow(ServerLevel level, LivingEntity entity, @Nullable ItemStack consumable) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.EntityShootBow(entity, consumable == null ? null : consumable.copy()),
@@ -743,6 +785,28 @@ public final class SkriptFabricEventBridge {
         );
     }
 
+    public static void dispatchItemDespawn(ServerLevel level, BlockPos pos, ItemStack itemStack) {
+        dispatchCompatItem(
+                level,
+                pos.immutable(),
+                FabricEventCompatHandles.ItemAction.DESPAWN,
+                itemStack,
+                false,
+                null
+        );
+    }
+
+    public static void dispatchItemMerge(ServerLevel level, BlockPos pos, ItemStack itemStack) {
+        dispatchCompatItem(
+                level,
+                pos.immutable(),
+                FabricEventCompatHandles.ItemAction.MERGE,
+                itemStack,
+                false,
+                null
+        );
+    }
+
     public static void dispatchItemDispense(ServerLevel level, BlockPos pos, ItemStack itemStack) {
         dispatchCompatItem(
                 level,
@@ -769,6 +833,33 @@ public final class SkriptFabricEventBridge {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.World(level, FabricEventCompatHandles.WorldAction.SAVE),
                 level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchWorldInit(MinecraftServer server, ServerLevel level) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(level, FabricEventCompatHandles.WorldAction.INIT),
+                server,
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchWorldLoad(MinecraftServer server, ServerLevel level) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(level, FabricEventCompatHandles.WorldAction.LOAD),
+                server,
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchWorldUnload(MinecraftServer server, ServerLevel level) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(level, FabricEventCompatHandles.WorldAction.UNLOAD),
+                server,
                 level,
                 null
         ));
@@ -805,6 +896,20 @@ public final class SkriptFabricEventBridge {
                 level,
                 player
         ));
+    }
+
+    private static @Nullable ServerLevel inventoryMoveLevel(Container container) {
+        if (container instanceof BlockEntity blockEntity && blockEntity.getLevel() instanceof ServerLevel level) {
+            return level;
+        }
+        return null;
+    }
+
+    private static @Nullable BlockPos inventoryMovePos(Container container) {
+        if (container instanceof BlockEntity blockEntity) {
+            return blockEntity.getBlockPos();
+        }
+        return null;
     }
 
     private static void dispatchClick(

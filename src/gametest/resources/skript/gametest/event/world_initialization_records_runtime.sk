@@ -1,0 +1,2 @@
+on world initialization:
+    record gametest world initialization

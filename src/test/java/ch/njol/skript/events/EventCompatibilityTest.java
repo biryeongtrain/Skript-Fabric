@@ -827,6 +827,44 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void itemEventParsesDespawnFilterAndChecksHandle() {
+        EvtItem event = parseEvent("item despawn of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.DESPAWN,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("item despawn of [stick]", event.toString(null, false));
+    }
+
+    @Test
+    void itemEventParsesMergeFilterAndChecksHandle() {
+        EvtItem event = parseEvent("item merge of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.MERGE,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("item merge of [stick]", event.toString(null, false));
+    }
+
+    @Test
     void itemEventParsesCraftFilterAndChecksHandle() {
         EvtItem event = parseEvent("crafting of stick", EvtItem.class);
 
@@ -843,6 +881,44 @@ final class EventCompatibilityTest {
                 null
         )));
         assertEquals("craft of [stick]", event.toString(null, false));
+    }
+
+    @Test
+    void itemEventParsesInventoryMoveAndChecksHandle() {
+        EvtItem event = parseEvent("inventory item move", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.INVENTORY_MOVE,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("inventory item move", event.toString(null, false));
+    }
+
+    @Test
+    void itemEventParsesStonecuttingFilterAndChecksHandle() {
+        EvtItem event = parseEvent("stonecutting of stone slab", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.STONECUTTING,
+                        new ItemStack(Items.STONE_SLAB),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertTrue(event.toString(null, false).startsWith("stonecutting of "));
     }
 
     @Test
@@ -1023,11 +1099,35 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void worldEventParsesInitVariantAndChecksCompatHandle() {
+        EvtWorld event = parseEvent("world initialization", EvtWorld.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(null, FabricEventCompatHandles.WorldAction.INIT),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
     void worldEventParsesSaveVariantAndChecksCompatHandle() {
         EvtWorld event = parseEvent("world saving", EvtWorld.class);
 
         assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.World(null, FabricEventCompatHandles.WorldAction.SAVE),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void worldEventParsesUnloadVariantAndChecksCompatHandle() {
+        EvtWorld event = parseEvent("world unloading", EvtWorld.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(null, FabricEventCompatHandles.WorldAction.UNLOAD),
                 null,
                 null,
                 null
