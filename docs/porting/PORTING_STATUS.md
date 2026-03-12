@@ -34,7 +34,7 @@ Last full verification: 2026-03-12
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.PlayerArmorChangeRuntimeTest` passed
   - `build/junit.xml` recorded `entity_target_and_untarget_execute_real_script`, `entity_portal_executes_real_script`, `helmet_change_executes_real_script`, `explosion_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `mutable_entity_death_payload_backfill_executes_synthetic_script` as passing GameTests
-  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `275 / 276` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `276 / 276`
 
 ## Active Priority
 
@@ -56,7 +56,7 @@ Last full verification: 2026-03-12
 - Deferred from the same cycle:
   - `EvtLeash` remains partial for `leash` and `player unleash`
   - synthetic backfill still remains for mutable `entity death` only
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite is currently blocked only by the unrelated `ExprNumbers` GameTest failure
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now passes `276 / 276`
 
 ## Open Gaps
 
