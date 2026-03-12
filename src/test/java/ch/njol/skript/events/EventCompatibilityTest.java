@@ -1,6 +1,7 @@
 package ch.njol.skript.events;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,6 +57,7 @@ final class EventCompatibilityTest {
         EvtSpectate.register();
         EvtTeleport.register();
         EvtExperienceChange.register();
+        EvtExperienceCooldownChange.register();
         EvtBookEdit.register();
         EvtBookSign.register();
         EvtBeaconEffect.register();
@@ -469,6 +471,82 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void blockEventParsesBurnFilterAndChecksHandle() {
+        EvtBlock event = parseEvent("block burning", EvtBlock.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.BURN,
+                        Blocks.FIRE.defaultBlockState(),
+                        null,
+                        false
+                ),
+                null,
+                null,
+                null
+                )));
+    }
+
+    @Test
+    void blockEventParsesFadeFilterAndChecksHandle() {
+        EvtBlock event = parseEvent("block fading", EvtBlock.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.FADE,
+                        Blocks.ICE.defaultBlockState(),
+                        null,
+                        false
+                ),
+                null,
+                null,
+                null
+                )));
+    }
+
+    @Test
+    void blockEventParsesFormFilterAndChecksHandle() {
+        EvtBlock event = parseEvent("block forming", EvtBlock.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.FORM,
+                        Blocks.ICE.defaultBlockState(),
+                        null,
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void blockEventParsesDropFilterAndChecksHandle() {
+        EvtBlock event = parseEvent("block dropping of stone", EvtBlock.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.DROP,
+                        Blocks.STONE.defaultBlockState(),
+                        new ItemStack(Items.STONE),
+                        true
+                ),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
     void clickEventParsesToolAndChecksBlockHandle() {
         EvtClick event = parseEvent("right click with stick on stone", EvtClick.class);
 
@@ -633,10 +711,160 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void itemEventParsesDispenseFilterAndChecksHandle() {
+        EvtItem event = parseEvent("dispense of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.DISPENSE,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void itemEventParsesPlayerDropVariantAndRejectsEntityDropHandle() {
+        EvtItem event = parseEvent("drop of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.DROP,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertFalse(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.DROP,
+                        new ItemStack(Items.STICK),
+                        true
+                ),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void itemEventParsesPrepareCraftFilterAndChecksHandle() {
+        EvtItem event = parseEvent("preparing craft of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.PREPARE_CRAFT,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("prepare craft of [stick]", event.toString(null, false));
+    }
+
+    @Test
+    void itemEventParsesPlayerPickupVariantAndRejectsEntityPickupHandle() {
+        EvtItem event = parseEvent("pickup of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.PICKUP,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertFalse(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.PICKUP,
+                        new ItemStack(Items.STICK),
+                        true
+                ),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void itemEventParsesConsumeFilterAndChecksHandle() {
+        EvtItem event = parseEvent("consume of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.CONSUME,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("consume of [stick]", event.toString(null, false));
+    }
+
+    @Test
+    void itemEventParsesCraftFilterAndChecksHandle() {
+        EvtItem event = parseEvent("crafting of stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.CRAFT,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("craft of [stick]", event.toString(null, false));
+    }
+
+    @Test
     void leashEventParsesPlayerUnleashVariant() {
         EvtLeash event = parseEvent("player unleashing", EvtLeash.class);
 
         assertEquals("player unleash", event.toString(null, false));
+    }
+
+    @Test
+    void playerLeashEventChecksCompatLeashHandle() throws ReflectiveOperationException {
+        EvtLeash event = parseEvent("player leashing of cow", EvtLeash.class);
+        Cow cow = allocateEntity(Cow.class, net.minecraft.world.entity.EntityType.COW);
+        ServerPlayer player = (ServerPlayer) unsafe().allocateInstance(ServerPlayer.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Leash(cow, FabricEventCompatHandles.LeashAction.PLAYER_LEASH),
+                null,
+                null,
+                player
+        )));
+        assertEquals("player leash of cow", event.toString(null, false));
     }
 
     @Test
@@ -664,6 +892,19 @@ final class EventCompatibilityTest {
                 null,
                 player
         )));
+    }
+
+    @Test
+    void experienceCooldownChangeEventChecksRuntimeHandle() {
+        EvtExperienceCooldownChange event = parseEvent("player experience cooldown change", EvtExperienceCooldownChange.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ExperienceCooldownChange("pickup"),
+                null,
+                null,
+                null
+        )));
+        assertEquals("player experience cooldown change", event.toString(null, false));
     }
 
     @Test
@@ -779,6 +1020,18 @@ final class EventCompatibilityTest {
         EvtWorld event = parseEvent("world loading", EvtWorld.class);
 
         assertEquals("world save/init/unload/load", event.toString(null, false));
+    }
+
+    @Test
+    void worldEventParsesSaveVariantAndChecksCompatHandle() {
+        EvtWorld event = parseEvent("world saving", EvtWorld.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(null, FabricEventCompatHandles.WorldAction.SAVE),
+                null,
+                null,
+                null
+        )));
     }
 
     private <T> T parseEvent(String input, Class<T> type) {

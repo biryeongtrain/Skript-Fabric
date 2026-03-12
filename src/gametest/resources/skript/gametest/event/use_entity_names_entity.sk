@@ -1,4 +1,4 @@
-on use entity:
+on right click on armor stand using stick:
     event-entity is not named
     set test name of entity event-entity to "clicked entity"
     set test block under player event-player to amethyst_block

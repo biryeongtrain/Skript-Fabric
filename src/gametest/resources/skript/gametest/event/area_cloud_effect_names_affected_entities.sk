@@ -1,0 +1,2 @@
+on area cloud effect:
+    set test name of entity affected entities to "affected entity"

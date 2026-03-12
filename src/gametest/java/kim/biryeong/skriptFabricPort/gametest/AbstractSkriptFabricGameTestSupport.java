@@ -513,6 +513,15 @@ public abstract class AbstractSkriptFabricGameTestSupport {
         );
     }
 
+    protected BeaconBlockEntity beaconAt(GameTestHelper helper, BlockPos pos) {
+        BeaconBlockEntity beacon = helper.getLevel().getBlockEntity(pos) instanceof BeaconBlockEntity found ? found : null;
+        helper.assertTrue(beacon != null, Component.literal("Expected beacon block entity to exist for beacon event test."));
+        if (beacon == null) {
+            throw new IllegalStateException("Beacon block entity was not created.");
+        }
+        return beacon;
+    }
+
     @SuppressWarnings("unchecked")
     protected void invokeBeaconApplyEffects(
             GameTestHelper helper,

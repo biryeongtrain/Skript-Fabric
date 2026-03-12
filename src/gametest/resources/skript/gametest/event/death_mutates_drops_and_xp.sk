@@ -1,0 +1,2 @@
+on death of cow:
+    set drops to diamond and 7 xp

@@ -67,6 +67,8 @@ final class EventCycle20260312CompatibilityTest {
     void simpleEventsRegistersSupportedSubset() {
         assertInstanceOf(EvtPortal.class, parseEvent("entity portal", ch.njol.skript.lang.SkriptEvent.class));
         assertInstanceOf(EvtWeatherChange.class, parseEvent("weather change to thunder", ch.njol.skript.lang.SkriptEvent.class));
+        EvtBlockFertilize fertilize = parseEvent("block fertilize", EvtBlockFertilize.class);
+        assertEquals(FabricEventCompatHandles.BlockFertilize.class, fertilize.getEventClasses()[0]);
     }
 
     @Test

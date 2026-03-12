@@ -1,3 +1,5 @@
 on skeleton shoot bow:
     if consumed item is set:
-        set test block at 4 1 0 to emerald_block
+        set test name of item consumed item to "shot arrow"
+        if name of consumed item is "shot arrow":
+            set test block at 4 1 0 to emerald_block

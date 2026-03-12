@@ -7,11 +7,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import java.util.List;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 
 public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFabricGameTestSupport {
@@ -28,6 +34,111 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
             helper.assertTrue(
                     player.getCustomName() != null && "first join".equals(player.getCustomName().getString()),
                     Component.literal("Expected first join event script to rename the player during the real join path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerDropEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_drop_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(12, 1, 1));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            player.getInventory().setItem(0, new ItemStack(Items.APPLE));
+
+            helper.assertTrue(
+                    player.drop(false),
+                    Component.literal("Expected the real player drop path to drop the selected apple.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected player drop event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "player drop".equals(player.getCustomName().getString()),
+                    Component.literal("Expected player drop event script to rename the dropping player.")
+            );
+
+            List<ItemEntity> drops = helper.getLevel().getEntitiesOfClass(
+                    ItemEntity.class,
+                    AABB.encapsulatingFullBlocks(markerAbsolute.below(), markerAbsolute.above()).inflate(1.5D)
+            );
+            helper.assertTrue(
+                    drops.stream().anyMatch(item -> item.getItem().is(Items.APPLE)),
+                    Component.literal("Expected the real player drop path to spawn an apple item entity.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerPickupEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_pickup_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(12, 1, 2));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            ItemEntity itemEntity = new ItemEntity(helper.getLevel(), player.getX(), player.getY(), player.getZ(), new ItemStack(Items.APPLE));
+            itemEntity.setPickUpDelay(0);
+            helper.getLevel().addFreshEntity(itemEntity);
+            itemEntity.playerTouch(player);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected player pickup event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "player pickup".equals(player.getCustomName().getString()),
+                    Component.literal("Expected player pickup event script to rename the picking-up player.")
+            );
+            helper.assertTrue(
+                    inventoryContains(player, Items.APPLE),
+                    Component.literal("Expected the real player pickup path to add the apple to the player's inventory.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerConsumeEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_consume_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(12, 1, 3));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.getFoodData().setFoodLevel(10);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.APPLE));
+
+            player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND).finishUsingItem(helper.getLevel(), player);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected player consume event script to mark the block under the player.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "player consume".equals(player.getCustomName().getString()),
+                    Component.literal("Expected player consume event script to rename the consuming player.")
             );
             runtime.clearScripts();
         });
@@ -260,6 +371,33 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
     }
 
     @GameTest
+    public void experienceCooldownChangeEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_experience_cooldown_change_marks_player.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setCustomName(null);
+            player.takeXpDelay = 0;
+
+            ExperienceOrb orb = new ExperienceOrb(helper.getLevel(), player.getX(), player.getY(), player.getZ(), 3);
+            helper.getLevel().addFreshEntity(orb);
+            orb.playerTouch(player);
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "pickup".equals(player.getCustomName().getString()),
+                    Component.literal("Expected experience cooldown change event script to expose the pickup reason.")
+            );
+            helper.assertTrue(
+                    player.takeXpDelay == 2,
+                    Component.literal("Expected orb pickup to apply the vanilla experience cooldown.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void respawnEventExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -337,5 +475,14 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
             );
             runtime.clearScripts();
         });
+    }
+
+    private static boolean inventoryContains(ServerPlayer player, net.minecraft.world.item.Item item) {
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            if (player.getInventory().getItem(slot).is(item)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

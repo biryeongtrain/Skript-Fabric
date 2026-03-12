@@ -1,0 +1,2 @@
+on item spawn of apple:
+    set test name of item event-item to "spawned apple"

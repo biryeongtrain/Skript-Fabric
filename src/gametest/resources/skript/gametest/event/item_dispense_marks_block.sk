@@ -1,0 +1,2 @@
+on dispense of apple:
+    set test block above event-block to emerald_block

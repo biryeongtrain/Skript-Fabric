@@ -1,0 +1,2 @@
+on spawning of zombie:
+    set test name of entity event-entity to "spawned zombie"

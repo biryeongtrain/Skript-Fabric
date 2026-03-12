@@ -1,0 +1,2 @@
+on player leashing of cow:
+    set test name of event-player to "leasher"

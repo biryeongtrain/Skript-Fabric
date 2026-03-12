@@ -1,0 +1,2 @@
+on burn of oak planks:
+    set test block above event-block to redstone_block

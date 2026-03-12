@@ -9,5 +9,5 @@ on gametest hanging break:
     set test name of entity hanging entity to "hanging entity"
     set test name of entity hanging remover to "hanging remover"
 
-on gametest block fertilize:
+on block fertilize:
     set test block above fertilized blocks to gold_block

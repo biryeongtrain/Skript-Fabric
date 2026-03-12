@@ -44,6 +44,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.LivingEntity;
@@ -59,6 +60,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Illusioner;
 import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
@@ -66,13 +68,17 @@ import net.minecraft.world.entity.monster.ZombieVillager;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.entity.projectile.ThrownSplashPotion;
 import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.inventory.FurnaceResultSlot;
+import net.minecraft.world.inventory.ResultSlot;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -88,13 +94,16 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.WitherRoseBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
+import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -146,6 +155,7 @@ import org.skriptlang.skript.fabric.compat.FabricInventory;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
+import org.skriptlang.skript.fabric.compat.PrivateBeaconAccess;
 import org.skriptlang.skript.fabric.compat.PrivateBlockEntityAccess;
 import org.skriptlang.skript.fabric.compat.PrivateEntityAccess;
 import org.skriptlang.skript.fabric.compat.PrivateFishingHookAccess;
@@ -203,6 +213,86 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void worldSaveEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            runtime.loadFromResource("skript/gametest/event/world_save_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(0, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            helper.getLevel().save(null, false, helper.getLevel().noSave());
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected the real world save path to execute the loaded world save script.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void itemDispenseEventExecutesRealScript(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        BlockPos dispenserPos = new BlockPos(0, 1, 0);
+        BlockPos markerPos = dispenserPos.above();
+        BlockPos powerPos = dispenserPos.below();
+        AABB dropBox = AABB.encapsulatingFullBlocks(
+                helper.absolutePos(new BlockPos(0, 1, 0)),
+                helper.absolutePos(new BlockPos(2, 3, 1))
+        );
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                runtime.clearScripts();
+                Variables.clearAll();
+                runtime.loadFromResource("skript/gametest/event/item_dispense_marks_block.sk");
+
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(markerPos), Blocks.AIR.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(powerPos), Blocks.AIR.defaultBlockState());
+
+                BlockState dispenserState = Blocks.DISPENSER.defaultBlockState()
+                        .setValue(DispenserBlock.FACING, Direction.EAST);
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(dispenserPos), dispenserState);
+
+                DispenserBlockEntity dispenser = (DispenserBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(dispenserPos));
+                helper.assertTrue(
+                        dispenser != null,
+                        Component.literal("Expected dispenser block entity to exist for dispense event test.")
+                );
+                if (dispenser == null) {
+                    runtime.clearScripts();
+                    Variables.clearAll();
+                    RUNTIME_LOCK.set(false);
+                    throw new IllegalStateException("Dispenser block entity was not created.");
+                }
+                dispenser.setItem(0, new ItemStack(Items.APPLE));
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(powerPos), Blocks.REDSTONE_BLOCK.defaultBlockState());
+                loaded.set(true);
+                return;
+            }
+
+            if (!helper.getLevel().getBlockState(helper.absolutePos(markerPos)).is(Blocks.EMERALD_BLOCK)) {
+                return;
+            }
+
+            List<ItemEntity> drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, dropBox);
+            helper.assertTrue(
+                    drops.stream().anyMatch(item -> item.getItem().is(Items.APPLE)),
+                    Component.literal("Expected the real dispenser path to spawn an apple item entity.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
     public void fabricServerTickBridgeExecutesLoadedScript(GameTestHelper helper) {
         SkriptRuntime runtime = SkriptRuntime.instance();
         BlockPos absoluteTarget = new BlockPos(1, 80, 1);
@@ -255,6 +345,61 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void blockDropProducerExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_drop_marks_block.sk");
+
+            BlockPos brokenAbsolute = helper.absolutePos(new BlockPos(2, 1, 0));
+            BlockPos markerAbsolute = brokenAbsolute.above();
+
+            helper.getLevel().setBlockAndUpdate(brokenAbsolute, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(brokenAbsolute.getX() + 0.5D, brokenAbsolute.getY(), brokenAbsolute.getZ() + 0.5D);
+
+            helper.assertTrue(
+                    player.gameMode.destroyBlock(brokenAbsolute),
+                    Component.literal("Expected mock server player to break the dropped test block.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.DIAMOND_BLOCK),
+                    Component.literal("Expected real block drop producer to execute the loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void entityShootBowEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/entity_shoot_bow_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(4, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            Skeleton skeleton = (Skeleton) helper.spawnWithNoFreeWill(EntityType.SKELETON, 0.5F, 1.0F, 0.5F);
+            skeleton.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
+
+            Cow target = (Cow) helper.spawnWithNoFreeWill(EntityType.COW, 6.5F, 1.0F, 0.5F);
+            target.setCustomName(null);
+
+            skeleton.performRangedAttack(target, 1.0F);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected real bow shot path to expose the consumed projectile item inside the loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void blockPlaceCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -278,6 +423,111 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     helper.getLevel().getBlockState(placedAbsolute.above()).is(Blocks.REDSTONE_BLOCK),
                     Component.literal("Expected block place compat bridge to execute loaded Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void blockBurnProducerExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_burn_marks_block.sk");
+
+            BlockPos fireRelative = new BlockPos(0, 2, 0);
+            BlockPos targetRelative = new BlockPos(1, 2, 0);
+            BlockPos markerAbsolute = helper.absolutePos(targetRelative.above());
+            BlockPos targetAbsolute = helper.absolutePos(targetRelative);
+
+            helper.getLevel().getGameRules().getRule(GameRules.RULE_DOFIRETICK).set(true, helper.getLevel().getServer());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(0, 1, 0)), Blocks.NETHERRACK.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(1, 1, 0)), Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(targetAbsolute, Blocks.OAK_PLANKS.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(fireRelative), Blocks.FIRE.defaultBlockState());
+
+            for (int tick = 0; tick < 64 && helper.getLevel().getBlockState(markerAbsolute).is(Blocks.AIR); tick++) {
+                BlockPos fireAbsolute = helper.absolutePos(fireRelative);
+                helper.getLevel().getBlockState(fireAbsolute).tick(helper.getLevel(), fireAbsolute, helper.getLevel().getRandom());
+            }
+
+            helper.assertTrue(
+                    !helper.getLevel().getBlockState(targetAbsolute).is(Blocks.OAK_PLANKS),
+                    Component.literal("Expected fire spread to consume or replace the oak planks target block.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected real fire spread to execute the block burn Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void blockFadeProducerExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_fade_marks_block.sk");
+
+            BlockPos iceRelative = new BlockPos(1, 2, 0);
+            BlockPos iceAbsolute = helper.absolutePos(iceRelative);
+            BlockPos markerAbsolute = iceAbsolute.above();
+
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(1, 1, 0)), Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(iceAbsolute, Blocks.ICE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(2, 2, 0)), Blocks.GLOWSTONE.defaultBlockState());
+
+            helper.getLevel().getBlockState(iceAbsolute).randomTick(helper.getLevel(), iceAbsolute, helper.getLevel().getRandom());
+
+            helper.assertTrue(
+                    !helper.getLevel().getBlockState(iceAbsolute).is(Blocks.ICE),
+                    Component.literal("Expected real ice melt to replace the ice target block.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected real ice melt to execute the block fade Skript file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void blockFormProducerExecutesLoadedScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_form_marks_block.sk");
+
+            BlockPos anchor = helper.absolutePos(new BlockPos(1, 0, 0));
+            BlockPos freezeTarget = null;
+            for (int y = 240; y >= 120; y--) {
+                BlockPos candidate = new BlockPos(anchor.getX(), y, anchor.getZ());
+                helper.getLevel().setBlockAndUpdate(candidate.below(), Blocks.STONE.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(candidate, Blocks.WATER.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(candidate.above(), Blocks.AIR.defaultBlockState());
+                if (helper.getLevel().getBiome(candidate).value().shouldFreeze(helper.getLevel(), candidate)) {
+                    freezeTarget = candidate;
+                    break;
+                }
+            }
+
+            helper.assertTrue(
+                    freezeTarget != null,
+                    Component.literal("Expected to find a precipitation-freeze position in the GameTest column.")
+            );
+
+            helper.getLevel().tickPrecipitation(freezeTarget);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(freezeTarget).is(Blocks.ICE),
+                    Component.literal("Expected precipitation freeze to form ice at the target position.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(freezeTarget.above()).is(Blocks.REDSTONE_BLOCK),
+                    Component.literal("Expected real precipitation freeze to execute the block form Skript file.")
             );
             runtime.clearScripts();
         });
@@ -553,6 +803,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             ServerPlayer player = helper.makeMockServerPlayerInLevel();
             player.setGameMode(GameType.CREATIVE);
             player.teleportTo(playerMarkerAbsolute.getX() + 0.5D, playerMarkerAbsolute.getY() + 1.0D, playerMarkerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
 
             InteractionResult result = UseEntityCallback.EVENT.invoker().interact(
                     player,
@@ -1578,6 +1829,92 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void prepareCraftEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/prepare_craft_names_player.sk");
+
+            BlockPos tableAbsolute = helper.absolutePos(new BlockPos(15, 1, 1));
+            helper.getLevel().setBlockAndUpdate(tableAbsolute, Blocks.CRAFTING_TABLE.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(tableAbsolute.getX() + 0.5D, tableAbsolute.getY() + 1.0D, tableAbsolute.getZ() + 1.5D);
+
+            CraftingMenu menu = new CraftingMenu(0, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), tableAbsolute));
+            menu.getInputGridSlots().get(0).set(new ItemStack(Items.OAK_PLANKS));
+            menu.getInputGridSlots().get(3).set(new ItemStack(Items.OAK_PLANKS));
+            menu.slotsChanged(new SimpleContainer(0));
+
+            helper.assertTrue(
+                    menu.getResultSlot().getItem().is(Items.STICK) && menu.getResultSlot().getItem().getCount() == 4,
+                    Component.literal("Expected the crafting menu preview to produce sticks after the real crafting-grid recompute.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "prepare craft".equals(player.getCustomName().getString()),
+                    Component.literal("Expected prepare-craft event script to rename the player during the real preview path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void craftEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/craft_names_player.sk");
+
+            BlockPos tableAbsolute = helper.absolutePos(new BlockPos(16, 1, 1));
+            helper.getLevel().setBlockAndUpdate(tableAbsolute, Blocks.CRAFTING_TABLE.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(tableAbsolute.getX() + 0.5D, tableAbsolute.getY() + 1.0D, tableAbsolute.getZ() + 1.5D);
+
+            CraftingMenu menu = new CraftingMenu(0, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), tableAbsolute));
+            menu.getInputGridSlots().get(0).set(new ItemStack(Items.OAK_PLANKS));
+            menu.getInputGridSlots().get(3).set(new ItemStack(Items.OAK_PLANKS));
+            menu.slotsChanged(menu.getSlot(1).container);
+
+            ResultSlot resultSlot = (ResultSlot) menu.getResultSlot();
+            ItemStack crafted = resultSlot.remove(4);
+            resultSlot.onTake(player, crafted);
+
+            helper.assertTrue(
+                    crafted.is(Items.STICK) && crafted.getCount() == 4,
+                    Component.literal("Expected the crafting result slot to return four sticks from the real craft take path.")
+            );
+            helper.assertTrue(
+                    player.getCustomName() != null && "craft".equals(player.getCustomName().getString()),
+                    Component.literal("Expected craft event script to rename the player during the real result-take path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void playerLeashEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_leash_names_player.sk");
+
+            ServerPlayer leashHolder = helper.makeMockServerPlayerInLevel();
+            Cow cow = createCow(helper, false);
+            leashHolder.setCustomName(null);
+            cow.setLeashedTo(leashHolder, true);
+
+            helper.assertTrue(
+                    leashHolder.getCustomName() != null && "leasher".equals(leashHolder.getCustomName().getString()),
+                    Component.literal("Expected player leash event script to rename the event-player during the real attach path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void furnaceFilteredFuelBurnEventExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -1790,6 +2127,34 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void areaCloudEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/area_cloud_effect_names_affected_entities.sk");
+
+            Cow cow = createCow(helper, false);
+            cow.setCustomName(null);
+
+            AreaEffectCloud cloud = new AreaEffectCloud(helper.getLevel(), cow.getX(), cow.getY(), cow.getZ());
+            cloud.setRadius(2.0F);
+            cloud.setWaitTime(0);
+            cloud.setDuration(40);
+            cloud.setPotionContents(new PotionContents(Potions.POISON));
+            helper.getLevel().addFreshEntity(cloud);
+            for (int i = 0; i < 6; i++) {
+                cloud.tick();
+            }
+
+            helper.assertTrue(
+                    cow.getCustomName() != null && "affected entity".equals(cow.getCustomName().getString()),
+                    Component.literal("Expected area cloud effect event to expose the affected entities list.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void potionEffectDueToAreaEffectCloudDoesNotMatchPotionDrink(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -1855,6 +2220,104 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             );
             runtime.clearScripts();
         });
+    }
+
+    @GameTest(maxTicks = 200, skyAccess = true)
+    public void beaconActivationExecutesRealScript(GameTestHelper helper) {
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos beaconPos = helper.absolutePos(new BlockPos(0, 1, 0));
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        RUNTIME_LOCK.compareAndSet(false, true),
+                        Component.literal("Waiting for exclusive Skript runtime access.")
+                ))
+                .thenExecute(() -> {
+                    Variables.clearAll();
+                    runtime.clearScripts();
+                    runtime.loadFromResource("skript/gametest/event/beacon_activation_marks_block.sk");
+                    helper.getLevel().setBlockAndUpdate(beaconPos, Blocks.BEACON.defaultBlockState());
+                    helper.getLevel().setBlockAndUpdate(beaconPos.above(), Blocks.AIR.defaultBlockState());
+                })
+                .thenIdle(80)
+                .thenExecute(() -> buildSingleTierBeaconBase(helper, beaconPos))
+                .thenWaitUntil(() -> {
+                    helper.assertTrue(
+                            PrivateBeaconAccess.levels(beaconAt(helper, beaconPos)) > 0,
+                            Component.literal("Expected the live beacon tick path to activate the beacon after building a base.")
+                    );
+                    helper.assertTrue(
+                            helper.getLevel().getBlockState(beaconPos.above()).is(Blocks.EMERALD_BLOCK),
+                            Component.literal("Expected beacon activation event to mark the block above the beacon.")
+                    );
+                })
+                .thenExecute(() -> {
+                    runtime.clearScripts();
+                    Variables.clearAll();
+                    RUNTIME_LOCK.set(false);
+                })
+                .thenSucceed();
+    }
+
+    @GameTest(maxTicks = 200, skyAccess = true)
+    public void primaryBeaconEffectExecutesRealScript(GameTestHelper helper) {
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        BlockPos beaconPos = helper.absolutePos(new BlockPos(2, 1, 2));
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        RUNTIME_LOCK.compareAndSet(false, true),
+                        Component.literal("Waiting for exclusive Skript runtime access.")
+                ))
+                .thenExecute(() -> {
+                    Variables.clearAll();
+                    runtime.clearScripts();
+                    runtime.loadFromResource("skript/gametest/event/primary_beacon_effect_marks_block.sk");
+
+                    ServerPlayer player = helper.makeMockServerPlayerInLevel();
+                    player.setGameMode(GameType.SURVIVAL);
+                    player.removeAllEffects();
+
+                    helper.getLevel().setBlockAndUpdate(beaconPos, Blocks.BEACON.defaultBlockState());
+                    helper.getLevel().setBlockAndUpdate(beaconPos.above(), Blocks.AIR.defaultBlockState());
+                    buildSingleTierBeaconBase(helper, beaconPos);
+                    player.teleportTo(beaconPos.getX() + 0.5D, beaconPos.getY() + 1.0D, beaconPos.getZ() + 0.5D);
+                })
+                .thenIdle(80)
+                .thenExecute(() -> helper.assertTrue(
+                        PrivateBeaconAccess.levels(beaconAt(helper, beaconPos)) > 0,
+                        Component.literal("Expected the live beacon tick path to activate the beacon before applying effects.")
+                ))
+                .thenExecute(() -> {
+                    BeaconBlockEntity beacon = beaconAt(helper, beaconPos);
+                    PrivateBeaconAccess.setPrimaryPower(beacon, MobEffects.SPEED);
+                    beacon.setChanged();
+                    invokeBeaconApplyEffects(
+                            helper,
+                            beaconPos,
+                            PrivateBeaconAccess.levels(beacon),
+                            PrivateBeaconAccess.primaryPower(beacon),
+                            null
+                    );
+                })
+                .thenWaitUntil(() -> {
+                    ServerPlayer player = helper.getLevel().getServer().getPlayerList().getPlayers().stream()
+                            .filter(found -> found.blockPosition().closerThan(beaconPos, 2.0D))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("Expected beacon effect test player to still be present."));
+                    helper.assertTrue(
+                            player.hasEffect(MobEffects.SPEED),
+                            Component.literal("Expected beacon applyEffects to grant the configured primary effect to the nearby player.")
+                    );
+                    helper.assertTrue(
+                            helper.getLevel().getBlockState(beaconPos.above()).is(Blocks.GOLD_BLOCK),
+                            Component.literal("Expected primary beacon effect event to mark the block above the beacon.")
+                    );
+                })
+                .thenExecute(() -> {
+                    runtime.clearScripts();
+                    Variables.clearAll();
+                    RUNTIME_LOCK.set(false);
+                })
+                .thenSucceed();
     }
 
     @GameTest
@@ -2250,6 +2713,52 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     nearbyDrops.size() == 1 && nearbyDrops.getFirst().getItem().is(Items.STICK),
                     Component.literal("Expected piglin barter script to replace barter drops with a single stick drop.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
+    public void deathEventMutatesDropsAndXpThroughRealDeathFlow(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        AABB deathBox = AABB.encapsulatingFullBlocks(
+                helper.absolutePos(new BlockPos(-1, 0, -1)),
+                helper.absolutePos(new BlockPos(2, 3, 2))
+        );
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                Variables.clearAll();
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/death_mutates_drops_and_xp.sk");
+
+                Cow cow = createCow(helper, false);
+                cow.hurtServer(helper.getLevel(), helper.getLevel().damageSources().genericKill(), cow.getHealth());
+                loaded.set(true);
+                return;
+            }
+
+            List<ItemEntity> drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, deathBox);
+            int totalExperience = helper.getLevel().getEntitiesOfClass(ExperienceOrb.class, deathBox)
+                    .stream()
+                    .mapToInt(ExperienceOrb::getValue)
+                    .sum();
+            if (drops.isEmpty() || totalExperience == 0) {
+                return;
+            }
+
+            helper.assertTrue(
+                    drops.size() == 1 && drops.getFirst().getItem().is(Items.DIAMOND),
+                    Component.literal("Expected death script to replace real cow drops with a single diamond.")
+            );
+            helper.assertTrue(
+                    totalExperience == 7,
+                    Component.literal("Expected death script to replace dropped experience with 7 total xp, got " + totalExperience + ".")
             );
             runtime.clearScripts();
             Variables.clearAll();
@@ -2762,6 +3271,77 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void zombieSpawnEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/spawning_of_zombie_names_entity.sk");
+
+            Zombie zombie = new Zombie(EntityType.ZOMBIE, helper.getLevel());
+            zombie.setPos(0.5D, 1.0D, 0.5D);
+            helper.getLevel().addFreshEntity(zombie);
+
+            helper.assertTrue(
+                    zombie.getCustomName() != null && "spawned zombie".equals(zombie.getCustomName().getString()),
+                    Component.literal("Expected zombie spawn event script to rename the spawned zombie.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void zombieTransformDueToCuringExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/zombie_transforming_due_to_curing_names_entity.sk");
+
+            ZombieVillager zombieVillager = (ZombieVillager) helper.spawnWithNoFreeWill(EntityType.ZOMBIE_VILLAGER, 0.5F, 1.0F, 0.5F);
+            invokeZombieVillagerFinishConversion(helper, zombieVillager);
+
+            helper.assertTrue(
+                    zombieVillager.getCustomName() != null && "transformed zombie".equals(zombieVillager.getCustomName().getString()),
+                    Component.literal("Expected zombie curing transform event script to rename the transforming zombie.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void experienceOrbSpawnEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/experience_orb_spawn_marks_block.sk");
+
+            ExperienceOrb orb = new ExperienceOrb(helper.getLevel(), 0.5D, 1.0D, 0.5D, 5);
+            helper.getLevel().addFreshEntity(orb);
+
+            helper.assertBlockPresent(Blocks.LAPIS_BLOCK, new BlockPos(6, 1, 0));
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void itemSpawnOfAppleExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/item_spawn_of_apple_names_item.sk");
+
+            ItemEntity itemEntity = new ItemEntity(helper.getLevel(), 0.5D, 1.0D, 0.5D, new ItemStack(Items.APPLE));
+            helper.getLevel().addFreshEntity(itemEntity);
+
+            ItemStack spawnedApple = itemEntity.getItem();
+            helper.assertTrue(
+                    spawnedApple.getCustomName() != null && "spawned apple".equals(spawnedApple.getCustomName().getString()),
+                    Component.literal("Expected apple item spawn event script to rename the spawned item.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void useItemBridgeExecutesLoadedScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -2805,4 +3385,14 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
         primedTnt.setFuse(1);
         helper.getLevel().addFreshEntity(primedTnt);
     }
+
+    private void buildSingleTierBeaconBase(GameTestHelper helper, BlockPos beaconPos) {
+        BlockPos baseCenter = beaconPos.below();
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                helper.getLevel().setBlockAndUpdate(baseCenter.offset(x, 0, z), Blocks.IRON_BLOCK.defaultBlockState());
+            }
+        }
+    }
+
 }

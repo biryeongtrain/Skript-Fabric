@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,10 +29,13 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
@@ -38,7 +43,6 @@ import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
-    private static final Class<?> ENTITY_DEATH_EVENT = effectEventClass("EntityDeath");
     private static final Class<?> HANGING_BREAK_EVENT = effectEventClass("HangingBreak");
 
     @GameTest
@@ -138,53 +142,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             ServerPlayer player = helper.makeMockServerPlayerInLevel();
             player.setGameMode(GameType.CREATIVE);
 
-            BlockPos activationPos = helper.absolutePos(new BlockPos(0, 1, 0));
-            BlockPos effectPos = helper.absolutePos(new BlockPos(1, 1, 0));
-            BlockPos blockDropPos = helper.absolutePos(new BlockPos(2, 1, 0));
-            helper.getLevel().setBlockAndUpdate(activationPos, Blocks.BEACON.defaultBlockState());
-            helper.getLevel().setBlockAndUpdate(effectPos, Blocks.BEACON.defaultBlockState());
-            helper.getLevel().setBlockAndUpdate(blockDropPos, Blocks.STONE.defaultBlockState());
-
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.BeaconToggle(helper.getLevel(), activationPos, true),
-                    helper,
-                    null
-            ), "beacon activation event");
-            helper.assertTrue(
-                    helper.getLevel().getBlockState(activationPos.above()).is(Blocks.EMERALD_BLOCK),
-                    Component.literal("Expected beacon activation event to mark the block above the beacon.")
-            );
-
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.BeaconEffect(helper.getLevel(), effectPos, true, null),
-                    helper,
-                    null
-            ), "beacon effect event");
-            helper.assertTrue(
-                    helper.getLevel().getBlockState(effectPos.above()).is(Blocks.GOLD_BLOCK),
-                    Component.literal("Expected beacon effect event to mark the block above the beacon.")
-            );
-
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.Block(
-                            helper.getLevel(),
-                            blockDropPos,
-                            FabricEventCompatHandles.BlockAction.DROP,
-                            helper.getLevel().getBlockState(blockDropPos),
-                            new ItemStack(Items.STONE),
-                            true
-                    ),
-                    helper,
-                    null
-            ), "block dropping event");
-            helper.assertTrue(
-                    helper.getLevel().getBlockState(blockDropPos.above()).is(Blocks.DIAMOND_BLOCK),
-                    Component.literal("Expected block dropping event to mark the block above the dropped block.")
-            );
-
             ItemStack editedBook = new ItemStack(Items.WRITABLE_BOOK);
             assertExecuted(helper, dispatch(
                     runtime,
@@ -209,71 +166,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected book signing event to rename the signed book item.")
             );
 
-            Skeleton skeleton = (Skeleton) helper.spawnWithNoFreeWill(EntityType.SKELETON, 3.5F, 1.0F, 0.5F);
-            ItemStack shotArrow = new ItemStack(Items.ARROW);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.EntityShootBow(skeleton, shotArrow),
-                    helper,
-                    null
-            ), "entity shoot bow event");
-            helper.assertTrue(
-                    "shot arrow".equals(shotArrow.getHoverName().getString()),
-                    Component.literal("Expected entity shoot bow event to expose the consumed projectile item.")
-            );
-
-            ArmorStand armorStand = new ArmorStand(helper.getLevel(), 4.5D, 1.0D, 0.5D);
-            helper.getLevel().addFreshEntity(armorStand);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.Click(
-                            helper.getLevel(),
-                            armorStand.blockPosition(),
-                            FabricEventCompatHandles.ClickType.RIGHT,
-                            armorStand,
-                            null,
-                            new ItemStack(Items.STICK)
-                    ),
-                    helper,
-                    player
-            ), "click event");
-            helper.assertTrue(
-                    armorStand.getCustomName() != null && "clicked entity".equals(armorStand.getCustomName().getString()),
-                    Component.literal("Expected click event to resolve event-entity inside a real .sk fixture.")
-            );
-
-            Zombie zombie = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 5.5F, 1.0F, 0.5F);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.EntityLifecycle(zombie, true),
-                    helper,
-                    null
-            ), "entity spawn event");
-            helper.assertTrue(
-                    zombie.getCustomName() != null && "spawned zombie".equals(zombie.getCustomName().getString()),
-                    Component.literal("Expected entity spawn event to resolve event-entity inside a real .sk fixture.")
-            );
-
-            Zombie transformed = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 6.5F, 1.0F, 0.5F);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.EntityTransform(transformed, "curing"),
-                    helper,
-                    null
-            ), "entity transform event");
-            helper.assertTrue(
-                    transformed.getCustomName() != null && "transformed zombie".equals(transformed.getCustomName().getString()),
-                    Component.literal("Expected entity transform event to resolve the filtered transform reason.")
-            );
-
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.ExperienceSpawn(5),
-                    helper,
-                    null
-            ), "experience spawn event");
-            helper.assertBlockPresent(Blocks.LAPIS_BLOCK, new BlockPos(6, 1, 0));
-
             ServerPlayer healingPlayer = helper.makeMockServerPlayerInLevel();
             assertExecuted(helper, dispatch(
                     runtime,
@@ -284,42 +176,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             helper.assertTrue(
                     healingPlayer.experienceLevel == 2,
                     Component.literal("Expected healing event to expose heal amount through the real .sk fixture.")
-            );
-
-            ItemStack spawnedApple = new ItemStack(Items.APPLE);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.Item(
-                            helper.getLevel(),
-                            helper.absolutePos(new BlockPos(7, 1, 0)),
-                            FabricEventCompatHandles.ItemAction.SPAWN,
-                            spawnedApple,
-                            false
-                    ),
-                    helper,
-                    null
-            ), "item spawn event");
-            helper.assertTrue(
-                    "spawned apple".equals(spawnedApple.getHoverName().getString()),
-                    Component.literal("Expected item spawn event to rename the spawned item.")
-            );
-
-            ItemStack consumedApple = new ItemStack(Items.APPLE);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.Item(
-                            helper.getLevel(),
-                            helper.absolutePos(new BlockPos(8, 1, 0)),
-                            FabricEventCompatHandles.ItemAction.CONSUME,
-                            consumedApple,
-                            false
-                    ),
-                    helper,
-                    player
-            ), "consume item event");
-            helper.assertTrue(
-                    "consumed apple".equals(consumedApple.getHoverName().getString()),
-                    Component.literal("Expected consumed item expression to rename the consumed item.")
             );
 
             runtime.clearScripts();
@@ -399,32 +255,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected dropped item owner expression to resolve the event-player UUID.")
             );
 
-            Cow firstAffected = createCow(helper, false);
-            Cow secondAffected = createCow(helper, false);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.AreaEffectCloudApply(List.of(firstAffected, secondAffected)),
-                    helper,
-                    null
-            ), "area cloud effect event");
-            helper.assertTrue(
-                    "affected entity".equals(firstAffected.getCustomName() == null ? null : firstAffected.getCustomName().getString())
-                            && "affected entity".equals(secondAffected.getCustomName() == null ? null : secondAffected.getCustomName().getString()),
-                    Component.literal("Expected affected entities expression to loop through all affected entities.")
-            );
-
-            ServerPlayer cooldownPlayer = helper.makeMockServerPlayerInLevel();
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.ExperienceCooldownChange("pickup"),
-                    helper,
-                    cooldownPlayer
-            ), "experience cooldown change event");
-            helper.assertTrue(
-                    cooldownPlayer.getCustomName() != null && "pickup".equals(cooldownPlayer.getCustomName().getString()),
-                    Component.literal("Expected experience cooldown change reason expression to expose the reason.")
-            );
-
             runtime.clearScripts();
         });
     }
@@ -474,6 +304,8 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             runtime.clearScripts();
         });
     }
+
+    @GameTest
     public void eventPayloadBundleExecutesRealScript(GameTestHelper helper) {
         ensureCustomEventsRegistered();
         runWithRuntimeLock(helper, () -> {
@@ -507,13 +339,25 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             );
 
             BlockPos fertilized = helper.absolutePos(new BlockPos(4, 1, 0));
-            helper.getLevel().setBlockAndUpdate(fertilized, Blocks.WHEAT.defaultBlockState());
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.BlockFertilize(List.of(new FabricBlock(helper.getLevel(), fertilized))),
-                    helper,
-                    null
-            ), "block fertilize context");
+            BlockState initialState = Blocks.WHEAT.defaultBlockState();
+            helper.getLevel().setBlockAndUpdate(fertilized, initialState);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BONE_MEAL));
+            player.teleportTo(fertilized.getX() + 0.5D, fertilized.getY() + 1.0D, fertilized.getZ() + 0.5D);
+            InteractionResult fertilizeResult = player.getItemInHand(InteractionHand.MAIN_HAND).useOn(new UseOnContext(
+                    player,
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(Vec3.atCenterOf(fertilized), Direction.UP, fertilized, false)
+            ));
+            helper.assertTrue(
+                    fertilizeResult.consumesAction(),
+                    Component.literal("Expected the real bonemeal item path to fertilize the crop.")
+            );
+            helper.assertTrue(
+                    !helper.getLevel().getBlockState(fertilized).equals(initialState),
+                    Component.literal("Expected bonemeal to grow the crop before asserting block fertilize hooks.")
+            );
             helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(4, 2, 0));
 
             runtime.clearScripts();
@@ -553,24 +397,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         });
     }
 
-    @GameTest
-    public void mutableEntityDeathPayloadBackfillExecutesSyntheticScript(GameTestHelper helper) {
-        ensureCustomEventsRegistered();
-        runWithRuntimeLock(helper, () -> {
-            SkriptRuntime runtime = SkriptRuntime.instance();
-            runtime.clearScripts();
-            runtime.loadFromResource("skript/gametest/expression/mutable_entity_death_payload_backfill.sk");
-
-            MutableEntityDeathHandle deathHandle = new MutableEntityDeathHandle(List.of(new ItemStack(Items.APPLE)), 1);
-            assertExecuted(helper, dispatch(runtime, deathHandle, helper, null), "entity death context");
-            helper.assertTrue(
-                    deathHandle.drops().size() == 1 && deathHandle.drops().get(0).is(Items.DIAMOND),
-                    Component.literal("Expected drops script to replace the death drops with diamonds.")
-            );
-            runtime.clearScripts();
-        });
-    }
-
     private static void ensureCustomEventsRegistered() {
         if (!CUSTOM_EVENTS_REGISTERED.compareAndSet(false, true)) {
             return;
@@ -578,14 +404,10 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestBlockContextEvent.class, "gametest block context");
         Skript.registerEvent(GameTestEntityContextEvent.class, "gametest entity context");
         Skript.registerEvent(GameTestItemEntityContextEvent.class, "gametest item entity context");
-        Skript.registerEvent(GameTestAreaCloudEffectEvent.class, "gametest area cloud effect");
-        Skript.registerEvent(GameTestExperienceCooldownChangeEvent.class, "gametest player experience cooldown change");
-        Skript.registerEvent(GameTestEntityDeathEvent.class, "gametest entity death");
         Skript.registerEvent(GameTestExplosiveEntityContextEvent.class, "gametest explosive entity context");
         Skript.registerEvent(GameTestHangingBreakEvent.class, "gametest hanging break");
         Skript.registerEvent(GameTestHelperContextEvent.class, "gametest helper context");
         Skript.registerEvent(GameTestProjectileContextEvent.class, "gametest projectile context");
-        Skript.registerEvent(GameTestBlockFertilizeEvent.class, "gametest block fertilize");
     }
 
     private int dispatch(SkriptRuntime runtime, Object handle, GameTestHelper helper, @Nullable ServerPlayer player) {
@@ -672,29 +494,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
     private record HelperContextHandle() {
     }
 
-    private static final class MutableEntityDeathHandle {
-
-        private final List<ItemStack> drops;
-        private int droppedExp;
-
-        private MutableEntityDeathHandle(List<ItemStack> drops, int droppedExp) {
-            this.drops = new java.util.ArrayList<>(drops);
-            this.droppedExp = droppedExp;
-        }
-
-        public List<ItemStack> drops() {
-            return drops;
-        }
-
-        public int droppedExp() {
-            return droppedExp;
-        }
-
-        public void setDroppedExp(int droppedExp) {
-            this.droppedExp = droppedExp;
-        }
-    }
-
     private record HangingBreakHandle(Entity entity, @Nullable Entity remover) {
     }
 
@@ -764,75 +563,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest item entity context";
-        }
-    }
-
-    public static final class GameTestAreaCloudEffectEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.AreaEffectCloudApply;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.AreaEffectCloudApply.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest area cloud effect";
-        }
-    }
-
-    public static final class GameTestExperienceCooldownChangeEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.ExperienceCooldownChange;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.ExperienceCooldownChange.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest player experience cooldown change";
-        }
-    }
-
-    public static final class GameTestEntityDeathEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof MutableEntityDeathHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{ENTITY_DEATH_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest entity death";
         }
     }
 
@@ -928,26 +658,4 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         }
     }
 
-    public static final class GameTestBlockFertilizeEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.BlockFertilize;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.BlockFertilize.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest block fertilize";
-        }
-    }
 }

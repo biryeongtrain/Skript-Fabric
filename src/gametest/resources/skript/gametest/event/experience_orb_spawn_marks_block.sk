@@ -1,0 +1,2 @@
+on experience orb spawn:
+    set test block at 6 1 0 to lapis_block

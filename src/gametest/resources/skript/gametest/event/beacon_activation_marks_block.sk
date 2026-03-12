@@ -1,0 +1,2 @@
+on beacon activation:
+    set test block above event-block to emerald_block

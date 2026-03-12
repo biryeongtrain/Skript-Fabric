@@ -16,13 +16,3 @@ on gametest item entity context:
         set test block at 1 1 0 to diamond_block
     if uuid of dropped item owner of event-entity is set:
         set test block at 9 1 0 to emerald_block
-
-on gametest area cloud effect:
-    set test name of entity affected entities to "affected entity"
-
-on gametest player experience cooldown change:
-    set test name of entity event-player to xp cooldown change reason
-
-on player egg throw:
-    set hatching number to 3
-    set hatching entity type to pig

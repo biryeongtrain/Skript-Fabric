@@ -1,0 +1,2 @@
+on preparing craft of stick:
+    set test name of entity event-player to "prepare craft"
