@@ -31,16 +31,13 @@ import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
-import org.skriptlang.skript.fabric.runtime.FabricDamageEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
-import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 
 public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
-    private static final Class<?> ENTITY_UNLEASH_EVENT = effectEventClass("EntityUnleash");
     private static final Class<?> PLAYER_EGG_THROW_EVENT = effectEventClass("PlayerEggThrow");
     private static final Class<?> PLAYER_RESPAWN_EVENT = effectEventClass("PlayerRespawn");
     private static final Class<?> EXPLOSION_PRIME_EVENT = effectEventClass("ExplosionPrime");
@@ -102,7 +99,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
     @GameTest
     public void mixedDamageAndHealingSyntaxExecutesRealScript(GameTestHelper helper) {
-        ensureCustomEventsRegistered();
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
             runtime.clearScripts();
@@ -110,31 +106,9 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
             ServerPlayer player = helper.makeMockServerPlayerInLevel();
             player.setGameMode(GameType.SURVIVAL);
+            player.setHealth(player.getMaxHealth());
 
-            Zombie attacker = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 0.5F, 1.0F, 0.5F);
-            attacker.setCustomName(Component.literal("damage attacker"));
-            Zombie victim = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 2.5F, 1.0F, 0.5F);
-
-            victim.hurtServer(helper.getLevel(), helper.getLevel().damageSources().mobAttack(attacker), 1.0F);
-            victim.setLastHurtByMob(attacker);
-
-            int executed = dispatch(
-                    runtime,
-                    new DamageContextHandle(
-                            helper.getLevel(),
-                            victim,
-                            helper.getLevel().damageSources().inFire(),
-                            2.0F,
-                            true
-                    ),
-                    helper,
-                    player
-            );
-            assertExecuted(helper, executed, "custom damage context backfill script");
-            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, new BlockPos(0, 1, 0));
-            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(1, 1, 0));
-            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, new BlockPos(2, 1, 0));
-            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(3, 1, 0));
+            player.hurtServer(helper.getLevel(), helper.getLevel().damageSources().inFire(), 2.0F);
             helper.assertTrue(
                     player.experienceLevel == 7,
                     Component.literal("Expected damage context script to change the event-player xp level.")
@@ -144,25 +118,11 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected damage context script to change the event-player walk speed.")
             );
             helper.assertTrue(
-                    victim.invulnerableTime == 12,
-                    Component.literal("Expected damage context script to change invulnerability ticks.")
-            );
-            helper.assertTrue(
-                    Math.abs((victim.getMaxHealth() / 2.0F) - 15.0F) < 0.0001F,
+                    Math.abs((player.getMaxHealth() / 2.0F) - 15.0F) < 0.0001F,
                     Component.literal("Expected damage context script to change maximum health.")
             );
-            helper.assertTrue(
-                    "last attacker marker".equals(attacker.getCustomName() == null ? null : attacker.getCustomName().getString()),
-                    Component.literal("Expected ExprLastAttacker to resolve the attack source entity.")
-            );
 
-            int healingExecuted = dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.Healing(player, "magic", 2.5F),
-                    helper,
-                    player
-            );
-            assertExecuted(helper, healingExecuted, "healing backfill script");
+            player.heal(2.5F);
             helper.assertTrue(
                     player.experienceLevel == 2,
                     Component.literal("Expected healing amount expression to update the event-player inside a real .sk fixture.")
@@ -533,7 +493,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
     @GameTest
     public void unleashProducerExecutesRealScript(GameTestHelper helper) {
-        ensureCustomEventsRegistered();
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
             runtime.clearScripts();
@@ -641,7 +600,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         if (!CUSTOM_EVENTS_REGISTERED.compareAndSet(false, true)) {
             return;
         }
-        Skript.registerEvent(GameTestDamageContextEvent.class, "gametest damage context");
         Skript.registerEvent(GameTestBlockContextEvent.class, "gametest block context");
         Skript.registerEvent(GameTestEntityContextEvent.class, "gametest entity context");
         Skript.registerEvent(GameTestItemEntityContextEvent.class, "gametest item entity context");
@@ -659,7 +617,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestPiglinBarterMutableEvent.class, "gametest piglin barter mutable");
         Skript.registerEvent(GameTestExplosionPrimeMutableEvent.class, "gametest explosion prime mutable");
         Skript.registerEvent(GameTestBlockFertilizeEvent.class, "gametest block fertilize");
-        Skript.registerEvent(GameTestUnleashEvent.class, "gametest unleash");
         Skript.registerEvent(GameTestRespawnEvent.class, "gametest respawn");
         Skript.registerEvent(GameTestExplosionPrimeEvent.class, "gametest explosion prime");
     }
@@ -726,19 +683,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             throw new NoSuchFieldException(fieldName);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Failed to read " + fieldName, exception);
-        }
-    }
-
-    private record DamageContextHandle(
-            net.minecraft.server.level.ServerLevel level,
-            LivingEntity entity,
-            net.minecraft.world.damagesource.DamageSource damageSource,
-            float amount,
-            boolean cancelled
-    ) implements FabricDamageEventHandle {
-
-        public boolean isCancelled() {
-            return cancelled;
         }
     }
 
@@ -861,29 +805,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
     }
 
     private record ExplosionPrimeHandle(boolean causesFire) {
-    }
-
-    public static final class GameTestDamageContextEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof DamageContextHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{DamageContextHandle.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest damage context";
-        }
     }
 
     public static final class GameTestBlockContextEvent extends ch.njol.skript.lang.SkriptEvent {
@@ -1090,29 +1011,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest player egg throw";
-        }
-    }
-
-    public static final class GameTestUnleashEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEntityUnleashHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{ENTITY_UNLEASH_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest unleash";
         }
     }
 

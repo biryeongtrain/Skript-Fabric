@@ -377,9 +377,9 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
-    public static void dispatchEntityUnleash(ServerLevel level, @Nullable Entity actor, boolean dropLeash) {
+    public static void dispatchEntityUnleash(ServerLevel level, Entity entity, @Nullable Entity actor, boolean dropLeash) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEntityUnleashHandle(dropLeash),
+                new FabricEntityUnleashHandle(entity, actor, dropLeash),
                 level.getServer(),
                 level,
                 actor instanceof ServerPlayer serverPlayer ? serverPlayer : null

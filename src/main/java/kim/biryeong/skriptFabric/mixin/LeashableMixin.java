@@ -14,7 +14,7 @@ public interface LeashableMixin {
     @Inject(method = "dropLeash(Lnet/minecraft/world/entity/Entity;ZZ)V", at = @At("HEAD"))
     private static void skript$dispatchUnleash(Entity entity, boolean sendPacket, boolean dropLeash, CallbackInfo ci) {
         if (entity.level() instanceof ServerLevel serverLevel) {
-            SkriptFabricEventBridge.dispatchEntityUnleash(serverLevel, null, dropLeash);
+            SkriptFabricEventBridge.dispatchEntityUnleash(serverLevel, entity, null, dropLeash);
         }
     }
 }

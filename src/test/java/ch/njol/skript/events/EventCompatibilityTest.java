@@ -3,6 +3,7 @@ package ch.njol.skript.events;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.entity.EntityData;
@@ -16,10 +17,13 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.animal.Cow;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashHandle;
 import org.skriptlang.skript.fabric.runtime.FabricScheduledTickHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
+import sun.misc.Unsafe;
 
 final class EventCompatibilityTest {
 
@@ -559,6 +563,19 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void leashEventChecksRuntimeUnleashHandle() throws ReflectiveOperationException {
+        EvtLeash event = parseEvent("unleashing", EvtLeash.class);
+        Cow cow = allocateEntity(Cow.class, net.minecraft.world.entity.EntityType.COW);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEntityUnleashHandle(cow, null, true),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
     void moveOnEventParsesItemTypeAndChecksHandle() {
         EvtMoveOn event = parseEvent("walking on dirt", EvtMoveOn.class);
 
@@ -677,6 +694,34 @@ final class EventCompatibilityTest {
         Field field = owner.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(owner);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends net.minecraft.world.entity.Entity> T allocateEntity(
+            Class<T> type,
+            net.minecraft.world.entity.EntityType<?> entityType
+    ) throws ReflectiveOperationException {
+        Unsafe unsafe = unsafe();
+        T entity = (T) unsafe.allocateInstance(type);
+        Field entityTypeField = null;
+        for (Field field : net.minecraft.world.entity.Entity.class.getDeclaredFields()) {
+            if (field.getType() == net.minecraft.world.entity.EntityType.class) {
+                entityTypeField = field;
+                break;
+            }
+        }
+        if (entityTypeField == null) {
+            throw new IllegalStateException("Could not find entity type field");
+        }
+        entityTypeField.setAccessible(true);
+        entityTypeField.set(entity, entityType);
+        return entity;
+    }
+
+    private static Unsafe unsafe() throws ReflectiveOperationException {
+        Field field = Unsafe.class.getDeclaredField("theUnsafe");
+        field.setAccessible(true);
+        return (Unsafe) field.get(null);
     }
 
     private static ServerLevel dummyLevel() {
