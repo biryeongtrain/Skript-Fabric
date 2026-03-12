@@ -86,6 +86,7 @@ import net.minecraft.world.inventory.StonecutterMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.component.FireworkExplosion;
@@ -441,29 +442,36 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
-    public void blockPlaceCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+    public void blockPlaceProducerExecutesLoadedScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
             runtime.clearScripts();
             runtime.loadFromResource("skript/gametest/event/block_place_sets_block.sk");
 
-            BlockPos placedAbsolute = helper.absolutePos(new BlockPos(1, 1, 1));
-            helper.getLevel().setBlockAndUpdate(placedAbsolute, Blocks.STONE.defaultBlockState());
+            BlockPos supportAbsolute = helper.absolutePos(new BlockPos(1, 1, 1));
+            BlockPos placedAbsolute = supportAbsolute.above();
+            helper.getLevel().setBlockAndUpdate(supportAbsolute, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(placedAbsolute, Blocks.AIR.defaultBlockState());
 
             ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STONE));
             player.teleportTo(placedAbsolute.getX() + 0.5D, placedAbsolute.getY() + 1.0D, placedAbsolute.getZ() + 0.5D);
 
-            SkriptFabricEventBridge.dispatchBlockPlace(
-                    helper.getLevel(),
-                    placedAbsolute,
-                    Blocks.STONE.defaultBlockState(),
-                    new ItemStack(Items.STONE),
-                    player
+            InteractionResult result = player.getItemInHand(InteractionHand.MAIN_HAND).useOn(new UseOnContext(
+                    player,
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(Vec3.atCenterOf(supportAbsolute), Direction.UP, supportAbsolute, false)
+            ));
+
+            helper.assertTrue(
+                    result.consumesAction(),
+                    Component.literal("Expected the real block item placement path to consume the player action.")
             );
 
             helper.assertTrue(
                     helper.getLevel().getBlockState(placedAbsolute.above()).is(Blocks.REDSTONE_BLOCK),
-                    Component.literal("Expected block place compat bridge to execute loaded Skript file.")
+                    Component.literal("Expected the real block place producer to execute the loaded Skript file.")
             );
             runtime.clearScripts();
         });

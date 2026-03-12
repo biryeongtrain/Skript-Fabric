@@ -465,9 +465,73 @@ final class EventCompatibilityTest {
 
     @Test
     void blockEventParsesBreakFilterAndChecksHandle() {
-        EvtBlock event = parseEvent("block breaking of stone", EvtBlock.class);
+        EvtBlock event = parseEvent("block breaking", EvtBlock.class);
 
-        assertEquals(true, event.toString(null, false).contains("break"));
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.BREAK,
+                        Blocks.STONE.defaultBlockState(),
+                        null,
+                        true
+                ),
+                null,
+                null,
+                null
+        )));
+        assertTrue(event.toString(null, false).contains("break"));
+    }
+
+    @Test
+    void blockEventParsesMineFilterAndRequiresDroppedResources() {
+        EvtBlock event = parseEvent("block mining", EvtBlock.class);
+
+        assertFalse(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.BREAK,
+                        Blocks.STONE.defaultBlockState(),
+                        null,
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.BREAK,
+                        Blocks.STONE.defaultBlockState(),
+                        null,
+                        true
+                ),
+                null,
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void blockEventParsesPlaceFilterAndChecksHandle() {
+        EvtBlock event = parseEvent("block placing", EvtBlock.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Block(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.BlockAction.PLACE,
+                        Blocks.STONE.defaultBlockState(),
+                        null,
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
     }
 
     @Test
