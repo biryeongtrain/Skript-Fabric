@@ -1,15 +1,16 @@
 # Fabric Event Mapping
 
-Last condensed: 2026-03-12
-Last full verification: 2026-03-12
+Last condensed: 2026-03-13
+Last full verification: 2026-03-13
 
 ## Snapshot
 
-- Active event rows: `70`
+- Active event rows: `75`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.WorldLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.ItemLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.InventoryMoveRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `306` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `309` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 
 ## Active Rows
 
@@ -89,17 +90,10 @@ Last full verification: 2026-03-12
 ## Open Parity Note
 
 - `Evt*.java` runtime audit:
-  - runtime-backed: `45 / 53`
-  - synthetic/partial: `3 / 53`
+  - runtime-backed: `48 / 53`
+  - synthetic/partial: `0 / 53`
   - non-runtime/manual: `5 / 53`
-- Remaining synthetic/partial event syntax focus:
-  - `EvtBlock`
-    live: `burn`, `fade`, `form`, `drop`
-    remaining: `break`, `mine`, `place`
-  - `EvtItem`
-    live: `dispense`, `spawn`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `despawn`, `merge`, `inventory move`, `stonecutting`
-    remaining: `inventory click`
-  - `EvtHarvestBlock`
+- Runtime-backed closure is complete for event-hook families; only non-runtime/manual `Evt*.java` remain outside the live bucket.
 - Remaining event-facing synthetic alias:
   - `gametest hanging break`
 - Remaining cross-cutting gap is not limited to dispatch:

@@ -23,7 +23,7 @@ Last full verification: 2026-03-12
 | `2` runtime harness | `completed` | real `.sk` loading and execution path is active |
 | `3` core type mappings | `completed` | core Bukkit-to-Mojang adapters are active |
 | `4` base type/info layer | `completed` | base type registrations are restored |
-| `5` event backend | `in_progress` | `37` active mapping rows; `30 / 45` `Evt*.java` runtime-backed; see [FABRIC_EVENT_MAPPING.md](FABRIC_EVENT_MAPPING.md) |
+| `5` event backend | `completed` | `72` active mapping rows; `48 / 53` `Evt*.java` runtime-backed, `5 / 53` non-runtime/manual; see [FABRIC_EVENT_MAPPING.md](FABRIC_EVENT_MAPPING.md) |
 | `6` syntax packages | `in_progress` | source-complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24` |
 | `7` GameTest suite | `in_progress` | full suite green at `264 / 264` |
 | `8` parity audit | `in_progress` | `23 / 214` package-local classes audited, plus `4` top-level helpers outside the matrix |
@@ -31,8 +31,8 @@ Last full verification: 2026-03-12
 ## Current Notes
 
 - Stage 5:
-  - `Evt*.java` runtime audit stands at `30 / 45` runtime-backed, `10 / 45` synthetic or partial, `5 / 45` non-runtime or manual
-  - remaining risk is still parity depth inside `EvtBlock`, `EvtItem`, and the standalone synthetic bucket
+  - `Evt*.java` runtime audit stands at `48 / 53` runtime-backed, `0 / 53` synthetic or partial, `5 / 53` non-runtime or manual
+  - remaining event work is GameTest rewrite and synthetic alias cleanup, not backend hook closure
 - Stage 6 recent runtime-closure work:
   - legacy `parseStatic` flags
   - explicit-literal-only `Classes.getPatternInfos(...)`

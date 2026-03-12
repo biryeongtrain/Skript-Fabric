@@ -1,7 +1,7 @@
 # Next Agent Handoff
 
-Last condensed: 2026-03-12
-Last full verification: 2026-03-12
+Last condensed: 2026-03-13
+Last full verification: 2026-03-13
 
 ## Read Order
 
@@ -16,36 +16,34 @@ Last full verification: 2026-03-12
 ## Current State
 
 - Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
-- Runtime-backed `Evt*.java`: `45 / 53`
-- Synthetic/partial `Evt*.java`: `3 / 53`
+- Runtime-backed `Evt*.java`: `48 / 53`
+- Synthetic/partial `Evt*.java`: `0 / 53`
 - Non-runtime/manual `Evt*.java`: `5 / 53`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
 - Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.WorldLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.ItemLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.InventoryMoveRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `306` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `309` GameTests; `block place`, `block mine`, `inventory click`, and `sweet berry harvest` passed, and the remaining failure was `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 
 ## Most Recent Merged Slice
 
 - public `on area cloud effect:`, `on player experience cooldown change:`, and `on block fertilize:` now use public syntax with real-trigger GameTests
-- `EvtBlock` now has live `burn`, `fade`, `form`, and `drop` producers
-- `EvtItem` now has live `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `item despawn`, `item merge`, `inventory item move`, and `stonecutting` producers
+- `EvtBlock` now has live `burn`, `fade`, `form`, `drop`, `break`, `mine`, and `place` producers
+- `EvtItem` now has live `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `item despawn`, `item merge`, `inventory item move`, `inventory click`, and `stonecutting` producers
+- `EvtHarvestBlock` now uses the real ripe `SweetBerryBushBlock.useWithoutItem(...)` harvest path
 - public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path
 - `EvtWorld` now has live `save`, `initialization`, `loading`, and `unloading` producers
 - runtime bootstrap now force-initializes the recovered event activation bundle during full GameTest startup
 
 ## Do Next
 
-- Continue event hook closure from the remaining synthetic/partial bucket:
-  - `EvtBlock`
-  - `EvtItem`
-  - `EvtHarvestBlock`
-- `EvtItem` only needs `inventory click`
-- `EvtHarvestBlock` sweet berry harvest was attempted but reverted because it introduced new full-suite GameTest failures
+- Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
 - Continue removing synthetic event aliases only where public syntax plus real producer both exist:
   - remaining blocked alias is `gametest hanging break`
+- Investigate the remaining unrelated full-suite failures:
+  - `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 - After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
