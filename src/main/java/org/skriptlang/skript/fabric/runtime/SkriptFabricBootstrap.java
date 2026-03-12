@@ -1090,6 +1090,7 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.effects.EffApplyBoneMeal.register();
         ch.njol.skript.effects.EffEntityUnload.register();
         ch.njol.skript.effects.EffForceEnchantmentGlint.register();
+        ch.njol.skript.effects.EffMakeEggHatch.register();
         ch.njol.skript.effects.EffReplace.register();
         ch.njol.skript.effects.EffDetonate.register();
         ch.njol.skript.effects.EffLog.register();
@@ -1118,6 +1119,7 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtExperienceSpawn.register();
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();
+        ch.njol.skript.events.EvtPlayerEggThrow.register();
         ch.njol.skript.events.EvtPeriodical.register();
         ch.njol.skript.events.EvtScript.register();
         ch.njol.skript.events.EvtSkript.register();

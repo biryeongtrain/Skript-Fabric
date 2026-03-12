@@ -173,6 +173,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -2072,6 +2073,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     @GameTest
     public void playerEggThrowProducerExecutesRealScript(GameTestHelper helper) {
         AtomicBoolean loaded = new AtomicBoolean(false);
+        AtomicInteger initialPigCount = new AtomicInteger(-1);
         BlockPos pigBoxMin = helper.absolutePos(new BlockPos(-1, 0, -1));
         BlockPos pigBoxMax = helper.absolutePos(new BlockPos(2, 4, 2));
         AABB pigBox = new AABB(
@@ -2088,6 +2090,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                 if (!RUNTIME_LOCK.compareAndSet(false, true)) {
                     return;
                 }
+                initialPigCount.set(helper.getLevel().getEntitiesOfClass(Pig.class, pigBox).size());
                 Variables.clearAll();
                 runtime.clearScripts();
                 runtime.loadFromResource("skript/gametest/event/player_egg_throw_hatches_pigs.sk");
@@ -2110,7 +2113,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             }
 
             helper.assertTrue(
-                    helper.getLevel().getEntitiesOfClass(Pig.class, pigBox).size() == 3,
+                    helper.getLevel().getEntitiesOfClass(Pig.class, pigBox).size() == initialPigCount.get() + 3,
                     Component.literal("Expected player egg throw script to hatch exactly three pigs from a real egg collision.")
             );
             runtime.clearScripts();
