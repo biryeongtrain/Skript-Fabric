@@ -17,9 +17,9 @@ Last full verification: 2026-03-12
   - conditions: `28 / 28`
   - expressions: `84 / 84`
   - effects: `24 / 24`
-- Runtime-backed `Evt*.java`: `40 / 50`
-- Synthetic/partial `Evt*.java`: `5 / 50`
-- Non-runtime/manual `Evt*.java`: `5 / 50`
+- Runtime-backed `Evt*.java`: `44 / 53`
+- Synthetic/partial `Evt*.java`: `4 / 53`
+- Non-runtime/manual `Evt*.java`: `5 / 53`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
   - `breeding`: `12 / 12`
@@ -32,9 +32,8 @@ Last full verification: 2026-03-12
   - exact-path present locally: `925`
   - shortfall: `264`
 - Latest verification:
-  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.FirstJoinRuntimeUnitTest --tests org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridgeMoveOnTest --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
-  - `build/junit.xml` recorded `first_join_event_executes_real_script`, `walking_on_dirt_event_executes_real_script`, `respawn_event_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `player_unleash_producer_executes_real_script` as passing GameTests
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `278 / 278`
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `300` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 
 ## Active Priority
 
@@ -46,15 +45,15 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
-  - public `on first join:` now uses the real `PlayerList.placeNewPlayer(...)` producer and a dedicated player-infra GameTest
-  - public `on walking on %itemtypes%:` now uses the accepted player-move path with support-block delta tracking and a dedicated player-infra GameTest
-  - public `on respawn:` now lives in a dedicated player-infra GameTest resource instead of the shared custom-context backfill
-  - public `on explosion prime:` producer coverage now lives in the event suite with a dedicated fixture instead of the shared custom-context backfill
-  - public `on player unleashing:` now carries the real leash-holder actor through `Leashable.dropLeash(...)` and a dedicated public-syntax GameTest
+  - public `on area cloud effect:`, `on player experience cooldown change:`, and `on block fertilize:` now use public syntax with dedicated real-trigger GameTests instead of `gametest ...` aliases
+  - `EvtBlock` now has live producers for `burn`, `fade`, `form`, and `drop`
+  - `EvtItem` now has live producers for `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, and `consume`
+  - public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path, and `on world saving:` now uses the real `ServerLevel.save(...)` path
+  - mixed event backfill coverage was reduced so live block/item families no longer rely on helper-only aliases
 - Deferred from the same cycle:
-  - `EvtLeash` remains partial for `leash` only
-  - synthetic backfill still remains for mutable `entity death`, `area cloud effect`, `player experience cooldown change`, `hanging break`, and `block fertilize`
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now passes `278 / 278`
+  - partial event families are now limited to `EvtBlock`, `EvtItem`, `EvtHarvestBlock`, and `EvtWorld`
+  - the remaining event-facing synthetic alias is `gametest hanging break`
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `300` GameTests with only the unrelated `ExprNumbers` baseline failure
 
 ## Open Gaps
 

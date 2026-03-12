@@ -16,26 +16,24 @@ Last full verification: 2026-03-12
 ## Current State
 
 - Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
-- Runtime-backed `Evt*.java`: `40 / 50`
-- Synthetic/partial `Evt*.java`: `5 / 50`
-- Non-runtime/manual `Evt*.java`: `5 / 50`
+- Runtime-backed `Evt*.java`: `44 / 53`
+- Synthetic/partial `Evt*.java`: `4 / 53`
+- Non-runtime/manual `Evt*.java`: `5 / 53`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
 - Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
 - Latest verification:
-  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.FirstJoinRuntimeUnitTest --tests org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridgeMoveOnTest --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
-  - `build/junit.xml` recorded `first_join_event_executes_real_script`, `walking_on_dirt_event_executes_real_script`, `respawn_event_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `player_unleash_producer_executes_real_script` as passing GameTests
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `278 / 278`
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `300` GameTests with only the known baseline failure `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
 
 ## Most Recent Merged Slice
 
-- public `on first join:` now uses the real `PlayerList.placeNewPlayer(...)` producer and a dedicated player-infra GameTest
-- public `on walking on %itemtypes%:` now uses the accepted player-move path with support-block delta tracking and a dedicated player-infra GameTest
-- public `on respawn:` now lives in a dedicated player-infra GameTest resource instead of the shared custom-context backfill
-- public `on explosion prime:` producer coverage now lives in the event suite with a dedicated fixture instead of the shared custom-context backfill
-- public `on player unleashing:` now carries the real leash-holder actor through `Leashable.dropLeash(...)` and a dedicated public-syntax GameTest
-- `EvtLeash` remains partial only for `leash`
+- public `on area cloud effect:`, `on player experience cooldown change:`, and `on block fertilize:` now use public syntax with real-trigger GameTests
+- `EvtBlock` now has live `burn`, `fade`, `form`, and `drop` producers
+- `EvtItem` now has live `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, and `consume` producers
+- public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path
+- `EvtWorld` now has a live `save` producer
 
 ## Do Next
 
@@ -43,10 +41,9 @@ Last full verification: 2026-03-12
   - `EvtBlock`
   - `EvtItem`
   - `EvtHarvestBlock`
-  - `EvtLeash` (`leash` remaining)
   - `EvtWorld`
 - Continue removing synthetic event aliases only where public syntax plus real producer both exist:
-  - remaining blocked aliases are mutable `entity death`, `gametest area cloud effect`, `gametest player experience cooldown change`, `gametest hanging break`, and `gametest block fertilize`
+  - remaining blocked alias is `gametest hanging break`
 - After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
