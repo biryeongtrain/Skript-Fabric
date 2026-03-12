@@ -5,12 +5,12 @@ Last full verification: 2026-03-12
 
 ## Snapshot
 
-- Active event rows: `46`
+- Active event rows: `48`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.PlayerArmorChangeRuntimeTest` passed
-  - `build/junit.xml` recorded `entity_target_and_untarget_execute_real_script`, `entity_portal_executes_real_script`, `helmet_change_executes_real_script`, `explosion_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `mutable_entity_death_payload_backfill_executes_synthetic_script` as passing GameTests
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `276 / 276`
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.FirstJoinRuntimeUnitTest --tests org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridgeMoveOnTest --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
+  - `build/junit.xml` recorded `first_join_event_executes_real_script`, `walking_on_dirt_event_executes_real_script`, `respawn_event_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `player_unleash_producer_executes_real_script` as passing GameTests
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `278 / 278`
 
 ## Active Rows
 
@@ -41,18 +41,20 @@ Last full verification: 2026-03-12
 | `on entity block change` | `Sheep.ate()` mixin path |
 | `on [entity] target` / `on [entity] un-target` | `Mob.setTarget(LivingEntity)` mixin path |
 | `on gamemode change` | `ServerPlayerGameMode.changeGameModeForPlayer(GameType)` |
+| `on first join` | `PlayerList.placeNewPlayer(Connection, ServerPlayer, CommonListenerCookie)` |
 | `on armor change` / slot-specific armor change | `LivingEntity.onEquipItem(EquipmentSlot, ItemStack, ItemStack)` |
 | `on respawn` | `PlayerList.respawn(ServerPlayer, boolean, Entity.RemovalReason)` |
 | `on teleport` | `Entity.teleportTo(...)` mixin path |
 | `on player start/swap/stop spectating` | `ServerPlayer.setCamera(Entity)` mixin path |
 | `on [player] portal` / `on entity portal` | `Entity.handlePortal()` mixin path |
 | `on weather change` | `ServerLevel.setWeatherParameters(...)` |
+| `on (step|walk) (on|over) %itemtypes%` | `ServerGamePacketListenerImpl.handleMovePlayer` accepted-move path with support-block delta check |
 | `on pressure plate` | `BasePressurePlateBlock.onEntityCollision` and `TripWireBlock.onEntityCollision` |
 | `on vehicle collision` | `AbstractMinecart.push(Entity)` non-minecart path |
 | `on firework explosion` | `FireworkRocketEntity.explodeAndRemove(ServerLevel)` |
 | `on explode` | `ServerExplosion.explode()` mixin path with mutable exploded blocks / yield feedback |
 | `on explosion prime` | `Creeper.explodeCreeper()` mixin path with mutable radius feedback |
-| `on unleash` | `Leashable.dropLeash(Entity, boolean, boolean)` mixin path |
+| `on unleash` / `on player unleashing` | `Leashable.dropLeash(Entity, boolean, boolean)` mixin path |
 | `on player egg throw` | `ThrownEgg.onHit(HitResult)` mixin path |
 | `on piglin barter` | `PiglinAi.stopHoldingOffHandItem(ServerLevel, Piglin, boolean)` mixin path |
 | `on level change` | `ServerPlayer.giveExperienceLevels(int)` delta bridge |
@@ -66,16 +68,14 @@ Last full verification: 2026-03-12
 ## Open Parity Note
 
 - `Evt*.java` runtime audit:
-  - runtime-backed: `38 / 50`
-  - synthetic/partial: `7 / 50`
+  - runtime-backed: `40 / 50`
+  - synthetic/partial: `5 / 50`
   - non-runtime/manual: `5 / 50`
 - Remaining synthetic/partial event syntax focus:
   - `EvtBlock`
   - `EvtItem`
-  - `EvtFirstJoin`
   - `EvtHarvestBlock`
-  - `EvtLeash` (`unleash` live; `leash` and `player unleash` remain partial)
-  - `EvtMoveOn`
+  - `EvtLeash` (`leash` remains partial; `unleash` and `player unleash` are live)
   - `EvtWorld`
 - Remaining cross-cutting gap is not limited to dispatch:
   - ambiguous bare item-id compare, for example `event-item is wheat`

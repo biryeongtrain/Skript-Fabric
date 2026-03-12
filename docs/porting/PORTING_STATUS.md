@@ -17,8 +17,8 @@ Last full verification: 2026-03-12
   - conditions: `28 / 28`
   - expressions: `84 / 84`
   - effects: `24 / 24`
-- Runtime-backed `Evt*.java`: `38 / 50`
-- Synthetic/partial `Evt*.java`: `7 / 50`
+- Runtime-backed `Evt*.java`: `40 / 50`
+- Synthetic/partial `Evt*.java`: `5 / 50`
 - Non-runtime/manual `Evt*.java`: `5 / 50`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
@@ -32,9 +32,9 @@ Last full verification: 2026-03-12
   - exact-path present locally: `925`
   - shortfall: `264`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.PlayerArmorChangeRuntimeTest` passed
-  - `build/junit.xml` recorded `entity_target_and_untarget_execute_real_script`, `entity_portal_executes_real_script`, `helmet_change_executes_real_script`, `explosion_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `mutable_entity_death_payload_backfill_executes_synthetic_script` as passing GameTests
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `276 / 276`
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.FirstJoinRuntimeUnitTest --tests org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridgeMoveOnTest --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
+  - `build/junit.xml` recorded `first_join_event_executes_real_script`, `walking_on_dirt_event_executes_real_script`, `respawn_event_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `player_unleash_producer_executes_real_script` as passing GameTests
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `278 / 278`
 
 ## Active Priority
 
@@ -46,17 +46,15 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
-  - public `on [entity] target:` / `on [entity] un-target:` now uses the real `Mob.setTarget(...)` producer and a dedicated entity target GameTest
-  - public `on [player] portal:` / `on entity portal:` now uses the real portal travel path and a dedicated entity portal GameTest
-  - public `on armor change:` / `on helmet change:` now uses the real `LivingEntity.onEquipItem(...)` producer and a dedicated armor-slot GameTest
-  - public `on explode:` now uses the real `ServerExplosion.explode()` producer with mutable block-yield feedback and dedicated TNT-triggered GameTests
-  - public `on explosion prime:` now uses the real creeper ignition path with mutable radius feedback and dedicated real-trigger GameTests
-  - mixed-runtime synthetic aliases for `gametest explode` and `gametest explosion prime` were removed in favor of public syntax
-  - mutable `entity death` payload proof was split out of the shared mixed bundle into a dedicated backfill GameTest resource
+  - public `on first join:` now uses the real `PlayerList.placeNewPlayer(...)` producer and a dedicated player-infra GameTest
+  - public `on walking on %itemtypes%:` now uses the accepted player-move path with support-block delta tracking and a dedicated player-infra GameTest
+  - public `on respawn:` now lives in a dedicated player-infra GameTest resource instead of the shared custom-context backfill
+  - public `on explosion prime:` producer coverage now lives in the event suite with a dedicated fixture instead of the shared custom-context backfill
+  - public `on player unleashing:` now carries the real leash-holder actor through `Leashable.dropLeash(...)` and a dedicated public-syntax GameTest
 - Deferred from the same cycle:
-  - `EvtLeash` remains partial for `leash` and `player unleash`
-  - synthetic backfill still remains for mutable `entity death` only
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now passes `276 / 276`
+  - `EvtLeash` remains partial for `leash` only
+  - synthetic backfill still remains for mutable `entity death`, `area cloud effect`, `player experience cooldown change`, `hanging break`, and `block fertilize`
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now passes `278 / 278`
 
 ## Open Gaps
 

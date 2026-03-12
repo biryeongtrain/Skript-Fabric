@@ -16,41 +16,37 @@ Last full verification: 2026-03-12
 ## Current State
 
 - Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
-- Runtime-backed `Evt*.java`: `38 / 50`
-- Synthetic/partial `Evt*.java`: `7 / 50`
+- Runtime-backed `Evt*.java`: `40 / 50`
+- Synthetic/partial `Evt*.java`: `5 / 50`
 - Non-runtime/manual `Evt*.java`: `5 / 50`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
 - Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.PlayerArmorChangeRuntimeTest` passed
-  - `build/junit.xml` recorded `entity_target_and_untarget_execute_real_script`, `entity_portal_executes_real_script`, `helmet_change_executes_real_script`, `explosion_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `mutable_entity_death_payload_backfill_executes_synthetic_script` as passing GameTests
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `276 / 276`
+  - `./gradlew test --tests org.skriptlang.skript.fabric.runtime.FirstJoinRuntimeUnitTest --tests org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridgeMoveOnTest --tests ch.njol.skript.events.EventCompatibilityTest --warning-mode none --console=plain` passed
+  - `build/junit.xml` recorded `first_join_event_executes_real_script`, `walking_on_dirt_event_executes_real_script`, `respawn_event_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `player_unleash_producer_executes_real_script` as passing GameTests
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` passed; `278 / 278`
 
 ## Most Recent Merged Slice
 
-- public `on [entity] target:` / `on [entity] un-target:` now uses the real `Mob.setTarget(...)` producer and a dedicated GameTest
-- public `on [player] portal:` / `on entity portal:` now uses the real portal travel path and a dedicated GameTest
-- public `on armor change:` / `on helmet change:` now uses the real `LivingEntity.onEquipItem(...)` producer and a dedicated GameTest
-- public `on explode:` now uses the real TNT producer with mutable block-yield feedback and dedicated GameTests
-- public `on explosion prime:` now uses the real creeper ignition path with mutable radius feedback and dedicated GameTests
-- mixed-runtime synthetic aliases for `gametest explode` and `gametest explosion prime` were removed
-- mutable `entity death` payload proof was moved out of the shared bundle into a dedicated backfill GameTest
-- `EvtLeash` remains partial: `unleash` is live, `leash` and `player unleash` still need dedicated runtime coverage
+- public `on first join:` now uses the real `PlayerList.placeNewPlayer(...)` producer and a dedicated player-infra GameTest
+- public `on walking on %itemtypes%:` now uses the accepted player-move path with support-block delta tracking and a dedicated player-infra GameTest
+- public `on respawn:` now lives in a dedicated player-infra GameTest resource instead of the shared custom-context backfill
+- public `on explosion prime:` producer coverage now lives in the event suite with a dedicated fixture instead of the shared custom-context backfill
+- public `on player unleashing:` now carries the real leash-holder actor through `Leashable.dropLeash(...)` and a dedicated public-syntax GameTest
+- `EvtLeash` remains partial only for `leash`
 
 ## Do Next
 
 - Continue event hook closure from the remaining synthetic/partial bucket:
   - `EvtBlock`
   - `EvtItem`
-  - `EvtFirstJoin`
   - `EvtHarvestBlock`
-  - `EvtLeash` (`leash` and `player unleash` remaining)
-  - `EvtMoveOn`
+  - `EvtLeash` (`leash` remaining)
   - `EvtWorld`
 - Continue removing synthetic event aliases only where public syntax plus real producer both exist:
-  - remaining blocked alias is mutable `entity death`
+  - remaining blocked aliases are mutable `entity death`, `gametest area cloud effect`, `gametest player experience cooldown change`, `gametest hanging break`, and `gametest block fertilize`
 - After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
