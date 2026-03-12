@@ -7,8 +7,8 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `282`
-- Exact-path expressions missing: `96`
+- Exact-path missing in local tree: `264`
+- Exact-path expressions missing: `78`
 - Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
 ## Priority Matrix
@@ -88,19 +88,25 @@ Baseline snapshot date: 2026-03-08
 ## Latest Verified Merge
 
 - Landed:
-  - syntax1 utility expressions `ExprTool`, `ExprWithFireResistance`
-  - syntax2 utility expressions `ExprTimeState`, `ExprSlotIndex`
+  - syntax1 compatibility expressions `ExprQuitReason`, `ExprSourceBlock`, `ExprTamer`
+  - syntax2 compatibility expressions `ExprHostname`, `ExprTPS`, `ExprPermissions`
+  - syntax3 compatibility expressions `ExprConfig`, `ExprNode`, `ExprScripts`
   - bootstrap/binding closure for that syntax subset
-  - remaining compat cleanup in `PrivateItemEntityAccess`
+  - cycle H real `.sk` GameTest hardening for the syntax1/2/3 subset
+  - `entity shoot bow` runtime hook with dedicated real-trigger GameTest; mixed-runtime helper backfill removed
 - Deferred:
+  - weather-change runtime dispatch was reverted after the mixin target failed full GameTest
+  - `ExprNumbers`, `ExprReadiedArrow`, and `ExprAppliedEffect` stayed out this cycle
   - teleport-cause and spawn-reason event hooks stayed out after worker write failures
   - `PrivateFishingHookAccess.currentState` migration stayed out after the GameTest mixin accessor descriptor failure remained unresolved
 - Added compatibility coverage:
-  - `ExpressionCycle20260312CSyntax1CompatibilityTest`
-  - `ExpressionCycle20260312DSyntax2CompatibilityTest`
-  - `ExpressionCycle20260312DBindingCompatibilityTest`
-  - `CompatAccessorMigrationUnitTest`
+  - `ExpressionCycle20260312Syntax1CompatibilityTest`
+  - `ExpressionCycle20260312Syntax2CompatibilityTest`
+  - `ExpressionCycle20260312Syntax3CompatibilityTest`
+  - `ExpressionCycle20260312GBindingCompatibilityTest`
+  - `MixedRuntimeSyntaxBatchTest`
 - Verification passed on 2026-03-12:
-  - targeted cycle JUnit suite covering syntax S1, syntax2 D, bootstrap/binding D, and compat accessor migration
+  - targeted cycle JUnit suite covering syntax1 G, syntax2 G, syntax3 G, bootstrap/binding G, event compatibility, event bridge binding, and mixed runtime
+  - cycle H GameTest hardening for syntax1/2/3 and the dedicated `entity shoot bow` trigger path
   - `./gradlew runGameTest --rerun-tasks`
-- Verified runtime baseline after that merge: `260 / 260`
+- Verified runtime baseline after that merge: `261 / 261`

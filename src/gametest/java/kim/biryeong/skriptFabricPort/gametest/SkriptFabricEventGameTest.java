@@ -54,6 +54,7 @@ import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombieVillager;
@@ -2414,6 +2415,30 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.BLUE_WOOL),
                     Component.literal("Expected use item bridge to resolve event-player inside a real .sk file.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void entityShootBowExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/entity_shoot_bow_marks_block.sk");
+
+            BlockPos markerPos = helper.absolutePos(new BlockPos(4, 1, 0));
+            helper.getLevel().setBlockAndUpdate(markerPos, Blocks.AIR.defaultBlockState());
+
+            Skeleton skeleton = (Skeleton) helper.spawnWithNoFreeWill(EntityType.SKELETON, 0.5F, 1.0F, 0.5F);
+            Zombie target = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 4.5F, 1.0F, 0.5F);
+            skeleton.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+            skeleton.setTarget(target);
+            skeleton.performRangedAttack(target, 1.0F);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerPos).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected entity shoot bow hook to fire through the real ranged attack path.")
             );
             runtime.clearScripts();
         });

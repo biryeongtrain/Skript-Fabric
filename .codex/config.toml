@@ -1,5 +1,8 @@
 approval_policy = "never"
 sandbox_mode = "workspace_write"
+[features]
+multi_agents = true
+
 [agents]
 max_threads = 12
 max_depth = 1

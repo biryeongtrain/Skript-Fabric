@@ -16,8 +16,7 @@ public class ExprMods extends SimpleExpression<String> {
         Skript.registerExpression(
                 ExprMods.class,
                 String.class,
-                "[(all [[of] the]|the)] [loaded] mod[s] [ids]"
-        );
+                "[(all [[of] the]|the)] [loaded] mod[s] [ids]");
     }
 
     @Override

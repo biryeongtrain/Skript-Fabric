@@ -18,6 +18,8 @@ Read:
 Own merges, canonical docs, and final verification only.
 Keep Stage 8 counts frozen unless explicitly reassigned.
 Merge lanes in this order unless conflicts force otherwise: Lane C, Lane B, Lane A.
+Reject any syntax slice that lacks a real `.sk` GameTest.
+Reject any event hook slice whose only proof is direct `dispatch(...)` of the target compat handle.
 After merge run:
 - ./gradlew runGameTest --rerun-tasks
 - ./gradlew build --rerun-tasks
@@ -38,7 +40,8 @@ Read:
 
 Stay inside Statement / ScriptLoader / log compatibility.
 Do not edit canonical docs.
-If user-visible .sk behavior changes, add real .sk coverage and run GameTests.
+If you land new syntax, add a real `.sk` GameTest that proves parse plus runtime execution.
+If you touch event hooks, validate them through a real game-state or callback trigger, not by dispatching the target compat handle directly.
 Record exact commands and results only in LANE_A_STATUS.md.
 ```
 
@@ -56,6 +59,8 @@ Read:
 
 Stay inside SkriptParser / parser-default-value / parser-facing regression work.
 Do not edit canonical docs.
+If you land new syntax, add a real `.sk` GameTest that proves parse plus runtime execution.
+If you touch event hooks, validate them through a real game-state or callback trigger, not by dispatching the target compat handle directly.
 Record exact commands and results only in LANE_B_STATUS.md.
 ```
 
@@ -73,5 +78,7 @@ Read:
 
 Stay inside variables/classes/config/structures and adjacent function-runtime dependency closure.
 Do not edit canonical docs.
+If you land new syntax, add a real `.sk` GameTest that proves parse plus runtime execution.
+If you touch event hooks, validate them through a real game-state or callback trigger, not by dispatching the target compat handle directly.
 Record exact commands and results only in LANE_C_STATUS.md.
 ```

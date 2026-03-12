@@ -3,19 +3,24 @@ package ch.njol.skript.expressions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.util.ColorRGB;
 import ch.njol.skript.util.Direction;
 import ch.njol.util.Kleenean;
+import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.SharedConstants;
+import net.minecraft.network.protocol.handshake.ClientIntent;
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -146,6 +151,38 @@ final class ExpressionCycle20260312Syntax2CompatibilityTest {
         }, 0, Kleenean.FALSE, conditionParseResult("lane-s2-always")));
     }
 
+    @Test
+    void hostnameTpsAndPermissionsMatchFabricRuntimeContracts() {
+        ParserInstance parser = ParserInstance.get();
+        String previousEventName = parser.getCurrentEventName();
+        Class<?>[] previousEventClasses = parser.getCurrentEventClasses();
+        try {
+            parser.setCurrentEvent("connect", ClientIntentionPacket.class);
+            ExprHostname hostname = new ExprHostname();
+            assertTrue(hostname.init(new Expression[0], 0, Kleenean.FALSE, parseResult("hostname")));
+            ClientIntentionPacket packet = new ClientIntentionPacket(765, "testers.example.com", 25565, ClientIntent.LOGIN);
+            assertEquals("testers.example.com", hostname.getSingle(new SkriptEvent(packet, null, null, null)));
+            assertNull(hostname.getSingle(SkriptEvent.EMPTY));
+        } finally {
+            restoreEventContext(parser, previousEventName, previousEventClasses);
+        }
+
+        ExprTPS tps = new ExprTPS();
+        assertTrue(tps.init(new Expression[0], 3, Kleenean.FALSE, parseResult("tps")));
+        assertEquals(0, tps.getArray(SkriptEvent.EMPTY).length);
+        assertEquals(20.0D, ExprTPS.resolveTpsFromAverageTickTimeNanos(50_000_000L), 0.00001D);
+        assertEquals(10.0D, ExprTPS.resolveTpsFromAverageTickTimeNanos(100_000_000L), 0.00001D);
+
+        LinkedHashMap<String, Boolean> permissionMap = new LinkedHashMap<>();
+        permissionMap.put("skript.tree", true);
+        permissionMap.put("skript.tree.*", false);
+        permissionMap.put("skript.forest", true);
+        assertEquals(
+                java.util.List.of("skript.forest", "skript.tree"),
+                java.util.List.of(ExprPermissions.collectPermissionKeys(permissionMap))
+        );
+    }
+
     private static SkriptParser.ParseResult parseResult(String expr) {
         SkriptParser.ParseResult result = new SkriptParser.ParseResult();
         result.expr = expr;
@@ -166,6 +203,14 @@ final class ExpressionCycle20260312Syntax2CompatibilityTest {
         assertEquals(x, vector.x, 0.00001D);
         assertEquals(y, vector.y, 0.00001D);
         assertEquals(z, vector.z, 0.00001D);
+    }
+
+    private static void restoreEventContext(ParserInstance parser, @Nullable String previousEventName, @Nullable Class<?>[] previousEventClasses) {
+        if (previousEventName == null) {
+            parser.deleteCurrentEvent();
+        } else {
+            parser.setCurrentEvent(previousEventName, previousEventClasses);
+        }
     }
 
     public static final class TestConstantCondition extends Condition {

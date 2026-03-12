@@ -6,8 +6,8 @@ Last full verification: 2026-03-12
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `282`
-  - expressions missing: `96`
+  - overall missing: `264`
+  - expressions missing: `78`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -27,11 +27,12 @@ Last full verification: 2026-03-12
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `907`
-  - shortfall: `282`
+  - exact-path present locally: `925`
+  - shortfall: `264`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax S1, syntax2 D, bootstrap/binding D, and compat accessor migration
-  - `./gradlew runGameTest --rerun-tasks` passed with `260 / 260`
+  - targeted cycle JUnit suite passed for syntax1 G, syntax2 G, syntax3 G, bootstrap/binding G, event compatibility, event bridge binding, and mixed runtime
+  - cycle H GameTest hardening passed for syntax1/2/3 real `.sk` coverage and the dedicated `entity shoot bow` trigger path
+  - `./gradlew runGameTest --rerun-tasks` passed with `261 / 261`
 
 ## Active Priority
 
@@ -43,14 +44,16 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed expression slice:
-  - syntax1 utility subset: `ExprTool`, `ExprWithFireResistance`
-  - syntax2 utility subset: `ExprTimeState`, `ExprSlotIndex`
+  - syntax1 compatibility subset: `ExprQuitReason`, `ExprSourceBlock`, `ExprTamer`
+  - syntax2 compatibility subset: `ExprHostname`, `ExprTPS`, `ExprPermissions`
+  - syntax3 compatibility subset: `ExprConfig`, `ExprNode`, `ExprScripts`
 - Latest landed infra slice:
-  - bootstrap and binding coverage for the 2026-03-12d syntax subset
-  - remaining `PrivateItemEntityAccess` reflection fallback removal
+  - bootstrap and binding coverage for the 2026-03-12g compatibility subset
+  - cycle H real `.sk` GameTest hardening for the syntax1/2/3 compatibility subset
+  - `entity shoot bow` runtime hook with dedicated real-trigger GameTest; mixed-runtime helper backfill removed
 - Deferred from the same cycle:
-  - teleport-cause and spawn-reason event hooks stayed out after worker write failures
-  - `PrivateFishingHookAccess.currentState` migration stayed out after the GameTest mixin accessor descriptor failure remained unresolved
+  - weather-change runtime dispatch stayed out after the mixin target failed full GameTest and was reverted in integrator
+  - `ExprNumbers`, `ExprReadiedArrow`, `ExprAppliedEffect`, teleport-cause, spawn-reason, and `PrivateFishingHookAccess.currentState` stayed deferred
 - Landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 
 ## Open Gaps

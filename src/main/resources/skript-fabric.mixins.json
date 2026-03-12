@@ -39,6 +39,7 @@
     "LootTableMixin",
     "PlayerExperienceMixin",
     "PlayerPotionCauseMixin",
+    "ProjectileWeaponItemMixin",
     "PotionContentsMixin",
     "ReloadableServerRegistriesHolderMixin",
     "ServerCommonPacketListenerImplMixin",

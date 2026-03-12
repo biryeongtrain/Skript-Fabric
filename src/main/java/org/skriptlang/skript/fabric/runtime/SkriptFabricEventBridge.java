@@ -362,6 +362,15 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchEntityShootBow(ServerLevel level, LivingEntity entity, @Nullable ItemStack consumable) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityShootBow(entity, consumable == null ? null : consumable.copy()),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
     public static void dispatchBeaconEffect(
             ServerLevel level,
             BlockPos pos,

@@ -12,6 +12,7 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
@@ -24,9 +25,11 @@ import java.lang.reflect.Proxy;
 import java.util.Optional;
 import java.util.OptionalLong;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.flag.FeatureFlags;
@@ -38,9 +41,11 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ch.njol.skript.events.FabricEventCompatHandles;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import sun.misc.Unsafe;
@@ -57,11 +62,52 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         ensureSyntax();
     }
 
+    @AfterEach
+    void cleanupParserState() {
+        ParserInstance.get().deleteCurrentEvent();
+    }
+
     @Test
     void parserBindsLandedSyntaxSubset() {
         assertInstanceOf(ExprGameRule.class, parseExpression("gamerule keepInventory of lane-c12-s1-world", GameruleValue.class));
         assertInstanceOf(ExprWeather.class, parseExpression("weather in lane-c12-s1-world", ExprWeather.WeatherKind.class));
         assertInstanceOf(ExprWorldBorderWarningTime.class, parseExpression("world border warning time of lane-c12-s1-worldborder", Timespan.class));
+    }
+
+    @Test
+    void parserBindsQuitReasonSourceBlockAndTamerInExpectedContexts() {
+        ParserInstance parser = ParserInstance.get();
+
+        parser.setCurrentEvent("quit", TestQuitHandle.class);
+        assertInstanceOf(ExprQuitReason.class, parseExpression("quit reason", String.class));
+
+        parser.setCurrentEvent("spread", TestSourceBlockHandle.class);
+        assertInstanceOf(ExprSourceBlock.class, parseExpression("source block", FabricBlock.class));
+
+        parser.setCurrentEvent("tame", TestTameHandle.class);
+        assertInstanceOf(ExprTamer.class, parseExpression("tamer", ServerPlayer.class));
+    }
+
+    @Test
+    void quitReasonSourceBlockAndTamerReadCompatStyleHandles() throws Exception {
+        ParserInstance parser = ParserInstance.get();
+
+        parser.setCurrentEvent("quit", TestQuitHandle.class);
+        ExprQuitReason quitReason = new ExprQuitReason();
+        assertTrue(quitReason.init(new Expression[0], 0, Kleenean.FALSE, parseResult("quit reason")));
+        assertEquals("kicked", quitReason.getSingle(new SkriptEvent(new TestQuitHandle("kicked"), null, null, null)));
+
+        parser.setCurrentEvent("spread", TestSourceBlockHandle.class);
+        ExprSourceBlock sourceBlock = new ExprSourceBlock();
+        assertTrue(sourceBlock.init(new Expression[0], 0, Kleenean.FALSE, parseResult("source block")));
+        FabricBlock block = new FabricBlock(null, new BlockPos(2, 4, 6));
+        assertEquals(block, sourceBlock.getSingle(new SkriptEvent(new TestSourceBlockHandle(block), null, null, null)));
+
+        parser.setCurrentEvent("tame", TestTameHandle.class);
+        ExprTamer tamer = new ExprTamer();
+        assertTrue(tamer.init(new Expression[0], 0, Kleenean.FALSE, parseResult("tamer")));
+        ServerPlayer player = (ServerPlayer) unsafe().allocateInstance(ServerPlayer.class);
+        assertEquals(player, tamer.getSingle(new SkriptEvent(new TestTameHandle(player), null, null, null)));
     }
 
     @Test
@@ -172,11 +218,16 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         registerClassInfo(ServerLevel.class, "world");
         registerClassInfo(WorldBorder.class, "worldborder");
         registerClassInfo(Timespan.class, "timespan");
+        registerClassInfo(FabricBlock.class, "block");
+        registerClassInfo(ServerPlayer.class, "player");
 
         Skript.registerExpression(TestWorldExpression.class, ServerLevel.class, "lane-c12-s1-world");
         Skript.registerExpression(TestWorldBorderExpression.class, WorldBorder.class, "lane-c12-s1-worldborder");
 
         new ExprGameRule();
+        new ExprQuitReason();
+        new ExprSourceBlock();
+        new ExprTamer();
         new ExprWeather();
         new ExprWorldBorderWarningTime();
         syntaxRegistered = true;
@@ -305,6 +356,15 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
     }
 
     private record LevelFixture(ServerLevel level, MutableLevelData levelData) {
+    }
+
+    private record TestQuitHandle(String reason) {
+    }
+
+    private record TestSourceBlockHandle(FabricBlock source) {
+    }
+
+    private record TestTameHandle(ServerPlayer owner) {
     }
 
     private static final class MutableLevelData implements java.lang.reflect.InvocationHandler {

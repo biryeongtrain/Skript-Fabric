@@ -45,8 +45,20 @@ Use one worktree per lane. Do not share a worktree across active sessions.
 - Workers do not edit canonical docs under `docs/porting/*.md`.
 - Workers update only their own lane file under `docs/porting/parallel/`.
 - Keep exact commands and exact results in the lane file.
+- Any landed syntax addition must include a real `.sk` GameTest that proves parse plus runtime execution for the added syntax.
+- Any landed event hook must include a GameTest that triggers the real game-state or callback path. Direct `dispatch(...)` of the target compat handle does not count as hook validation.
+- When a real-trigger GameTest replaces an event helper backfill case, remove that event from `SkriptFabricMixedRuntimeBackfillGameTest` in the same slice.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun `runGameTest`.
 - If a change overlaps another lane's scope, stop and hand it back to the coordinator.
+
+## Landing Gates
+
+1. lane unit JUnit
+2. bootstrap or binding JUnit when the slice changes registration or event exposure
+3. slice-specific GameTest
+4. full `./gradlew runGameTest --rerun-tasks`
+
+Do not send a slice for merge if it fails any gate or if the only GameTest proof is helper-driven event dispatch for the target hook.
 
 ## Merge Order
 

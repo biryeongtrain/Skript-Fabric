@@ -3,10 +3,16 @@ package ch.njol.skript.expressions;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.config.Config;
+import ch.njol.skript.config.EntryNode;
+import ch.njol.skript.config.Node;
+import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleLiteral;
@@ -15,6 +21,8 @@ import com.mojang.authlib.GameProfile;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
@@ -33,7 +41,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
+import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 import sun.misc.Unsafe;
 
@@ -46,8 +56,80 @@ class ExpressionCycle20260312Syntax3CompatibilityTest {
     }
 
     @AfterEach
-    void cleanupRegistry() {
+    void cleanupRegistry() throws Exception {
         Skript.instance().syntaxRegistry().clear(SyntaxRegistry.EXPRESSION);
+        ExprConfig.setMainConfig(null);
+        setLoadedScripts(List.of());
+    }
+
+    @Test
+    void configNodeAndScriptsExposeExpectedCompatibilityContracts() throws Exception {
+        Config config = new Config("main", "main.sk", null);
+        config.getMainNode().set("language", new EntryNode("language", "french"));
+        SectionNode nested = new SectionNode("database");
+        nested.add(new EntryNode("host", "localhost"));
+        config.getMainNode().add(nested);
+        ExprConfig.setMainConfig(config);
+
+        ExprConfig exprConfig = new ExprConfig();
+        assertTrue(exprConfig.init(new Expression[0], 0, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertEquals(config, exprConfig.getSingle(SkriptEvent.EMPTY));
+        assertEquals("the skript config", exprConfig.toString(SkriptEvent.EMPTY, false));
+
+        config.invalidate();
+        assertNull(exprConfig.getSingle(SkriptEvent.EMPTY));
+
+        Config refreshed = new Config("main", "main.sk", null);
+        refreshed.getMainNode().set("language", "english");
+        SectionNode refreshedNested = new SectionNode("database");
+        refreshedNested.add(new EntryNode("host", "localhost"));
+        refreshed.getMainNode().add(refreshedNested);
+        ExprConfig.setMainConfig(refreshed);
+        assertEquals(refreshed, exprConfig.getSingle(SkriptEvent.EMPTY));
+
+        ExprNode pathNode = new ExprNode();
+        assertTrue(pathNode.init(new Expression[]{
+                new SimpleLiteral<>("language", false),
+                new SimpleLiteral<>(refreshed, false)
+        }, 2, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertEquals("english", ((EntryNode) pathNode.getSingle(SkriptEvent.EMPTY)).getValue());
+        String pathNodeString = pathNode.toString(SkriptEvent.EMPTY, false);
+        assertTrue(pathNodeString.contains("the node"));
+        assertTrue(pathNodeString.contains("language"));
+
+        ExprNode blankPath = new ExprNode();
+        assertTrue(blankPath.init(new Expression[]{
+                new SimpleLiteral<>(" ", false),
+                new SimpleLiteral<>(refreshed, false)
+        }, 2, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertEquals(refreshed.getMainNode(), blankPath.getSingle(SkriptEvent.EMPTY));
+
+        ExprNode childNodes = new ExprNode();
+        assertTrue(childNodes.init(new Expression[]{new SimpleLiteral<>(refreshed, false)}, 6, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertFalse(childNodes.isSingle());
+        assertArrayEquals(new Class[]{Node.class, EntryNode.class}, childNodes.possibleReturnTypes());
+        assertEquals(2, childNodes.getArray(SkriptEvent.EMPTY).length);
+        Iterator<? extends Node> iterator = childNodes.iterator(SkriptEvent.EMPTY);
+        assertTrue(iterator != null && iterator.hasNext());
+
+        Script first = new Script(new Config("first", "first.sk", null), new ArrayList<>());
+        Script second = new Script(new Config("nested/second", "nested/second.sk", null), new ArrayList<>());
+        setLoadedScripts(List.of(first, second));
+
+        ExprScripts allScripts = new ExprScripts();
+        assertTrue(allScripts.init(new Expression[0], 0, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertArrayEquals(new Script[]{first, second}, allScripts.getArray(SkriptEvent.EMPTY));
+        assertEquals("all scripts", allScripts.toString(SkriptEvent.EMPTY, false));
+
+        ExprScripts loadedScripts = new ExprScripts();
+        assertTrue(loadedScripts.init(new Expression[0], 1, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertArrayEquals(new Script[]{first, second}, loadedScripts.getArray(SkriptEvent.EMPTY));
+        assertEquals("all enabled scripts", loadedScripts.toString(SkriptEvent.EMPTY, false));
+
+        ExprScripts disabledScripts = new ExprScripts();
+        assertTrue(disabledScripts.init(new Expression[0], 2, ch.njol.util.Kleenean.FALSE, parseResult("")));
+        assertArrayEquals(new Script[0], disabledScripts.getArray(SkriptEvent.EMPTY));
+        assertEquals("all disabled scripts", disabledScripts.toString(SkriptEvent.EMPTY, false));
     }
 
     @Test
@@ -164,6 +246,9 @@ class ExpressionCycle20260312Syntax3CompatibilityTest {
 
     @Test
     void ownedExpressionsInstantiate() {
+        assertDoesNotThrow(ExprConfig::new);
+        assertDoesNotThrow(ExprNode::new);
+        assertDoesNotThrow(ExprScripts::new);
         assertDoesNotThrow(ExprLore::new);
         assertDoesNotThrow(ExprTimePlayed::new);
         assertDoesNotThrow(ExprTotalExperience::new);
@@ -188,6 +273,12 @@ class ExpressionCycle20260312Syntax3CompatibilityTest {
         Field field = Unsafe.class.getDeclaredField("theUnsafe");
         field.setAccessible(true);
         return (Unsafe) field.get(null);
+    }
+
+    private static void setLoadedScripts(List<Script> scripts) throws Exception {
+        Field field = SkriptRuntime.class.getDeclaredField("scripts");
+        field.setAccessible(true);
+        field.set(SkriptRuntime.instance(), new ArrayList<>(scripts));
     }
 
     private static final class TypedExpression<T> implements Expression<T> {
