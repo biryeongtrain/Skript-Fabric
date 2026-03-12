@@ -16,36 +16,44 @@ Last full verification: 2026-03-12
 ## Current State
 
 - Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
-- Stage 5 event backend rows active: `22 / 22`
+- Runtime-backed `Evt*.java`: `30 / 45`
+- Synthetic/partial `Evt*.java`: `10 / 45`
+- Non-runtime/manual `Evt*.java`: `5 / 45`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `926`, upstream `1189`, shortfall `263`
+- Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax1 I and bootstrap/binding I
-  - `ExprNumbers` real `.sk` GameTest passed after wiring the cycle I GameTest entrypoint
-  - `./gradlew runGameTest --rerun-tasks` passed with `262 / 262`
+  - targeted cycle JUnit suite passed for event compatibility, event cycle compatibility, event bridge binding, and mixed runtime
+  - `./gradlew runGameTest --rerun-tasks` passed with `264 / 264`
 
 ## Most Recent Merged Slice
 
-- cycle I syntax slice `ExprNumbers`
-- bootstrap/binding closure for `ExprNumbers`
-- cycle I real `.sk` GameTest entrypoint wiring for `ExprNumbers`
-- teleport-cause stayed out after the real-trigger GameTest still returned a missing cause
-- spawn-reason stayed out after the worker could not produce a GameTest-clean commit
+- `EvtEntityBlockChange` live sheep-eat path
+- `EvtGameMode`
+- `EvtWeatherChange`
+- `EvtPressurePlate`
+- `EvtVehicleCollision` minecart/entity path
+- `EvtFirework`
+- real `unleash` runtime backfill replaced the synthetic mixed-runtime helper path
+- minimal bootstrap registration for `EvtWeatherChange`
+- firework GameTest runtime-lock stabilization for full-suite execution
 
 ## Do Next
 
-- Continue exact-path closure from `263` overall missing with focus on expressions `77` and the remaining non-event buckets.
-- Resume the next-smallest slices in this order: `ExprReadiedArrow`, `ExprAppliedEffect`, teleport cause, spawn reason.
+- Continue event hook closure from the remaining synthetic/partial bucket:
+  - `EvtBlock`
+  - `EvtItem`
+  - `EvtEntityTarget`
+  - `EvtFirstJoin`
+  - `EvtHarvestBlock`
+  - `EvtLeash`
+  - `EvtMoveOn`
+  - `EvtPlayerArmorChange`
+  - `EvtPortal`
+  - `EvtWorld`
+- After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
-- Treat `events missing: 0` as exact-path parity only.
-  - The 2026-03-12 `Evt*.java` audit split is `24` runtime-backed, `16` synthetic or partial, `5` non-runtime/manual/scheduled/internal.
-  - Prioritize closing the synthetic bucket before claiming event-hook closure.
-- First event-hook closure targets from the audit:
-  - `EvtBlock` remaining variants: `burn`, `fade`, `form`, `drop`
-  - `EvtItem` remaining variants: everything except `SPAWN`
-  - standalone synthetic classes: `EvtEntityBlockChange`, `EvtEntityTarget`, `EvtFirework`, `EvtFirstJoin`, `EvtGameMode`, `EvtHarvestBlock`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtPressurePlate`, `EvtVehicleCollision`, `EvtWeatherChange`, `EvtWorld`
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.
 

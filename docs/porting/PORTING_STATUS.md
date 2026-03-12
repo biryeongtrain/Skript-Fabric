@@ -6,10 +6,9 @@ Last full verification: 2026-03-12
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `263`
-  - expressions missing: `77`
+  - overall missing: `264`
+  - expressions missing: `78`
   - events missing: `0`
-    - exact-path only; this is not the same as live-hook completeness
   - sections missing: `8`
   - command missing: `9`
   - aliases missing: `9`
@@ -18,7 +17,9 @@ Last full verification: 2026-03-12
   - conditions: `28 / 28`
   - expressions: `84 / 84`
   - effects: `24 / 24`
-- Stage 5 event backend rows active: `22 / 22`
+- Runtime-backed `Evt*.java`: `30 / 45`
+- Synthetic/partial `Evt*.java`: `10 / 45`
+- Non-runtime/manual `Evt*.java`: `5 / 45`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
   - `breeding`: `12 / 12`
@@ -28,17 +29,11 @@ Last full verification: 2026-03-12
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `926`
-  - shortfall: `263`
+  - exact-path present locally: `925`
+  - shortfall: `264`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax1 I and bootstrap/binding I
-  - `ExprNumbers` real `.sk` GameTest passed after wiring the cycle I GameTest entrypoint
-  - `./gradlew runGameTest --rerun-tasks` passed with `262 / 262`
-- `Evt*.java` runtime audit:
-  - total local `Evt*.java`: `45`
-  - runtime-backed/live-hooked: `24`
-  - synthetic-handle-only or partial: `16`
-  - non-runtime/manual/scheduled/internal: `5`
+  - targeted cycle JUnit suite passed for event compatibility, event cycle compatibility, event bridge binding, and mixed runtime
+  - `./gradlew runGameTest --rerun-tasks` passed with `264 / 264`
 
 ## Active Priority
 
@@ -49,16 +44,22 @@ Last full verification: 2026-03-12
 
 ## Latest Closed Core Slice
 
-- Latest landed expression slice:
-  - cycle I syntax subset: `ExprNumbers`
+- Latest landed event slice:
+  - `EvtEntityBlockChange` live sheep-eat path
+  - `EvtGameMode`
+  - `EvtWeatherChange`
+  - `EvtPressurePlate`
+  - `EvtVehicleCollision` minecart/entity path
+  - `EvtFirework`
 - Latest landed infra slice:
-  - bootstrap force-init and binding coverage for `ExprNumbers`
-  - cycle I real `.sk` GameTest entrypoint wiring for `ExprNumbers`
+  - real `unleash` runtime backfill replaced the synthetic mixed-runtime helper path
+  - minimal bootstrap registration for `EvtWeatherChange`
+  - firework GameTest runtime-lock stabilization for full-suite execution
 - Deferred from the same cycle:
-  - teleport-cause stayed out after the real-trigger GameTest still resolved a missing cause
-  - spawn-reason stayed out after the worker could not produce a GameTest-clean commit
-  - `ExprReadiedArrow`, `ExprAppliedEffect`, weather-change runtime dispatch, and `PrivateFishingHookAccess.currentState` remain deferred
-- Landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
+  - `EvtBlock` partial variants
+  - `EvtItem` partial variants
+  - `EvtEntityTarget`, `EvtFirstJoin`, `EvtHarvestBlock`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtWorld`
+- Landed with unit JUnit, binding JUnit, and Minecraft GameTest
 
 ## Open Gaps
 
@@ -67,9 +68,6 @@ Last full verification: 2026-03-12
 - Function namespace/default-parameter/runtime parity beyond the current fixes.
 - Variable runtime is still an in-memory bridge, not upstream-complete.
 - Cross-cutting Stage 8 parity gap: ambiguous bare item-id compare, for example `event-item is wheat`.
-- Event source parity is split:
-  - upstream `events` exact-path parity is closed
-  - runtime hook parity is still open for `EvtBlock` partial (`burn`/`fade`/`form`/`drop`), `EvtItem` partial (everything except `SPAWN`), plus `EvtEntityBlockChange`, `EvtEntityTarget`, `EvtFirework`, `EvtFirstJoin`, `EvtGameMode`, `EvtHarvestBlock`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtPressurePlate`, `EvtVehicleCollision`, `EvtWeatherChange`, and `EvtWorld`
 
 ## Reference Docs
 
