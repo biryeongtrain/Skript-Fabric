@@ -1031,6 +1031,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprNode.class);
         forceInitialize(ch.njol.skript.expressions.ExprOfflinePlayers.class);
         forceInitialize(ch.njol.skript.expressions.ExprOnlinePlayersCount.class);
+        forceInitialize(ch.njol.skript.expressions.ExprNumbers.class);
         forceInitialize(ch.njol.skript.expressions.ExprOps.class);
         forceInitialize(ch.njol.skript.expressions.ExprPandaGene.class);
         forceInitialize(ch.njol.skript.expressions.ExprItemOwner.class);

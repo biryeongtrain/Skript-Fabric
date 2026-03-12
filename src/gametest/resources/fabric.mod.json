@@ -15,6 +15,7 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricAliveKillGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricConditionGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionCycleISyntax1GameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneAGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneBGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEffectGameTest",
