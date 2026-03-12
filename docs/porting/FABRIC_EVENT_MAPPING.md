@@ -18,6 +18,8 @@ Last full verification: 2026-03-12
 
 - Class classification is conservative:
   - a class stays in the `synthetic-handle-only` bucket if it still exposes registered patterns without a real runtime caller, even when one sub-pattern already has a live path
+- Counts are by `Evt*.java` syntax class, not by unique hook family:
+  - some classes are runtime-derived from another live handle instead of owning a dedicated bridge callback
 - `non-runtime/manual/scheduled/internal` means the syntax is intentionally driven by scheduler, loader, or Skript lifecycle code instead of a Minecraft/Fabric hook
 
 ## Runtime-Backed `Evt*.java`
@@ -43,7 +45,7 @@ Last full verification: 2026-03-12
 - `EvtLevel`
 - `EvtMove`
 - `EvtPlantGrowth`
-- `EvtPlayerChunkEnter`
+- `EvtPlayerChunkEnter` via the live `FabricPlayerEventHandles.Move` dispatch path; no dedicated chunk-enter bridge exists
 - `EvtPlayerCommandSend`
 - `EvtResourcePackResponse`
 - `EvtSpectate`
