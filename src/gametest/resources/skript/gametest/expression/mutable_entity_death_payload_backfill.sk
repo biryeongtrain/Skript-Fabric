@@ -1,0 +1,2 @@
+on gametest entity death:
+    set drops to diamond

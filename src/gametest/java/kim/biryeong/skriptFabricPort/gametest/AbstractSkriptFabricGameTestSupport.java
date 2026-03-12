@@ -674,6 +674,30 @@ public abstract class AbstractSkriptFabricGameTestSupport {
         }
     }
 
+    protected void invokeEndPortalEntityInside(GameTestHelper helper, BlockPos pos, Entity entity) {
+        try {
+            Method method = net.minecraft.world.level.block.EndPortalBlock.class.getDeclaredMethod(
+                    "entityInside",
+                    net.minecraft.world.level.block.state.BlockState.class,
+                    net.minecraft.world.level.Level.class,
+                    BlockPos.class,
+                    net.minecraft.world.entity.Entity.class,
+                    InsideBlockEffectApplier.class
+            );
+            method.setAccessible(true);
+            method.invoke(
+                    helper.getLevel().getBlockState(pos).getBlock(),
+                    helper.getLevel().getBlockState(pos),
+                    helper.getLevel(),
+                    pos,
+                    entity,
+                    InsideBlockEffectApplier.NOOP
+            );
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to invoke EndPortalBlock.entityInside for GameTest.", exception);
+        }
+    }
+
     protected boolean invokeTotemDeathProtection(LivingEntity entity, DamageSource damageSource) {
         try {
             Method method = LivingEntity.class.getDeclaredMethod("checkTotemDeathProtection", DamageSource.class);

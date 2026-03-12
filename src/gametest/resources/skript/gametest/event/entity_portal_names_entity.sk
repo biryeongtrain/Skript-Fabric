@@ -1,0 +1,2 @@
+on entity portal:
+    set test name of entity event-entity to "portal entity"

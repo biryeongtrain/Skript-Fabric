@@ -2,15 +2,6 @@ on gametest projectile context:
     add 2 to arrow knockback strength of event-entity
     set arrow pierce level of event-entity to 3
 
-on gametest entity death:
-    set drops to diamond
-
-on gametest explode mutable:
-    set explosion block yield to 0
-
-on gametest explosion prime mutable:
-    set explosion yield to 3
-
 on gametest explosive entity context:
     set explosive yield of event-entity to 5
 

@@ -1,0 +1,6 @@
+on explode:
+    loop exploded blocks:
+        if loop-block is stone:
+            set test block at 8 1 0 to redstone_block
+        if loop-block is dirt:
+            set test block at 9 1 0 to redstone_block

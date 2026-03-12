@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -33,11 +34,11 @@ import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
+import ch.njol.skript.variables.Variables;
 
 public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
-    private static final Class<?> EXPLOSION_PRIME_EVENT = effectEventClass("ExplosionPrime");
     private static final Class<?> ENTITY_DEATH_EVENT = effectEventClass("EntityDeath");
     private static final Class<?> HANGING_BREAK_EVENT = effectEventClass("HangingBreak");
 
@@ -425,33 +426,41 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected experience cooldown change reason expression to expose the reason.")
             );
 
-            BlockPos explodedFirst = helper.absolutePos(new BlockPos(4, 1, 0));
-            BlockPos explodedSecond = helper.absolutePos(new BlockPos(5, 1, 0));
-            helper.getLevel().setBlockAndUpdate(explodedFirst, Blocks.STONE.defaultBlockState());
-            helper.getLevel().setBlockAndUpdate(explodedSecond, Blocks.DIRT.defaultBlockState());
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.Explosion(List.of(
-                            new org.skriptlang.skript.fabric.compat.FabricBlock(helper.getLevel(), explodedFirst),
-                            new org.skriptlang.skript.fabric.compat.FabricBlock(helper.getLevel(), explodedSecond)
-                    )),
-                    helper,
-                    null
-            ), "explosion event");
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void explosionPrimeProducerExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/custom_context_backfill.sk");
+
+            Creeper creeper = (Creeper) helper.spawnWithNoFreeWill(EntityType.CREEPER, 4.5F, 1.0F, 0.5F);
+            setIntField(creeper, "maxSwell", 1);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
+
             helper.assertTrue(
-                    helper.getLevel().getBlockState(explodedFirst.above()).is(Blocks.REDSTONE_BLOCK)
-                            && helper.getLevel().getBlockState(explodedSecond.above()).is(Blocks.REDSTONE_BLOCK),
-                    Component.literal("Expected exploded blocks expression to loop through every exploded block.")
+                    player.interactOn(creeper, InteractionHand.MAIN_HAND).consumesAction(),
+                    Component.literal("Expected creeper ignition to succeed through the real interaction path.")
             );
+            for (int i = 0; i < 4 && creeper.isAlive(); i++) {
+                creeper.tick();
+            }
 
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new ExplosionPrimeHandle(true),
-                    helper,
-                    null
-            ), "explosion prime event");
-            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(4, 1, 0));
-
+            Object value = Variables.getVariable("gametest::explosion_prime_radius", null, false);
+            helper.assertTrue(
+                    value instanceof Number number && Math.abs(number.floatValue() - 3.0F) < 0.001F,
+                    Component.literal("Expected real explosion prime producer to expose the default creeper radius.")
+            );
+            helper.assertTrue(
+                    !creeper.isAlive(),
+                    Component.literal("Expected the ignited creeper to reach its real explosion path.")
+            );
             runtime.clearScripts();
         });
     }
@@ -509,27 +518,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected projectile context script to mutate arrow knockback and pierce values.")
             );
 
-            MutableEntityDeathHandle deathHandle = new MutableEntityDeathHandle(List.of(new ItemStack(Items.APPLE)), 1);
-            assertExecuted(helper, dispatch(runtime, deathHandle, helper, null), "entity death context");
-            helper.assertTrue(
-                    deathHandle.drops().size() == 1 && deathHandle.drops().get(0).is(Items.DIAMOND),
-                    Component.literal("Expected drops script to replace the death drops with diamonds.")
-            );
-
-            FabricEventCompatHandles.Explosion explosion = new FabricEventCompatHandles.Explosion(List.of(new FabricBlock(helper.getLevel(), helper.absolutePos(new BlockPos(0, 1, 0)))), 0.75F);
-            assertExecuted(helper, dispatch(runtime, explosion, helper, null), "explode mutable context");
-            helper.assertTrue(
-                    explosion.yield() == 0.0F,
-                    Component.literal("Expected explosion block yield script to clear the mutable explosion yield.")
-            );
-
-            MutableExplosionPrimeHandle explosionPrime = new MutableExplosionPrimeHandle(1.0F, false);
-            assertExecuted(helper, dispatch(runtime, explosionPrime, helper, null), "explosion prime mutable context");
-            helper.assertTrue(
-                    explosionPrime.radius() == 3.0F,
-                    Component.literal("Expected explosion yield script to update the explosion radius.")
-            );
-
             Creeper creeper = (Creeper) helper.spawnWithNoFreeWill(EntityType.CREEPER, 1.5F, 1.0F, 0.5F);
             assertExecuted(helper, dispatch(runtime, new ExplosiveEntityContextHandle(creeper), helper, null), "explosive entity context");
             helper.assertTrue(
@@ -562,6 +550,57 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         });
     }
 
+    @GameTest
+    public void explosionPrimeMutableProducerExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos woolPos = new BlockPos(2, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/explosion_prime_mutates_radius.sk");
+
+            helper.setBlock(woolPos, Blocks.WHITE_WOOL);
+            Creeper creeper = (Creeper) helper.spawnWithNoFreeWill(EntityType.CREEPER, 1.5F, 1.0F, 0.5F);
+            setIntField(creeper, "maxSwell", 1);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
+
+            helper.assertTrue(
+                    player.interactOn(creeper, InteractionHand.MAIN_HAND).consumesAction(),
+                    Component.literal("Expected creeper ignition to succeed through the real interaction path.")
+            );
+            for (int i = 0; i < 4 && creeper.isAlive(); i++) {
+                creeper.tick();
+            }
+
+            helper.assertBlockPresent(Blocks.WHITE_WOOL, woolPos);
+            helper.assertTrue(
+                    !creeper.isAlive(),
+                    Component.literal("Expected the ignited creeper to reach its real explosion path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void mutableEntityDeathPayloadBackfillExecutesSyntheticScript(GameTestHelper helper) {
+        ensureCustomEventsRegistered();
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/expression/mutable_entity_death_payload_backfill.sk");
+
+            MutableEntityDeathHandle deathHandle = new MutableEntityDeathHandle(List.of(new ItemStack(Items.APPLE)), 1);
+            assertExecuted(helper, dispatch(runtime, deathHandle, helper, null), "entity death context");
+            helper.assertTrue(
+                    deathHandle.drops().size() == 1 && deathHandle.drops().get(0).is(Items.DIAMOND),
+                    Component.literal("Expected drops script to replace the death drops with diamonds.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
     private static void ensureCustomEventsRegistered() {
         if (!CUSTOM_EVENTS_REGISTERED.compareAndSet(false, true)) {
             return;
@@ -571,16 +610,12 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestItemEntityContextEvent.class, "gametest item entity context");
         Skript.registerEvent(GameTestAreaCloudEffectEvent.class, "gametest area cloud effect");
         Skript.registerEvent(GameTestExperienceCooldownChangeEvent.class, "gametest player experience cooldown change");
-        Skript.registerEvent(GameTestExplosionEvent.class, "gametest explode");
-        Skript.registerEvent(GameTestExplodeMutableEvent.class, "gametest explode mutable");
         Skript.registerEvent(GameTestEntityDeathEvent.class, "gametest entity death");
         Skript.registerEvent(GameTestExplosiveEntityContextEvent.class, "gametest explosive entity context");
         Skript.registerEvent(GameTestHangingBreakEvent.class, "gametest hanging break");
         Skript.registerEvent(GameTestHelperContextEvent.class, "gametest helper context");
         Skript.registerEvent(GameTestProjectileContextEvent.class, "gametest projectile context");
-        Skript.registerEvent(GameTestExplosionPrimeMutableEvent.class, "gametest explosion prime mutable");
         Skript.registerEvent(GameTestBlockFertilizeEvent.class, "gametest block fertilize");
-        Skript.registerEvent(GameTestExplosionPrimeEvent.class, "gametest explosion prime");
     }
 
     private int dispatch(SkriptRuntime runtime, Object handle, GameTestHelper helper, @Nullable ServerPlayer player) {
@@ -690,37 +725,7 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         }
     }
 
-    private static final class MutableExplosionPrimeHandle {
-
-        private float radius;
-        private boolean causesFire;
-
-        private MutableExplosionPrimeHandle(float radius, boolean causesFire) {
-            this.radius = radius;
-            this.causesFire = causesFire;
-        }
-
-        public float radius() {
-            return radius;
-        }
-
-        public void setRadius(float radius) {
-            this.radius = radius;
-        }
-
-        public boolean causesFire() {
-            return causesFire;
-        }
-
-        public void setCausesFire(boolean causesFire) {
-            this.causesFire = causesFire;
-        }
-    }
-
     private record HangingBreakHandle(Entity entity, @Nullable Entity remover) {
-    }
-
-    private record ExplosionPrimeHandle(boolean causesFire) {
     }
 
     public static final class GameTestBlockContextEvent extends ch.njol.skript.lang.SkriptEvent {
@@ -835,98 +840,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest player experience cooldown change";
-        }
-    }
-
-    public static final class GameTestExplosionEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.Explosion;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.Explosion.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest explode";
-        }
-    }
-
-    public static final class GameTestExplodeMutableEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.Explosion;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.Explosion.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest explode mutable";
-        }
-    }
-
-    public static final class GameTestExplosionPrimeEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof ExplosionPrimeHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{EXPLOSION_PRIME_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest explosion prime";
-        }
-    }
-
-    public static final class GameTestExplosionPrimeMutableEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof MutableExplosionPrimeHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{EXPLOSION_PRIME_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest explosion prime mutable";
         }
     }
 

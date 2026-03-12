@@ -1,0 +1,2 @@
+on explosion prime:
+    set explosion yield to 0

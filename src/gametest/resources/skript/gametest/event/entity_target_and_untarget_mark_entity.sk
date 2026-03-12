@@ -1,0 +1,5 @@
+on entity target:
+    set test name of entity event-entity to "targeted"
+
+on entity untarget:
+    set test name of entity event-entity to "untargeted"

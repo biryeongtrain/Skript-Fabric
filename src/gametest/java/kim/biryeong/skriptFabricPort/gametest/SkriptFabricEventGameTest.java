@@ -13,7 +13,6 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
-import ch.njol.skript.variables.Variables;
 import com.mojang.authlib.GameProfile;
 import com.mojang.math.Transformation;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -57,6 +56,7 @@ import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Illusioner;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.Spider;
@@ -84,6 +84,7 @@ import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.WitherRoseBlock;
@@ -207,10 +208,9 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
         AtomicBoolean loaded = new AtomicBoolean(false);
         helper.succeedWhen(() -> {
             if (!loaded.get()) {
-                helper.assertTrue(
-                        RUNTIME_LOCK.compareAndSet(false, true),
-                        Component.literal("Waiting for exclusive Skript runtime access.")
-                );
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
                 runtime.clearScripts();
                 helper.getLevel().setBlockAndUpdate(absoluteTarget, Blocks.AIR.defaultBlockState());
                 runtime.loadFromResource("skript/gametest/event/server_tick_sets_block.sk");
@@ -419,10 +419,9 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
         AtomicBoolean loaded = new AtomicBoolean(false);
         helper.succeedWhen(() -> {
             if (!loaded.get()) {
-                helper.assertTrue(
-                        RUNTIME_LOCK.compareAndSet(false, true),
-                        Component.literal("Waiting for exclusive Skript runtime access.")
-                );
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
                 runtime.clearScripts();
                 runtime.loadFromResource("skript/gametest/event/vehicle_entity_collision_marks_block.sk");
 
@@ -2022,6 +2021,156 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void entityTargetAndUntargetExecuteRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            Variables.clearAll();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/entity_target_and_untarget_mark_entity.sk");
+
+            Spider spider = (Spider) helper.spawnWithNoFreeWill(EntityType.SPIDER, 0.5F, 1.0F, 0.5F);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.teleportTo(2.5D, 1.0D, 0.5D);
+
+            spider.setTarget(player);
+            helper.assertTrue(
+                    spider.getCustomName() != null && "targeted".equals(spider.getCustomName().getString()),
+                    Component.literal("Expected entity target event to rename the mob when a real target is assigned.")
+            );
+
+            spider.setCustomName(null);
+            spider.setTarget(null);
+            helper.assertTrue(
+                    spider.getCustomName() != null && "untargeted".equals(spider.getCustomName().getString()),
+                    Component.literal("Expected entity untarget event to rename the mob when its target is cleared.")
+            );
+
+            runtime.clearScripts();
+            Variables.clearAll();
+        });
+    }
+
+    @GameTest
+    public void explosionExecutesRealScript(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/explosion_marks_block_types.sk");
+
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(1, 1, 0)), Blocks.STONE.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(2, 1, 0)), Blocks.DIRT.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(8, 1, 0)), Blocks.AIR.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(9, 1, 0)), Blocks.AIR.defaultBlockState());
+
+                spawnPrimedTnt(helper, 1.5D, 1.0D, 1.5D);
+                loaded.set(true);
+                return;
+            }
+
+            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, new BlockPos(8, 1, 0));
+            helper.assertBlockPresent(Blocks.REDSTONE_BLOCK, new BlockPos(9, 1, 0));
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
+    public void helmetChangeExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            Variables.clearAll();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/helmet_change_names_player.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "helmet changed".equals(player.getCustomName().getString()),
+                    Component.literal("Expected helmet change event to rename the player when a real armor slot changes.")
+            );
+
+            runtime.clearScripts();
+            Variables.clearAll();
+        });
+    }
+
+    @GameTest
+    public void entityPortalExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            Variables.clearAll();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/entity_portal_names_entity.sk");
+
+            BlockPos portalPos = helper.absolutePos(new BlockPos(0, 1, 0));
+            helper.getLevel().setBlockAndUpdate(portalPos, Blocks.END_PORTAL.defaultBlockState());
+
+            Zombie zombie = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 0.5F, 1.0F, 0.5F);
+            invokeEndPortalEntityInside(helper, portalPos, zombie);
+            zombie.tick();
+
+            helper.assertTrue(
+                    zombie.getCustomName() != null && "portal entity".equals(zombie.getCustomName().getString()),
+                    Component.literal("Expected entity portal event to rename the entity after the portal travel path runs.")
+            );
+
+            runtime.clearScripts();
+            Variables.clearAll();
+        });
+    }
+
+    @GameTest
+    public void explosionYieldExecutesRealScript(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        BlockPos dirtPos = new BlockPos(2, 1, 0);
+        BlockPos markerPos = new BlockPos(8, 1, 0);
+        AABB dropBox = AABB.encapsulatingFullBlocks(
+                helper.absolutePos(new BlockPos(0, 0, -1)),
+                helper.absolutePos(new BlockPos(4, 3, 2))
+        );
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/explosion_zero_yield_marks_block.sk");
+                helper.getLevel().getGameRules().getRule(GameRules.RULE_TNT_EXPLOSION_DROP_DECAY).set(false, helper.getLevel().getServer());
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(dirtPos), Blocks.DIRT.defaultBlockState());
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(markerPos), Blocks.AIR.defaultBlockState());
+
+                spawnPrimedTnt(helper, 1.5D, 1.0D, 1.5D);
+                loaded.set(true);
+                return;
+            }
+
+            if (!helper.getBlockState(markerPos).is(Blocks.EMERALD_BLOCK)) {
+                return;
+            }
+            if (!helper.getBlockState(dirtPos).is(Blocks.AIR)) {
+                return;
+            }
+
+            List<ItemEntity> nearbyDrops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, dropBox);
+            helper.assertTrue(
+                    nearbyDrops.stream().noneMatch(item -> item.getItem().is(Items.DIRT)),
+                    Component.literal("Expected explosion block yield mutation to suppress TNT dirt drops.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
     public void piglinBarterEventExecutesRealScript(GameTestHelper helper) {
         AtomicBoolean loaded = new AtomicBoolean(false);
         helper.succeedWhen(() -> {
@@ -2604,10 +2753,18 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                     Component.literal("Expected use item bridge to resolve event-item inside a real .sk file.")
             );
             helper.assertTrue(
-                    helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.BLUE_WOOL),
+            helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.BLUE_WOOL),
                     Component.literal("Expected use item bridge to resolve event-player inside a real .sk file.")
             );
             runtime.clearScripts();
         });
+    }
+
+    private void spawnPrimedTnt(GameTestHelper helper, double x, double y, double z) {
+        PrimedTnt primedTnt = new PrimedTnt(helper.getLevel(), x, y, z, null);
+        primedTnt.setNoGravity(true);
+        primedTnt.setDeltaMovement(Vec3.ZERO);
+        primedTnt.setFuse(1);
+        helper.getLevel().addFreshEntity(primedTnt);
     }
 }

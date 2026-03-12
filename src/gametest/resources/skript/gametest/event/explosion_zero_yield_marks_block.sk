@@ -1,0 +1,3 @@
+on explode:
+    set explosion block yield to 0
+    set test block at 8 1 0 to emerald_block

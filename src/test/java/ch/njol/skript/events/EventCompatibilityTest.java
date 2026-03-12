@@ -497,19 +497,26 @@ final class EventCompatibilityTest {
     }
 
     @Test
-    void entityTargetEventChecksUntarget() {
-        EvtEntityTarget event = parseEvent("entity untarget", EvtEntityTarget.class);
+    void entityTargetEventChecksTargetAndUntargetSemantics() throws Exception {
+        EvtEntityTarget targetEvent = parseEvent("entity target", EvtEntityTarget.class);
+        EvtEntityTarget untargetEvent = parseEvent("entity untarget", EvtEntityTarget.class);
+        Cow cow = allocateEntity(Cow.class, net.minecraft.world.entity.EntityType.COW);
+        Cow target = allocateEntity(Cow.class, net.minecraft.world.entity.EntityType.COW);
 
-        assertEquals("entity untarget", event.toString(null, false));
-        assertEquals(
-                true,
-                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        new FabricEventCompatHandles.EntityTarget(null),
+        assertEquals("entity target", targetEvent.toString(null, false));
+        assertTrue(targetEvent.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityTarget(cow, target),
+                null,
+                null,
+                null
+        )));
+        assertEquals("entity untarget", untargetEvent.toString(null, false));
+        assertTrue(untargetEvent.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.EntityTarget(cow, null),
                         null,
                         null,
                         null
-                ))
-        );
+                )));
     }
 
     @Test
@@ -660,14 +667,27 @@ final class EventCompatibilityTest {
     }
 
     @Test
-    void playerArmorChangeEventChecksHelmetVariant() {
-        EvtPlayerArmorChange event = parseEvent("helmet change", EvtPlayerArmorChange.class);
+    void playerArmorChangeEventMapsRequestedArmorSlot() {
+        EvtPlayerArmorChange helmet = parseEvent("helmet change", EvtPlayerArmorChange.class);
+        EvtPlayerArmorChange chestplate = parseEvent("chestplate change", EvtPlayerArmorChange.class);
 
-        assertEquals("helmet changed", event.toString(null, false));
+        assertEquals("helmet changed", helmet.toString(null, false));
+        assertTrue(helmet.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.HEAD),
+                null,
+                null,
+                null
+        )));
+        assertTrue(chestplate.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.CHEST),
+                null,
+                null,
+                null
+        )));
         assertEquals(
-                true,
-                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.HEAD),
+                false,
+                helmet.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.CHEST),
                         null,
                         null,
                         null
@@ -684,6 +704,22 @@ final class EventCompatibilityTest {
                 true,
                 event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
                         new FabricEventCompatHandles.Portal(null, false),
+                        null,
+                        null,
+                        null
+                ))
+        );
+    }
+
+    @Test
+    void portalEventParsesPlayerVariant() {
+        EvtPortal event = parseEvent("player portal", EvtPortal.class);
+
+        assertEquals("player portal", event.toString(null, false));
+        assertEquals(
+                true,
+                event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                        new FabricEventCompatHandles.Portal(null, true),
                         null,
                         null,
                         null
