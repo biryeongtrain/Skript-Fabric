@@ -30,7 +30,9 @@ import java.util.NoSuchElementException;
 public class ExprNumbers extends SimpleExpression<Number> {
     static {
         Skript.registerExpression(ExprNumbers.class, Number.class,
-                "[(all [[of] the]|the)] (numbers|1¦integers|2¦decimals) (between|from) %number% (and|to) %number%");
+                "[(all [[of] the]|the)] numbers (between|from) %number% (and|to) %number%",
+                "[(all [[of] the]|the)] integers (between|from) %number% (and|to) %number%",
+                "[(all [[of] the]|the)] decimals (between|from) %number% (and|to) %number%");
     }
 
     @SuppressWarnings("null")
@@ -44,7 +46,7 @@ public class ExprNumbers extends SimpleExpression<Number> {
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         start = (Expression<Number>) exprs[0];
         end = (Expression<Number>) exprs[1];
-        mode = parseResult.mark;
+        mode = parseResult.mark != 0 ? parseResult.mark : matchedPattern;
         return true;
     }
 

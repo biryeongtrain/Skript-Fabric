@@ -193,6 +193,7 @@ public final class SkriptFabricBootstrap {
             try {
                 StructOptions.register();
                 SecIf.register();
+                forceInitialize(ch.njol.skript.sections.SecLoop.class);
                 if (!hasCoreProperties()) {
                     Property.registerDefaultProperties();
                 }
@@ -1029,6 +1030,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprNamed.class);
         forceInitialize(ch.njol.skript.expressions.ExprNoDamageTicks.class);
         forceInitialize(ch.njol.skript.expressions.ExprNode.class);
+        forceInitialize(ch.njol.skript.expressions.ExprNumbers.class);
         forceInitialize(ch.njol.skript.expressions.ExprOfflinePlayers.class);
         forceInitialize(ch.njol.skript.expressions.ExprOnlinePlayersCount.class);
         forceInitialize(ch.njol.skript.expressions.ExprOps.class);
