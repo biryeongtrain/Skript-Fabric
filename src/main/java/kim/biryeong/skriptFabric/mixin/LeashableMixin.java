@@ -2,6 +2,7 @@ package kim.biryeong.skriptFabric.mixin;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Leashable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,7 +15,8 @@ public interface LeashableMixin {
     @Inject(method = "dropLeash(Lnet/minecraft/world/entity/Entity;ZZ)V", at = @At("HEAD"))
     private static void skript$dispatchUnleash(Entity entity, boolean sendPacket, boolean dropLeash, CallbackInfo ci) {
         if (entity.level() instanceof ServerLevel serverLevel) {
-            SkriptFabricEventBridge.dispatchEntityUnleash(serverLevel, entity, null, dropLeash);
+            Entity leashHolder = entity instanceof Leashable leashable ? leashable.getLeashHolder() : null;
+            SkriptFabricEventBridge.dispatchEntityUnleash(serverLevel, entity, leashHolder, dropLeash);
         }
     }
 }

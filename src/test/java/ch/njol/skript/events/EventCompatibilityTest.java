@@ -16,6 +16,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.phys.Vec3;
@@ -648,6 +649,20 @@ final class EventCompatibilityTest {
                 null,
                 null,
                 null
+        )));
+    }
+
+    @Test
+    void playerLeashEventChecksRuntimePlayerUnleashHandle() throws ReflectiveOperationException {
+        EvtLeash event = parseEvent("player unleashing", EvtLeash.class);
+        Cow cow = allocateEntity(Cow.class, net.minecraft.world.entity.EntityType.COW);
+        ServerPlayer player = (ServerPlayer) unsafe().allocateInstance(ServerPlayer.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEntityUnleashHandle(cow, player, true),
+                null,
+                null,
+                player
         )));
     }
 

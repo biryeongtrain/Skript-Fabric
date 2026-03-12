@@ -58,6 +58,7 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
@@ -2077,6 +2078,43 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             runtime.clearScripts();
             Variables.clearAll();
             RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
+    public void explosionPrimeProducerExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            Variables.clearAll();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/explosion_prime_records_default_radius.sk");
+
+            Creeper creeper = (Creeper) helper.spawnWithNoFreeWill(EntityType.CREEPER, 4.5F, 1.0F, 0.5F);
+            setIntField(creeper, "maxSwell", 1);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
+
+            helper.assertTrue(
+                    player.interactOn(creeper, InteractionHand.MAIN_HAND).consumesAction(),
+                    Component.literal("Expected creeper ignition to succeed through the real interaction path.")
+            );
+            for (int i = 0; i < 4 && creeper.isAlive(); i++) {
+                creeper.tick();
+            }
+
+            Object value = Variables.getVariable("gametest::explosion_prime_radius", null, false);
+            helper.assertTrue(
+                    value instanceof Number number && Math.abs(number.floatValue() - 3.0F) < 0.001F,
+                    Component.literal("Expected real explosion prime producer to expose the default creeper radius.")
+            );
+            helper.assertTrue(
+                    !creeper.isAlive(),
+                    Component.literal("Expected the ignited creeper to reach its real explosion path.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
         });
     }
 

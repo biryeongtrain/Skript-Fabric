@@ -1,0 +1,2 @@
+on walking on dirt:
+    set test name of entity event-player to "walked on dirt"

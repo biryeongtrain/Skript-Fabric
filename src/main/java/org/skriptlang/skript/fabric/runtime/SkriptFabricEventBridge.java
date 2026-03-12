@@ -1,8 +1,11 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import com.mojang.authlib.GameProfile;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Collection;
@@ -741,6 +744,29 @@ public final class SkriptFabricEventBridge {
                 level,
                 player
         ));
+        dispatchMoveOn(player, level, fromPosition, toPosition);
+    }
+
+    static void dispatchMoveOn(ServerPlayer player, ServerLevel level, Vec3 fromPosition, Vec3 toPosition) {
+        BlockPos fromBlock = moveOnBlockPos(fromPosition);
+        BlockPos toBlock = moveOnBlockPos(toPosition);
+        if (fromBlock.equals(toBlock)) {
+            return;
+        }
+        BlockState blockState = level.getBlockState(toBlock);
+        if (blockState.isAir()) {
+            return;
+        }
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.MoveOn(blockState),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    static BlockPos moveOnBlockPos(Vec3 position) {
+        return BlockPos.containing(position.x, Math.ceil(position.y) - 1.0D, position.z);
     }
 
     public static void dispatchPlayerCommandSend(ServerPlayer player, Collection<String> commands) {
@@ -757,6 +783,16 @@ public final class SkriptFabricEventBridge {
         ServerLevel level = player.level();
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.ResourcePackResponse(status),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchFirstJoin(ServerPlayer player, boolean firstJoin) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.firstJoin(firstJoin),
                 level.getServer(),
                 level,
                 player
@@ -886,6 +922,10 @@ public final class SkriptFabricEventBridge {
                 level,
                 player
         ));
+    }
+
+    public static boolean isFirstJoin(Path playerDataDirectory, GameProfile profile) {
+        return profile.getId() != null && !Files.exists(playerDataDirectory.resolve(profile.getId() + ".dat"));
     }
 
     public static void dispatchArmorChange(ServerPlayer player, FabricEventCompatHandles.ArmorSlot slot) {

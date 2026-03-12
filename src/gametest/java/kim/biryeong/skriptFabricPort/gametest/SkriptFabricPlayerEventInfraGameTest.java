@@ -6,6 +6,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.level.GameType;
@@ -14,6 +15,23 @@ import net.minecraft.world.phys.Vec3;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 
 public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFabricGameTestSupport {
+
+    @GameTest
+    public void firstJoinEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/first_join_names_player.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "first join".equals(player.getCustomName().getString()),
+                    Component.literal("Expected first join event script to rename the player during the real join path.")
+            );
+            runtime.clearScripts();
+        });
+    }
 
     @GameTest
     public void resourcePackAcceptedEventExecutesRealScript(GameTestHelper helper) {
@@ -62,6 +80,37 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
             helper.assertTrue(
                     player.getCustomName() != null && "move hook".equals(player.getCustomName().getString()),
                     Component.literal("Expected move event script to mutate the moving player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void walkingOnDirtEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_walk_on_dirt_names_player.sk");
+
+            BlockPos startAbsolute = helper.absolutePos(new BlockPos(13, 1, 1));
+            BlockPos targetAbsolute = startAbsolute.east();
+            helper.getLevel().setBlockAndUpdate(startAbsolute, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(targetAbsolute, Blocks.DIRT.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(startAbsolute.getX() + 0.5D, startAbsolute.getY() + 1.0D, startAbsolute.getZ() + 0.5D);
+
+            sendPlayerMove(
+                    player,
+                    new Vec3(targetAbsolute.getX() + 0.5D, targetAbsolute.getY() + 1.0D, targetAbsolute.getZ() + 0.5D),
+                    player.getYRot(),
+                    player.getXRot()
+            );
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "walked on dirt".equals(player.getCustomName().getString()),
+                    Component.literal("Expected walking-on-dirt event script to mutate the moving player after entering dirt.")
             );
             runtime.clearScripts();
         });
@@ -206,6 +255,25 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
                     player.getCustomName() != null && "xp down".equals(player.getCustomName().getString()),
                     Component.literal("Expected experience-decrease event script to rename the player.")
             );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void respawnEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/player_respawn_marks_block.sk");
+
+            BlockPos markerRelative = new BlockPos(19, 1, 1);
+            BlockPos markerAbsolute = helper.absolutePos(markerRelative);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            helper.getLevel().getServer().getPlayerList().respawn(player, false, Entity.RemovalReason.KILLED);
+
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, markerRelative);
             runtime.clearScripts();
         });
     }

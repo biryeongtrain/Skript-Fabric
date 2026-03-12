@@ -1,0 +1,2 @@
+on explosion prime:
+    set {gametest::explosion_prime_radius} to explosion yield

@@ -1,0 +1,2 @@
+on first join:
+    set test name of player to "first join"

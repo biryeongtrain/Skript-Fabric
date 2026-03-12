@@ -45,6 +45,7 @@
     "LootTableMixin",
     "MobTargetMixin",
     "PlayerExperienceMixin",
+    "PlayerListFirstJoinMixin",
     "PlayerListRespawnMixin",
     "PlayerPotionCauseMixin",
     "PiglinAiMixin",
