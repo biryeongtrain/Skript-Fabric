@@ -1,0 +1,2 @@
+on block mine:
+    set test block above event-block to emerald_block

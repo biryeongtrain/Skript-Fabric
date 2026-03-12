@@ -416,6 +416,35 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void blockMineEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/block_mine_sets_block.sk");
+
+            BlockPos brokenAbsolute = helper.absolutePos(new BlockPos(3, 1, 0));
+            BlockPos markerAbsolute = brokenAbsolute.above();
+
+            helper.getLevel().setBlockAndUpdate(brokenAbsolute, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(brokenAbsolute.getX() + 0.5D, brokenAbsolute.getY(), brokenAbsolute.getZ() + 0.5D);
+
+            helper.assertTrue(
+                    player.gameMode.destroyBlock(brokenAbsolute),
+                    Component.literal("Expected mock server player to mine the dropped test block.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected the public mine syntax to execute through the real block break path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void entityShootBowEventExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
