@@ -43,7 +43,7 @@ public class ExprUnleashReason extends SimpleExpression<String> implements Event
             return null;
         }
         return switch (handle.action()) {
-            case LEASH -> null;
+            case LEASH, PLAYER_LEASH -> null;
             case UNLEASH, PLAYER_UNLEASH -> new String[]{handle.action().name().toLowerCase(Locale.ENGLISH)};
         };
     }

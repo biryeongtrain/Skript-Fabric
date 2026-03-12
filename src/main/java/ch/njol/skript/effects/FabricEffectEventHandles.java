@@ -3,9 +3,11 @@ package ch.njol.skript.effects;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricExplosionPrimeEventHandle;
 
 final class FabricEffectEventHandles {
@@ -48,18 +50,25 @@ final class FabricEffectEventHandles {
         }
     }
 
-    static final class EntityDeath {
+    static final class EntityDeath implements FabricEntityEventHandle {
 
+        private final LivingEntity entity;
         private final List<ItemStack> drops;
         private int droppedExp;
 
-        EntityDeath() {
-            this(new ArrayList<>(), 0);
+        EntityDeath(LivingEntity entity) {
+            this(entity, new ArrayList<>(), 0);
         }
 
-        EntityDeath(List<ItemStack> drops, int droppedExp) {
+        EntityDeath(LivingEntity entity, List<ItemStack> drops, int droppedExp) {
+            this.entity = entity;
             this.drops = drops;
             this.droppedExp = droppedExp;
+        }
+
+        @Override
+        public LivingEntity entity() {
+            return entity;
         }
 
         public List<ItemStack> drops() {

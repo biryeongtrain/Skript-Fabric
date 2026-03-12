@@ -73,6 +73,7 @@ public final class FabricEventCompatHandles {
 
     public enum LeashAction {
         LEASH,
+        PLAYER_LEASH,
         UNLEASH,
         PLAYER_UNLEASH
     }

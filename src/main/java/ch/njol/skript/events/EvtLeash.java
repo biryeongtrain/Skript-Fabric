@@ -30,11 +30,14 @@ public final class EvtLeash extends SkriptEvent {
     @SuppressWarnings("unchecked")
     public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
         types = args[0] == null ? null : ((Literal<EntityData<?>>) args[0]).getAll(null);
-        action = FabricEventCompatHandles.LeashAction.LEASH;
-        if (parseResult.hasTag("un")) {
-            action = parseResult.hasTag("player")
+        if (parseResult.hasTag("player")) {
+            action = parseResult.hasTag("un")
                     ? FabricEventCompatHandles.LeashAction.PLAYER_UNLEASH
-                    : FabricEventCompatHandles.LeashAction.UNLEASH;
+                    : FabricEventCompatHandles.LeashAction.PLAYER_LEASH;
+        } else {
+            action = parseResult.hasTag("un")
+                    ? FabricEventCompatHandles.LeashAction.UNLEASH
+                    : FabricEventCompatHandles.LeashAction.LEASH;
         }
         return true;
     }

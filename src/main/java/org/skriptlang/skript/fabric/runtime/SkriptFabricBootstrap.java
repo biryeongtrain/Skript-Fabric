@@ -1106,8 +1106,10 @@ public final class SkriptFabricBootstrap {
 
     private static void registerRecoveredEventActivationBundle() {
         ch.njol.skript.events.EvtAtTime.register();
+        ch.njol.skript.events.EvtAreaCloudEffect.register();
         ch.njol.skript.events.EvtBeaconEffect.register();
         ch.njol.skript.events.EvtBeaconToggle.register();
+        ch.njol.skript.events.EvtBlockFertilize.register();
         ch.njol.skript.events.EvtBlock.register();
         ch.njol.skript.events.EvtBookEdit.register();
         ch.njol.skript.events.EvtBookSign.register();
@@ -1121,10 +1123,12 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtExperienceSpawn.register();
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();
+        ch.njol.skript.events.EvtLeash.register();
         ch.njol.skript.events.EvtPlayerEggThrow.register();
         ch.njol.skript.events.EvtPeriodical.register();
         ch.njol.skript.events.EvtScript.register();
         ch.njol.skript.events.EvtSkript.register();
+        ch.njol.skript.events.EvtWorld.register();
     }
 
     private static void forceInitialize(Class<?> type) {

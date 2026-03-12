@@ -14,8 +14,17 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unchecked")
 public final class EvtEntity extends SkriptEvent {
 
+    private static final @Nullable Class<?> ENTITY_DEATH_EVENT_CLASS = resolveEntityDeathEventClass();
     private @Nullable EntityData<?>[] types;
     private boolean spawn;
+
+    private static @Nullable Class<?> resolveEntityDeathEventClass() {
+        try {
+            return Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$EntityDeath");
+        } catch (ClassNotFoundException ignored) {
+            return null;
+        }
+    }
 
     public static synchronized void register() {
         EventClassInfoRegistrar.register();
@@ -53,13 +62,24 @@ public final class EvtEntity extends SkriptEvent {
 
     @Override
     public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-        if (!(event.handle() instanceof FabricEventCompatHandles.EntityLifecycle handle) || handle.spawn() != spawn) {
-            return false;
+        Entity entity;
+        if (spawn) {
+            if (!(event.handle() instanceof FabricEventCompatHandles.EntityLifecycle handle) || !handle.spawn()) {
+                return false;
+            }
+            entity = handle.entity();
+        } else {
+            if (!(event.handle() instanceof org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle handle)) {
+                return false;
+            }
+            entity = handle.entity();
+            if (!(entity instanceof LivingEntity)) {
+                return false;
+            }
         }
         if (types == null) {
             return true;
         }
-        Entity entity = handle.entity();
         for (EntityData<?> type : types) {
             if (type != null && type.isInstance(entity)) {
                 return true;
@@ -70,7 +90,10 @@ public final class EvtEntity extends SkriptEvent {
 
     @Override
     public Class<?>[] getEventClasses() {
-        return new Class<?>[]{FabricEventCompatHandles.EntityLifecycle.class};
+        if (spawn || ENTITY_DEATH_EVENT_CLASS == null) {
+            return new Class<?>[]{FabricEventCompatHandles.EntityLifecycle.class};
+        }
+        return new Class<?>[]{ENTITY_DEATH_EVENT_CLASS};
     }
 
     @Override

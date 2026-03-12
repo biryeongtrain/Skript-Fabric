@@ -6,8 +6,10 @@ public final class SimpleEvents {
     }
 
     public static synchronized void register() {
+        EvtAreaCloudEffect.register();
         EvtBeaconEffect.register();
         EvtBeaconToggle.register();
+        EvtBlockFertilize.register();
         EvtBlock.register();
         EvtBookEdit.register();
         EvtBookSign.register();
@@ -18,6 +20,7 @@ public final class SimpleEvents {
         EvtEntityTransform.register();
         EvtExplosionPrime.register();
         EvtExperienceChange.register();
+        EvtExperienceCooldownChange.register();
         EvtExperienceSpawn.register();
         EvtFirstJoin.register();
         EvtFirework.register();

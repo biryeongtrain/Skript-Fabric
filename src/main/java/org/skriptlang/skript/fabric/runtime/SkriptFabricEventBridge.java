@@ -81,8 +81,12 @@ public final class SkriptFabricEventBridge {
             Collections.synchronizedMap(new IdentityHashMap<>());
     private static final @Nullable Constructor<?> PLAYER_RESPAWN_EFFECT_HANDLE_CTOR = resolvePlayerRespawnEffectHandleCtor();
     private static final @Nullable Method PLAYER_RESPAWN_EFFECT_LOCATION = resolvePlayerRespawnEffectMethod("respawnLocation");
+    private static final @Nullable Constructor<?> ENTITY_DEATH_EFFECT_HANDLE_CTOR = resolveEntityDeathEffectHandleCtor();
+    private static final @Nullable Method ENTITY_DEATH_EFFECT_DROPS = resolveEntityDeathEffectMethod("drops");
+    private static final @Nullable Method ENTITY_DEATH_EFFECT_DROPPED_EXP = resolveEntityDeathEffectMethod("droppedExp");
     private static final @Nullable Constructor<?> EXPLOSION_PRIME_EFFECT_HANDLE_CTOR = resolveExplosionPrimeEffectHandleCtor();
     private static final @Nullable Method EXPLOSION_PRIME_EFFECT_RADIUS = resolveExplosionPrimeEffectMethod("radius");
+    private static final ThreadLocal<@Nullable DeathCapture> ACTIVE_DEATH_CAPTURE = new ThreadLocal<>();
     private static volatile boolean registered;
 
     private SkriptFabricEventBridge() {
@@ -288,6 +292,55 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void beginDeathCapture(LivingEntity entity, ServerLevel level, DamageSource source) {
+        ACTIVE_DEATH_CAPTURE.set(new DeathCapture(entity, level, source));
+    }
+
+    public static boolean captureDeathDrop(Entity entity, ItemStack stack) {
+        DeathCapture capture = ACTIVE_DEATH_CAPTURE.get();
+        if (capture == null || capture.entity() != entity || stack.isEmpty()) {
+            return false;
+        }
+        capture.drops().add(stack.copy());
+        return true;
+    }
+
+    public static boolean captureDeathExperience(LivingEntity entity, int amount) {
+        DeathCapture capture = ACTIVE_DEATH_CAPTURE.get();
+        if (capture == null || capture.entity() != entity) {
+            return false;
+        }
+        capture.addDroppedExp(amount);
+        return true;
+    }
+
+    public static void finishDeathCapture(LivingEntity entity) {
+        DeathCapture capture = ACTIVE_DEATH_CAPTURE.get();
+        ACTIVE_DEATH_CAPTURE.remove();
+        if (capture == null || capture.entity() != entity) {
+            return;
+        }
+
+        Object handle = createEntityDeathHandle(entity, capture.drops(), capture.droppedExp());
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                capture.level().getServer(),
+                capture.level(),
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+
+        for (ItemStack drop : entityDeathDrops(handle)) {
+            if (!drop.isEmpty()) {
+                entity.spawnAtLocation(capture.level(), drop.copy());
+            }
+        }
+
+        int droppedExp = entityDeathDroppedExp(handle);
+        if (droppedExp > 0) {
+            ExperienceOrb.award(capture.level(), entity.position(), droppedExp);
+        }
+    }
+
     private static void dispatchEntityTransform(Mob previous, Mob converted, net.minecraft.world.entity.ConversionParams conversionParams) {
         if (!(previous.level() instanceof ServerLevel serverLevel)) {
             return;
@@ -304,6 +357,15 @@ public final class SkriptFabricEventBridge {
     public static void dispatchBrewingFuel(ServerLevel level, BlockPos pos, BrewingStandBlockEntity brewingStand, boolean willConsume) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricBrewingFuelHandle(level, pos.immutable(), brewingStand, willConsume),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchAreaCloudEffect(ServerLevel level, List<LivingEntity> affectedEntities) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.AreaEffectCloudApply(List.copyOf(affectedEntities)),
                 level.getServer(),
                 level,
                 null
@@ -384,6 +446,28 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchPrepareCraft(ServerLevel level, BlockPos pos, ServerPlayer player, ItemStack result) {
+        dispatchCompatItem(
+                level,
+                pos.immutable(),
+                FabricEventCompatHandles.ItemAction.PREPARE_CRAFT,
+                result,
+                false,
+                player
+        );
+    }
+
+    public static void dispatchCraft(ServerPlayer player, ItemStack result) {
+        dispatchCompatItem(
+                player.level(),
+                player.blockPosition().immutable(),
+                FabricEventCompatHandles.ItemAction.CRAFT,
+                result,
+                false,
+                player
+        );
+    }
+
     public static void dispatchEntityShootBow(ServerLevel level, LivingEntity entity, @Nullable ItemStack consumable) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.EntityShootBow(entity, consumable == null ? null : consumable.copy()),
@@ -433,6 +517,21 @@ public final class SkriptFabricEventBridge {
                 level.getServer(),
                 level,
                 actor instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchEntityLeash(ServerLevel level, Entity entity, @Nullable Entity actor) {
+        ServerPlayer serverPlayer = actor instanceof ServerPlayer player ? player : null;
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Leash(
+                        entity,
+                        serverPlayer != null
+                                ? FabricEventCompatHandles.LeashAction.PLAYER_LEASH
+                                : FabricEventCompatHandles.LeashAction.LEASH
+                ),
+                level.getServer(),
+                level,
+                serverPlayer
         ));
     }
 
@@ -511,6 +610,34 @@ public final class SkriptFabricEventBridge {
         dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.PLACE, state, itemStack, false, player);
     }
 
+    public static void dispatchBlockBurn(ServerLevel level, BlockPos pos, @Nullable BlockState state) {
+        dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.BURN, state, null, false, null);
+    }
+
+    public static void dispatchBlockFade(ServerLevel level, BlockPos pos, @Nullable BlockState state) {
+        dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.FADE, state, null, false, null);
+    }
+
+    public static void dispatchBlockForm(ServerLevel level, BlockPos pos, @Nullable BlockState state) {
+        dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.FORM, state, null, false, null);
+    }
+
+    public static void dispatchBlockDrop(
+            ServerLevel level,
+            BlockPos pos,
+            @Nullable BlockState state,
+            @Nullable ServerPlayer player
+    ) {
+        ItemStack itemStack = null;
+        if (state != null) {
+            net.minecraft.world.item.Item item = state.getBlock().asItem();
+            if (item != null) {
+                itemStack = new ItemStack(item);
+            }
+        }
+        dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.DROP, state, itemStack, true, player);
+    }
+
     public static void dispatchEntityBlockChange(
             ServerLevel level,
             BlockPos pos,
@@ -555,6 +682,15 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchBlockFertilize(ServerLevel level, java.util.List<FabricBlock> blocks) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BlockFertilize(List.copyOf(blocks)),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
     public static void dispatchPressurePlate(ServerLevel level, BlockPos pos, boolean tripwire) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.PressurePlate(level, pos.immutable(), tripwire),
@@ -576,6 +712,65 @@ public final class SkriptFabricEventBridge {
                 level.getServer(),
                 level,
                 vehicle instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchPlayerItemDrop(ServerPlayer player, ItemEntity itemEntity) {
+        if (!(itemEntity.level() instanceof ServerLevel level)) {
+            return;
+        }
+        dispatchCompatItem(
+                level,
+                itemEntity.blockPosition().immutable(),
+                FabricEventCompatHandles.ItemAction.DROP,
+                itemEntity.getItem(),
+                false,
+                player
+        );
+    }
+
+    public static void dispatchPlayerItemPickup(ServerPlayer player, ItemEntity itemEntity, ItemStack itemStack) {
+        if (!(itemEntity.level() instanceof ServerLevel level)) {
+            return;
+        }
+        dispatchCompatItem(
+                level,
+                itemEntity.blockPosition().immutable(),
+                FabricEventCompatHandles.ItemAction.PICKUP,
+                itemStack,
+                false,
+                player
+        );
+    }
+
+    public static void dispatchItemDispense(ServerLevel level, BlockPos pos, ItemStack itemStack) {
+        dispatchCompatItem(
+                level,
+                pos.immutable(),
+                FabricEventCompatHandles.ItemAction.DISPENSE,
+                itemStack,
+                false,
+                null
+        );
+    }
+
+    public static void dispatchPlayerItemConsume(ServerPlayer player, ItemStack itemStack) {
+        dispatchCompatItem(
+                player.level(),
+                player.blockPosition().immutable(),
+                FabricEventCompatHandles.ItemAction.CONSUME,
+                itemStack,
+                false,
+                player
+        );
+    }
+
+    public static void dispatchWorldSave(ServerLevel level) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.World(level, FabricEventCompatHandles.WorldAction.SAVE),
+                level.getServer(),
+                level,
+                null
         ));
     }
 
@@ -924,6 +1119,16 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchExperienceCooldownChange(ServerPlayer player, @Nullable String reason) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ExperienceCooldownChange(reason),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
     public static boolean isFirstJoin(Path playerDataDirectory, GameProfile profile) {
         return profile.getId() != null && !Files.exists(playerDataDirectory.resolve(profile.getId() + ".dat"));
     }
@@ -1072,6 +1277,67 @@ public final class SkriptFabricEventBridge {
         }
     }
 
+    private static Object createEntityDeathHandle(LivingEntity entity, List<ItemStack> drops, int droppedExp) {
+        if (ENTITY_DEATH_EFFECT_HANDLE_CTOR == null) {
+            throw new IllegalStateException("Entity death effect handle constructor is unavailable.");
+        }
+        try {
+            return ENTITY_DEATH_EFFECT_HANDLE_CTOR.newInstance(entity, new ArrayList<>(drops), droppedExp);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to create entity death effect handle.", exception);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<ItemStack> entityDeathDrops(Object handle) {
+        if (ENTITY_DEATH_EFFECT_DROPS == null || !ENTITY_DEATH_EFFECT_DROPS.getDeclaringClass().isInstance(handle)) {
+            throw new IllegalStateException("Entity death effect drops accessor is unavailable.");
+        }
+        try {
+            Object value = ENTITY_DEATH_EFFECT_DROPS.invoke(handle);
+            if (!(value instanceof List<?> list)) {
+                return List.of();
+            }
+            return (List<ItemStack>) list;
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to read entity death drops.", exception);
+        }
+    }
+
+    private static int entityDeathDroppedExp(Object handle) {
+        if (ENTITY_DEATH_EFFECT_DROPPED_EXP == null || !ENTITY_DEATH_EFFECT_DROPPED_EXP.getDeclaringClass().isInstance(handle)) {
+            throw new IllegalStateException("Entity death effect dropped-exp accessor is unavailable.");
+        }
+        try {
+            Object value = ENTITY_DEATH_EFFECT_DROPPED_EXP.invoke(handle);
+            return value instanceof Number number ? number.intValue() : 0;
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to read entity death dropped exp.", exception);
+        }
+    }
+
+    private static @Nullable Constructor<?> resolveEntityDeathEffectHandleCtor() {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$EntityDeath");
+            Constructor<?> constructor = type.getDeclaredConstructor(LivingEntity.class, List.class, int.class);
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static @Nullable Method resolveEntityDeathEffectMethod(String methodName) {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$EntityDeath");
+            Method method = type.getMethod(methodName);
+            method.setAccessible(true);
+            return method;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
     public static float dispatchExplosionPrime(ServerLevel level, float radius, boolean causesFire) {
         Object handle = createExplosionPrimeHandle(radius, causesFire);
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
@@ -1125,6 +1391,42 @@ public final class SkriptFabricEventBridge {
             return method;
         } catch (ReflectiveOperationException ignored) {
             return null;
+        }
+    }
+
+    private static final class DeathCapture {
+
+        private final LivingEntity entity;
+        private final ServerLevel level;
+        @SuppressWarnings("unused")
+        private final DamageSource source;
+        private final List<ItemStack> drops = new ArrayList<>();
+        private int droppedExp;
+
+        private DeathCapture(LivingEntity entity, ServerLevel level, DamageSource source) {
+            this.entity = entity;
+            this.level = level;
+            this.source = source;
+        }
+
+        private LivingEntity entity() {
+            return entity;
+        }
+
+        private ServerLevel level() {
+            return level;
+        }
+
+        private List<ItemStack> drops() {
+            return drops;
+        }
+
+        private int droppedExp() {
+            return droppedExp;
+        }
+
+        private void addDroppedExp(int amount) {
+            droppedExp = Math.max(0, droppedExp + amount);
         }
     }
 
