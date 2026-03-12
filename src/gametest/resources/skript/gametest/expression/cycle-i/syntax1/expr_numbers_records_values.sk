@@ -1,0 +1,33 @@
+on gametest:
+    set {_numbers_count} to 0
+    set {_numbers_sum} to 0
+    loop numbers from 2.5 to 5.5:
+        add 1 to {_numbers_count}
+        add loop-value to {_numbers_sum}
+        if {_numbers_count} = 1:
+            set {cyclei::numbers::first} to loop-value
+        set {cyclei::numbers::last} to loop-value
+    set {cyclei::numbers::count} to {_numbers_count}
+    set {cyclei::numbers::sum} to {_numbers_sum}
+
+    set {_integers_count} to 0
+    set {_integers_sum} to 0
+    loop integers from 2.9 to 5.1:
+        add 1 to {_integers_count}
+        add loop-value to {_integers_sum}
+        if {_integers_count} = 1:
+            set {cyclei::integers::first} to loop-value
+        set {cyclei::integers::last} to loop-value
+    set {cyclei::integers::count} to {_integers_count}
+    set {cyclei::integers::sum} to {_integers_sum}
+
+    set {_decimals_count} to 0
+    set {_decimals_sum} to 0
+    loop decimals from 3.94 to 4:
+        add 1 to {_decimals_count}
+        add loop-value to {_decimals_sum}
+        if {_decimals_count} = 1:
+            set {cyclei::decimals::first} to loop-value
+        set {cyclei::decimals::last} to loop-value
+    set {cyclei::decimals::count} to {_decimals_count}
+    set {cyclei::decimals::sum} to {_decimals_sum}
