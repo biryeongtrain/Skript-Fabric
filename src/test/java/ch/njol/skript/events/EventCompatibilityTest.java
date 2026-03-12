@@ -46,6 +46,7 @@ final class EventCompatibilityTest {
         EvtLevel.register();
         EvtMove.register();
         EvtPeriodical.register();
+        EvtPiglinBarter.register();
         EvtPlayerChunkEnter.register();
         EvtPlayerCommandSend.register();
         EvtSpectate.register();
@@ -223,6 +224,21 @@ final class EventCompatibilityTest {
                         null
                 ))
         );
+    }
+
+    @Test
+    void piglinBarterEventParsesAndChecksCompatHandle() {
+        EvtPiglinBarter event = parseEvent("on piglin barter", EvtPiglinBarter.class);
+
+        assertEquals("piglin barter", event.toString(null, false));
+        assertEquals(1, event.getEventClasses().length);
+        assertEquals(FabricEventCompatHandles.PiglinBarter.class, event.getEventClasses()[0]);
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PiglinBarter(new ItemStack(Items.GOLD_INGOT)),
+                null,
+                null,
+                null
+        )));
     }
 
     @Test

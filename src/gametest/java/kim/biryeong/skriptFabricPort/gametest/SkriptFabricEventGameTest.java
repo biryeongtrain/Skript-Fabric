@@ -56,7 +56,9 @@ import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombieVillager;
@@ -2011,6 +2013,57 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             }
 
             helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 2, 0));
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
+    public void piglinBarterEventExecutesRealScript(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/piglin_barter_mutates_drops_and_marks_input.sk");
+
+                Piglin piglin = new Piglin(EntityType.PIGLIN, helper.getLevel());
+                piglin.setPos(0.5D, 1.0D, 0.5D);
+                piglin.setBaby(false);
+                piglin.setPersistenceRequired();
+                helper.getLevel().addFreshEntity(piglin);
+
+                ItemEntity gold = new ItemEntity(helper.getLevel(), 0.5D, 1.0D, 0.75D, new ItemStack(Items.GOLD_INGOT));
+                gold.setPickUpDelay(0);
+                helper.getLevel().addFreshEntity(gold);
+
+                loaded.set(true);
+                return;
+            }
+
+            if (!helper.getBlockState(new BlockPos(0, 2, 0)).is(Blocks.EMERALD_BLOCK)) {
+                return;
+            }
+
+            List<ItemEntity> nearbyDrops = helper.getLevel().getEntitiesOfClass(
+                    ItemEntity.class,
+                    AABB.encapsulatingFullBlocks(
+                            helper.absolutePos(new BlockPos(0, 0, 0)).offset(-1, 0, -1),
+                            helper.absolutePos(new BlockPos(1, 3, 1)).offset(1, 1, 1)
+                    )
+            );
+            if (nearbyDrops.stream().noneMatch(item -> item.getItem().is(Items.STICK))) {
+                return;
+            }
+
+            helper.assertTrue(
+                    nearbyDrops.size() == 1 && nearbyDrops.getFirst().getItem().is(Items.STICK),
+                    Component.literal("Expected piglin barter script to replace barter drops with a single stick drop.")
+            );
             runtime.clearScripts();
             Variables.clearAll();
             RUNTIME_LOCK.set(false);

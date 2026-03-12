@@ -44,6 +44,7 @@
     "PlayerExperienceMixin",
     "PlayerListRespawnMixin",
     "PlayerPotionCauseMixin",
+    "PiglinAiMixin",
     "ProjectileWeaponItemMixin",
     "PotionContentsMixin",
     "ReloadableServerRegistriesHolderMixin",

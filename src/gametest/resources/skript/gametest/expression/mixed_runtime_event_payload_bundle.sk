@@ -2,9 +2,6 @@ on gametest projectile context:
     add 2 to arrow knockback strength of event-entity
     set arrow pierce level of event-entity to 3
 
-on gametest piglin barter mutable:
-    add stick to barter drops
-
 on gametest entity death:
     set drops to diamond
 

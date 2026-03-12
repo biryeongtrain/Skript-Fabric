@@ -415,18 +415,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected affected entities expression to loop through all affected entities.")
             );
 
-            ItemStack barterInput = new ItemStack(Items.GOLD_INGOT);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.PiglinBarter(barterInput),
-                    helper,
-                    null
-            ), "piglin barter event");
-            helper.assertTrue(
-                    "barter input".equals(barterInput.getHoverName().getString()),
-                    Component.literal("Expected barter input expression to resolve the barter item.")
-            );
-
             ServerPlayer cooldownPlayer = helper.makeMockServerPlayerInLevel();
             assertExecuted(helper, dispatch(
                     runtime,
@@ -535,20 +523,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected projectile context script to mutate arrow knockback and pierce values.")
             );
 
-            List<ItemStack> barterOutcome = new java.util.ArrayList<>();
-            barterOutcome.add(new ItemStack(Items.APPLE));
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    new FabricEventCompatHandles.PiglinBarter(new ItemStack(Items.GOLD_INGOT), barterOutcome),
-                    helper,
-                    null
-            ), "piglin barter mutable context");
-            helper.assertTrue(
-                    barterOutcome.size() == 2
-                            && barterOutcome.stream().anyMatch(stack -> stack.is(Items.STICK)),
-                    Component.literal("Expected barter drops script to add a stick to the mutable outcome list.")
-            );
-
             MutableEntityDeathHandle deathHandle = new MutableEntityDeathHandle(List.of(new ItemStack(Items.APPLE)), 1);
             assertExecuted(helper, dispatch(runtime, deathHandle, helper, null), "entity death context");
             helper.assertTrue(
@@ -610,7 +584,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestEntityContextEvent.class, "gametest entity context");
         Skript.registerEvent(GameTestItemEntityContextEvent.class, "gametest item entity context");
         Skript.registerEvent(GameTestAreaCloudEffectEvent.class, "gametest area cloud effect");
-        Skript.registerEvent(GameTestPiglinBarterEvent.class, "gametest piglin barter");
         Skript.registerEvent(GameTestExperienceCooldownChangeEvent.class, "gametest player experience cooldown change");
         Skript.registerEvent(GameTestExplosionEvent.class, "gametest explode");
         Skript.registerEvent(GameTestExplodeMutableEvent.class, "gametest explode mutable");
@@ -620,7 +593,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestHangingBreakEvent.class, "gametest hanging break");
         Skript.registerEvent(GameTestHelperContextEvent.class, "gametest helper context");
         Skript.registerEvent(GameTestProjectileContextEvent.class, "gametest projectile context");
-        Skript.registerEvent(GameTestPiglinBarterMutableEvent.class, "gametest piglin barter mutable");
         Skript.registerEvent(GameTestExplosionPrimeMutableEvent.class, "gametest explosion prime mutable");
         Skript.registerEvent(GameTestBlockFertilizeEvent.class, "gametest block fertilize");
         Skript.registerEvent(GameTestExplosionPrimeEvent.class, "gametest explosion prime");
@@ -901,29 +873,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         }
     }
 
-    public static final class GameTestPiglinBarterEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.PiglinBarter;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.PiglinBarter.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest piglin barter";
-        }
-    }
-
     public static final class GameTestExperienceCooldownChangeEvent extends ch.njol.skript.lang.SkriptEvent {
 
         @Override
@@ -1174,29 +1123,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest projectile context";
-        }
-    }
-
-    public static final class GameTestPiglinBarterMutableEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEventCompatHandles.PiglinBarter;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{FabricEventCompatHandles.PiglinBarter.class};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest piglin barter mutable";
         }
     }
 

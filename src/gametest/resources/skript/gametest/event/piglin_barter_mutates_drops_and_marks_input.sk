@@ -1,0 +1,5 @@
+on piglin barter:
+    if barter input is gold ingot:
+        set test block at 0 2 0 to emerald_block
+    delete barter drops
+    add stick to barter drops

@@ -56,6 +56,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.piglin.Piglin;
 import org.jetbrains.annotations.Nullable;
 import ch.njol.skript.events.FabricEventCompatHandles;
 import ch.njol.skript.events.FabricPlayerEventHandles;
@@ -379,6 +380,15 @@ public final class SkriptFabricEventBridge {
                 level.getServer(),
                 level,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchPiglinBarter(ServerLevel level, Piglin piglin, @Nullable ItemStack input, List<ItemStack> outcome) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PiglinBarter(input, outcome),
+                level.getServer(),
+                level,
+                null
         ));
     }
 

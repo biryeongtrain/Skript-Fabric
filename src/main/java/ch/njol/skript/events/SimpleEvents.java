@@ -27,6 +27,7 @@ public final class SimpleEvents {
         EvtLeash.register();
         EvtMove.register();
         EvtMoveOn.register();
+        EvtPiglinBarter.register();
         EvtPlayerArmorChange.register();
         EvtPlayerChunkEnter.register();
         EvtPlayerCommandSend.register();

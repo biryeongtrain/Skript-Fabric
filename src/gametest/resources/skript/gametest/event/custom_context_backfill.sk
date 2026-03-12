@@ -20,9 +20,6 @@ on gametest item entity context:
 on gametest area cloud effect:
     set test name of entity affected entities to "affected entity"
 
-on gametest piglin barter:
-    set test name of item barter input to "barter input"
-
 on gametest player experience cooldown change:
     set test name of entity event-player to xp cooldown change reason
 
