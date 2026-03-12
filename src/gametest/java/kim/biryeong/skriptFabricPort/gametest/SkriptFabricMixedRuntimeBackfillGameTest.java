@@ -34,14 +34,14 @@ import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricDamageEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
-import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 
 public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
-    private static final Class<?> PLAYER_EGG_THROW_EVENT = effectEventClass("PlayerEggThrow");
     private static final Class<?> ENTITY_UNLEASH_EVENT = effectEventClass("EntityUnleash");
+    private static final Class<?> PLAYER_EGG_THROW_EVENT = effectEventClass("PlayerEggThrow");
     private static final Class<?> PLAYER_RESPAWN_EVENT = effectEventClass("PlayerRespawn");
     private static final Class<?> EXPLOSION_PRIME_EVENT = effectEventClass("ExplosionPrime");
     private static final Class<?> ENTITY_DEATH_EVENT = effectEventClass("EntityDeath");
@@ -250,6 +250,19 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             helper.assertTrue(
                     "signed book".equals(signedBook.getHoverName().getString()),
                     Component.literal("Expected book signing event to rename the signed book item.")
+            );
+
+            Skeleton skeleton = (Skeleton) helper.spawnWithNoFreeWill(EntityType.SKELETON, 3.5F, 1.0F, 0.5F);
+            ItemStack shotArrow = new ItemStack(Items.ARROW);
+            assertExecuted(helper, dispatch(
+                    runtime,
+                    new FabricEventCompatHandles.EntityShootBow(skeleton, shotArrow),
+                    helper,
+                    null
+            ), "entity shoot bow event");
+            helper.assertTrue(
+                    "shot arrow".equals(shotArrow.getHoverName().getString()),
+                    Component.literal("Expected entity shoot bow event to expose the consumed projectile item.")
             );
 
             ArmorStand armorStand = new ArmorStand(helper.getLevel(), 4.5D, 1.0D, 0.5D);
@@ -500,14 +513,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
             assertExecuted(helper, dispatch(
                     runtime,
-                    new UnleashHandle(true),
-                    helper,
-                    null
-            ), "unleash event");
-            helper.assertBlockPresent(Blocks.IRON_BLOCK, new BlockPos(2, 1, 0));
-
-            assertExecuted(helper, dispatch(
-                    runtime,
                     new RespawnHandle(true, false),
                     helper,
                     null
@@ -522,6 +527,30 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             ), "explosion prime event");
             helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(4, 1, 0));
 
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void unleashProducerExecutesRealScript(GameTestHelper helper) {
+        ensureCustomEventsRegistered();
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/unleash_runtime_marks_block.sk");
+
+            BlockPos unleashMarker = helper.absolutePos(new BlockPos(2, 1, 0));
+            helper.getLevel().setBlockAndUpdate(unleashMarker, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer leashHolder = helper.makeMockServerPlayerInLevel();
+            Cow cow = createCow(helper, false);
+            cow.setLeashedTo(leashHolder, true);
+            cow.dropLeash();
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(unleashMarker).is(Blocks.IRON_BLOCK),
+                    Component.literal("Expected real unleash producer to execute loaded Skript file.")
+            );
             runtime.clearScripts();
         });
     }
@@ -828,24 +857,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         }
     }
 
-    private static final class UnleashHandle implements FabricEntityUnleashEventHandle {
-
-        private boolean dropLeash;
-
-        private UnleashHandle(boolean dropLeash) {
-            this.dropLeash = dropLeash;
-        }
-
-        public boolean isDropLeash() {
-            return dropLeash;
-        }
-
-        @Override
-        public void setDropLeash(boolean dropLeash) {
-            this.dropLeash = dropLeash;
-        }
-    }
-
     private record RespawnHandle(boolean isBedSpawn, boolean isAnchorSpawn) {
     }
 
@@ -1091,7 +1102,7 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
         @Override
         public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof UnleashHandle;
+            return event.handle() instanceof FabricEntityUnleashHandle;
         }
 
         @Override

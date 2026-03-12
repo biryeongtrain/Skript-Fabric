@@ -119,6 +119,7 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.events.EvtCommand.register();
         ch.njol.skript.events.EvtExperienceChange.register();
         ch.njol.skript.events.EvtEntityBlockChange.register();
+        ch.njol.skript.events.EvtGameMode.register();
         ch.njol.skript.events.EvtGrow.register();
         ch.njol.skript.events.EvtLevel.register();
         ch.njol.skript.events.EvtMove.register();
@@ -130,6 +131,7 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.events.EvtSpectate.register();
         ch.njol.skript.events.EvtTeleport.register();
         ch.njol.skript.events.EvtVehicleCollision.register();
+        ch.njol.skript.events.EvtWeatherChange.register();
         Skript.registerEvent(EvtBucketCatch.class, EvtBucketCatch.patterns());
         Skript.registerEvent(EvtBreeding.class, EvtBreeding.patterns());
         Skript.registerEvent(EvtBrewingComplete.class, EvtBrewingComplete.patterns());

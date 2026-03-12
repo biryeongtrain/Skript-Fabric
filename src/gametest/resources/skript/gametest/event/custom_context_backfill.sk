@@ -33,10 +33,6 @@ on gametest player egg throw:
     set hatching number to 3
     set hatching entity type to pig
 
-on gametest unleash:
-    if the leash will drop:
-        set test block at 2 1 0 to iron_block
-
 on gametest respawn:
     if respawn location is a bed:
         set test block at 3 1 0 to gold_block

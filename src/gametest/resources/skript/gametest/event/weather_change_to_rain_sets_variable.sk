@@ -1,0 +1,2 @@
+on weather change to rain:
+    set {gametest::weather_change_to_rain} to true

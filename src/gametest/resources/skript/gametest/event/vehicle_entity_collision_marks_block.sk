@@ -1,2 +1,2 @@
-on vehicle entity collision of zombie:
+on vehicle entity collision of pig:
     set test block at 6 1 0 to emerald_block

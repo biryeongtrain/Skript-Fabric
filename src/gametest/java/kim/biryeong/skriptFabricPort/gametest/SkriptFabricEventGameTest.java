@@ -1,70 +1,200 @@
 package kim.biryeong.skriptFabricPort.gametest;
 
+import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.TriggerItem;
+import ch.njol.skript.lang.TriggerSection;
+import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Timespan;
+import ch.njol.skript.util.Timespan.TimePeriod;
+import ch.njol.skript.variables.Variables;
+import com.mojang.authlib.GameProfile;
+import com.mojang.math.Transformation;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Brightness;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.entity.Interaction;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Dolphin;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Pufferfish;
-import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.ZombieVillager;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.ThrownSplashPotion;
 import net.minecraft.world.entity.vehicle.MinecartChest;
 import net.minecraft.world.inventory.FurnaceResultSlot;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.component.Fireworks;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.WitherRoseBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.ConduitBlockEntity;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.skriptlang.skript.fabric.compat.*;
+import org.skriptlang.skript.bukkit.base.types.InventoryClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ItemStackClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ItemTypeClassInfo;
+import org.skriptlang.skript.bukkit.base.types.LocationClassInfo;
+import org.skriptlang.skript.bukkit.base.types.NameableClassInfo;
+import org.skriptlang.skript.bukkit.base.types.OfflinePlayerClassInfo;
+import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
+import org.skriptlang.skript.bukkit.base.types.VectorClassInfo;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondScalesWithDifficulty;
+import org.skriptlang.skript.bukkit.damagesource.elements.CondWasIndirect;
+import org.skriptlang.skript.bukkit.displays.text.CondTextDisplayHasDropShadow;
+import org.skriptlang.skript.bukkit.brewing.elements.CondBrewingConsume;
+import org.skriptlang.skript.bukkit.fishing.elements.CondFishingLure;
+import org.skriptlang.skript.bukkit.fishing.elements.CondIsInOpenWater;
+import org.skriptlang.skript.bukkit.input.InputKey;
+import org.skriptlang.skript.bukkit.input.elements.conditions.CondIsPressingKey;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDamage;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompDispensable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompInteract;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompShearable;
+import org.skriptlang.skript.bukkit.itemcomponents.equippable.elements.CondEquipCompSwapEquipment;
+import org.skriptlang.skript.bukkit.interactions.elements.conditions.CondIsResponsive;
+import org.skriptlang.skript.bukkit.loottables.LootTable;
+import org.skriptlang.skript.bukkit.loottables.LootTableUtils;
+import org.skriptlang.skript.bukkit.loottables.elements.conditions.CondHasLootTable;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanAge;
+import org.skriptlang.skript.bukkit.breeding.elements.CondCanBreed;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsAdult;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsBaby;
+import org.skriptlang.skript.bukkit.breeding.elements.CondIsInLove;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondHasPotion;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPoisoned;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionAmbient;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondIsPotionInstant;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasIcon;
+import org.skriptlang.skript.bukkit.potion.elements.conditions.CondPotionHasParticles;
+import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
+import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.bukkit.tags.elements.CondIsTagged;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
+import org.skriptlang.skript.fabric.compat.FabricBreedingItemSource;
+import org.skriptlang.skript.fabric.compat.FabricBreedingState;
+import org.skriptlang.skript.fabric.compat.FabricFishingState;
+import org.skriptlang.skript.fabric.compat.FabricInventory;
+import org.skriptlang.skript.fabric.compat.FabricItemType;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
+import org.skriptlang.skript.fabric.compat.PrivateBlockEntityAccess;
+import org.skriptlang.skript.fabric.compat.PrivateEntityAccess;
+import org.skriptlang.skript.fabric.compat.PrivateFishingHookAccess;
+import org.skriptlang.skript.fabric.compat.PrivateFurnaceAccess;
+import org.skriptlang.skript.fabric.runtime.FabricAttackEntityHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBlockBreakHandle;
 import org.skriptlang.skript.fabric.runtime.FabricBreedingEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricBreedingHandle;
+import org.skriptlang.skript.fabric.runtime.FabricBrewingFuelHandle;
+import org.skriptlang.skript.fabric.runtime.FabricDamageHandle;
+import org.skriptlang.skript.fabric.runtime.FabricFishingEventHandle;
+import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
+import org.skriptlang.skript.fabric.runtime.FabricFishingHandle;
+import org.skriptlang.skript.fabric.runtime.FabricPlayerInputHandle;
+import org.skriptlang.skript.fabric.runtime.FabricUseEntityHandle;
+import org.skriptlang.skript.fabric.runtime.FabricUseItemHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
-
+import org.skriptlang.skript.lang.properties.Property;
+import org.skriptlang.skript.lang.properties.handlers.WXYZHandler;
+import ch.njol.util.Kleenean;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import ch.njol.skript.variables.Variables;
 
 public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTestSupport {
+
+    @GameTest
+    public void weatherChangeToRainExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            helper.getLevel().setWeatherParameters(0, 0, false, false);
+            runtime.loadFromResource("skript/gametest/event/weather_change_to_rain_sets_variable.sk");
+
+            helper.getLevel().setWeatherParameters(0, 6000, true, false);
+
+            helper.assertTrue(
+                    Boolean.TRUE.equals(Variables.getVariable("gametest::weather_change_to_rain", null, false)),
+                    Component.literal("Expected real weather transition to execute the loaded weather change script.")
+            );
+            runtime.clearScripts();
+        });
+    }
 
     @GameTest
     public void fabricServerTickBridgeExecutesLoadedScript(GameTestHelper helper) {
@@ -220,7 +350,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
-    public void entityBlockChangeCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
+    public void sheepEatProducerExecutesLoadedScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
             runtime.clearScripts();
@@ -230,17 +360,12 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.getLevel().setBlockAndUpdate(changedAbsolute, Blocks.GRASS_BLOCK.defaultBlockState());
 
             Sheep sheep = (Sheep) helper.spawnWithNoFreeWill(EntityType.SHEEP, 0.5F, 1.0F, 0.5F);
-            SkriptFabricEventBridge.dispatchEntityBlockChange(
-                    helper.getLevel(),
-                    changedAbsolute,
-                    sheep,
-                    Blocks.GRASS_BLOCK.defaultBlockState(),
-                    Blocks.AIR.defaultBlockState()
-            );
+            sheep.teleportTo(changedAbsolute.getX() + 0.5D, changedAbsolute.getY() + 1.0D, changedAbsolute.getZ() + 0.5D);
+            sheep.ate();
 
             helper.assertTrue(
                     helper.getLevel().getBlockState(changedAbsolute.above()).is(Blocks.REDSTONE_BLOCK),
-                    Component.literal("Expected entity block change compat bridge to execute loaded Skript file.")
+                    Component.literal("Expected sheep eat producer to execute the loaded Skript file.")
             );
             runtime.clearScripts();
         });
@@ -253,54 +378,79 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             runtime.clearScripts();
             runtime.loadFromResource("skript/gametest/event/pressure_plate_marks_blocks.sk");
 
+            BlockPos pressurePos = helper.absolutePos(new BlockPos(2, 1, 0));
+            BlockPos tripwirePos = helper.absolutePos(new BlockPos(3, 1, 0));
             BlockPos pressureMarker = helper.absolutePos(new BlockPos(4, 1, 0));
             BlockPos tripwireMarker = helper.absolutePos(new BlockPos(5, 1, 0));
+            helper.getLevel().setBlockAndUpdate(pressurePos, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(tripwirePos, Blocks.TRIPWIRE.defaultBlockState());
             helper.getLevel().setBlockAndUpdate(pressureMarker, Blocks.AIR.defaultBlockState());
             helper.getLevel().setBlockAndUpdate(tripwireMarker, Blocks.AIR.defaultBlockState());
 
-            SkriptFabricEventBridge.dispatchPressurePlate(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 0)), false);
-            SkriptFabricEventBridge.dispatchPressurePlate(helper.getLevel(), helper.absolutePos(new BlockPos(3, 1, 0)), true);
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(pressurePos.getX() + 0.5D, pressurePos.getY(), pressurePos.getZ() + 0.5D);
+            invokePressurePlateEntityInside(helper, pressurePos, player);
+
+            ArmorStand tripwireProbe = new ArmorStand(EntityType.ARMOR_STAND, helper.getLevel());
+            tripwireProbe.setPos(tripwirePos.getX() + 0.5D, tripwirePos.getY(), tripwirePos.getZ() + 0.5D);
+            helper.getLevel().addFreshEntity(tripwireProbe);
+            invokeTripWireEntityInside(helper, tripwirePos, tripwireProbe);
 
             helper.assertTrue(
                     helper.getLevel().getBlockState(pressureMarker).is(Blocks.LAPIS_BLOCK),
-                    Component.literal("Expected pressure plate compat bridge to execute loaded Skript file.")
+                    Component.literal("Expected stepping on a pressure plate to execute the loaded Skript file.")
             );
             helper.assertTrue(
                     helper.getLevel().getBlockState(tripwireMarker).is(Blocks.RED_WOOL),
-                    Component.literal("Expected tripwire compat bridge to execute loaded Skript file.")
+                    Component.literal("Expected tripping tripwire to execute the loaded Skript file.")
             );
             runtime.clearScripts();
         });
     }
 
     @GameTest
-    public void vehicleCollisionCompatBridgeExecutesLoadedScript(GameTestHelper helper) {
-        runWithRuntimeLock(helper, () -> {
-            SkriptRuntime runtime = SkriptRuntime.instance();
-            runtime.clearScripts();
-            runtime.loadFromResource("skript/gametest/event/vehicle_collision_marks_block.sk");
+    public void vehicleEntityCollisionProducerExecutesLoadedScript(GameTestHelper helper) {
+        SkriptRuntime runtime = SkriptRuntime.instance();
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            if (!loaded.get()) {
+                helper.assertTrue(
+                        RUNTIME_LOCK.compareAndSet(false, true),
+                        Component.literal("Waiting for exclusive Skript runtime access.")
+                );
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/vehicle_entity_collision_marks_block.sk");
+
+                for (int x = 0; x <= 4; x++) {
+                    BlockPos railAbsolute = helper.absolutePos(new BlockPos(x, 1, 0));
+                    BlockPos powerAbsolute = railAbsolute.below();
+                    helper.getLevel().setBlockAndUpdate(powerAbsolute, Blocks.REDSTONE_BLOCK.defaultBlockState());
+                    helper.getLevel().setBlockAndUpdate(railAbsolute, Blocks.POWERED_RAIL.defaultBlockState());
+                }
+
+                BlockPos markerAbsolute = helper.absolutePos(new BlockPos(6, 1, 0));
+                helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+                MinecartChest minecart = new MinecartChest(EntityType.CHEST_MINECART, helper.getLevel());
+                minecart.setPos(0.5D, 1.0625D, 0.5D);
+                minecart.setDeltaMovement(0.45D, 0.0D, 0.0D);
+                helper.getLevel().addFreshEntity(minecart);
+
+                Pig pig = (Pig) helper.spawnWithNoFreeWill(EntityType.PIG, 2.5F, 1.0F, 0.5F);
+                pig.setDeltaMovement(Vec3.ZERO);
+
+                loaded.set(true);
+                return;
+            }
 
             BlockPos markerAbsolute = helper.absolutePos(new BlockPos(6, 1, 0));
-            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
-
-            MinecartChest minecart = new MinecartChest(EntityType.CHEST_MINECART, helper.getLevel());
-            minecart.setPos(0.5D, 1.0D, 0.5D);
-            helper.getLevel().addFreshEntity(minecart);
-            Zombie zombie = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 1.5F, 1.0F, 0.5F);
-
-            SkriptFabricEventBridge.dispatchVehicleCollision(
-                    helper.getLevel(),
-                    helper.absolutePos(new BlockPos(0, 1, 0)),
-                    minecart,
-                    null,
-                    zombie
-            );
-
             helper.assertTrue(
                     helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
-                    Component.literal("Expected vehicle collision compat bridge to execute loaded Skript file.")
+                    Component.literal("Expected real minecart collision to execute the loaded Skript file.")
             );
             runtime.clearScripts();
+            RUNTIME_LOCK.set(false);
         });
     }
 
@@ -1827,6 +1977,47 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
     }
 
     @GameTest
+    public void fireworkExplosionExecutesRealScript(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/firework_explosion_marks_block.sk");
+
+                ItemStack rocketStack = new ItemStack(Items.FIREWORK_ROCKET);
+                rocketStack.set(
+                        DataComponents.FIREWORKS,
+                        new Fireworks(
+                                1,
+                                List.of(new FireworkExplosion(
+                                        FireworkExplosion.Shape.SMALL_BALL,
+                                        IntArrayList.of(0xFF0000),
+                                        IntArrayList.of(),
+                                        false,
+                                        false
+                                ))
+                        )
+                );
+                FireworkRocketEntity firework = new FireworkRocketEntity(helper.getLevel(), 0.5D, 1.0D, 0.5D, rocketStack);
+                helper.getLevel().addFreshEntity(firework);
+                setIntField(firework, "life", 0);
+                setIntField(firework, "lifetime", 1);
+                loaded.set(true);
+                return;
+            }
+
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, new BlockPos(0, 2, 0));
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
     public void potionEffectDueToUnknownExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();
@@ -2310,30 +2501,6 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     helper.getLevel().getBlockState(playerMarkerAbsolute).is(Blocks.BLUE_WOOL),
                     Component.literal("Expected use item bridge to resolve event-player inside a real .sk file.")
-            );
-            runtime.clearScripts();
-        });
-    }
-
-    @GameTest
-    public void entityShootBowExecutesRealScript(GameTestHelper helper) {
-        runWithRuntimeLock(helper, () -> {
-            SkriptRuntime runtime = SkriptRuntime.instance();
-            runtime.clearScripts();
-            runtime.loadFromResource("skript/gametest/event/entity_shoot_bow_marks_block.sk");
-
-            BlockPos markerPos = helper.absolutePos(new BlockPos(4, 1, 0));
-            helper.getLevel().setBlockAndUpdate(markerPos, Blocks.AIR.defaultBlockState());
-
-            Skeleton skeleton = (Skeleton) helper.spawnWithNoFreeWill(EntityType.SKELETON, 0.5F, 1.0F, 0.5F);
-            Zombie target = (Zombie) helper.spawnWithNoFreeWill(EntityType.ZOMBIE, 4.5F, 1.0F, 0.5F);
-            skeleton.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
-            skeleton.setTarget(target);
-            skeleton.performRangedAttack(target, 1.0F);
-
-            helper.assertTrue(
-                    helper.getLevel().getBlockState(markerPos).is(Blocks.EMERALD_BLOCK),
-                    Component.literal("Expected entity shoot bow hook to fire through the real ranged attack path.")
             );
             runtime.clearScripts();
         });

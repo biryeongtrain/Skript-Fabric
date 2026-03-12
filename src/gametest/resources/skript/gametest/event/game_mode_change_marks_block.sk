@@ -1,0 +1,2 @@
+on gamemode change to creative:
+    set test block under player event-player to emerald_block

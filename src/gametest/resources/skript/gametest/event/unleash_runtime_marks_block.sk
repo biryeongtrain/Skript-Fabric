@@ -1,0 +1,3 @@
+on gametest unleash:
+    if the leash will drop:
+        set test block at 2 1 0 to iron_block

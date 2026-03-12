@@ -1,8 +1,11 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -15,6 +18,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -33,10 +37,12 @@ import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -371,6 +377,15 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchEntityUnleash(ServerLevel level, @Nullable Entity actor, boolean dropLeash) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEntityUnleashHandle(dropLeash),
+                level.getServer(),
+                level,
+                actor instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
     public static void dispatchBeaconEffect(
             ServerLevel level,
             BlockPos pos,
@@ -406,6 +421,15 @@ public final class SkriptFabricEventBridge {
     public static void dispatchExperienceSpawn(ServerLevel level, ExperienceOrb orb) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.ExperienceSpawn(orb.getValue()),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchFirework(ServerLevel level, FireworkRocketEntity firework) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Firework(fireworkColors(firework)),
                 level.getServer(),
                 level,
                 null
@@ -697,6 +721,16 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchGameMode(ServerPlayer player, GameType mode) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.GameMode(mode),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
     public static void dispatchTeleport(Entity entity, ServerLevel level, Vec3 fromPosition, Vec3 toPosition) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 FabricPlayerEventHandles.teleport(
@@ -735,8 +769,66 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchWeatherChange(ServerLevel level, boolean rain, boolean thunder) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.WeatherChange(rain, thunder),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
     private static Input normalizeInput(Input input) {
         return input != null ? input : Input.EMPTY;
+    }
+
+    private static @Nullable java.util.Set<Integer> fireworkColors(FireworkRocketEntity firework) {
+        Object fireworks = firework.getItem().get(DataComponents.FIREWORKS);
+        if (fireworks == null) {
+            return null;
+        }
+        Object explosions = invokeNoArg(fireworks, "explosions");
+        if (!(explosions instanceof Iterable<?> iterable)) {
+            return null;
+        }
+        java.util.Set<Integer> colors = new LinkedHashSet<>();
+        for (Object explosion : iterable) {
+            appendColorValues(colors, invokeNoArg(explosion, "colors"));
+        }
+        return colors.isEmpty() ? null : colors;
+    }
+
+    private static void appendColorValues(java.util.Set<Integer> colors, @Nullable Object source) {
+        if (source == null) {
+            return;
+        }
+        if (source instanceof Iterable<?> iterable) {
+            for (Object value : iterable) {
+                if (value instanceof Number number) {
+                    colors.add(number.intValue());
+                }
+            }
+            return;
+        }
+        if (source.getClass().isArray()) {
+            int length = Array.getLength(source);
+            for (int index = 0; index < length; index++) {
+                Object value = Array.get(source, index);
+                if (value instanceof Number number) {
+                    colors.add(number.intValue());
+                }
+            }
+        }
+    }
+
+    private static @Nullable Object invokeNoArg(Object target, String methodName) {
+        try {
+            Method method = target.getClass().getMethod(methodName);
+            method.setAccessible(true);
+            return method.invoke(target);
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
     }
 
     public static void dispatchBreeding(

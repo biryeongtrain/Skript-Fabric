@@ -123,6 +123,32 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
     }
 
     @GameTest
+    public void gameModeChangeEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/game_mode_change_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(15, 1, 1));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            helper.assertTrue(
+                    player.setGameMode(GameType.CREATIVE),
+                    Component.literal("Expected the player game mode to change to creative during the GameTest.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected game mode change event script to mark the block under the player.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
     public void commandEventExecutesRealScript(GameTestHelper helper) {
         runWithRuntimeLock(helper, () -> {
             SkriptRuntime runtime = SkriptRuntime.instance();

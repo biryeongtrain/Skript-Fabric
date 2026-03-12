@@ -78,7 +78,9 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.level.block.BasePressurePlateBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.TripWireBlock;
 import net.minecraft.world.level.block.WitherRoseBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
@@ -621,6 +623,54 @@ public abstract class AbstractSkriptFabricGameTestSupport {
             );
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Failed to invoke WitherRoseBlock.entityInside for GameTest.", exception);
+        }
+    }
+
+    protected void invokePressurePlateEntityInside(GameTestHelper helper, BlockPos pos, Entity entity) {
+        try {
+            Method method = BasePressurePlateBlock.class.getDeclaredMethod(
+                    "entityInside",
+                    net.minecraft.world.level.block.state.BlockState.class,
+                    net.minecraft.world.level.Level.class,
+                    BlockPos.class,
+                    net.minecraft.world.entity.Entity.class,
+                    InsideBlockEffectApplier.class
+            );
+            method.setAccessible(true);
+            method.invoke(
+                    helper.getLevel().getBlockState(pos).getBlock(),
+                    helper.getLevel().getBlockState(pos),
+                    helper.getLevel(),
+                    pos,
+                    entity,
+                    InsideBlockEffectApplier.NOOP
+            );
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to invoke BasePressurePlateBlock.entityInside for GameTest.", exception);
+        }
+    }
+
+    protected void invokeTripWireEntityInside(GameTestHelper helper, BlockPos pos, Entity entity) {
+        try {
+            Method method = TripWireBlock.class.getDeclaredMethod(
+                    "entityInside",
+                    net.minecraft.world.level.block.state.BlockState.class,
+                    net.minecraft.world.level.Level.class,
+                    BlockPos.class,
+                    net.minecraft.world.entity.Entity.class,
+                    InsideBlockEffectApplier.class
+            );
+            method.setAccessible(true);
+            method.invoke(
+                    helper.getLevel().getBlockState(pos).getBlock(),
+                    helper.getLevel().getBlockState(pos),
+                    helper.getLevel(),
+                    pos,
+                    entity,
+                    InsideBlockEffectApplier.NOOP
+            );
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to invoke TripWireBlock.entityInside for GameTest.", exception);
         }
     }
 
