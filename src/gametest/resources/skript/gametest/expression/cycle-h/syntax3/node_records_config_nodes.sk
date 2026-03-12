@@ -1,0 +1,4 @@
+on gametest cycle h syntax3 context:
+    set {cycleh::syntax3::language_node} to the node "language" in the skript config
+    loop nodes in the skript config:
+        set {cycleh::syntax3::nodes::%loop-node's key%} to loop-node

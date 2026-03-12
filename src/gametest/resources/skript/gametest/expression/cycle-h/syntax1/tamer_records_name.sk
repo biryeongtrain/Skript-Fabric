@@ -1,0 +1,2 @@
+on gametest cycle h tame:
+    set {cycleh::tamer_name} to "%tamer%"

@@ -1,0 +1,2 @@
+on gametest cycle h source context:
+    set test block above source block to emerald_block

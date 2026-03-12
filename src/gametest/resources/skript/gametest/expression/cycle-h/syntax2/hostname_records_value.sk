@@ -1,0 +1,2 @@
+on gametest cycle h hostname context:
+    set {cycleh::syntax2::hostname} to hostname

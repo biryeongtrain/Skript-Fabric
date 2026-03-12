@@ -1,0 +1,2 @@
+on gametest cycle h tame context:
+    set xp level of tamer to 5

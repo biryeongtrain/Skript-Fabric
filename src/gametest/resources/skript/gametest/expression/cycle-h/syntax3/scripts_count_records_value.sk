@@ -1,0 +1,4 @@
+on gametest cycle h syntax3:
+    delete {cycleh::syntax3::script_count}
+    loop all scripts:
+        add 1 to {cycleh::syntax3::script_count}

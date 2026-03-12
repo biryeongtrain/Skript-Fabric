@@ -1,0 +1,2 @@
+on gametest cycle h syntax3:
+    set {cycleh::syntax3::node} to the node "language" in the skript config

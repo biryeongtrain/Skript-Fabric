@@ -1,0 +1,2 @@
+on gametest cycle h quit context:
+    set {cycleh::quit_reason} to quit reason

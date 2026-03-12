@@ -1,0 +1,4 @@
+on gametest cycle h server context:
+    set {cycleh::syntax2::permission_count} to 0
+    loop permissions of {cycleh::syntax2::player}:
+        add 1 to {cycleh::syntax2::permission_count}

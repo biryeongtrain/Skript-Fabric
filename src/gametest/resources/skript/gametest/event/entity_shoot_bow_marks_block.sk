@@ -1,0 +1,3 @@
+on skeleton shoot bow:
+    if consumed item is set:
+        set test block at 4 1 0 to emerald_block

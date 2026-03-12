@@ -1,0 +1,2 @@
+on gametest cycle h syntax3 context:
+    set {cycleh::syntax3::config} to the skript config

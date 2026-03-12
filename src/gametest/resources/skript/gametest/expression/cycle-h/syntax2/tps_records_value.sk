@@ -1,0 +1,2 @@
+on gametest cycle h server context:
+    set {cycleh::syntax2::tps} to tps from last 1 minute

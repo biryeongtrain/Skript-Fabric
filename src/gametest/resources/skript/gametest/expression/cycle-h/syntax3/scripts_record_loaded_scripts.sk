@@ -1,0 +1,8 @@
+on gametest cycle h syntax3 context:
+    loop all scripts:
+        set {cycleh::syntax3::scripts::%loop-index%} to loop-script
+    loop all enabled scripts:
+        set {cycleh::syntax3::loaded_scripts::%loop-index%} to loop-script
+    set {cycleh::syntax3::disabled_count} to 0
+    loop all disabled scripts:
+        add 1 to {cycleh::syntax3::disabled_count}
