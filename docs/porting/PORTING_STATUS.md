@@ -31,9 +31,10 @@ Last full verification: 2026-03-12
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
   - exact-path present locally: `925`
   - shortfall: `264`
-- Latest full verification:
-  - targeted cycle JUnit suite passed for event compatibility, event cycle compatibility, event bridge binding, and mixed runtime
-  - `./gradlew runGameTest --rerun-tasks` passed with `264 / 264`
+- Latest verification:
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest` passed
+  - `build/junit.xml` recorded `mixed_damage_and_healing_syntax_executes_real_script` and `unleash_producer_executes_real_script` as passing GameTests
+  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `264 / 265` passed
 
 ## Active Priority
 
@@ -44,22 +45,15 @@ Last full verification: 2026-03-12
 
 ## Latest Closed Core Slice
 
-- Latest landed event slice:
-  - `EvtEntityBlockChange` live sheep-eat path
-  - `EvtGameMode`
-  - `EvtWeatherChange`
-  - `EvtPressurePlate`
-  - `EvtVehicleCollision` minecart/entity path
-  - `EvtFirework`
-- Latest landed infra slice:
-  - real `unleash` runtime backfill replaced the synthetic mixed-runtime helper path
-  - minimal bootstrap registration for `EvtWeatherChange`
-  - firework GameTest runtime-lock stabilization for full-suite execution
+- Latest landed runtime/GameTest slice:
+  - synthetic `gametest damage context` removed; mixed-runtime damage fixture now uses public `on damage:` and real player fire damage
+  - mixed-runtime healing fixture now uses public `on healing:` and real player healing
+  - synthetic `gametest unleash` removed; unleash fixture now uses public `on unleash:` and the live `Leashable.dropLeash(...)` producer
+  - `EvtLeash` now accepts the real unleash runtime handle and exposes the `EntityUnleash` parser marker needed by unleash-only syntax
 - Deferred from the same cycle:
-  - `EvtBlock` partial variants
-  - `EvtItem` partial variants
-  - `EvtEntityTarget`, `EvtFirstJoin`, `EvtHarvestBlock`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtWorld`
-- Landed with unit JUnit, binding JUnit, and Minecraft GameTest
+  - `EvtLeash` remains partial for `leash` and `player unleash`
+  - synthetic event backfill still required for `piglin barter`, `player egg throw`, `respawn`, `explode`, `explosion prime`, and mutable `entity death`
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite is currently blocked by the unrelated `ExprNumbers` GameTest failure
 
 ## Open Gaps
 

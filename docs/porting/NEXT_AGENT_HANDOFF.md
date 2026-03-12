@@ -23,21 +23,18 @@ Last full verification: 2026-03-12
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
 - Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
-- Latest full verification:
-  - targeted cycle JUnit suite passed for event compatibility, event cycle compatibility, event bridge binding, and mixed runtime
-  - `./gradlew runGameTest --rerun-tasks` passed with `264 / 264`
+- Latest verification:
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest` passed
+  - `build/junit.xml` recorded `mixed_damage_and_healing_syntax_executes_real_script` and `unleash_producer_executes_real_script` as passing GameTests
+  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `264 / 265` passed
 
 ## Most Recent Merged Slice
 
-- `EvtEntityBlockChange` live sheep-eat path
-- `EvtGameMode`
-- `EvtWeatherChange`
-- `EvtPressurePlate`
-- `EvtVehicleCollision` minecart/entity path
-- `EvtFirework`
-- real `unleash` runtime backfill replaced the synthetic mixed-runtime helper path
-- minimal bootstrap registration for `EvtWeatherChange`
-- firework GameTest runtime-lock stabilization for full-suite execution
+- synthetic `gametest damage context` removed; mixed-runtime damage fixture now uses public `on damage:` with real fire damage
+- mixed-runtime healing fixture now uses public `on healing:` with real player healing
+- synthetic `gametest unleash` removed; mixed-runtime unleash fixture now uses public `on unleash:` with the live unleash producer
+- `EvtLeash` now accepts the real unleash runtime handle and exposes the `EntityUnleash` parser marker for unleash-only syntax
+- `EvtLeash` remains partial: `unleash` is live, `leash` and `player unleash` still need dedicated runtime coverage
 
 ## Do Next
 
@@ -47,11 +44,13 @@ Last full verification: 2026-03-12
   - `EvtEntityTarget`
   - `EvtFirstJoin`
   - `EvtHarvestBlock`
-  - `EvtLeash`
+  - `EvtLeash` (`leash` and `player unleash` remaining)
   - `EvtMoveOn`
   - `EvtPlayerArmorChange`
   - `EvtPortal`
   - `EvtWorld`
+- Continue removing synthetic event aliases only where public syntax plus real producer both exist:
+  - remaining blocked aliases are `piglin barter`, `player egg throw`, `respawn`, `explode`, `explosion prime`, and mutable `entity death`
 - After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.

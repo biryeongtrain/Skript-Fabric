@@ -5,10 +5,12 @@ Last full verification: 2026-03-12
 
 ## Snapshot
 
-- Active event rows: `37`
+- Active event rows: `38`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
-- Latest full verification:
-  - `./gradlew runGameTest --rerun-tasks` passed with `264 / 264`
+- Latest verification:
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest` passed
+  - `build/junit.xml` recorded `mixed_damage_and_healing_syntax_executes_real_script` and `unleash_producer_executes_real_script` as passing GameTests
+  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `264 / 265` passed
 
 ## Active Rows
 
@@ -44,6 +46,7 @@ Last full verification: 2026-03-12
 | `on pressure plate` | `BasePressurePlateBlock.onEntityCollision` and `TripWireBlock.onEntityCollision` |
 | `on vehicle collision` | `AbstractMinecart.push(Entity)` non-minecart path |
 | `on firework explosion` | `FireworkRocketEntity.explodeAndRemove(ServerLevel)` |
+| `on unleash` | `Leashable.dropLeash(Entity, boolean, boolean)` mixin path |
 | `on level change` | `ServerPlayer.giveExperienceLevels(int)` delta bridge |
 | `on experience decrease` | `ServerPlayer.giveExperiencePoints(int)` delta bridge |
 | `on sending of the server command list` | `Commands.sendCommands(ServerPlayer)` |
@@ -64,7 +67,7 @@ Last full verification: 2026-03-12
   - `EvtEntityTarget`
   - `EvtFirstJoin`
   - `EvtHarvestBlock`
-  - `EvtLeash`
+  - `EvtLeash` (`unleash` live; `leash` and `player unleash` remain partial)
   - `EvtMoveOn`
   - `EvtPlayerArmorChange`
   - `EvtPortal`
