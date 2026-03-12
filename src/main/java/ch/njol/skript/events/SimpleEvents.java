@@ -30,6 +30,7 @@ public final class SimpleEvents {
         EvtPiglinBarter.register();
         EvtPlayerArmorChange.register();
         EvtPlayerChunkEnter.register();
+        EvtPlayerEggThrow.register();
         EvtPlayerCommandSend.register();
         EvtPortal.register();
         EvtPressurePlate.register();

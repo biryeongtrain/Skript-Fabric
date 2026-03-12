@@ -19,8 +19,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.projectile.ThrownEgg;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashHandle;
 import org.skriptlang.skript.fabric.runtime.FabricScheduledTickHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -72,6 +75,7 @@ final class EventCompatibilityTest {
         EvtLeash.register();
         EvtMoveOn.register();
         EvtGrow.register();
+        EvtPlayerEggThrow.register();
         EvtPlantGrowth.register();
         EvtPlayerArmorChange.register();
         EvtPortal.register();
@@ -540,6 +544,20 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void playerEggThrowEventParsesPublicSyntaxAndChecksHandle() {
+        EvtPlayerEggThrow event = parseEvent("player egg throw", EvtPlayerEggThrow.class);
+
+        assertEquals("player egg throw", event.toString(null, false));
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new TestEggThrowHandle(null, true, (byte) 1),
+                null,
+                null,
+                null
+        )));
+        assertTrue(event.getEventClasses().length >= 1);
+    }
+
+    @Test
     void gamemodeEventParsesSpecificModeAndChecksHandle() {
         EvtGameMode event = parseEvent("gamemode change to spectator", EvtGameMode.class);
 
@@ -788,5 +806,31 @@ final class EventCompatibilityTest {
 
     private static ServerLevel dummyLevel() {
         return null;
+    }
+
+    private record TestEggThrowHandle(
+            @Nullable ThrownEgg egg,
+            boolean hatching,
+            byte hatches
+    ) implements FabricEggThrowEventHandle {
+        @Override
+        public void setHatching(boolean hatching) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setHatches(byte hatches) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public @Nullable net.minecraft.world.entity.EntityType<?> hatchingType() {
+            return net.minecraft.world.entity.EntityType.CHICKEN;
+        }
+
+        @Override
+        public void setHatchingType(net.minecraft.world.entity.EntityType<?> hatchingType) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

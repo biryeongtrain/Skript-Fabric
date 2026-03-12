@@ -58,6 +58,7 @@
     "SpiderPotionCauseMixin",
     "StoredUserEntryAccessor",
     "SplashPotionCauseMixin",
+    "ThrownEggMixin",
     "TextDisplayAccessor",
     "TripWireBlockMixin",
     "VillagerPotionCauseMixin",

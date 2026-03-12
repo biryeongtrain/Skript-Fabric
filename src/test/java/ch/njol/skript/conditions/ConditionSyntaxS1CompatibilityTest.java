@@ -16,6 +16,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
@@ -155,6 +156,10 @@ class ConditionSyntaxS1CompatibilityTest {
 	}
 
 	private record TestEggThrowHandle(boolean hatching, byte hatches) implements FabricEggThrowEventHandle {
+		@Override
+		public @Nullable ThrownEgg egg() {
+			return null;
+		}
 
 		@Override
 		public void setHatching(boolean hatching) {

@@ -1,9 +1,17 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.projectile.ThrownEgg;
 import org.jetbrains.annotations.Nullable;
 
-public interface FabricEggThrowEventHandle {
+public interface FabricEggThrowEventHandle extends FabricEntityEventHandle {
+
+    @Nullable ThrownEgg egg();
+
+    @Override
+    default @Nullable ThrownEgg entity() {
+        return egg();
+    }
 
     boolean hatching();
 

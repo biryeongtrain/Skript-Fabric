@@ -1,0 +1,4 @@
+on player egg throw:
+    make the egg hatch
+    set hatching number to 3
+    set hatching entity type to pig

@@ -28,6 +28,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
@@ -137,7 +138,8 @@ final class ExpressionEventContextBundleCompatibilityTest {
     @Test
     void eggThrowExpressionsReadAndMutateCompatHandle() {
         ParserInstance.get().setCurrentEvent("egg throw", eggThrowEventClass());
-        MutableEggThrowHandle handle = new MutableEggThrowHandle(true, (byte) 1, EntityType.CHICKEN);
+        ThrownEgg egg = allocateEntity(ThrownEgg.class, EntityType.EGG);
+        MutableEggThrowHandle handle = new MutableEggThrowHandle(egg, true, (byte) 1, EntityType.CHICKEN);
         SkriptEvent event = new SkriptEvent(handle, null, null, null);
 
         ExprHatchingNumber number = new ExprHatchingNumber();
@@ -151,6 +153,10 @@ final class ExpressionEventContextBundleCompatibilityTest {
         assertNotNull(type.getSingle(event));
         type.change(event, new Object[]{EntityData.parse("pig")}, ChangeMode.SET);
         assertEquals(EntityType.PIG, handle.hatchingType());
+
+        ExprEgg exprEgg = new ExprEgg();
+        assertTrue(exprEgg.init(new Expression[0], 0, Kleenean.FALSE, parseResult("egg")));
+        assertEquals(egg, exprEgg.getSingle(event));
     }
 
     @Test
@@ -223,7 +229,7 @@ final class ExpressionEventContextBundleCompatibilityTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends LivingEntity> T allocateEntity(Class<T> type, EntityType<?> entityType) {
+    private static <T extends Entity> T allocateEntity(Class<T> type, EntityType<?> entityType) {
         try {
             Unsafe unsafe = unsafe();
             T entity = (T) unsafe.allocateInstance(type);
@@ -261,14 +267,21 @@ final class ExpressionEventContextBundleCompatibilityTest {
 
     private static final class MutableEggThrowHandle implements org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle {
 
+        private final @Nullable ThrownEgg egg;
         private boolean hatching;
         private byte hatches;
         private EntityType<?> hatchingType;
 
-        private MutableEggThrowHandle(boolean hatching, byte hatches, EntityType<?> hatchingType) {
+        private MutableEggThrowHandle(@Nullable ThrownEgg egg, boolean hatching, byte hatches, EntityType<?> hatchingType) {
+            this.egg = egg;
             this.hatching = hatching;
             this.hatches = hatches;
             this.hatchingType = hatchingType;
+        }
+
+        @Override
+        public @Nullable ThrownEgg egg() {
+            return egg;
         }
 
         @Override

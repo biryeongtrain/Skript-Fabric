@@ -32,6 +32,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Interaction;
@@ -40,6 +41,7 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
@@ -52,6 +54,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.phys.Vec3;
@@ -390,6 +393,31 @@ public final class SkriptFabricEventBridge {
                 level,
                 null
         ));
+    }
+
+    public static boolean dispatchPlayerEggThrow(ThrownEgg egg, HitResult hitResult) {
+        if (!(egg.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        if (!(egg.getOwner() instanceof ServerPlayer player)) {
+            return false;
+        }
+
+        MutableEggThrowHandle handle = MutableEggThrowHandle.create(egg);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                level.getServer(),
+                level,
+                player
+        ));
+
+        if (handle.hatching()) {
+            spawnEggHatches(level, egg, handle.hatches(), handle.hatchingType());
+        }
+
+        level.broadcastEntityEvent(egg, (byte) 3);
+        egg.discard();
+        return true;
     }
 
     public static void dispatchEntityUnleash(ServerLevel level, Entity entity, @Nullable Entity actor, boolean dropLeash) {
@@ -1092,6 +1120,87 @@ public final class SkriptFabricEventBridge {
                     return key;
                 })
                 .orElse(null);
+    }
+
+    private static void spawnEggHatches(
+            ServerLevel level,
+            ThrownEgg egg,
+            byte hatches,
+            @Nullable EntityType<?> hatchingType
+    ) {
+        int hatchCount = Math.max(0, hatches);
+        EntityType<?> type = hatchingType == null ? EntityType.CHICKEN : hatchingType;
+        for (int index = 0; index < hatchCount; index++) {
+            Entity entity = type.create(level, net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
+            if (entity == null) {
+                continue;
+            }
+            entity.setPos(egg.getX(), egg.getY(), egg.getZ());
+            entity.setYRot(egg.getYRot());
+            if (entity instanceof AgeableMob ageableMob) {
+                ageableMob.setAge(-24000);
+            }
+            level.addFreshEntity(entity);
+        }
+    }
+
+    private static final class MutableEggThrowHandle implements FabricEggThrowEventHandle {
+
+        private final ThrownEgg egg;
+        private boolean hatching;
+        private byte hatches;
+        private @Nullable EntityType<?> hatchingType;
+
+        private MutableEggThrowHandle(ThrownEgg egg, boolean hatching, byte hatches, @Nullable EntityType<?> hatchingType) {
+            this.egg = egg;
+            this.hatching = hatching;
+            this.hatches = hatches;
+            this.hatchingType = hatchingType;
+        }
+
+        private static MutableEggThrowHandle create(ThrownEgg egg) {
+            boolean hatching = egg.level().random.nextInt(8) == 0;
+            byte hatches = 0;
+            if (hatching) {
+                hatches = (byte) (egg.level().random.nextInt(32) == 0 ? 4 : 1);
+            }
+            return new MutableEggThrowHandle(egg, hatching, hatches, EntityType.CHICKEN);
+        }
+
+        @Override
+        public ThrownEgg egg() {
+            return egg;
+        }
+
+        @Override
+        public boolean hatching() {
+            return hatching;
+        }
+
+        @Override
+        public void setHatching(boolean hatching) {
+            this.hatching = hatching;
+        }
+
+        @Override
+        public byte hatches() {
+            return hatches;
+        }
+
+        @Override
+        public void setHatches(byte hatches) {
+            this.hatches = (byte) Math.max(0, hatches);
+        }
+
+        @Override
+        public @Nullable EntityType<?> hatchingType() {
+            return hatchingType;
+        }
+
+        @Override
+        public void setHatchingType(EntityType<?> hatchingType) {
+            this.hatchingType = hatchingType;
+        }
     }
 
     private static @Nullable ServerPlayer resolveLootingPlayer(LootContext context, @Nullable Entity contextEntity) {

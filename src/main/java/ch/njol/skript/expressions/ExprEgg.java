@@ -8,6 +8,7 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.EventValueExpression;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("The Egg")
@@ -23,6 +24,18 @@ public class ExprEgg extends EventValueExpression<ThrownEgg> {
 
     public ExprEgg() {
         super(ThrownEgg.class, true);
+    }
+
+    @Override
+    protected ThrownEgg @Nullable [] get(SkriptEvent event) {
+        if (event.handle() instanceof ThrownEgg egg) {
+            return new ThrownEgg[]{egg};
+        }
+        if (!(event.handle() instanceof FabricEggThrowEventHandle eggThrow)) {
+            return null;
+        }
+        ThrownEgg egg = eggThrow.egg();
+        return egg == null ? null : new ThrownEgg[]{egg};
     }
 
     @Override

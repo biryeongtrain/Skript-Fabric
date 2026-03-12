@@ -31,14 +31,12 @@ import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.runtime.FabricBlockEventHandle;
-import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityEventHandle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 
 public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
-    private static final Class<?> PLAYER_EGG_THROW_EVENT = effectEventClass("PlayerEggThrow");
     private static final Class<?> EXPLOSION_PRIME_EVENT = effectEventClass("ExplosionPrime");
     private static final Class<?> ENTITY_DEATH_EVENT = effectEventClass("EntityDeath");
     private static final Class<?> HANGING_BREAK_EVENT = effectEventClass("HangingBreak");
@@ -446,18 +444,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected exploded blocks expression to loop through every exploded block.")
             );
 
-            MutableEggThrowHandle eggThrowHandle = new MutableEggThrowHandle(true, (byte) 1, EntityType.CHICKEN);
-            assertExecuted(helper, dispatch(
-                    runtime,
-                    eggThrowHandle,
-                    helper,
-                    null
-            ), "egg throw event");
-            helper.assertTrue(
-                    eggThrowHandle.hatches() == 3 && eggThrowHandle.hatchingType() == EntityType.PIG,
-                    Component.literal("Expected egg throw expressions to mutate the compat handle.")
-            );
-
             assertExecuted(helper, dispatch(
                     runtime,
                     new ExplosionPrimeHandle(true),
@@ -587,7 +573,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestExperienceCooldownChangeEvent.class, "gametest player experience cooldown change");
         Skript.registerEvent(GameTestExplosionEvent.class, "gametest explode");
         Skript.registerEvent(GameTestExplodeMutableEvent.class, "gametest explode mutable");
-        Skript.registerEvent(GameTestEggThrowEvent.class, "gametest player egg throw");
         Skript.registerEvent(GameTestEntityDeathEvent.class, "gametest entity death");
         Skript.registerEvent(GameTestExplosiveEntityContextEvent.class, "gametest explosive entity context");
         Skript.registerEvent(GameTestHangingBreakEvent.class, "gametest hanging break");
@@ -733,49 +718,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
     }
 
     private record HangingBreakHandle(Entity entity, @Nullable Entity remover) {
-    }
-
-    private static final class MutableEggThrowHandle implements FabricEggThrowEventHandle {
-
-        private boolean hatching;
-        private byte hatches;
-        private EntityType<?> hatchingType;
-
-        private MutableEggThrowHandle(boolean hatching, byte hatches, EntityType<?> hatchingType) {
-            this.hatching = hatching;
-            this.hatches = hatches;
-            this.hatchingType = hatchingType;
-        }
-
-        @Override
-        public boolean hatching() {
-            return hatching;
-        }
-
-        @Override
-        public void setHatching(boolean hatching) {
-            this.hatching = hatching;
-        }
-
-        @Override
-        public byte hatches() {
-            return hatches;
-        }
-
-        @Override
-        public void setHatches(byte hatches) {
-            this.hatches = hatches;
-        }
-
-        @Override
-        public @Nullable EntityType<?> hatchingType() {
-            return hatchingType;
-        }
-
-        @Override
-        public void setHatchingType(EntityType<?> hatchingType) {
-            this.hatchingType = hatchingType;
-        }
     }
 
     private record ExplosionPrimeHandle(boolean causesFire) {
@@ -939,29 +881,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest explode mutable";
-        }
-    }
-
-    public static final class GameTestEggThrowEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof FabricEggThrowEventHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{PLAYER_EGG_THROW_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest player egg throw";
         }
     }
 

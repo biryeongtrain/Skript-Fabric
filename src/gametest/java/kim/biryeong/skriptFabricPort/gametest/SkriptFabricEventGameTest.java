@@ -68,6 +68,7 @@ import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.entity.projectile.ThrownSplashPotion;
 import net.minecraft.world.entity.vehicle.MinecartChest;
 import net.minecraft.world.inventory.FurnaceResultSlot;
@@ -2040,11 +2041,9 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                 ItemEntity gold = new ItemEntity(helper.getLevel(), 0.5D, 1.0D, 0.75D, new ItemStack(Items.GOLD_INGOT));
                 gold.setPickUpDelay(0);
                 helper.getLevel().addFreshEntity(gold);
-
                 loaded.set(true);
                 return;
             }
-
             if (!helper.getBlockState(new BlockPos(0, 2, 0)).is(Blocks.EMERALD_BLOCK)) {
                 return;
             }
@@ -2063,6 +2062,56 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     nearbyDrops.size() == 1 && nearbyDrops.getFirst().getItem().is(Items.STICK),
                     Component.literal("Expected piglin barter script to replace barter drops with a single stick drop.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+            RUNTIME_LOCK.set(false);
+        });
+    }
+
+    @GameTest
+    public void playerEggThrowProducerExecutesRealScript(GameTestHelper helper) {
+        AtomicBoolean loaded = new AtomicBoolean(false);
+        BlockPos pigBoxMin = helper.absolutePos(new BlockPos(-1, 0, -1));
+        BlockPos pigBoxMax = helper.absolutePos(new BlockPos(2, 4, 2));
+        AABB pigBox = new AABB(
+                pigBoxMin.getX(),
+                pigBoxMin.getY(),
+                pigBoxMin.getZ(),
+                pigBoxMax.getX() + 1.0D,
+                pigBoxMax.getY() + 1.0D,
+                pigBoxMax.getZ() + 1.0D
+        );
+        helper.succeedWhen(() -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            if (!loaded.get()) {
+                if (!RUNTIME_LOCK.compareAndSet(false, true)) {
+                    return;
+                }
+                Variables.clearAll();
+                runtime.clearScripts();
+                runtime.loadFromResource("skript/gametest/event/player_egg_throw_hatches_pigs.sk");
+
+                ServerPlayer player = helper.makeMockServerPlayerInLevel();
+                player.setGameMode(GameType.SURVIVAL);
+                player.teleportTo(0.5D, 3.0D, 0.5D);
+
+                ThrownEgg egg = (ThrownEgg) EntityType.EGG.create(helper.getLevel(), EntitySpawnReason.TRIGGERED);
+                helper.assertTrue(egg != null, Component.literal("Expected egg entity type to create a thrown egg."));
+                if (egg == null) {
+                    throw new IllegalStateException("Thrown egg type creation returned null.");
+                }
+                egg.setOwner(player);
+                egg.setPos(0.5D, 3.0D, 0.5D);
+                egg.setDeltaMovement(0.0D, -0.75D, 0.0D);
+                helper.getLevel().addFreshEntity(egg);
+                loaded.set(true);
+                return;
+            }
+
+            helper.assertTrue(
+                    helper.getLevel().getEntitiesOfClass(Pig.class, pigBox).size() == 3,
+                    Component.literal("Expected player egg throw script to hatch exactly three pigs from a real egg collision.")
             );
             runtime.clearScripts();
             Variables.clearAll();
