@@ -5,12 +5,12 @@ Last full verification: 2026-03-12
 
 ## Snapshot
 
-- Active event rows: `41`
+- Active event rows: `46`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests ch.njol.skript.expressions.ExpressionEventContextBundleCompatibilityTest --tests ch.njol.skript.conditions.ConditionSyntaxS1CompatibilityTest` passed
-  - `build/junit.xml` recorded `respawn_producer_executes_real_script`, `piglin_barter_event_executes_real_script`, and `player_egg_throw_producer_executes_real_script` as passing GameTests
-  - full `./gradlew runGameTest --rerun-tasks` is currently blocked only by the existing `ExprNumbers` GameTest failure; `267 / 268` passed
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.PlayerArmorChangeRuntimeTest` passed
+  - `build/junit.xml` recorded `entity_target_and_untarget_execute_real_script`, `entity_portal_executes_real_script`, `helmet_change_executes_real_script`, `explosion_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `mutable_entity_death_payload_backfill_executes_synthetic_script` as passing GameTests
+  - full `./gradlew runGameTest --rerun-tasks` is currently blocked only by the existing `ExprNumbers` GameTest failure; `275 / 276` passed
 
 ## Active Rows
 
@@ -39,14 +39,19 @@ Last full verification: 2026-03-12
 | `on player chunk enter` | `ServerGamePacketListenerImpl.handleMovePlayer` chunk boundary check |
 | `on command` | `Commands.performPrefixedCommand(CommandSourceStack, String)` |
 | `on entity block change` | `Sheep.ate()` mixin path |
+| `on [entity] target` / `on [entity] un-target` | `Mob.setTarget(LivingEntity)` mixin path |
 | `on gamemode change` | `ServerPlayerGameMode.changeGameModeForPlayer(GameType)` |
+| `on armor change` / slot-specific armor change | `LivingEntity.onEquipItem(EquipmentSlot, ItemStack, ItemStack)` |
 | `on respawn` | `PlayerList.respawn(ServerPlayer, boolean, Entity.RemovalReason)` |
 | `on teleport` | `Entity.teleportTo(...)` mixin path |
 | `on player start/swap/stop spectating` | `ServerPlayer.setCamera(Entity)` mixin path |
+| `on [player] portal` / `on entity portal` | `Entity.handlePortal()` mixin path |
 | `on weather change` | `ServerLevel.setWeatherParameters(...)` |
 | `on pressure plate` | `BasePressurePlateBlock.onEntityCollision` and `TripWireBlock.onEntityCollision` |
 | `on vehicle collision` | `AbstractMinecart.push(Entity)` non-minecart path |
 | `on firework explosion` | `FireworkRocketEntity.explodeAndRemove(ServerLevel)` |
+| `on explode` | `ServerExplosion.explode()` mixin path with mutable exploded blocks / yield feedback |
+| `on explosion prime` | `Creeper.explodeCreeper()` mixin path with mutable radius feedback |
 | `on unleash` | `Leashable.dropLeash(Entity, boolean, boolean)` mixin path |
 | `on player egg throw` | `ThrownEgg.onHit(HitResult)` mixin path |
 | `on piglin barter` | `PiglinAi.stopHoldingOffHandItem(ServerLevel, Piglin, boolean)` mixin path |
@@ -61,19 +66,16 @@ Last full verification: 2026-03-12
 ## Open Parity Note
 
 - `Evt*.java` runtime audit:
-  - runtime-backed: `33 / 45`
-  - synthetic/partial: `7 / 45`
-  - non-runtime/manual: `5 / 45`
+  - runtime-backed: `38 / 50`
+  - synthetic/partial: `7 / 50`
+  - non-runtime/manual: `5 / 50`
 - Remaining synthetic/partial event syntax focus:
   - `EvtBlock`
   - `EvtItem`
-  - `EvtEntityTarget`
   - `EvtFirstJoin`
   - `EvtHarvestBlock`
   - `EvtLeash` (`unleash` live; `leash` and `player unleash` remain partial)
   - `EvtMoveOn`
-  - `EvtPlayerArmorChange`
-  - `EvtPortal`
   - `EvtWorld`
 - Remaining cross-cutting gap is not limited to dispatch:
   - ambiguous bare item-id compare, for example `event-item is wheat`

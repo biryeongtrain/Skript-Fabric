@@ -17,9 +17,9 @@ Last full verification: 2026-03-12
   - conditions: `28 / 28`
   - expressions: `84 / 84`
   - effects: `24 / 24`
-- Runtime-backed `Evt*.java`: `30 / 45`
-- Synthetic/partial `Evt*.java`: `10 / 45`
-- Non-runtime/manual `Evt*.java`: `5 / 45`
+- Runtime-backed `Evt*.java`: `38 / 50`
+- Synthetic/partial `Evt*.java`: `7 / 50`
+- Non-runtime/manual `Evt*.java`: `5 / 50`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
   - `breeding`: `12 / 12`
@@ -32,9 +32,9 @@ Last full verification: 2026-03-12
   - exact-path present locally: `925`
   - shortfall: `264`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest` passed
-  - `build/junit.xml` recorded `mixed_damage_and_healing_syntax_executes_real_script` and `unleash_producer_executes_real_script` as passing GameTests
-  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `264 / 265` passed
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.PlayerArmorChangeRuntimeTest` passed
+  - `build/junit.xml` recorded `entity_target_and_untarget_execute_real_script`, `entity_portal_executes_real_script`, `helmet_change_executes_real_script`, `explosion_executes_real_script`, `explosion_prime_producer_executes_real_script`, and `mutable_entity_death_payload_backfill_executes_synthetic_script` as passing GameTests
+  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `275 / 276` passed
 
 ## Active Priority
 
@@ -46,13 +46,16 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
-  - public `on respawn:` now uses the real `PlayerList.respawn(...)` producer and a dedicated respawn GameTest
-  - public `on piglin barter:` now uses the real piglin barter producer and a dedicated barter GameTest
-  - public `on player egg throw:` now uses the real `ThrownEgg.onHit(...)` producer and a dedicated egg collision GameTest
-  - synthetic mixed-runtime aliases for `gametest respawn`, `gametest piglin barter`, and `gametest player egg throw` were removed in favor of public syntax
+  - public `on [entity] target:` / `on [entity] un-target:` now uses the real `Mob.setTarget(...)` producer and a dedicated entity target GameTest
+  - public `on [player] portal:` / `on entity portal:` now uses the real portal travel path and a dedicated entity portal GameTest
+  - public `on armor change:` / `on helmet change:` now uses the real `LivingEntity.onEquipItem(...)` producer and a dedicated armor-slot GameTest
+  - public `on explode:` now uses the real `ServerExplosion.explode()` producer with mutable block-yield feedback and dedicated TNT-triggered GameTests
+  - public `on explosion prime:` now uses the real creeper ignition path with mutable radius feedback and dedicated real-trigger GameTests
+  - mixed-runtime synthetic aliases for `gametest explode` and `gametest explosion prime` were removed in favor of public syntax
+  - mutable `entity death` payload proof was split out of the shared mixed bundle into a dedicated backfill GameTest resource
 - Deferred from the same cycle:
   - `EvtLeash` remains partial for `leash` and `player unleash`
-  - synthetic event backfill still required for `explode`, `explosion prime`, and mutable `entity death`
+  - synthetic backfill still remains for mutable `entity death` only
 - Landed with unit JUnit plus targeted Minecraft GameTest; full suite is currently blocked only by the unrelated `ExprNumbers` GameTest failure
 
 ## Open Gaps
