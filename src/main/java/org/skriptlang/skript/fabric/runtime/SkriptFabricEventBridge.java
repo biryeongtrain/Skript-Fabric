@@ -510,6 +510,20 @@ public final class SkriptFabricEventBridge {
         );
     }
 
+    public static void dispatchInventoryClick(ServerPlayer player, ItemStack clickedStack) {
+        if (clickedStack.isEmpty()) {
+            return;
+        }
+        dispatchCompatItem(
+                player.level(),
+                player.blockPosition().immutable(),
+                FabricEventCompatHandles.ItemAction.INVENTORY_CLICK,
+                clickedStack,
+                false,
+                player
+        );
+    }
+
     public static void dispatchEntityShootBow(ServerLevel level, LivingEntity entity, @Nullable ItemStack consumable) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.EntityShootBow(entity, consumable == null ? null : consumable.copy()),
@@ -678,6 +692,15 @@ public final class SkriptFabricEventBridge {
             }
         }
         dispatchCompatBlock(level, pos, FabricEventCompatHandles.BlockAction.DROP, state, itemStack, true, player);
+    }
+
+    public static void dispatchHarvestBlock(ServerLevel level, BlockState state, @Nullable ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.HarvestBlock(state),
+                level.getServer(),
+                level,
+                player
+        ));
     }
 
     public static void dispatchEntityBlockChange(

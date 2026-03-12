@@ -1,0 +1,2 @@
+on inventory click at stick:
+    set test block under player event-player to emerald_block

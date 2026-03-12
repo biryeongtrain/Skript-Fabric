@@ -1,0 +1,2 @@
+on player block harvest:
+    set block at location(2, 1, 0) to diamond block

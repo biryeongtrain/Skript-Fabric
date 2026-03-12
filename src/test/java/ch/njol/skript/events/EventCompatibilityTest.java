@@ -948,6 +948,25 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void itemEventParsesInventoryClickFilterAndChecksHandle() {
+        EvtItem event = parseEvent("inventory click at stick", EvtItem.class);
+
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Item(
+                        dummyLevel(),
+                        BlockPos.ZERO,
+                        FabricEventCompatHandles.ItemAction.INVENTORY_CLICK,
+                        new ItemStack(Items.STICK),
+                        false
+                ),
+                null,
+                null,
+                null
+        )));
+        assertEquals("inventory click of [stick]", event.toString(null, false));
+    }
+
+    @Test
     void itemEventParsesInventoryMoveAndChecksHandle() {
         EvtItem event = parseEvent("inventory item move", EvtItem.class);
 

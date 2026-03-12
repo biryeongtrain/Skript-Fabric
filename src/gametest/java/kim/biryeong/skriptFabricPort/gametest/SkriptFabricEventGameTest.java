@@ -15,6 +15,7 @@ import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
 import com.mojang.authlib.GameProfile;
 import com.mojang.math.Transformation;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -27,7 +28,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.HashedStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.Direction;
@@ -76,6 +79,8 @@ import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.entity.projectile.ThrownSplashPotion;
 import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.inventory.FurnaceResultSlot;
@@ -98,6 +103,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.WitherRoseBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
@@ -439,6 +445,100 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.assertTrue(
                     helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
                     Component.literal("Expected the public mine syntax to execute through the real block break path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void inventoryClickEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            runtime.loadFromResource("skript/gametest/event/inventory_click_marks_block.sk");
+
+            BlockPos chestAbsolute = helper.absolutePos(new BlockPos(19, 1, 3));
+            helper.getLevel().setBlockAndUpdate(chestAbsolute, Blocks.CHEST.defaultBlockState());
+
+            ChestBlockEntity chest = (ChestBlockEntity) helper.getLevel().getBlockEntity(chestAbsolute);
+            helper.assertTrue(
+                    chest != null,
+                    Component.literal("Expected chest block entity to exist for the real inventory click path.")
+            );
+            if (chest == null) {
+                throw new IllegalStateException("Inventory click test chest was not created.");
+            }
+
+            chest.setItem(0, new ItemStack(Items.STICK));
+            chest.setChanged();
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(chestAbsolute.getX() + 0.5D, chestAbsolute.getY() + 1.0D, chestAbsolute.getZ() + 1.5D);
+            player.openMenu(chest);
+
+            player.connection.handleContainerClick(new ServerboundContainerClickPacket(
+                    player.containerMenu.containerId,
+                    player.containerMenu.getStateId(),
+                    (short) 0,
+                    (byte) 0,
+                    ClickType.PICKUP,
+                    new Int2ObjectOpenHashMap<>(),
+                    HashedStack.EMPTY
+            ));
+
+            helper.assertTrue(
+                    player.containerMenu.getSlot(0).getItem().isEmpty(),
+                    Component.literal("Expected the real chest menu click path to take the stick from slot 0.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(chestAbsolute.below()).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected the real inventory click packet path to execute the inventory click script.")
+            );
+            runtime.clearScripts();
+            Variables.clearAll();
+        });
+    }
+
+    @GameTest
+    public void harvestSweetBerryBushExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/harvest_sweet_berry_bush_marks_block.sk");
+
+            BlockPos bushAbsolute = helper.absolutePos(new BlockPos(0, 1, 0));
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(2, 1, 0));
+            helper.getLevel().setBlockAndUpdate(
+                    bushAbsolute,
+                    Blocks.SWEET_BERRY_BUSH.defaultBlockState().setValue(SweetBerryBushBlock.AGE, 3)
+            );
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(bushAbsolute.getX() + 0.5D, bushAbsolute.getY(), bushAbsolute.getZ() + 1.5D);
+
+            InteractionResult result = player.gameMode.useItemOn(
+                    player,
+                    helper.getLevel(),
+                    player.getItemInHand(InteractionHand.MAIN_HAND),
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(Vec3.atCenterOf(bushAbsolute), Direction.NORTH, bushAbsolute, false)
+            );
+
+            helper.assertTrue(
+                    result.consumesAction(),
+                    Component.literal("Expected mock server player to harvest the ripe sweet berry bush.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.DIAMOND_BLOCK),
+                    Component.literal("Expected sweet berry bush harvest producer to execute the loaded Skript file.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(bushAbsolute).getValue(SweetBerryBushBlock.AGE) == 1,
+                    Component.literal("Expected ripe sweet berry bush harvesting to reset the bush age to 1.")
             );
             runtime.clearScripts();
         });
