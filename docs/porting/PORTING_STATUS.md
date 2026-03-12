@@ -6,8 +6,8 @@ Last full verification: 2026-03-12
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `264`
-  - expressions missing: `78`
+  - overall missing: `263`
+  - expressions missing: `77`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -27,12 +27,12 @@ Last full verification: 2026-03-12
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `925`
-  - shortfall: `264`
+  - exact-path present locally: `926`
+  - shortfall: `263`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax1 G, syntax2 G, syntax3 G, bootstrap/binding G, event compatibility, event bridge binding, and mixed runtime
-  - cycle H GameTest hardening passed for syntax1/2/3 real `.sk` coverage and the dedicated `entity shoot bow` trigger path
-  - `./gradlew runGameTest --rerun-tasks` passed with `261 / 261`
+  - targeted cycle JUnit suite passed for syntax1 I and bootstrap/binding I
+  - `ExprNumbers` real `.sk` GameTest passed after wiring the cycle I GameTest entrypoint
+  - `./gradlew runGameTest --rerun-tasks` passed with `262 / 262`
 
 ## Active Priority
 
@@ -44,16 +44,14 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed expression slice:
-  - syntax1 compatibility subset: `ExprQuitReason`, `ExprSourceBlock`, `ExprTamer`
-  - syntax2 compatibility subset: `ExprHostname`, `ExprTPS`, `ExprPermissions`
-  - syntax3 compatibility subset: `ExprConfig`, `ExprNode`, `ExprScripts`
+  - cycle I syntax subset: `ExprNumbers`
 - Latest landed infra slice:
-  - bootstrap and binding coverage for the 2026-03-12g compatibility subset
-  - cycle H real `.sk` GameTest hardening for the syntax1/2/3 compatibility subset
-  - `entity shoot bow` runtime hook with dedicated real-trigger GameTest; mixed-runtime helper backfill removed
+  - bootstrap force-init and binding coverage for `ExprNumbers`
+  - cycle I real `.sk` GameTest entrypoint wiring for `ExprNumbers`
 - Deferred from the same cycle:
-  - weather-change runtime dispatch stayed out after the mixin target failed full GameTest and was reverted in integrator
-  - `ExprNumbers`, `ExprReadiedArrow`, `ExprAppliedEffect`, teleport-cause, spawn-reason, and `PrivateFishingHookAccess.currentState` stayed deferred
+  - teleport-cause stayed out after the real-trigger GameTest still resolved a missing cause
+  - spawn-reason stayed out after the worker could not produce a GameTest-clean commit
+  - `ExprReadiedArrow`, `ExprAppliedEffect`, weather-change runtime dispatch, and `PrivateFishingHookAccess.currentState` remain deferred
 - Landed with unit JUnit, bootstrap/binding JUnit, and Minecraft GameTest
 
 ## Open Gaps

@@ -20,26 +20,24 @@ Last full verification: 2026-03-12
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
+- Upstream `ch/njol/skript` baseline: exact-path present `926`, upstream `1189`, shortfall `263`
 - Latest full verification:
-  - targeted cycle JUnit suite passed for syntax1 G, syntax2 G, syntax3 G, bootstrap/binding G, event compatibility, event bridge binding, and mixed runtime
-  - cycle H GameTest hardening passed for syntax1/2/3 real `.sk` coverage and the dedicated `entity shoot bow` trigger path
-  - `./gradlew runGameTest --rerun-tasks` passed with `261 / 261`
+  - targeted cycle JUnit suite passed for syntax1 I and bootstrap/binding I
+  - `ExprNumbers` real `.sk` GameTest passed after wiring the cycle I GameTest entrypoint
+  - `./gradlew runGameTest --rerun-tasks` passed with `262 / 262`
 
 ## Most Recent Merged Slice
 
-- syntax1 compatibility helpers `ExprQuitReason`, `ExprSourceBlock`, `ExprTamer`
-- syntax2 compatibility helpers `ExprHostname`, `ExprTPS`, `ExprPermissions`
-- syntax3 compatibility helpers `ExprConfig`, `ExprNode`, `ExprScripts`
-- bootstrap/binding closure for the 2026-03-12g syntax subset
-- cycle H real `.sk` GameTest hardening for the syntax1/2/3 subset
-- `entity shoot bow` runtime hook with dedicated real-trigger GameTest; mixed-runtime helper backfill removed
-- weather-change runtime dispatch was rejected after the mixin target failed full GameTest
+- cycle I syntax slice `ExprNumbers`
+- bootstrap/binding closure for `ExprNumbers`
+- cycle I real `.sk` GameTest entrypoint wiring for `ExprNumbers`
+- teleport-cause stayed out after the real-trigger GameTest still returned a missing cause
+- spawn-reason stayed out after the worker could not produce a GameTest-clean commit
 
 ## Do Next
 
-- Continue exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
-- Resume the next-smallest slices in this order: `ExprNumbers`, `ExprReadiedArrow`, `ExprAppliedEffect`, teleport cause, spawn reason.
+- Continue exact-path closure from `263` overall missing with focus on expressions `77` and the remaining non-event buckets.
+- Resume the next-smallest slices in this order: `ExprReadiedArrow`, `ExprAppliedEffect`, teleport cause, spawn reason.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.
