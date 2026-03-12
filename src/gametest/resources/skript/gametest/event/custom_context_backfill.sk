@@ -33,9 +33,8 @@ on gametest player egg throw:
     set hatching number to 3
     set hatching entity type to pig
 
-on gametest respawn:
-    if respawn location is a bed:
-        set test block at 3 1 0 to gold_block
+on respawn:
+    set test block at 3 1 0 to gold_block
 
 on gametest explosion prime:
     if the event-explosion is fiery:

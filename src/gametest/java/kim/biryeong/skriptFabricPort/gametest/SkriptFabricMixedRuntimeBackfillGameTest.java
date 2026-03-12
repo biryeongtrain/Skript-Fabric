@@ -39,7 +39,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
     private static final Class<?> PLAYER_EGG_THROW_EVENT = effectEventClass("PlayerEggThrow");
-    private static final Class<?> PLAYER_RESPAWN_EVENT = effectEventClass("PlayerRespawn");
     private static final Class<?> EXPLOSION_PRIME_EVENT = effectEventClass("ExplosionPrime");
     private static final Class<?> ENTITY_DEATH_EVENT = effectEventClass("EntityDeath");
     private static final Class<?> HANGING_BREAK_EVENT = effectEventClass("HangingBreak");
@@ -473,14 +472,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
 
             assertExecuted(helper, dispatch(
                     runtime,
-                    new RespawnHandle(true, false),
-                    helper,
-                    null
-            ), "respawn event");
-            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(3, 1, 0));
-
-            assertExecuted(helper, dispatch(
-                    runtime,
                     new ExplosionPrimeHandle(true),
                     helper,
                     null
@@ -510,6 +501,21 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     helper.getLevel().getBlockState(unleashMarker).is(Blocks.IRON_BLOCK),
                     Component.literal("Expected real unleash producer to execute loaded Skript file.")
             );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void respawnProducerExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/custom_context_backfill.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            helper.getLevel().getServer().getPlayerList().respawn(player, false, Entity.RemovalReason.KILLED);
+
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(3, 1, 0));
             runtime.clearScripts();
         });
     }
@@ -617,7 +623,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestPiglinBarterMutableEvent.class, "gametest piglin barter mutable");
         Skript.registerEvent(GameTestExplosionPrimeMutableEvent.class, "gametest explosion prime mutable");
         Skript.registerEvent(GameTestBlockFertilizeEvent.class, "gametest block fertilize");
-        Skript.registerEvent(GameTestRespawnEvent.class, "gametest respawn");
         Skript.registerEvent(GameTestExplosionPrimeEvent.class, "gametest explosion prime");
     }
 
@@ -799,9 +804,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         public void setHatchingType(EntityType<?> hatchingType) {
             this.hatchingType = hatchingType;
         }
-    }
-
-    private record RespawnHandle(boolean isBedSpawn, boolean isAnchorSpawn) {
     }
 
     private record ExplosionPrimeHandle(boolean causesFire) {
@@ -1011,29 +1013,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest player egg throw";
-        }
-    }
-
-    public static final class GameTestRespawnEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof RespawnHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{PLAYER_RESPAWN_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest respawn";
         }
     }
 

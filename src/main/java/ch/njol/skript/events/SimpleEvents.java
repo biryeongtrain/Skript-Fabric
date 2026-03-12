@@ -32,6 +32,7 @@ public final class SimpleEvents {
         EvtPlayerCommandSend.register();
         EvtPortal.register();
         EvtPressurePlate.register();
+        EvtRespawn.register();
         EvtResourcePackResponse.register();
         EvtSpectate.register();
         EvtTeleport.register();

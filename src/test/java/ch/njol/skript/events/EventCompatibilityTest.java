@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashHandle;
@@ -74,6 +75,7 @@ final class EventCompatibilityTest {
         EvtPlayerArmorChange.register();
         EvtPortal.register();
         EvtPressurePlate.register();
+        EvtRespawn.register();
         EvtResourcePackResponse.register();
         EvtVehicleCollision.register();
         EvtWeatherChange.register();
@@ -253,6 +255,39 @@ final class EventCompatibilityTest {
 
         assertEquals("player enter chunk", event.toString(null, false));
         assertEquals(1, event.getEventClasses().length);
+    }
+
+    @Test
+    void respawnEventChecksCompatAndEffectHandles() throws Exception {
+        EvtRespawn event = parseEvent("on respawn", EvtRespawn.class);
+
+        assertEquals("respawn", event.toString(null, false));
+        assertEquals(FabricEventCompatHandles.PlayerRespawn.class, event.getEventClasses()[0]);
+        assertEquals(resolveClass("ch.njol.skript.effects.FabricEffectEventHandles$PlayerRespawn"), event.getEventClasses()[1]);
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PlayerRespawn(
+                        new org.skriptlang.skript.fabric.compat.FabricLocation(null, new Vec3(1, 2, 3)),
+                        true,
+                        false,
+                        "death"
+                ),
+                null,
+                null,
+                null
+        )));
+        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
+                newEffectHandle(
+                        "PlayerRespawn",
+                        new Class[]{org.skriptlang.skript.fabric.compat.FabricLocation.class, boolean.class, boolean.class, String.class},
+                        new org.skriptlang.skript.fabric.compat.FabricLocation(null, new Vec3(4, 5, 6)),
+                        false,
+                        true,
+                        "end_portal"
+                ),
+                null,
+                null,
+                null
+        )));
     }
 
     @Test
@@ -694,6 +729,17 @@ final class EventCompatibilityTest {
         Field field = owner.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(owner);
+    }
+
+    private static Class<?> resolveClass(String name) throws ClassNotFoundException {
+        return Class.forName(name);
+    }
+
+    private static Object newEffectHandle(String simpleName, Class<?>[] parameterTypes, Object... arguments) throws Exception {
+        Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$" + simpleName);
+        java.lang.reflect.Constructor<?> constructor = type.getDeclaredConstructor(parameterTypes);
+        constructor.setAccessible(true);
+        return constructor.newInstance(arguments);
     }
 
     @SuppressWarnings("unchecked")

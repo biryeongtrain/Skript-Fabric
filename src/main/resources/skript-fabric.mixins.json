@@ -42,6 +42,7 @@
     "LivingEntityPotionMixin",
     "LootTableMixin",
     "PlayerExperienceMixin",
+    "PlayerListRespawnMixin",
     "PlayerPotionCauseMixin",
     "ProjectileWeaponItemMixin",
     "PotionContentsMixin",

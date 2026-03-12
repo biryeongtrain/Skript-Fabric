@@ -1,6 +1,7 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Collection;
@@ -21,6 +22,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -43,6 +45,7 @@ import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -67,6 +70,8 @@ public final class SkriptFabricEventBridge {
 
     private static final Map<net.minecraft.world.level.storage.loot.LootTable, ResourceKey<net.minecraft.world.level.storage.loot.LootTable>> LOOT_TABLE_KEYS =
             Collections.synchronizedMap(new IdentityHashMap<>());
+    private static final @Nullable Constructor<?> PLAYER_RESPAWN_EFFECT_HANDLE_CTOR = resolvePlayerRespawnEffectHandleCtor();
+    private static final @Nullable Method PLAYER_RESPAWN_EFFECT_LOCATION = resolvePlayerRespawnEffectMethod("respawnLocation");
     private static volatile boolean registered;
 
     private SkriptFabricEventBridge() {
@@ -731,6 +736,51 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchRespawn(ServerPlayer previousPlayer, ServerPlayer player, boolean alive, Entity.RemovalReason removalReason) {
+        ServerLevel level = player.level();
+        FabricLocation defaultLocation = new FabricLocation(level, player.position());
+        boolean anchorSpawn = false;
+        boolean bedSpawn = false;
+
+        Object respawn = invokeNoArg(previousPlayer, "getRespawn");
+        if (respawn != null) {
+            Object respawnData = invokeNoArg(respawn, "respawnData");
+            if (respawnData == null) {
+                respawnData = respawn;
+            }
+            Object rawDimension = invokeNoArg(respawnData, "dimension");
+            Object rawPos = invokeNoArg(respawnData, "pos");
+            if (rawDimension instanceof ResourceKey<?> dimensionKey && rawPos instanceof BlockPos blockPos) {
+                @SuppressWarnings("unchecked")
+                ServerLevel respawnLevel = player.getServer().getLevel((ResourceKey<Level>) dimensionKey);
+                if (respawnLevel != null) {
+                    BlockState blockState = respawnLevel.getBlockState(blockPos);
+                    anchorSpawn = blockState.is(Blocks.RESPAWN_ANCHOR);
+                    bedSpawn = blockState.is(BlockTags.BEDS);
+                }
+            }
+        }
+
+        String reason = alive ? "end_portal" : removalReason == Entity.RemovalReason.KILLED ? "death" : null;
+        Object handle = createPlayerRespawnHandle(defaultLocation, bedSpawn, anchorSpawn, reason);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                level.getServer(),
+                level,
+                player
+        ));
+
+        if (handle instanceof FabricEventCompatHandles.PlayerRespawn compatHandle && compatHandle.respawnLocation() != null) {
+            applyRespawnLocation(player, compatHandle.respawnLocation());
+            return;
+        }
+
+        FabricLocation updatedLocation = playerRespawnLocation(handle);
+        if (updatedLocation != null) {
+            applyRespawnLocation(player, updatedLocation);
+        }
+    }
+
     public static void dispatchTeleport(Entity entity, ServerLevel level, Vec3 fromPosition, Vec3 toPosition) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 FabricPlayerEventHandles.teleport(
@@ -826,6 +876,69 @@ public final class SkriptFabricEventBridge {
             Method method = target.getClass().getMethod(methodName);
             method.setAccessible(true);
             return method.invoke(target);
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static void applyRespawnLocation(ServerPlayer player, FabricLocation location) {
+        if (location.level() != null && location.level() != player.level()) {
+            return;
+        }
+        player.snapTo(
+                location.position().x,
+                location.position().y,
+                location.position().z,
+                player.getYRot(),
+                player.getXRot()
+        );
+    }
+
+    private static Object createPlayerRespawnHandle(
+            FabricLocation defaultLocation,
+            boolean bedSpawn,
+            boolean anchorSpawn,
+            @Nullable String reason
+    ) {
+        if (PLAYER_RESPAWN_EFFECT_HANDLE_CTOR == null) {
+            return new FabricEventCompatHandles.PlayerRespawn(defaultLocation, bedSpawn, anchorSpawn, reason);
+        }
+        try {
+            return PLAYER_RESPAWN_EFFECT_HANDLE_CTOR.newInstance(defaultLocation, bedSpawn, anchorSpawn, reason);
+        } catch (ReflectiveOperationException ignored) {
+            return new FabricEventCompatHandles.PlayerRespawn(defaultLocation, bedSpawn, anchorSpawn, reason);
+        }
+    }
+
+    private static @Nullable FabricLocation playerRespawnLocation(Object handle) {
+        if (PLAYER_RESPAWN_EFFECT_LOCATION == null || !PLAYER_RESPAWN_EFFECT_LOCATION.getDeclaringClass().isInstance(handle)) {
+            return null;
+        }
+        try {
+            Object value = PLAYER_RESPAWN_EFFECT_LOCATION.invoke(handle);
+            return value instanceof FabricLocation location ? location : null;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static @Nullable Constructor<?> resolvePlayerRespawnEffectHandleCtor() {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$PlayerRespawn");
+            Constructor<?> constructor = type.getDeclaredConstructor(FabricLocation.class, boolean.class, boolean.class, String.class);
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static @Nullable Method resolvePlayerRespawnEffectMethod(String methodName) {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$PlayerRespawn");
+            Method method = type.getMethod(methodName);
+            method.setAccessible(true);
+            return method;
         } catch (ReflectiveOperationException ignored) {
             return null;
         }
