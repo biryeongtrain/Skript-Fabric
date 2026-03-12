@@ -39,6 +39,13 @@ Last full verification: 2026-03-12
 - Continue exact-path closure from `263` overall missing with focus on expressions `77` and the remaining non-event buckets.
 - Resume the next-smallest slices in this order: `ExprReadiedArrow`, `ExprAppliedEffect`, teleport cause, spawn reason.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
+- Treat `events missing: 0` as exact-path parity only.
+  - The 2026-03-12 `Evt*.java` audit split is `24` runtime-backed, `16` synthetic or partial, `5` non-runtime/manual/scheduled/internal.
+  - Prioritize closing the synthetic bucket before claiming event-hook closure.
+- First event-hook closure targets from the audit:
+  - `EvtBlock` remaining variants: `burn`, `fade`, `form`, `drop`
+  - `EvtItem` remaining variants: everything except `SPAWN`
+  - standalone synthetic classes: `EvtEntityBlockChange`, `EvtEntityTarget`, `EvtFirework`, `EvtFirstJoin`, `EvtGameMode`, `EvtHarvestBlock`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtPressurePlate`, `EvtVehicleCollision`, `EvtWeatherChange`, `EvtWorld`
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.
 

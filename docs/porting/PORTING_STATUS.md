@@ -9,6 +9,7 @@ Last full verification: 2026-03-12
   - overall missing: `263`
   - expressions missing: `77`
   - events missing: `0`
+    - exact-path only; this is not the same as live-hook completeness
   - sections missing: `8`
   - command missing: `9`
   - aliases missing: `9`
@@ -33,6 +34,11 @@ Last full verification: 2026-03-12
   - targeted cycle JUnit suite passed for syntax1 I and bootstrap/binding I
   - `ExprNumbers` real `.sk` GameTest passed after wiring the cycle I GameTest entrypoint
   - `./gradlew runGameTest --rerun-tasks` passed with `262 / 262`
+- `Evt*.java` runtime audit:
+  - total local `Evt*.java`: `45`
+  - runtime-backed/live-hooked: `24`
+  - synthetic-handle-only or partial: `16`
+  - non-runtime/manual/scheduled/internal: `5`
 
 ## Active Priority
 
@@ -61,6 +67,9 @@ Last full verification: 2026-03-12
 - Function namespace/default-parameter/runtime parity beyond the current fixes.
 - Variable runtime is still an in-memory bridge, not upstream-complete.
 - Cross-cutting Stage 8 parity gap: ambiguous bare item-id compare, for example `event-item is wheat`.
+- Event source parity is split:
+  - upstream `events` exact-path parity is closed
+  - runtime hook parity is still open for `EvtBlock` partial (`burn`/`fade`/`form`/`drop`), `EvtItem` partial (everything except `SPAWN`), plus `EvtEntityBlockChange`, `EvtEntityTarget`, `EvtFirework`, `EvtFirstJoin`, `EvtGameMode`, `EvtHarvestBlock`, `EvtLeash`, `EvtMoveOn`, `EvtPlayerArmorChange`, `EvtPortal`, `EvtPressurePlate`, `EvtVehicleCollision`, `EvtWeatherChange`, and `EvtWorld`
 
 ## Reference Docs
 
