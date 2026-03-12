@@ -94,7 +94,6 @@ Last full verification: 2026-03-13
   - synthetic/partial: `0 / 53`
   - non-runtime/manual: `5 / 53`
 - Runtime-backed closure is complete for event-hook families; only non-runtime/manual `Evt*.java` remain outside the live bucket.
-- Remaining event-facing synthetic alias:
-  - `gametest hanging break`
+- Event-facing synthetic alias backlog is now `0`; hanging payload coverage runs through public `on break of item frame:` with the real item-frame break path.
 - Remaining cross-cutting gap is not limited to dispatch:
   - ambiguous bare item-id compare, for example `event-item is wheat`

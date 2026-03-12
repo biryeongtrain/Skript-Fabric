@@ -99,8 +99,8 @@ Baseline snapshot date: 2026-03-08
   - `ExpressionCycle20260312ISyntax1CompatibilityTest`
   - `ExpressionCycle20260312IBindingCompatibilityTest`
   - `SkriptFabricExpressionCycleISyntax1GameTest`
-- Verification passed on 2026-03-12:
+- Verification refreshed on 2026-03-13:
   - targeted cycle JUnit suite covering syntax1 I and bootstrap/binding I
   - cycle I real `.sk` GameTest entrypoint for `ExprNumbers`
   - `./gradlew runGameTest --rerun-tasks`
-- Verified runtime baseline after that merge: `262 / 262`
+- Current runtime baseline after the refresh: `310` GameTests executed, with `ExprNumbers` cleared and one unrelated beacon runtime-lock failure remaining

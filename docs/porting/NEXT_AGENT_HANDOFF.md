@@ -40,10 +40,9 @@ Last full verification: 2026-03-13
 ## Do Next
 
 - Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
-- Continue removing synthetic event aliases only where public syntax plus real producer both exist:
-  - remaining blocked alias is `gametest hanging break`
-- Investigate the remaining unrelated full-suite failures:
-  - `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+- Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
+- Investigate the remaining unrelated full-suite failure:
+  - `skript_fabric_event_game_test_primary_beacon_effect_executes_real_script`
 - After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
