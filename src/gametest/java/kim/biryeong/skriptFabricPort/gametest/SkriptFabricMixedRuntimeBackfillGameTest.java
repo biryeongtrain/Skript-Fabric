@@ -25,7 +25,7 @@ import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.animal.Cow;
-import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -43,7 +43,6 @@ import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkriptFabricGameTestSupport {
 
     private static final AtomicBoolean CUSTOM_EVENTS_REGISTERED = new AtomicBoolean(false);
-    private static final Class<?> HANGING_BREAK_EVENT = effectEventClass("HangingBreak");
 
     @GameTest
     public void storageUtilityAndPropertySyntaxExecutesRealScript(GameTestHelper helper) {
@@ -327,17 +326,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected explosive yield script to update the creeper radius.")
             );
 
-            ArmorStand hangingEntity = new ArmorStand(helper.getLevel(), 2.5D, 1.0D, 0.5D);
-            ArmorStand hangingRemover = new ArmorStand(helper.getLevel(), 3.5D, 1.0D, 0.5D);
-            helper.getLevel().addFreshEntity(hangingEntity);
-            helper.getLevel().addFreshEntity(hangingRemover);
-            assertExecuted(helper, dispatch(runtime, new HangingBreakHandle(hangingEntity, hangingRemover), helper, null), "hanging break context");
-            helper.assertTrue(
-                    "hanging entity".equals(hangingEntity.getCustomName() == null ? null : hangingEntity.getCustomName().getString())
-                            && "hanging remover".equals(hangingRemover.getCustomName() == null ? null : hangingRemover.getCustomName().getString()),
-                    Component.literal("Expected hanging expressions to resolve both the hanging entity and remover.")
-            );
-
             BlockPos fertilized = helper.absolutePos(new BlockPos(4, 1, 0));
             BlockState initialState = Blocks.WHEAT.defaultBlockState();
             helper.getLevel().setBlockAndUpdate(fertilized, initialState);
@@ -359,6 +347,40 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
                     Component.literal("Expected bonemeal to grow the crop before asserting block fertilize hooks.")
             );
             helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(4, 2, 0));
+
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void hangingBreakPayloadExecutesPublicSyntaxOnRealItemFrameBreak(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/expression/mixed_runtime_event_payload_bundle.sk");
+
+            BlockPos supportPos = helper.absolutePos(new BlockPos(2, 1, 0));
+            helper.getLevel().setBlockAndUpdate(supportPos, Blocks.STONE.defaultBlockState());
+
+            ItemFrame itemFrame = new ItemFrame(helper.getLevel(), supportPos, Direction.NORTH);
+            helper.getLevel().addFreshEntity(itemFrame);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.SURVIVAL);
+
+            helper.assertTrue(
+                    itemFrame.hurtServer(helper.getLevel(), helper.getLevel().damageSources().playerAttack(player), 1.0F),
+                    Component.literal("Expected the real item frame damage path to report a successful hanging break.")
+            );
+            helper.assertTrue(
+                    !itemFrame.isAlive(),
+                    Component.literal("Expected the attacked item frame to break on the real damage path.")
+            );
+            helper.assertTrue(
+                    "hanging entity".equals(itemFrame.getCustomName() == null ? null : itemFrame.getCustomName().getString())
+                            && "hanging remover".equals(player.getCustomName() == null ? null : player.getCustomName().getString()),
+                    Component.literal("Expected public hanging expressions to resolve both the broken item frame and its remover.")
+            );
 
             runtime.clearScripts();
         });
@@ -405,7 +427,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         Skript.registerEvent(GameTestEntityContextEvent.class, "gametest entity context");
         Skript.registerEvent(GameTestItemEntityContextEvent.class, "gametest item entity context");
         Skript.registerEvent(GameTestExplosiveEntityContextEvent.class, "gametest explosive entity context");
-        Skript.registerEvent(GameTestHangingBreakEvent.class, "gametest hanging break");
         Skript.registerEvent(GameTestHelperContextEvent.class, "gametest helper context");
         Skript.registerEvent(GameTestProjectileContextEvent.class, "gametest projectile context");
     }
@@ -438,14 +459,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             return (java.util.UUID) field.get(itemEntity);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Failed to read dropped item owner for GameTest.", exception);
-        }
-    }
-
-    private static Class<?> effectEventClass(String simpleName) {
-        try {
-            return Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$" + simpleName);
-        } catch (ClassNotFoundException exception) {
-            throw new IllegalStateException(exception);
         }
     }
 
@@ -492,9 +505,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
     }
 
     private record HelperContextHandle() {
-    }
-
-    private record HangingBreakHandle(Entity entity, @Nullable Entity remover) {
     }
 
     public static final class GameTestBlockContextEvent extends ch.njol.skript.lang.SkriptEvent {
@@ -586,29 +596,6 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
         @Override
         public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
             return "gametest explosive entity context";
-        }
-    }
-
-    public static final class GameTestHangingBreakEvent extends ch.njol.skript.lang.SkriptEvent {
-
-        @Override
-        public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parseResult) {
-            return args.length == 0;
-        }
-
-        @Override
-        public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return event.handle() instanceof HangingBreakHandle;
-        }
-
-        @Override
-        public Class<?>[] getEventClasses() {
-            return new Class<?>[]{HANGING_BREAK_EVENT};
-        }
-
-        @Override
-        public String toString(@Nullable org.skriptlang.skript.lang.event.SkriptEvent event, boolean debug) {
-            return "gametest hanging break";
         }
     }
 

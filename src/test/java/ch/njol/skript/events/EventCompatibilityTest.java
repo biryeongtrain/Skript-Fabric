@@ -484,6 +484,14 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    void blockEventParsesPublicItemFrameBreakSyntaxAndChecksHangingHandle() throws Exception {
+        EvtBlock event = parseEvent("break of item frame", EvtBlock.class);
+
+        assertEquals(2, event.getEventClasses().length);
+        assertEquals(resolveClass("ch.njol.skript.effects.FabricEffectEventHandles$HangingBreak"), event.getEventClasses()[1]);
+    }
+
+    @Test
     void blockEventParsesMineFilterAndRequiresDroppedResources() {
         EvtBlock event = parseEvent("block mining", EvtBlock.class);
 

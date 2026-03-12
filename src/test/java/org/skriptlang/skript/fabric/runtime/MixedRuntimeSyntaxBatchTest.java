@@ -236,6 +236,7 @@ final class MixedRuntimeSyntaxBatchTest {
         assertInstanceOf(EvtBeaconEffect.class, parseEvent("secondary beacon effect of speed"));
         assertInstanceOf(EvtBeaconToggle.class, parseEvent("beacon activation"));
         assertInstanceOf(EvtBlock.class, parseEvent("block breaking of stone"));
+        assertInstanceOf(EvtBlock.class, parseEvent("break of item frame"));
         assertInstanceOf(EvtClick.class, parseEvent("right click with stick on stone"));
         assertInstanceOf(EvtCommand.class, parseEvent("command \"say\""));
         assertInstanceOf(EvtEntity.class, parseEvent("spawning of zombie"));

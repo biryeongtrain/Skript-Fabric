@@ -5,7 +5,7 @@ on gametest projectile context:
 on gametest explosive entity context:
     set explosive yield of event-entity to 5
 
-on gametest hanging break:
+on break of item frame:
     set test name of entity hanging entity to "hanging entity"
     set test name of entity hanging remover to "hanging remover"
 

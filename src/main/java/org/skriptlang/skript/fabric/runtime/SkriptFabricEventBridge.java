@@ -88,6 +88,8 @@ public final class SkriptFabricEventBridge {
     private static final @Nullable Method ENTITY_DEATH_EFFECT_DROPPED_EXP = resolveEntityDeathEffectMethod("droppedExp");
     private static final @Nullable Constructor<?> EXPLOSION_PRIME_EFFECT_HANDLE_CTOR = resolveExplosionPrimeEffectHandleCtor();
     private static final @Nullable Method EXPLOSION_PRIME_EFFECT_RADIUS = resolveExplosionPrimeEffectMethod("radius");
+    private static final @Nullable Constructor<?> HANGING_BREAK_EFFECT_HANDLE_CTOR = resolveHangingBreakEffectHandleCtor();
+    private static final @Nullable Constructor<?> HANGING_PLACE_EFFECT_HANDLE_CTOR = resolveHangingPlaceEffectHandleCtor();
     private static final ThreadLocal<@Nullable DeathCapture> ACTIVE_DEATH_CAPTURE = new ThreadLocal<>();
     private static volatile boolean registered;
 
@@ -588,6 +590,26 @@ public final class SkriptFabricEventBridge {
                 level.getServer(),
                 level,
                 serverPlayer
+        ));
+    }
+
+    public static void dispatchHangingBreak(ServerLevel level, Entity entity, @Nullable Entity remover) {
+        ServerPlayer player = remover instanceof ServerPlayer serverPlayer ? serverPlayer : null;
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                createHangingBreakHandle(entity, remover),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchHangingPlace(ServerLevel level, Entity entity, @Nullable Entity placer) {
+        ServerPlayer player = placer instanceof ServerPlayer serverPlayer ? serverPlayer : null;
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                createHangingPlaceHandle(entity),
+                level.getServer(),
+                level,
+                player
         ));
     }
 
@@ -1517,6 +1539,50 @@ public final class SkriptFabricEventBridge {
             Method method = type.getMethod(methodName);
             method.setAccessible(true);
             return method;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static Object createHangingBreakHandle(Entity entity, @Nullable Entity remover) {
+        if (HANGING_BREAK_EFFECT_HANDLE_CTOR == null) {
+            throw new IllegalStateException("Hanging break effect handle constructor is unavailable.");
+        }
+        try {
+            return HANGING_BREAK_EFFECT_HANDLE_CTOR.newInstance(entity, remover);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to create hanging break effect handle.", exception);
+        }
+    }
+
+    private static Object createHangingPlaceHandle(Entity entity) {
+        if (HANGING_PLACE_EFFECT_HANDLE_CTOR == null) {
+            throw new IllegalStateException("Hanging place effect handle constructor is unavailable.");
+        }
+        try {
+            return HANGING_PLACE_EFFECT_HANDLE_CTOR.newInstance(entity);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to create hanging place effect handle.", exception);
+        }
+    }
+
+    private static @Nullable Constructor<?> resolveHangingBreakEffectHandleCtor() {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$HangingBreak");
+            Constructor<?> constructor = type.getDeclaredConstructor(Entity.class, Entity.class);
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static @Nullable Constructor<?> resolveHangingPlaceEffectHandleCtor() {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$HangingPlace");
+            Constructor<?> constructor = type.getDeclaredConstructor(Entity.class);
+            constructor.setAccessible(true);
+            return constructor;
         } catch (ReflectiveOperationException ignored) {
             return null;
         }

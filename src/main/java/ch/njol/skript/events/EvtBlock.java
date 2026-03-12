@@ -1,19 +1,31 @@
 package ch.njol.skript.events;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.entity.EntityData;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptEvent;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.SyntaxStringBuilder;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 
 @SuppressWarnings("unchecked")
 public final class EvtBlock extends SkriptEvent {
+
+    private static final @Nullable Class<?> HANGING_BREAK_EVENT = resolveEffectHandleClass("HangingBreak");
+    private static final @Nullable Class<?> HANGING_PLACE_EVENT = resolveEffectHandleClass("HangingPlace");
 
     private @Nullable Literal<Object> types;
     private FabricEventCompatHandles.BlockAction action;
@@ -51,24 +63,43 @@ public final class EvtBlock extends SkriptEvent {
 
     @Override
     public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-        if (!(event.handle() instanceof FabricEventCompatHandles.Block handle)) {
+        Object handle = event.handle();
+        if (handle instanceof FabricEventCompatHandles.Block blockHandle) {
+            if (blockHandle.action() != action) {
+                return false;
+            }
+            if (mine && !blockHandle.dropped()) {
+                return false;
+            }
+            if (types == null) {
+                return true;
+            }
+            return types.check(event, candidate -> matchesType(candidate, blockHandle.blockState(), blockHandle.itemStack(), null));
+        }
+        if (!isMatchingHangingHandle(handle, action)) {
             return false;
         }
-        if (handle.action() != action) {
-            return false;
-        }
-        if (mine && !handle.dropped()) {
+        if (mine) {
             return false;
         }
         if (types == null) {
             return true;
         }
-        return types.check(event, candidate -> matchesType(candidate, handle.blockState(), handle.itemStack()));
+        Entity entity = hangingEntity(handle);
+        return types.check(event, candidate -> matchesType(candidate, null, null, entity));
     }
 
     @Override
     public Class<?>[] getEventClasses() {
-        return new Class<?>[]{FabricEventCompatHandles.Block.class};
+        List<Class<?>> eventClasses = new ArrayList<>();
+        eventClasses.add(FabricEventCompatHandles.Block.class);
+        if (action == FabricEventCompatHandles.BlockAction.BREAK && HANGING_BREAK_EVENT != null) {
+            eventClasses.add(HANGING_BREAK_EVENT);
+        }
+        if (action == FabricEventCompatHandles.BlockAction.PLACE && HANGING_PLACE_EVENT != null) {
+            eventClasses.add(HANGING_PLACE_EVENT);
+        }
+        return eventClasses.toArray(Class<?>[]::new);
     }
 
     @Override
@@ -81,15 +112,76 @@ public final class EvtBlock extends SkriptEvent {
         return builder.toString();
     }
 
-    private static boolean matchesType(@Nullable Object candidate, @Nullable BlockState blockState, @Nullable ItemStack itemStack) {
+    private static boolean matchesType(
+            @Nullable Object candidate,
+            @Nullable BlockState blockState,
+            @Nullable ItemStack itemStack,
+            @Nullable Entity hangingEntity
+    ) {
         if (candidate instanceof FabricItemType itemType) {
             ItemStack stack = itemStack;
             if (stack == null && blockState != null) {
                 Item item = blockState.getBlock().asItem();
                 stack = item == null ? null : new ItemStack(item, Math.max(1, itemType.amount()));
             }
+            if (stack == null && hangingEntity != null) {
+                stack = hangingPickResult(hangingEntity, itemType.amount());
+            }
             return stack != null && itemType.matches(stack);
         }
+        if (candidate instanceof EntityData<?> entityData && hangingEntity != null) {
+            return entityData.isInstance(hangingEntity);
+        }
+        if (hangingEntity != null) {
+            String candidateName = String.valueOf(candidate);
+            String hangingName = hangingEventName(hangingEntity);
+            if (!hangingName.isEmpty() && hangingName.equalsIgnoreCase(candidateName)) {
+                return true;
+            }
+        }
         return candidate instanceof BlockState state && blockState != null && Objects.equals(blockState, state);
+    }
+
+    private static boolean isMatchingHangingHandle(Object handle, FabricEventCompatHandles.BlockAction action) {
+        return (action == FabricEventCompatHandles.BlockAction.BREAK && HANGING_BREAK_EVENT != null && HANGING_BREAK_EVENT.isInstance(handle))
+                || (action == FabricEventCompatHandles.BlockAction.PLACE && HANGING_PLACE_EVENT != null && HANGING_PLACE_EVENT.isInstance(handle));
+    }
+
+    private static @Nullable Entity hangingEntity(Object handle) {
+        try {
+            Method method = handle.getClass().getMethod("entity");
+            Object value = method.invoke(handle);
+            return value instanceof Entity entity ? entity : null;
+        } catch (ReflectiveOperationException exception) {
+            return null;
+        }
+    }
+
+    private static @Nullable ItemStack hangingPickResult(Entity entity, int amount) {
+        ItemStack stack = null;
+        if (entity instanceof ItemFrame itemFrame) {
+            stack = new ItemStack(itemFrame.getType() == EntityType.GLOW_ITEM_FRAME ? Items.GLOW_ITEM_FRAME : Items.ITEM_FRAME);
+        } else if (entity instanceof Painting painting) {
+            stack = new ItemStack(Items.PAINTING);
+        }
+        return stack == null || stack.isEmpty() ? null : stack.copyWithCount(Math.max(1, amount));
+    }
+
+    private static String hangingEventName(Entity entity) {
+        if (entity instanceof ItemFrame itemFrame) {
+            return itemFrame.getType() == EntityType.GLOW_ITEM_FRAME ? "glow item frame" : "item frame";
+        }
+        if (entity instanceof Painting) {
+            return "painting";
+        }
+        return "";
+    }
+
+    private static @Nullable Class<?> resolveEffectHandleClass(String simpleName) {
+        try {
+            return Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$" + simpleName);
+        } catch (ClassNotFoundException exception) {
+            return null;
+        }
     }
 }
