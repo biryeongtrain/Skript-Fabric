@@ -5,12 +5,12 @@ Last full verification: 2026-03-12
 
 ## Snapshot
 
-- Active event rows: `38`
+- Active event rows: `41`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest` passed
-  - `build/junit.xml` recorded `mixed_damage_and_healing_syntax_executes_real_script` and `unleash_producer_executes_real_script` as passing GameTests
-  - full `./gradlew runGameTest --rerun-tasks` is currently blocked by the existing `ExprNumbers` GameTest failure; `264 / 265` passed
+  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests ch.njol.skript.expressions.ExpressionEventContextBundleCompatibilityTest --tests ch.njol.skript.conditions.ConditionSyntaxS1CompatibilityTest` passed
+  - `build/junit.xml` recorded `respawn_producer_executes_real_script`, `piglin_barter_event_executes_real_script`, and `player_egg_throw_producer_executes_real_script` as passing GameTests
+  - full `./gradlew runGameTest --rerun-tasks` is currently blocked only by the existing `ExprNumbers` GameTest failure; `267 / 268` passed
 
 ## Active Rows
 
@@ -40,6 +40,7 @@ Last full verification: 2026-03-12
 | `on command` | `Commands.performPrefixedCommand(CommandSourceStack, String)` |
 | `on entity block change` | `Sheep.ate()` mixin path |
 | `on gamemode change` | `ServerPlayerGameMode.changeGameModeForPlayer(GameType)` |
+| `on respawn` | `PlayerList.respawn(ServerPlayer, boolean, Entity.RemovalReason)` |
 | `on teleport` | `Entity.teleportTo(...)` mixin path |
 | `on player start/swap/stop spectating` | `ServerPlayer.setCamera(Entity)` mixin path |
 | `on weather change` | `ServerLevel.setWeatherParameters(...)` |
@@ -47,6 +48,8 @@ Last full verification: 2026-03-12
 | `on vehicle collision` | `AbstractMinecart.push(Entity)` non-minecart path |
 | `on firework explosion` | `FireworkRocketEntity.explodeAndRemove(ServerLevel)` |
 | `on unleash` | `Leashable.dropLeash(Entity, boolean, boolean)` mixin path |
+| `on player egg throw` | `ThrownEgg.onHit(HitResult)` mixin path |
+| `on piglin barter` | `PiglinAi.stopHoldingOffHandItem(ServerLevel, Piglin, boolean)` mixin path |
 | `on level change` | `ServerPlayer.giveExperienceLevels(int)` delta bridge |
 | `on experience decrease` | `ServerPlayer.giveExperiencePoints(int)` delta bridge |
 | `on sending of the server command list` | `Commands.sendCommands(ServerPlayer)` |
@@ -58,8 +61,8 @@ Last full verification: 2026-03-12
 ## Open Parity Note
 
 - `Evt*.java` runtime audit:
-  - runtime-backed: `30 / 45`
-  - synthetic/partial: `10 / 45`
+  - runtime-backed: `33 / 45`
+  - synthetic/partial: `7 / 45`
   - non-runtime/manual: `5 / 45`
 - Remaining synthetic/partial event syntax focus:
   - `EvtBlock`

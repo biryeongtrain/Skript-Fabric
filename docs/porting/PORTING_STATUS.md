@@ -46,14 +46,14 @@ Last full verification: 2026-03-12
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
-  - synthetic `gametest damage context` removed; mixed-runtime damage fixture now uses public `on damage:` and real player fire damage
-  - mixed-runtime healing fixture now uses public `on healing:` and real player healing
-  - synthetic `gametest unleash` removed; unleash fixture now uses public `on unleash:` and the live `Leashable.dropLeash(...)` producer
-  - `EvtLeash` now accepts the real unleash runtime handle and exposes the `EntityUnleash` parser marker needed by unleash-only syntax
+  - public `on respawn:` now uses the real `PlayerList.respawn(...)` producer and a dedicated respawn GameTest
+  - public `on piglin barter:` now uses the real piglin barter producer and a dedicated barter GameTest
+  - public `on player egg throw:` now uses the real `ThrownEgg.onHit(...)` producer and a dedicated egg collision GameTest
+  - synthetic mixed-runtime aliases for `gametest respawn`, `gametest piglin barter`, and `gametest player egg throw` were removed in favor of public syntax
 - Deferred from the same cycle:
   - `EvtLeash` remains partial for `leash` and `player unleash`
-  - synthetic event backfill still required for `piglin barter`, `player egg throw`, `respawn`, `explode`, `explosion prime`, and mutable `entity death`
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite is currently blocked by the unrelated `ExprNumbers` GameTest failure
+  - synthetic event backfill still required for `explode`, `explosion prime`, and mutable `entity death`
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite is currently blocked only by the unrelated `ExprNumbers` GameTest failure
 
 ## Open Gaps
 
