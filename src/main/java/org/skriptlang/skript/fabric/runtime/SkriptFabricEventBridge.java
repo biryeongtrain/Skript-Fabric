@@ -3,6 +3,7 @@ package org.skriptlang.skript.fabric.runtime;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -65,6 +66,7 @@ import ch.njol.skript.events.FabricEventCompatHandles;
 import ch.njol.skript.events.FabricPlayerEventHandles;
 import org.skriptlang.skript.bukkit.loottables.LootTable;
 import org.skriptlang.skript.bukkit.potion.util.SkriptPotionEffect;
+import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.compat.FabricBreedingItemSource;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.compat.FabricInteractionState;
@@ -76,6 +78,8 @@ public final class SkriptFabricEventBridge {
             Collections.synchronizedMap(new IdentityHashMap<>());
     private static final @Nullable Constructor<?> PLAYER_RESPAWN_EFFECT_HANDLE_CTOR = resolvePlayerRespawnEffectHandleCtor();
     private static final @Nullable Method PLAYER_RESPAWN_EFFECT_LOCATION = resolvePlayerRespawnEffectMethod("respawnLocation");
+    private static final @Nullable Constructor<?> EXPLOSION_PRIME_EFFECT_HANDLE_CTOR = resolveExplosionPrimeEffectHandleCtor();
+    private static final @Nullable Method EXPLOSION_PRIME_EFFECT_RADIUS = resolveExplosionPrimeEffectMethod("radius");
     private static volatile boolean registered;
 
     private SkriptFabricEventBridge() {
@@ -479,6 +483,21 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static FabricEventCompatHandles.Explosion dispatchExplosion(ServerLevel level, Entity source, List<BlockPos> explodedPositions) {
+        List<FabricBlock> explodedBlocks = new ArrayList<>(explodedPositions.size());
+        for (BlockPos explodedPosition : explodedPositions) {
+            explodedBlocks.add(new FabricBlock(level, explodedPosition.immutable()));
+        }
+        FabricEventCompatHandles.Explosion handle = new FabricEventCompatHandles.Explosion(explodedBlocks);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                level.getServer(),
+                level,
+                source instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+        return handle;
+    }
+
     public static void dispatchBlockPlace(
             ServerLevel level,
             BlockPos pos,
@@ -774,6 +793,18 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchPortal(Entity entity) {
+        if (!(entity.level() instanceof ServerLevel level)) {
+            return;
+        }
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Portal(entity, entity instanceof ServerPlayer),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer player ? player : null
+        ));
+    }
+
     public static void dispatchRespawn(ServerPlayer previousPlayer, ServerPlayer player, boolean alive, Entity.RemovalReason removalReason) {
         ServerLevel level = player.level();
         FabricLocation defaultLocation = new FabricLocation(level, player.position());
@@ -857,9 +888,28 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchArmorChange(ServerPlayer player, FabricEventCompatHandles.ArmorSlot slot) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PlayerArmorChange(slot),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
     public static void dispatchWeatherChange(ServerLevel level, boolean rain, boolean thunder) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.WeatherChange(rain, thunder),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchEntityTarget(ServerLevel level, Mob entity, @Nullable LivingEntity target) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityTarget(entity, target),
                 level.getServer(),
                 level,
                 null
@@ -974,6 +1024,62 @@ public final class SkriptFabricEventBridge {
     private static @Nullable Method resolvePlayerRespawnEffectMethod(String methodName) {
         try {
             Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$PlayerRespawn");
+            Method method = type.getMethod(methodName);
+            method.setAccessible(true);
+            return method;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    public static float dispatchExplosionPrime(ServerLevel level, float radius, boolean causesFire) {
+        Object handle = createExplosionPrimeHandle(radius, causesFire);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                level.getServer(),
+                level,
+                null
+        ));
+        return explosionPrimeRadius(handle);
+    }
+
+    private static Object createExplosionPrimeHandle(float radius, boolean causesFire) {
+        if (EXPLOSION_PRIME_EFFECT_HANDLE_CTOR == null) {
+            throw new IllegalStateException("Explosion prime effect handle constructor is unavailable.");
+        }
+        try {
+            return EXPLOSION_PRIME_EFFECT_HANDLE_CTOR.newInstance(radius, causesFire);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to create explosion prime effect handle.", exception);
+        }
+    }
+
+    private static float explosionPrimeRadius(Object handle) {
+        if (EXPLOSION_PRIME_EFFECT_RADIUS == null || !EXPLOSION_PRIME_EFFECT_RADIUS.getDeclaringClass().isInstance(handle)) {
+            throw new IllegalStateException("Explosion prime effect radius accessor is unavailable.");
+        }
+        try {
+            Object value = EXPLOSION_PRIME_EFFECT_RADIUS.invoke(handle);
+            return value instanceof Number number ? number.floatValue() : 0.0F;
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to read explosion prime radius.", exception);
+        }
+    }
+
+    private static @Nullable Constructor<?> resolveExplosionPrimeEffectHandleCtor() {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$ExplosionPrime");
+            Constructor<?> constructor = type.getDeclaredConstructor(float.class, boolean.class);
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static @Nullable Method resolveExplosionPrimeEffectMethod(String methodName) {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$ExplosionPrime");
             Method method = type.getMethod(methodName);
             method.setAccessible(true);
             return method;

@@ -31,7 +31,7 @@ public final class FabricEventCompatHandles {
     public record Healing(Entity entity, @Nullable String reason, float amount) implements FabricEntityEventHandle {
     }
 
-    public record Portal(Entity entity, boolean player) {
+    public record Portal(Entity entity, boolean player) implements FabricEntityEventHandle {
     }
 
     public record WeatherChange(boolean rain, boolean thunder) {
@@ -53,7 +53,7 @@ public final class FabricEventCompatHandles {
     public record EntityTransform(Entity entity, @Nullable String reason) implements FabricEntityEventHandle {
     }
 
-    public record EntityTarget(@Nullable Entity target) {
+    public record EntityTarget(Entity entity, @Nullable Entity target) implements FabricEntityEventHandle {
     }
 
     public record EntityShootBow(LivingEntity entity, @Nullable ItemStack consumable) {

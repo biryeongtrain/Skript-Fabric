@@ -1113,9 +1113,11 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtBookSign.register();
         ch.njol.skript.events.EvtClick.register();
         ch.njol.skript.events.EvtEntity.register();
+        ch.njol.skript.events.EvtExplode.register();
         ch.njol.skript.events.EvtFirework.register();
         ch.njol.skript.events.EvtEntityShootBow.register();
         ch.njol.skript.events.EvtEntityTransform.register();
+        ch.njol.skript.events.EvtExplosionPrime.register();
         ch.njol.skript.events.EvtExperienceSpawn.register();
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();

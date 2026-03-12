@@ -13,8 +13,10 @@ public final class SimpleEvents {
         EvtBookSign.register();
         EvtClick.register();
         EvtEntity.register();
+        EvtExplode.register();
         EvtEntityShootBow.register();
         EvtEntityTransform.register();
+        EvtExplosionPrime.register();
         EvtExperienceChange.register();
         EvtExperienceSpawn.register();
         EvtFirstJoin.register();

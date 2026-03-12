@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.runtime.FabricExplosionPrimeEventHandle;
 
 final class FabricEffectEventHandles {
 
@@ -74,7 +75,7 @@ final class FabricEffectEventHandles {
         }
     }
 
-    static final class ExplosionPrime {
+    static final class ExplosionPrime implements FabricExplosionPrimeEventHandle {
 
         private float radius;
         private boolean causesFire;
