@@ -6,8 +6,8 @@ Last full verification: 2026-03-13
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `254`
-  - expressions missing: `68`
+  - overall missing: `251`
+  - expressions missing: `65`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -29,11 +29,11 @@ Last full verification: 2026-03-13
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `935`
-  - shortfall: `254`
+  - exact-path present locally: `938`
+  - shortfall: `251`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313KCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313KBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313LCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313LBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionSyntaxS4CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `318 / 318` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313MCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313MBindingCompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `319 / 319` GameTests green on `main`
 
 ## Active Priority
 
@@ -59,9 +59,10 @@ Last full verification: 2026-03-13
 - Latest landed runtime/GameTest slice:
   - cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
   - cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
-  - runtime bootstrap force-initializes the cycle K/L expression bundle during full GameTest startup
-  - cycle K/L add targeted compatibility/binding JUnit plus dedicated real `.sk` GameTests for core element/loop semantics, bell timing, lowest/highest solid block lookup, scaled item/entity literals, and projectile-force lookup
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `318 / 318` GameTests green on `main`
+  - cycle M adds `ExprSkull`, `ExprSignText`, and `ExprSpawnerType`
+  - runtime bootstrap force-initializes the cycle M expression bundle during full GameTest startup
+  - cycle M adds targeted compatibility/binding JUnit plus a dedicated real `.sk` GameTest for skull, live sign text, and spawner-type mutation
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `319 / 319` GameTests green on `main`
 
 ## Open Gaps
 
