@@ -3,6 +3,7 @@ package org.skriptlang.skript.fabric.runtime;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 final class UnsupportedSkriptScriptService implements SkriptScriptService {
 
@@ -31,7 +32,7 @@ final class UnsupportedSkriptScriptService implements SkriptScriptService {
 
     @Override
     public SkriptScriptOperationResult unloadAll() {
-        return new SkriptScriptOperationResult(0, List.of());
+        return new SkriptScriptOperationResult(0, List.of(), Map.of());
     }
 
     @Override

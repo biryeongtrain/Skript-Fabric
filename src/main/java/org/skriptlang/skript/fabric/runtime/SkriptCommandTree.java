@@ -87,6 +87,7 @@ public final class SkriptCommandTree {
         try {
             SkriptScriptOperationResult result = supplier.run();
             access.success(context.getSource(), summarize(label, result));
+            emitErrors(context.getSource(), access, result);
             return result.affectedFiles();
         } catch (IOException exception) {
             access.failure(context.getSource(), failure(label, exception));
@@ -105,6 +106,7 @@ public final class SkriptCommandTree {
         try {
             SkriptScriptOperationResult result = supplier.run(target);
             access.success(context.getSource(), summarize(label, result));
+            emitErrors(context.getSource(), access, result);
             return result.affectedFiles();
         } catch (IOException exception) {
             access.failure(context.getSource(), failure(label, exception));
@@ -141,11 +143,21 @@ public final class SkriptCommandTree {
     }
 
     private static String summarize(String label, SkriptScriptOperationResult result) {
-        if (result.affectedFiles() == 0) {
+        if (result.affectedFiles() == 0 && result.errors().isEmpty()) {
             return capitalize(label) + ": no matching scripts";
         }
-        return capitalize(label) + ": " + result.affectedFiles() + " script(s) affected"
-                + (result.scripts().isEmpty() ? "" : " [" + String.join(", ", result.scripts()) + "]");
+        String suffix = result.scripts().isEmpty() ? "" : " [" + String.join(", ", result.scripts()) + "]";
+        if (result.errors().isEmpty()) {
+            return capitalize(label) + ": " + result.affectedFiles() + " script(s) affected" + suffix;
+        }
+        return capitalize(label) + ": " + result.affectedFiles() + " script(s) affected, "
+                + result.errors().size() + " failed" + suffix;
+    }
+
+    private static <S> void emitErrors(S source, SourceAccess<S> access, SkriptScriptOperationResult result) {
+        for (var entry : result.errors().entrySet()) {
+            access.failure(source, entry.getKey() + ": " + entry.getValue());
+        }
     }
 
     private static String failure(String label, IOException exception) {

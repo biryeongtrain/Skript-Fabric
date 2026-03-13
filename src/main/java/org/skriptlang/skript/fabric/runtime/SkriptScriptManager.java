@@ -11,8 +11,10 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 import org.skriptlang.skript.lang.script.Script;
 
@@ -67,37 +69,37 @@ final class SkriptScriptManager {
         return List.copyOf(targets);
     }
 
-    List<String> loadAll() throws IOException {
+    ScriptLoadResult loadAll() throws IOException {
         ensureRootDirectory();
         runtime.clearScripts();
         return loadRelativePaths(discoverEnabledScripts(root));
     }
 
-    List<String> unloadAll() {
+    ScriptToggleResult unloadAll() {
         List<String> loaded = loadedScriptNames();
         runtime.clearScripts();
-        return loaded;
+        return new ScriptToggleResult(loaded, Map.of());
     }
 
-    List<String> reloadAll() throws IOException {
+    ScriptLoadResult reloadAll() throws IOException {
         return loadAll();
     }
 
-    List<String> reloadScripts() throws IOException {
+    ScriptLoadResult reloadScripts() throws IOException {
         return loadAll();
     }
 
-    List<String> reloadTarget(String target) throws IOException {
+    ScriptLoadResult reloadTarget(String target) throws IOException {
         ensureRootDirectory();
         ResolvedTarget resolved = resolveTarget(target);
         if (resolved == null) {
-            return List.of();
+            return new ScriptLoadResult(List.of(), Map.of());
         }
         unloadMatching(resolved.scopePath(), resolved.directoryTarget());
         return loadRelativePaths(resolved.enabledPaths());
     }
 
-    List<String> enableAll() throws IOException {
+    ScriptToggleResult enableAll() throws IOException {
         ensureRootDirectory();
         List<Path> renamed = new ArrayList<>();
         for (Path relativePath : discoverDisabledScripts(root)) {
@@ -107,14 +109,14 @@ final class SkriptScriptManager {
             renamed.add(root.relativize(enabled));
         }
         loadRelativePaths(renamed);
-        return userFacingNames(renamed);
+        return new ScriptToggleResult(userFacingNames(renamed), Map.of());
     }
 
-    List<String> enableTarget(String target) throws IOException {
+    ScriptToggleResult enableTarget(String target) throws IOException {
         ensureRootDirectory();
         ResolvedTarget resolved = resolveTarget(target);
         if (resolved == null) {
-            return List.of();
+            return new ScriptToggleResult(List.of(), Map.of());
         }
         List<Path> renamed = new ArrayList<>();
         for (Path relativePath : resolved.allPaths()) {
@@ -126,11 +128,11 @@ final class SkriptScriptManager {
             Files.move(source, enabled, StandardCopyOption.REPLACE_EXISTING);
             renamed.add(root.relativize(enabled));
         }
-        loadRelativePaths(renamed);
-        return userFacingNames(renamed);
+        ScriptLoadResult loadResult = loadRelativePaths(renamed);
+        return new ScriptToggleResult(loadResult.scripts(), loadResult.errors());
     }
 
-    List<String> disableAll() throws IOException {
+    ScriptToggleResult disableAll() throws IOException {
         ensureRootDirectory();
         List<Path> enabledPaths = discoverEnabledScripts(root);
         runtime.clearScripts();
@@ -141,14 +143,14 @@ final class SkriptScriptManager {
             Files.move(source, disabled, StandardCopyOption.REPLACE_EXISTING);
             renamed.add(root.relativize(disabled));
         }
-        return userFacingNames(renamed);
+        return new ScriptToggleResult(userFacingNames(renamed), Map.of());
     }
 
-    List<String> disableTarget(String target) throws IOException {
+    ScriptToggleResult disableTarget(String target) throws IOException {
         ensureRootDirectory();
         ResolvedTarget resolved = resolveTarget(target);
         if (resolved == null) {
-            return List.of();
+            return new ScriptToggleResult(List.of(), Map.of());
         }
         unloadMatching(resolved.scopePath(), resolved.directoryTarget());
         List<Path> renamed = new ArrayList<>();
@@ -161,24 +163,39 @@ final class SkriptScriptManager {
             Files.move(source, disabled, StandardCopyOption.REPLACE_EXISTING);
             renamed.add(root.relativize(disabled));
         }
-        return userFacingNames(renamed);
+        return new ScriptToggleResult(userFacingNames(renamed), Map.of());
     }
 
     private void ensureRootDirectory() throws IOException {
         Files.createDirectories(root);
     }
 
-    private List<String> loadRelativePaths(Collection<Path> relativePaths) throws IOException {
+    private ScriptLoadResult loadRelativePaths(Collection<Path> relativePaths) throws IOException {
         List<Path> loaded = new ArrayList<>();
+        Map<String, String> errors = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (Path relativePath : sortedPaths(relativePaths)) {
             Path absolutePath = root.resolve(relativePath);
             if (!Files.isRegularFile(absolutePath) || !isEnabledScriptFile(absolutePath)) {
                 continue;
             }
-            runtime.loadFromPath(absolutePath, relativePath.toString().replace('\\', '/'));
-            loaded.add(relativePath);
+            try {
+                runtime.loadFromPath(absolutePath, relativePath.toString().replace('\\', '/'));
+                loaded.add(relativePath);
+            } catch (IOException exception) {
+                errors.put(targetName(absolutePath), describeError(exception));
+            } catch (RuntimeException exception) {
+                errors.put(targetName(absolutePath), describeError(exception));
+            }
         }
-        return userFacingNames(loaded);
+        return new ScriptLoadResult(userFacingNames(loaded), errors);
+    }
+
+    private String describeError(Throwable throwable) {
+        String message = throwable.getMessage();
+        if (message == null || message.isBlank()) {
+            return throwable.getClass().getSimpleName();
+        }
+        return message;
     }
 
     private void unloadMatching(Path scopePath, boolean directoryTarget) {
@@ -352,5 +369,11 @@ final class SkriptScriptManager {
     }
 
     private record ResolvedTarget(Path scopePath, boolean directoryTarget, List<Path> allPaths, List<Path> enabledPaths) {
+    }
+
+    record ScriptLoadResult(List<String> scripts, Map<String, String> errors) {
+    }
+
+    record ScriptToggleResult(List<String> scripts, Map<String, String> errors) {
     }
 }

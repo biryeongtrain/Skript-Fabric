@@ -41,6 +41,24 @@ final class SkriptCommandTreeTest {
     }
 
     @Test
+    void reportsPerFileErrorsWithoutAbortingCommand() throws Exception {
+        CommandDispatcher<TestSource> dispatcher = new CommandDispatcher<>();
+        FakeScriptService service = new FakeScriptService();
+        service.reloadAllResult = new SkriptScriptOperationResult(
+                1,
+                List.of("good"),
+                java.util.Map.of("broken", "Can't understand this condition/effect: boom")
+        );
+        SkriptCommandTree.register(dispatcher, service, new TestAccess());
+
+        TestSource source = new TestSource(true);
+        dispatcher.execute("skript reload all", source);
+
+        assertTrue(source.messages.stream().anyMatch(message -> message.contains("Reload all: 1 script(s) affected, 1 failed")));
+        assertTrue(source.messages.stream().anyMatch(message -> message.contains("FAIL:broken: Can't understand this condition/effect: boom")));
+    }
+
+    @Test
     void suggestsTargetsFromService() throws Exception {
         CommandDispatcher<TestSource> dispatcher = new CommandDispatcher<>();
         FakeScriptService service = new FakeScriptService();
@@ -81,6 +99,7 @@ final class SkriptCommandTreeTest {
     private static final class FakeScriptService implements SkriptScriptService {
 
         private final List<String> invocations = new ArrayList<>();
+        private SkriptScriptOperationResult reloadAllResult = new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
 
         @Override
         public Path root() {
@@ -107,7 +126,7 @@ final class SkriptCommandTreeTest {
         @Override
         public SkriptScriptOperationResult reloadAll() {
             invocations.add("reloadAll");
-            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
+            return reloadAllResult;
         }
 
         @Override

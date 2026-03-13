@@ -118,6 +118,22 @@ final class FileSystemSkriptScriptServiceTest {
     }
 
     @Test
+    void loadAllContinuesPastBrokenScriptsAndRecordsErrors() throws IOException {
+        Path root = tempDir.resolve("config").resolve("skript");
+        writeScript(root.resolve("good.sk"), "good");
+        writeBrokenScript(root.resolve("broken.sk"));
+
+        FileSystemSkriptScriptService service = new FileSystemSkriptScriptService(root, SkriptRuntime.instance());
+        SkriptScriptOperationResult result = service.loadAll();
+
+        assertEquals(List.of("good"), result.scripts());
+        assertEquals(1, result.errors().size());
+        assertTrue(result.errors().containsKey("broken"));
+        assertEquals(List.of("good"), MARKERS);
+        assertEquals(List.of("good"), service.listLoadedScripts());
+    }
+
+    @Test
     void unloadAllClearsLoadedScripts() throws IOException {
         Path root = tempDir.resolve("config").resolve("skript");
         writeScript(root.resolve("admin.sk"), "admin");
@@ -142,6 +158,16 @@ final class FileSystemSkriptScriptServiceTest {
                 on load:
                     record script marker "%s"
                 """.formatted(marker)
+        );
+    }
+
+    private static void writeBrokenScript(Path path) throws IOException {
+        Files.createDirectories(path.getParent());
+        Files.writeString(
+                path,
+                """
+                this is not valid skript
+                """
         );
     }
 

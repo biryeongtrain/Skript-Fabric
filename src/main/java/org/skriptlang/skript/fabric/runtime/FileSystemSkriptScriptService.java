@@ -90,7 +90,11 @@ final class FileSystemSkriptScriptService implements SkriptScriptService {
         manager.unloadAll();
     }
 
-    private SkriptScriptOperationResult result(List<String> scripts) {
-        return new SkriptScriptOperationResult(scripts.size(), scripts);
+    private SkriptScriptOperationResult result(SkriptScriptManager.ScriptLoadResult result) {
+        return new SkriptScriptOperationResult(result.scripts().size(), result.scripts(), result.errors());
+    }
+
+    private SkriptScriptOperationResult result(SkriptScriptManager.ScriptToggleResult result) {
+        return new SkriptScriptOperationResult(result.scripts().size(), result.scripts(), result.errors());
     }
 }
