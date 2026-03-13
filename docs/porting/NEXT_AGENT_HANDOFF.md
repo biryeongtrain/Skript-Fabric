@@ -22,28 +22,32 @@ Last full verification: 2026-03-13
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `938`, upstream `1189`, shortfall `251`
+- Upstream `ch/njol/skript` baseline: exact-path present `960`, upstream `1189`, shortfall `229`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313MCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313MBindingCompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `319 / 319` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `334 / 334` GameTests green in the cycle-F integrator tree
 
 ## Most Recent Merged Slice
 
-- cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
-- cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
-- cycle M adds `ExprSkull`, `ExprSignText`, and `ExprSpawnerType`
-- runtime bootstrap now force-initializes the cycle M expression bundle during full GameTest startup
-- cycle M adds dedicated compatibility/binding JUnit plus a real `.sk` GameTest for skull, live sign text, and spawner-type mutation
+- cycle F lands worker-first proven subsets:
+  - safe1: `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`
+  - safe2: `ExprCommandInfo`, `ExprResult`, `ExprScript`, `ExprScriptsOld`
+  - safe4: `ExprHexCode`, `ExprColorFromHexCode`, `ExprRecursiveSize`, `ExprBlockSphere`
+  - safe5: `ExprMe`, `ExprTypeOf`, `ExprSkullOwner`, `ExprEnchantmentLevel`, `ExprEnchantments`
+  - safe6: `ExprMaxMinecartSpeed`, `ExprMinecartDerailedFlyingVelocity`, `ExprCompassTarget`, `ExprPortal`, `LitConsole`
+- cycle F drops unproven worker slices `ExprCmdCooldownInfo`, `ExprEntities`, `ExprValueWithin`, and the safe3 section/literal lane
+- runtime bootstrap now force-initializes the landed cycle F expression bundles during full GameTest startup
+- cycle F adds dedicated compatibility/binding JUnit plus real `.sk` GameTests for every surviving landed lane
 
 ## Do Next
 
 - Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
 - Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
 - Full-suite stabilization is closed for the current baseline.
-- Resume from the `Must Port` bucket rather than treating all `251` exact-path leftovers as equal-priority work.
+- Resume from the `Must Port` bucket rather than treating all `229` exact-path leftovers as equal-priority work.
 - Keep `Adapt` work scoped to Fabric-native replacements for user-visible behavior, not literal class parity.
 - Treat `Non-goal` leftovers as excluded from normal closure planning unless one becomes a direct blocker.
-- Immediate backlog remains expressions-first, with focus on the remaining user-visible expression bucket.
+- Immediate backlog remains expressions-first, with focus on the remaining user-visible expression bucket now that cycle F cut expressions missing from `65` to `44`.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.

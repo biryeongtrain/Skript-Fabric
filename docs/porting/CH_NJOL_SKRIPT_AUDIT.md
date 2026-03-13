@@ -7,8 +7,8 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `251`
-- Exact-path expressions missing: `65`
+- Exact-path missing in local tree: `229`
+- Exact-path expressions missing: `44`
 - Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
 ## Priority Matrix
@@ -101,15 +101,52 @@ Baseline snapshot date: 2026-03-08
 ## Latest Verified Merge
 
 - Landed:
+  - cycle F worker-first expression batch:
+    - `ExprArgument`
+    - `ExprParse`
+    - `ExprParseError`
+    - `ExprValue`
+    - `ExprCommandInfo`
+    - `ExprResult`
+    - `ExprScript`
+    - `ExprScriptsOld`
+    - `ExprHexCode`
+    - `ExprColorFromHexCode`
+    - `ExprRecursiveSize`
+    - `ExprBlockSphere`
+    - `ExprMe`
+    - `ExprTypeOf`
+    - `ExprSkullOwner`
+    - `ExprEnchantmentLevel`
+    - `ExprEnchantments`
+    - `ExprMaxMinecartSpeed`
+    - `ExprMinecartDerailedFlyingVelocity`
+    - `ExprCompassTarget`
+    - `ExprPortal`
+    - `LitConsole`
   - cycle K expressions `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
   - cycle L expression `ExprProjectileForce` plus live bow-force payload propagation
   - cycle M expressions `ExprSkull`, `ExprSignText`, and `ExprSpawnerType`
   - bootstrap/binding closure for the cycle M expression bundle
-  - cycle K/L real `.sk` GameTest entrypoint wiring for core element/loop semantics, bell timing, lowest/highest solid block lookup, scaled item/entity literals, and projectile-force proof
+  - cycle F compatibility/binding closure and real `.sk` GameTest entrypoint wiring for the landed safe1/safe2/safe4/safe5/safe6 bundles
 - Deferred:
-  - parser-heavy expression closure such as `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`, and `ExprValueWithin`
+  - dropped cycle F worker slices `ExprCmdCooldownInfo`, `ExprEntities`, `ExprValueWithin`, and the safe3 section/literal lane
   - `PrivateFishingHookAccess.currentState`
 - Added compatibility coverage:
+  - `ExpressionCycle20260313FBindingCompatibilityTest`
+  - `ExpressionCycle20260313FSafe1BindingCompatibilityTest`
+  - `ExpressionCycle20260313FSafe1CompatibilityTest`
+  - `ExpressionCycle20260313FSafe2BindingCompatibilityTest`
+  - `ExpressionCycle20260313FSafe2CompatibilityTest`
+  - `ExpressionCycle20260313FSafe4BindingCompatibilityTest`
+  - `ExpressionCycle20260313FSafe4CompatibilityTest`
+  - `ExpressionCycle20260313FSafe5CompatibilityTest`
+  - `ExpressionCycle20260313FSafe6CompatibilityTest`
+  - `ExpressionCycle20260313FSafe5BindingTest`
+  - `SkriptFabricExpressionCycleFSafe1GameTest`
+  - `SkriptFabricExpressionCycleFSafe4GameTest`
+  - `SkriptFabricExpressionCycle20260313FSafe5GameTest`
+  - `SkriptFabricExpressionCycleFSyntax1GameTest`
   - `ExpressionCycle20260313KCompatibilityTest`
   - `ExpressionCycle20260313KBindingCompatibilityTest`
   - `ExpressionCycle20260313LCompatibilityTest`

@@ -6,8 +6,8 @@ Last full verification: 2026-03-13
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `251`
-  - expressions missing: `65`
+  - overall missing: `229`
+  - expressions missing: `44`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -29,11 +29,11 @@ Last full verification: 2026-03-13
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `938`
-  - shortfall: `251`
+  - exact-path present locally: `960`
+  - shortfall: `229`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313MCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313MBindingCompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `319 / 319` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `334 / 334` GameTests green in the cycle-F integrator tree
 
 ## Active Priority
 
@@ -46,7 +46,7 @@ Last full verification: 2026-03-13
 
 - `Must Port`
   - Remaining user-visible Skript syntax that still matters on Fabric.
-  - Current examples: parser/runtime-heavy expressions such as `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`, `ExprValueWithin`, arithmetic support, remaining entity/block/banner/enchantment/sign/property expressions, remaining sections, literals, and `StructFunction`.
+  - Current examples: arithmetic support, remaining entity/block/banner/sign/property expressions, remaining sections, literals, and `StructFunction`.
 - `Adapt`
   - Surfaces that are still user-visible, but where Bukkit and Fabric concepts diverge enough that a literal class-for-class copy is the wrong target.
   - Current examples: `aliases`, `command`, SQL/storage backends, serializer glue, slot/util wrappers, and expression families around chat/playerlist/server icon/plugin state/command metadata/teleport cause/spawn reason.
@@ -57,12 +57,19 @@ Last full verification: 2026-03-13
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
+  - cycle F lands worker-first proven subsets:
+    - safe1: `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`
+    - safe2: `ExprCommandInfo`, `ExprResult`, `ExprScript`, `ExprScriptsOld`
+    - safe4: `ExprHexCode`, `ExprColorFromHexCode`, `ExprRecursiveSize`, `ExprBlockSphere`
+    - safe5: `ExprMe`, `ExprTypeOf`, `ExprSkullOwner`, `ExprEnchantmentLevel`, `ExprEnchantments`
+    - safe6: `ExprMaxMinecartSpeed`, `ExprMinecartDerailedFlyingVelocity`, `ExprCompassTarget`, `ExprPortal`, `LitConsole`
+  - cycle F explicitly drops unproven worker items `ExprCmdCooldownInfo`, `ExprEntities`, `ExprValueWithin`, and the entire safe3 section/literal lane
   - cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
   - cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
   - cycle M adds `ExprSkull`, `ExprSignText`, and `ExprSpawnerType`
-  - runtime bootstrap force-initializes the cycle M expression bundle during full GameTest startup
-  - cycle M adds targeted compatibility/binding JUnit plus a dedicated real `.sk` GameTest for skull, live sign text, and spawner-type mutation
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `319 / 319` GameTests green on `main`
+  - runtime bootstrap force-initializes the landed cycle F expression bundles during full GameTest startup
+  - cycle F adds targeted compatibility/binding JUnit plus dedicated real `.sk` GameTests for every surviving worker lane
+- Landed with unit JUnit plus targeted Minecraft GameTest; the cycle-F integrator suite completes `334 / 334` GameTests green
 
 ## Open Gaps
 
