@@ -33,7 +33,7 @@ Last full verification: 2026-03-13
   - shortfall: `264`
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `309` GameTests; `block place`, `block mine`, `inventory click`, and `sweet berry harvest` passed, and the remaining failure was `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `310 / 310` GameTests green on `main`
 
 ## Active Priority
 
@@ -53,7 +53,7 @@ Last full verification: 2026-03-13
   - runtime bootstrap now force-initializes the recovered event activation bundle so full GameTest startup sees the recovered public event syntaxes
   - mixed event backfill coverage no longer has any event-facing `gametest ...` alias; hanging payload coverage now uses public `on break of item frame:` with a real item-frame break producer
   - cycle I `ExprNumbers` now bootstraps, binds through `SecLoop`, and executes its real `.sk` GameTest path
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `310` GameTests and currently has one unrelated runtime-lock failure in `skript_fabric_event_game_test_primary_beacon_effect_executes_real_script`
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `310 / 310` GameTests green after central runtime cleanup and direct beacon tick/apply-effects verification
 
 ## Open Gaps
 

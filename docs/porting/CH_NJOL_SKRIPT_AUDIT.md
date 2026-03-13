@@ -103,4 +103,4 @@ Baseline snapshot date: 2026-03-08
   - targeted cycle JUnit suite covering syntax1 I and bootstrap/binding I
   - cycle I real `.sk` GameTest entrypoint for `ExprNumbers`
   - `./gradlew runGameTest --rerun-tasks`
-- Current runtime baseline after the refresh: `310` GameTests executed, with `ExprNumbers` cleared and one unrelated beacon runtime-lock failure remaining
+- Current runtime baseline after the refresh: `310 / 310` GameTests green on `main`; `ExprNumbers`, hanging payload coverage, and beacon runtime-lock contention are cleared

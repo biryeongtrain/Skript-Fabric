@@ -25,7 +25,7 @@ Last full verification: 2026-03-13
 - Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `309` GameTests; `block place`, `block mine`, `inventory click`, and `sweet berry harvest` passed, and the remaining failure was `skript_fabric_expression_cycle_isyntax1game_test_expr_numbers_executes_real_script`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `310 / 310` GameTests green on `main`
 
 ## Most Recent Merged Slice
 
@@ -41,9 +41,8 @@ Last full verification: 2026-03-13
 
 - Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
 - Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
-- Investigate the remaining unrelated full-suite failure:
-  - `skript_fabric_event_game_test_primary_beacon_effect_executes_real_script`
-- After that, resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
+- Full-suite stabilization is closed for the current baseline.
+- Resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.
