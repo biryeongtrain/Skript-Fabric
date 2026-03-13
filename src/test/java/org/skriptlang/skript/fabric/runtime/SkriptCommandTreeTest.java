@@ -36,7 +36,7 @@ final class SkriptCommandTreeTest {
         assertEquals(List.of("reloadAll", "enable:quests/daily", "disableAll"), service.invocations);
         assertTrue(source.messages.stream().anyMatch(message -> message.contains("Reload all: 2 script(s) affected")));
         assertTrue(source.messages.stream().anyMatch(message -> message.contains("Enable quests/daily: 1 script(s) affected")));
-        assertTrue(source.messages.stream().anyMatch(message -> message.contains("Loaded scripts (2): quests/daily.sk, admin.sk")));
+        assertTrue(source.messages.stream().anyMatch(message -> message.contains("Loaded scripts (2): quests/daily, admin")));
         assertTrue(source.messages.stream().anyMatch(message -> message.contains("Usage: /skript reload all|scripts|<target>")));
     }
 
@@ -88,61 +88,72 @@ final class SkriptCommandTreeTest {
         }
 
         @Override
+        public List<String> discoverScripts() {
+            return List.of("quests/daily.sk", "admin.sk");
+        }
+
+        @Override
         public SkriptScriptOperationResult loadAll() {
             invocations.add("loadAll");
-            return new SkriptScriptOperationResult(2, List.of("quests/daily.sk", "admin.sk"));
+            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
+        }
+
+        @Override
+        public SkriptScriptOperationResult unloadAll() {
+            invocations.add("unloadAll");
+            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
         }
 
         @Override
         public SkriptScriptOperationResult reloadAll() {
             invocations.add("reloadAll");
-            return new SkriptScriptOperationResult(2, List.of("quests/daily.sk", "admin.sk"));
+            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
         }
 
         @Override
         public SkriptScriptOperationResult reloadScripts() {
             invocations.add("reloadScripts");
-            return new SkriptScriptOperationResult(2, List.of("quests/daily.sk", "admin.sk"));
+            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
         }
 
         @Override
         public SkriptScriptOperationResult reloadTarget(String target) {
             invocations.add("reload:" + target);
-            return new SkriptScriptOperationResult(1, List.of(target + ".sk"));
+            return new SkriptScriptOperationResult(1, List.of(target));
         }
 
         @Override
         public SkriptScriptOperationResult enableAll() {
             invocations.add("enableAll");
-            return new SkriptScriptOperationResult(2, List.of("quests/daily.sk", "admin.sk"));
+            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
         }
 
         @Override
         public SkriptScriptOperationResult enableTarget(String target) {
             invocations.add("enable:" + target);
-            return new SkriptScriptOperationResult(1, List.of(target + ".sk"));
+            return new SkriptScriptOperationResult(1, List.of(target));
         }
 
         @Override
         public SkriptScriptOperationResult disableAll() {
             invocations.add("disableAll");
-            return new SkriptScriptOperationResult(2, List.of("quests/daily.sk", "admin.sk"));
+            return new SkriptScriptOperationResult(2, List.of("quests/daily", "admin"));
         }
 
         @Override
         public SkriptScriptOperationResult disableTarget(String target) {
             invocations.add("disable:" + target);
-            return new SkriptScriptOperationResult(1, List.of(target + ".sk"));
+            return new SkriptScriptOperationResult(1, List.of(target));
         }
 
         @Override
         public List<String> listLoadedScripts() {
-            return List.of("quests/daily.sk", "admin.sk");
+            return List.of("quests/daily", "admin");
         }
 
         @Override
         public List<String> suggestedTargets() {
-            return List.of("quests/daily", "admin.sk");
+            return List.of("quests/daily", "admin");
         }
 
         @Override

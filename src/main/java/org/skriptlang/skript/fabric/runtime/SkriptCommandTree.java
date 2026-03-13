@@ -71,8 +71,8 @@ public final class SkriptCommandTree {
                 .then(LiteralArgumentBuilder.<S>literal("list")
                         .executes(context -> list(context, scriptService, access)))
                 .then(LiteralArgumentBuilder.<S>literal("help")
-                        .executes(context -> help(context, scriptService, access)))
-                .executes(context -> help(context, scriptService, access));
+                        .executes(context -> help(context, access)))
+                .executes(context -> help(context, access));
 
         dispatcher.register(root);
     }
@@ -122,7 +122,7 @@ public final class SkriptCommandTree {
         return scripts.size();
     }
 
-    private static <S> int help(CommandContext<S> context, SkriptScriptService service, SourceAccess<S> access) {
+    private static <S> int help(CommandContext<S> context, SourceAccess<S> access) {
         access.success(
                 context.getSource(),
                 "Usage: /skript reload all|scripts|<target>, /skript enable all|<target>, /skript disable all|<target>, /skript list, /skript help"

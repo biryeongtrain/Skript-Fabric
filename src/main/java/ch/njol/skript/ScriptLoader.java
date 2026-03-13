@@ -25,6 +25,8 @@ import org.skriptlang.skript.lang.script.ScriptWarning;
 public final class ScriptLoader {
 
     private static final Pattern OPTION_PATTERN = Pattern.compile("\\{@(.+?)}");
+    public static final String DISABLED_SCRIPT_PREFIX = "-";
+    public static final int DISABLED_SCRIPT_PREFIX_LENGTH = DISABLED_SCRIPT_PREFIX.length();
 
     private ScriptLoader() {
     }

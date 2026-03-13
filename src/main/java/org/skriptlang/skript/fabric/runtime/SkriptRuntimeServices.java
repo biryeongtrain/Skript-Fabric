@@ -1,10 +1,7 @@
 package org.skriptlang.skript.fabric.runtime;
 
-import java.nio.file.Path;
-
 public final class SkriptRuntimeServices {
 
-    private static final Path DEFAULT_ROOT = Path.of("config", "skript");
     private static volatile SkriptScriptService scriptService;
 
     private SkriptRuntimeServices() {
@@ -17,7 +14,7 @@ public final class SkriptRuntimeServices {
         }
         synchronized (SkriptRuntimeServices.class) {
             if (scriptService == null) {
-                scriptService = new UnsupportedSkriptScriptService(DEFAULT_ROOT);
+                scriptService = new FileSystemSkriptScriptService(SkriptScriptRoots.runtimeScriptsRoot(), SkriptRuntime.instance());
             }
             return scriptService;
         }

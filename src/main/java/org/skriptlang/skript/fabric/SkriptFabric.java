@@ -4,7 +4,7 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
-import org.skriptlang.skript.fabric.runtime.SkriptCommandRegistration;
+import org.skriptlang.skript.fabric.runtime.SkriptRuntimeLifecycle;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntimeServices;
 
 public final class SkriptFabric implements ModInitializer {
@@ -15,6 +15,6 @@ public final class SkriptFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         SkriptFabricBootstrap.bootstrap();
-        SkriptCommandRegistration.register(SkriptRuntimeServices.scriptService());
+        SkriptRuntimeLifecycle.register(SkriptRuntimeServices.scriptService(), LOGGER);
     }
 }

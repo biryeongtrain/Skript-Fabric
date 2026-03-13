@@ -19,8 +19,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.annotations.Nullable;
@@ -46,21 +48,44 @@ public final class SkriptRuntime {
             EvtSkript.onSkriptStop();
         }
         scripts.clear();
-        for (Script script : snapshot) {
-            List<Structure> structures = orderedStructures(script.getStructures());
-            for (int i = structures.size() - 1; i >= 0; i--) {
-                structures.get(i).unload();
-            }
-            for (int i = structures.size() - 1; i >= 0; i--) {
-                structures.get(i).postUnload();
-            }
-            script.invalidate();
-        }
+        unloadLoadedScripts(snapshot);
     }
 
     public synchronized Script loadFromPath(Path path) throws IOException {
         String source = Files.readString(path, StandardCharsets.UTF_8);
         return loadScript(path.getFileName().toString(), path.toString(), path.toFile(), source);
+    }
+
+    public synchronized Script loadFromPath(Path path, String displayPath) throws IOException {
+        String source = Files.readString(path, StandardCharsets.UTF_8);
+        return loadScript(path.getFileName().toString(), displayPath, path.toFile(), source);
+    }
+
+    public synchronized List<Script> loadedScripts() {
+        return List.copyOf(scripts);
+    }
+
+    public synchronized int unloadScripts(Collection<Script> scriptsToUnload) {
+        if (scriptsToUnload.isEmpty()) {
+            return 0;
+        }
+
+        List<Script> removed = new ArrayList<>();
+        for (Iterator<Script> iterator = scripts.iterator(); iterator.hasNext(); ) {
+            Script script = iterator.next();
+            if (scriptsToUnload.contains(script)) {
+                removed.add(script);
+                iterator.remove();
+            }
+        }
+        if (removed.isEmpty()) {
+            return 0;
+        }
+        if (scripts.isEmpty()) {
+            EvtSkript.onSkriptStop();
+        }
+        unloadLoadedScripts(removed);
+        return removed.size();
     }
 
     public synchronized Script loadFromResource(String resourcePath) {
@@ -205,6 +230,19 @@ public final class SkriptRuntime {
         List<Structure> ordered = new ArrayList<>(structures);
         ordered.sort(Comparator.comparingInt(structure -> structure.getPriority().getPriority()));
         return ordered;
+    }
+
+    private void unloadLoadedScripts(List<Script> loadedScripts) {
+        for (Script script : loadedScripts) {
+            List<Structure> structures = orderedStructures(script.getStructures());
+            for (int i = structures.size() - 1; i >= 0; i--) {
+                structures.get(i).unload();
+            }
+            for (int i = structures.size() - 1; i >= 0; i--) {
+                structures.get(i).postUnload();
+            }
+            script.invalidate();
+        }
     }
 
     private SectionNode parseScript(String source, String scriptName) {

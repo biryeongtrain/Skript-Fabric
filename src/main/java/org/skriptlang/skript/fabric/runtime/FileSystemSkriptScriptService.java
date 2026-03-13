@@ -4,86 +4,93 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-final class UnsupportedSkriptScriptService implements SkriptScriptService {
+final class FileSystemSkriptScriptService implements SkriptScriptService {
 
-    private static final String MESSAGE = "Skript reload service is not implemented in this build.";
+    private final SkriptScriptManager manager;
 
-    private final Path root;
+    FileSystemSkriptScriptService(SkriptScriptManager manager) {
+        this.manager = manager;
+    }
 
-    UnsupportedSkriptScriptService(Path root) {
-        this.root = root;
+    FileSystemSkriptScriptService(Path root, SkriptRuntime runtime) {
+        this(new SkriptScriptManager(root, runtime));
     }
 
     @Override
     public Path root() {
-        return root;
+        return manager.root();
     }
 
     @Override
     public List<String> discoverScripts() throws IOException {
-        throw unsupported();
+        return manager.discoverScripts();
     }
 
     @Override
     public SkriptScriptOperationResult loadAll() throws IOException {
-        throw unsupported();
+        return result(manager.loadAll());
     }
 
     @Override
     public SkriptScriptOperationResult unloadAll() {
-        return new SkriptScriptOperationResult(0, List.of());
+        return result(manager.unloadAll());
     }
 
     @Override
     public SkriptScriptOperationResult reloadAll() throws IOException {
-        throw unsupported();
+        return result(manager.reloadAll());
     }
 
     @Override
     public SkriptScriptOperationResult reloadScripts() throws IOException {
-        throw unsupported();
+        return result(manager.reloadScripts());
     }
 
     @Override
     public SkriptScriptOperationResult reloadTarget(String target) throws IOException {
-        throw unsupported();
+        return result(manager.reloadTarget(target));
     }
 
     @Override
     public SkriptScriptOperationResult enableAll() throws IOException {
-        throw unsupported();
+        return result(manager.enableAll());
     }
 
     @Override
     public SkriptScriptOperationResult enableTarget(String target) throws IOException {
-        throw unsupported();
+        return result(manager.enableTarget(target));
     }
 
     @Override
     public SkriptScriptOperationResult disableAll() throws IOException {
-        throw unsupported();
+        return result(manager.disableAll());
     }
 
     @Override
     public SkriptScriptOperationResult disableTarget(String target) throws IOException {
-        throw unsupported();
+        return result(manager.disableTarget(target));
     }
 
     @Override
     public List<String> listLoadedScripts() {
-        return List.of();
+        return manager.loadedScriptNames();
     }
 
     @Override
     public List<String> suggestedTargets() {
-        return List.of();
+        try {
+            return manager.suggestedTargets();
+        } catch (IOException exception) {
+            return List.of();
+        }
     }
 
     @Override
     public void shutdown() {
+        manager.unloadAll();
     }
 
-    private IOException unsupported() {
-        return new IOException(MESSAGE);
+    private SkriptScriptOperationResult result(List<String> scripts) {
+        return new SkriptScriptOperationResult(scripts.size(), scripts);
     }
 }
