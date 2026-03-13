@@ -7,7 +7,7 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `229`
+- Exact-path missing in local tree: `228`
 - Exact-path expressions missing: `44`
 - Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
@@ -16,7 +16,7 @@ Baseline snapshot date: 2026-03-08
 | Tier | Packages | Why |
 | --- | --- | --- |
 | `P0` | `lang (81 / 85)` | closest numerically to upstream, still behavior-incomplete |
-| `P1` | `classes (5 / 28)`, `config (6 / 20)`, `log (9 / 17)`, `patterns (13 / 14)`, `registrations (3 / 10)`, `sections (1 / 10)`, `structures (1 / 10)`, `util (8 / 57)`, `variables (3 / 11)` | parser/runtime dependencies |
+| `P1` | `classes (5 / 28)`, `config (6 / 20)`, `log (9 / 17)`, `patterns (13 / 14)`, `registrations (3 / 10)`, `sections (1 / 10)`, `structures (2 / 10)`, `util (8 / 57)`, `variables (3 / 11)` | parser/runtime dependencies |
 | `P2` | `aliases`, `command`, `conditions`, `effects`, `entity`, `events`, `expressions`, `literals`, `localization` | import after core closure |
 | `P3` | `bukkitutil`, `doc`, `hooks`, `test`, `timings`, `update` | defer |
 
@@ -25,7 +25,7 @@ Baseline snapshot date: 2026-03-08
 - The exact-path tracker stays in place for bookkeeping, but remaining files are no longer all treated as equal-priority parity work.
 - `Must Port`
   - Remaining user-visible Skript surface that should still exist on Fabric.
-  - Current cluster: the remaining expression backlog, remaining sections, literals, arithmetic support, parser/value families, and `StructFunction`.
+  - Current cluster: the remaining expression backlog, remaining sections, literals, arithmetic support, and parser/value families.
 - `Adapt`
   - User-visible surfaces that need Fabric-native equivalents rather than literal Bukkit/Paper class parity.
   - Current cluster: aliases, command surface, serializer/storage/config glue, slot/util wrappers, and Bukkit-shaped expressions such as chat/playerlist/server-icon/plugin-state/command metadata/teleport-cause/spawn-reason.
@@ -45,6 +45,7 @@ Baseline snapshot date: 2026-03-08
   - open: broader orchestration only when a concrete mismatch is reproduced
 - Function runtime:
   - landed: local-first lookup, exact-type overload preference, parsed default parameters, keyed plural default behavior
+  - landed: `StructFunction` declaration loading plus runtime `return` registration
   - open: broader namespace/default/runtime parity
 
 ### `Part 1B`

@@ -6,7 +6,7 @@ Last full verification: 2026-03-13
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `229`
+  - overall missing: `228`
   - expressions missing: `44`
   - events missing: `0`
   - sections missing: `8`
@@ -29,11 +29,11 @@ Last full verification: 2026-03-13
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `960`
-  - shortfall: `229`
+  - exact-path present locally: `961`
+  - shortfall: `228`
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `334 / 334` GameTests green in the cycle-F integrator tree
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `335 / 335` GameTests green on `main`
 
 ## Active Priority
 
@@ -46,7 +46,7 @@ Last full verification: 2026-03-13
 
 - `Must Port`
   - Remaining user-visible Skript syntax that still matters on Fabric.
-  - Current examples: arithmetic support, remaining entity/block/banner/sign/property expressions, remaining sections, literals, and `StructFunction`.
+  - Current examples: arithmetic support, remaining entity/block/banner/sign/property expressions, remaining sections, and literals.
 - `Adapt`
   - Surfaces that are still user-visible, but where Bukkit and Fabric concepts diverge enough that a literal class-for-class copy is the wrong target.
   - Current examples: `aliases`, `command`, SQL/storage backends, serializer glue, slot/util wrappers, and expression families around chat/playerlist/server icon/plugin state/command metadata/teleport cause/spawn reason.
@@ -67,9 +67,11 @@ Last full verification: 2026-03-13
   - cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
   - cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
   - cycle M adds `ExprSkull`, `ExprSignText`, and `ExprSpawnerType`
+  - function declaration loading now lands `StructFunction` plus bootstrap registration for `EffReturn`
+  - real `.sk` GameTest now proves declared global and local functions execute during runtime load
   - runtime bootstrap force-initializes the landed cycle F expression bundles during full GameTest startup
   - cycle F adds targeted compatibility/binding JUnit plus dedicated real `.sk` GameTests for every surviving worker lane
-- Landed with unit JUnit plus targeted Minecraft GameTest; the cycle-F integrator suite completes `334 / 334` GameTests green
+- Landed with targeted Minecraft GameTest; current full suite completes `335 / 335` GameTests green
 
 ## Open Gaps
 
