@@ -992,6 +992,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprDamageCause.class);
         forceInitialize(ch.njol.skript.expressions.ExprDifficulty.class);
         forceInitialize(ch.njol.skript.expressions.ExprDistance.class);
+        forceInitialize(ch.njol.skript.expressions.ExprElement.class);
         forceInitialize(ch.njol.skript.expressions.ExprExperience.class);
         forceInitialize(ch.njol.skript.expressions.ExprFinalDamage.class);
         forceInitialize(ch.njol.skript.expressions.ExprHealReason.class);
@@ -1022,6 +1023,8 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLastAttacker.class);
         forceInitialize(ch.njol.skript.expressions.ExprLeashHolder.class);
         forceInitialize(ch.njol.skript.expressions.ExprLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLowestHighestSolidBlock.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLoopValue.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxDurability.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxHealth.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxItemUseTime.class);
@@ -1044,7 +1047,10 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprPermissions.class);
         forceInitialize(ch.njol.skript.expressions.ExprPlayerProtocolVersion.class);
         forceInitialize(ch.njol.skript.expressions.ExprProtocolVersion.class);
+        forceInitialize(ch.njol.skript.expressions.ExprProjectileForce.class);
         forceInitialize(ch.njol.skript.expressions.ExprQuitReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprResonatingTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprRingingTime.class);
         forceInitialize(ch.njol.skript.expressions.ExprTPS.class);
         forceInitialize(ch.njol.skript.expressions.ExprRawName.class);
         forceInitialize(ch.njol.skript.expressions.ExprRedstoneBlockPower.class);
@@ -1073,6 +1079,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprWhitelist.class);
         forceInitialize(ch.njol.skript.expressions.ExprWithFireResistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprWithItemFlags.class);
+        forceInitialize(ch.njol.skript.expressions.ExprXOf.class);
         forceInitialize(ch.njol.skript.expressions.ExprXYZComponent.class);
         forceInitialize(ch.njol.skript.expressions.ExprYawPitch.class);
     }

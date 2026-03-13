@@ -92,7 +92,7 @@ final class ExpressionSyntaxS4CompatibilityTest {
         ExprShooter shooter = new ExprShooter();
         assertTrue(shooter.init(new Expression[1], 0, Kleenean.FALSE, parseResult("shooter")));
         assertEquals(shooterEntity, shooter.getSingle(new SkriptEvent(
-                new FabricEventCompatHandles.EntityShootBow(shooterEntity, null),
+                new FabricEventCompatHandles.EntityShootBow(shooterEntity, null, 1.0F),
                 null,
                 null,
                 null

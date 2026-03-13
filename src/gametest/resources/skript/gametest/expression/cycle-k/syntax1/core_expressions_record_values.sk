@@ -1,0 +1,11 @@
+on gametest cycle k syntax1 context:
+    set {cyclek::syntax1::first} to first element out of lane-k-values
+    set {cyclek::syntax1::range::*} to elements from 2 to 3 out of lane-k-values
+    set {cyclek::syntax1::scaled} to 3 of lane-k-itemtype
+    loop lane-k-values:
+        if loop-iteration is 2:
+            set {cyclek::syntax1::previous} to previous loop-value
+            set {cyclek::syntax1::current} to loop-value
+            set {cyclek::syntax1::next} to next loop-value
+    if {cyclek::syntax1::first} is "alpha":
+        set test block at 4 1 0 to emerald_block

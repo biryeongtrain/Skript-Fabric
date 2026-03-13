@@ -56,7 +56,7 @@ public final class FabricEventCompatHandles {
     public record EntityTarget(Entity entity, @Nullable Entity target) implements FabricEntityEventHandle {
     }
 
-    public record EntityShootBow(LivingEntity entity, @Nullable ItemStack consumable) {
+    public record EntityShootBow(LivingEntity entity, @Nullable ItemStack consumable, float force) {
     }
 
     public record AreaEffectCloudApply(@Nullable java.util.List<LivingEntity> affectedEntities) {

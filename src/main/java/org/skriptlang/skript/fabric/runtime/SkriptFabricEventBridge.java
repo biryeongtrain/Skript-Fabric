@@ -526,9 +526,9 @@ public final class SkriptFabricEventBridge {
         );
     }
 
-    public static void dispatchEntityShootBow(ServerLevel level, LivingEntity entity, @Nullable ItemStack consumable) {
+    public static void dispatchEntityShootBow(ServerLevel level, LivingEntity entity, @Nullable ItemStack consumable, float force) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.EntityShootBow(entity, consumable == null ? null : consumable.copy()),
+                new FabricEventCompatHandles.EntityShootBow(entity, consumable == null ? null : consumable.copy(), force),
                 level.getServer(),
                 level,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null

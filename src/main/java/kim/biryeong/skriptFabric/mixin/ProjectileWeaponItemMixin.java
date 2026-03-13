@@ -29,7 +29,7 @@ abstract class ProjectileWeaponItemMixin {
             @Nullable LivingEntity target,
             CallbackInfo callbackInfo
     ) {
-        SkriptFabricEventBridge.dispatchEntityShootBow(level, shooter, skript$firstConsumable(projectiles));
+        SkriptFabricEventBridge.dispatchEntityShootBow(level, shooter, skript$firstConsumable(projectiles), velocity);
     }
 
     private static @Nullable ItemStack skript$firstConsumable(List<ItemStack> projectiles) {

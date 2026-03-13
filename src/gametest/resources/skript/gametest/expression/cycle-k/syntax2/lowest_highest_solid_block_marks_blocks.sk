@@ -1,0 +1,5 @@
+on gametest cycle k syntax2 context:
+    set {_highest} to highest solid block at {cyclek::syntax2::origin}
+    set {_lowest} to lowest solid block at {cyclek::syntax2::origin}
+    set test block above {_highest} to emerald_block
+    set test block above {_lowest} to diamond_block
