@@ -143,6 +143,14 @@ def isolatedRegistrySuites = [
                 className: 'org.skriptlang.skript.fabric.runtime.ExpressionLaneBBindingTest'
         ],
         [
+                taskName: 'isolatedExpressionCycle20260313FSafe5BindingTest',
+                className: 'org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest'
+        ],
+        [
+                taskName: 'isolatedExpressionCycle20260313FSafe1BindingCompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest'
+        ],
+        [
                 taskName: 'isolatedExpressionEventContextBundleCompatibilityTest',
                 className: 'ch.njol.skript.expressions.ExpressionEventContextBundleCompatibilityTest'
         ],
@@ -161,6 +169,10 @@ def isolatedRegistrySuites = [
         [
                 taskName: 'isolatedEffectBindingTest',
                 className: 'org.skriptlang.skript.fabric.runtime.EffectBindingTest'
+        ],
+        [
+                taskName: 'isolatedExpressionCycle20260313FSafe4BindingCompatibilityTest',
+                className: 'ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest'
         ]
 ]
 
@@ -190,6 +202,58 @@ tasks.named('runGameTest', JavaExec).configure {
             "-Dfabric-api.gametest.report-file=${project.buildDir}/junit.xml",
             "-Dmixin.debug.countInjections=true"
     ]
+    def gameTestFilter = System.getProperty("fabric-api.gametest.filter")
+    if (gameTestFilter != null && !gameTestFilter.isBlank()) {
+        jvmArgs += ["-Dfabric-api.gametest.filter=${gameTestFilter}"]
+    }
+}
+
+def cycle20260313FSafe4GametestResources = tasks.register('syncCycle20260313FSafe4GametestResources', Copy) {
+    from('src/gametest/resources') {
+        exclude 'fabric.mod.json'
+    }
+    into layout.buildDirectory.dir('resources/cycle20260313FSafe4Gametest')
+
+    doLast {
+        def modJson = new File(destinationDir, 'fabric.mod.json')
+        modJson.text = '''{
+  "schemaVersion": 1,
+  "id": "skript-fabric-port-gametest",
+  "version": "0.0.0",
+  "name": "Skript-Fabric-port GameTests",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "kim.biryeong.skriptFabricPort.gametest.WorldInitializationGameTestBootstrap"
+    ],
+    "fabric-gametest": [
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionCycleFSafe4GameTest"
+    ]
+  }
+}
+'''
+    }
+}
+
+tasks.register('runExpressionCycle20260313FSafe4GameTest', JavaExec) {
+    def baseTask = tasks.named('runGameTest', JavaExec).get()
+    def processGametestResources = tasks.named('processGametestResources', ProcessResources).get()
+    dependsOn tasks.named('gametestClasses'), cycle20260313FSafe4GametestResources
+    group = 'verification'
+    description = 'Runs only the cycle 20260313f safe4 GameTests.'
+    classpath = files(
+            cycle20260313FSafe4GametestResources,
+            baseTask.classpath.filter { it != processGametestResources.destinationDir }
+    )
+    mainClass.set(baseTask.mainClass.get())
+    args(baseTask.args)
+    jvmArgs(baseTask.jvmArgs ?: [])
+    systemProperties.putAll(baseTask.systemProperties)
+    workingDir(baseTask.workingDir)
 }
 
 java {

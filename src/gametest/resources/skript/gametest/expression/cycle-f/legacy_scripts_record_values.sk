@@ -1,0 +1,8 @@
+on gametest cycle f script surfaces:
+    loop all scripts:
+        set {cyclef::legacy::all::%loop-index%} to loop-script
+    loop all enabled scripts without paths:
+        set {cyclef::legacy::enabled::%loop-index%} to loop-value
+    set {cyclef::legacy::disabled_count} to 0
+    loop all disabled scripts:
+        add 1 to {cyclef::legacy::disabled_count}

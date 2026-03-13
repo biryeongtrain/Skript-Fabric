@@ -1,0 +1,4 @@
+on use entity:
+    set event-player's compass target to location of event-entity
+    set {cyclef::compass::target} to compass target of event-player
+    set test block under player event-player to diamond_block

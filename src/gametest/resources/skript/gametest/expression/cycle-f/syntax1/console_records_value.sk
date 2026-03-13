@@ -1,0 +1,2 @@
+on server tick:
+    set {cyclef::console} to console

@@ -243,13 +243,9 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
     @GameTest
     public void equipEffectExecutesRealScript(GameTestHelper helper) {
         Cow cow = createCow(helper, false);
-        SkriptRuntime runtime = SkriptRuntime.instance();
-        BlockPos markerPos = new BlockPos(9, 1, 0);
-        helper.assertTrue(
-                RUNTIME_LOCK.compareAndSet(false, true),
-                Component.literal("Waiting for exclusive Skript runtime access.")
-        );
-        try {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
             runtime.clearScripts();
             runtime.loadFromResource("skript/gametest/effect/equip_entity_marks_block.sk");
 
@@ -278,22 +274,16 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
             );
             runtime.clearScripts();
             helper.succeed();
-        } finally {
-            RUNTIME_LOCK.set(false);
-        }
+        });
     }
 
     @GameTest
     public void damageEffectExecutesRealScript(GameTestHelper helper) {
         Cow cow = createCow(helper, false);
         float startingHealth = cow.getHealth();
-        SkriptRuntime runtime = SkriptRuntime.instance();
-        BlockPos markerPos = new BlockPos(9, 1, 0);
-        helper.assertTrue(
-                RUNTIME_LOCK.compareAndSet(false, true),
-                Component.literal("Waiting for exclusive Skript runtime access.")
-        );
-        try {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
             runtime.clearScripts();
             runtime.loadFromResource("skript/gametest/effect/damage_entity_marks_block.sk");
 
@@ -322,44 +312,39 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
             );
             runtime.clearScripts();
             helper.succeed();
-        } finally {
-            RUNTIME_LOCK.set(false);
-        }
+        });
     }
 
     @GameTest
     public void delayEffectExecutesRealScript(GameTestHelper helper) {
-        SkriptRuntime runtime = SkriptRuntime.instance();
-        BlockPos markerPos = new BlockPos(0, 1, 0);
-        helper.startSequence()
-                .thenExecute(() -> {
-                helper.assertTrue(
-                        RUNTIME_LOCK.compareAndSet(false, true),
-                        Component.literal("Waiting for exclusive Skript runtime access.")
-                );
-                Variables.clearAll();
-                runtime.clearScripts();
-                helper.getLevel().setBlockAndUpdate(helper.absolutePos(markerPos), Blocks.AIR.defaultBlockState());
-                runtime.loadFromResource("skript/gametest/effect/wait_one_tick_sets_block.sk");
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(0, 1, 0);
+            helper.startSequence()
+                    .thenExecute(() -> {
+                        Variables.clearAll();
+                        runtime.clearScripts();
+                        helper.getLevel().setBlockAndUpdate(helper.absolutePos(markerPos), Blocks.AIR.defaultBlockState());
+                        runtime.loadFromResource("skript/gametest/effect/wait_one_tick_sets_block.sk");
 
-                int executed = GameTestRuntimeContext.withHelper(helper, () -> runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        helper,
-                        helper.getLevel().getServer(),
-                        helper.getLevel(),
-                        null
-                )));
-                helper.assertTrue(
-                        executed == 1,
-                        Component.literal("Expected exactly one delayed gametest trigger execution but got " + executed)
-                );
-                })
-                .thenWaitUntil(() -> helper.assertBlockPresent(Blocks.GOLD_BLOCK, markerPos))
-                .thenExecute(() -> {
-                    runtime.clearScripts();
-                    Variables.clearAll();
-                    RUNTIME_LOCK.set(false);
-                })
-                .thenSucceed();
+                        int executed = GameTestRuntimeContext.withHelper(helper, () -> runtime.dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                                helper,
+                                helper.getLevel().getServer(),
+                                helper.getLevel(),
+                                null
+                        )));
+                        helper.assertTrue(
+                                executed == 1,
+                                Component.literal("Expected exactly one delayed gametest trigger execution but got " + executed)
+                        );
+                    })
+                    .thenWaitUntil(() -> helper.assertBlockPresent(Blocks.GOLD_BLOCK, markerPos))
+                    .thenExecute(() -> {
+                        runtime.clearScripts();
+                        Variables.clearAll();
+                    })
+                    .thenSucceed();
+        });
     }
 
     @GameTest

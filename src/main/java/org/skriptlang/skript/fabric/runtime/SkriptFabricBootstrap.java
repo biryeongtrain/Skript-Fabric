@@ -25,6 +25,9 @@ import ch.njol.skript.expressions.ExprLevelProgress;
 import ch.njol.skript.expressions.ExprMaxFreezeTicks;
 import ch.njol.skript.expressions.ExprRandomCharacter;
 import ch.njol.skript.expressions.ExprTimes;
+import ch.njol.skript.classes.data.JavaClasses;
+import ch.njol.skript.classes.data.SkriptClasses;
+import ch.njol.skript.literals.LitConsole;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.sections.SecIf;
 import ch.njol.skript.structures.StructOptions;
@@ -798,6 +801,7 @@ public final class SkriptFabricBootstrap {
                 );
                 initializeRecoveredSyntaxCoreExpressionBundle();
                 initializeRecoveredExpressionBundle();
+                LitConsole.register();
                 SkriptFabricAdditionalSyntax.register();
                 SkriptFabricAdditionalEffects.register();
                 ch.njol.skript.effects.EffActionBar.register();
@@ -925,6 +929,8 @@ public final class SkriptFabricBootstrap {
     }
 
     private static void registerCoreClassInfos() {
+        JavaClasses.register();
+        SkriptClasses.register();
         registerClassInfoIfMissing("player", PlayerClassInfo::register);
         registerClassInfoIfMissing("inventory", InventoryClassInfo::register);
         registerClassInfoIfMissing("itemstack", ItemStackClassInfo::register);
@@ -977,8 +983,10 @@ public final class SkriptFabricBootstrap {
     private static void initializeRecoveredSyntaxCoreExpressionBundle() {
         forceInitialize(ch.njol.skript.expressions.ExprAttacked.class);
         forceInitialize(ch.njol.skript.expressions.ExprAttacker.class);
+        forceInitialize(ch.njol.skript.expressions.ExprArgument.class);
         forceInitialize(ch.njol.skript.expressions.ExprAltitude.class);
         forceInitialize(ch.njol.skript.expressions.ExprBlock.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBlockSphere.class);
         forceInitialize(ch.njol.skript.expressions.ExprBlockData.class);
         forceInitialize(ch.njol.skript.expressions.ExprCarryingBlockData.class);
         forceInitialize(ch.njol.skript.expressions.ExprChunk.class);
@@ -987,12 +995,16 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprClientViewDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommandBlockCommand.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommand.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCommandInfo.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommandSender.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCompassTarget.class);
         forceInitialize(ch.njol.skript.expressions.ExprDamage.class);
         forceInitialize(ch.njol.skript.expressions.ExprDamageCause.class);
         forceInitialize(ch.njol.skript.expressions.ExprDifficulty.class);
         forceInitialize(ch.njol.skript.expressions.ExprDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprElement.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantmentLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantments.class);
         forceInitialize(ch.njol.skript.expressions.ExprExperience.class);
         forceInitialize(ch.njol.skript.expressions.ExprFinalDamage.class);
         forceInitialize(ch.njol.skript.expressions.ExprHealReason.class);
@@ -1008,6 +1020,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLocationOf.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocationVectorOffset.class);
         forceInitialize(ch.njol.skript.expressions.ExprMOTD.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMe.class);
         forceInitialize(ch.njol.skript.expressions.ExprMidpoint.class);
         forceInitialize(ch.njol.skript.expressions.ExprAffectedEntities.class);
         forceInitialize(ch.njol.skript.expressions.ExprAppliedEffect.class);
@@ -1028,8 +1041,10 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprMaxDurability.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxHealth.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxItemUseTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMaxMinecartSpeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxPlayers.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxStack.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMinecartDerailedFlyingVelocity.class);
         forceInitialize(ch.njol.skript.expressions.ExprMods.class);
         forceInitialize(ch.njol.skript.expressions.ExprNamed.class);
         forceInitialize(ch.njol.skript.expressions.ExprNearestEntity.class);
@@ -1040,16 +1055,20 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprOnlinePlayersCount.class);
         forceInitialize(ch.njol.skript.expressions.ExprOps.class);
         forceInitialize(ch.njol.skript.expressions.ExprPandaGene.class);
+        forceInitialize(ch.njol.skript.expressions.ExprParse.class);
+        forceInitialize(ch.njol.skript.expressions.ExprParseError.class);
         forceInitialize(ch.njol.skript.expressions.ExprItemOwner.class);
         forceInitialize(ch.njol.skript.expressions.ExprItemThrower.class);
         forceInitialize(ch.njol.skript.expressions.ExprPing.class);
         forceInitialize(ch.njol.skript.expressions.ExprPlain.class);
         forceInitialize(ch.njol.skript.expressions.ExprPermissions.class);
         forceInitialize(ch.njol.skript.expressions.ExprPlayerProtocolVersion.class);
+        forceInitialize(ch.njol.skript.expressions.ExprPortal.class);
         forceInitialize(ch.njol.skript.expressions.ExprProtocolVersion.class);
         forceInitialize(ch.njol.skript.expressions.ExprProjectileForce.class);
         forceInitialize(ch.njol.skript.expressions.ExprQuitReason.class);
         forceInitialize(ch.njol.skript.expressions.ExprResonatingTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprResult.class);
         forceInitialize(ch.njol.skript.expressions.ExprRingingTime.class);
         forceInitialize(ch.njol.skript.expressions.ExprTPS.class);
         forceInitialize(ch.njol.skript.expressions.ExprRawName.class);
@@ -1060,16 +1079,21 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprSimulationDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprSlotIndex.class);
         forceInitialize(ch.njol.skript.expressions.ExprSkull.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSkullOwner.class);
+        forceInitialize(ch.njol.skript.expressions.ExprScript.class);
         forceInitialize(ch.njol.skript.expressions.ExprSignText.class);
         forceInitialize(ch.njol.skript.expressions.ExprSourceBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawnerType.class);
         forceInitialize(ch.njol.skript.expressions.ExprScripts.class);
+        forceInitialize(ch.njol.skript.expressions.ExprScriptsOld.class);
         forceInitialize(ch.njol.skript.expressions.ExprTamer.class);
         forceInitialize(ch.njol.skript.expressions.ExprTargetedBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprTimeState.class);
         forceInitialize(ch.njol.skript.expressions.ExprTool.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTypeOf.class);
+        forceInitialize(ch.njol.skript.expressions.ExprValue.class);
         forceInitialize(ch.njol.skript.expressions.ExprVersion.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorBetweenLocations.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorCrossProduct.class);
@@ -1085,6 +1109,9 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprXOf.class);
         forceInitialize(ch.njol.skript.expressions.ExprXYZComponent.class);
         forceInitialize(ch.njol.skript.expressions.ExprYawPitch.class);
+        forceInitialize(org.skriptlang.skript.common.expressions.ExprColorFromHexCode.class);
+        forceInitialize(org.skriptlang.skript.common.expressions.ExprHexCode.class);
+        forceInitialize(org.skriptlang.skript.common.expressions.ExprRecursiveSize.class);
     }
 
     private static void initializeRecoveredExpressionBundle() {

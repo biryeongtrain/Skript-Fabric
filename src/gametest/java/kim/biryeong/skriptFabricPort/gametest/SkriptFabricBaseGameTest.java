@@ -1100,7 +1100,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
 
     private static void ensureBuiltInSetHintTestSyntaxRegistered() {
         if (BUILT_IN_SET_HINT_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
-            Skript.registerEffect(CaptureHintedIntegerGameTestEffect.class, "capture hinted integer %integer%");
+            Skript.registerEffect(CaptureHintedIntegerGameTestEffect.class, "capture hinted integer %number%");
             Skript.registerEffect(CaptureHintedTextGameTestEffect.class, "capture hinted text %string%");
         }
     }
@@ -1135,16 +1135,16 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         if (STATEMENT_FALLBACK_SECTION_HINT_TEST_SYNTAX_REGISTERED.compareAndSet(false, true)) {
             Skript.registerExpression(
                     StatementManagedHintGameTestExpression.class,
-                    Integer.class,
+                    Number.class,
                     "statement hint value"
             );
             Skript.registerStatement(
                     StatementManagedHintGameTestStatement.class,
-                    "statement-managed hint %integer%"
+                    "statement-managed hint %number%"
             );
             Skript.registerEffect(
                     CaptureStatementFallbackHintedIntegerGameTestEffect.class,
-                    "capture statement fallback hinted integer %integer%"
+                    "capture statement fallback hinted integer %number%"
             );
         }
     }
@@ -1174,7 +1174,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
 
     public static final class CaptureHintedIntegerGameTestEffect extends ch.njol.skript.lang.Effect {
 
-        private Expression<Integer> value;
+        private Expression<Number> value;
 
         @Override
         @SuppressWarnings("unchecked")
@@ -1184,13 +1184,14 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
                 Kleenean isDelayed,
                 ch.njol.skript.lang.SkriptParser.ParseResult parseResult
         ) {
-            value = (Expression<Integer>) expressions[0];
+            value = (Expression<Number>) expressions[0];
             return true;
         }
 
         @Override
         protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            lastBuiltInHintedInteger = value.getSingle(event);
+            Number captured = value.getSingle(event);
+            lastBuiltInHintedInteger = captured == null ? null : captured.intValue();
         }
 
         @Override
@@ -1419,7 +1420,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
     }
 
-    public static final class StatementManagedHintGameTestExpression extends SectionExpression<Integer> {
+    public static final class StatementManagedHintGameTestExpression extends SectionExpression<Number> {
 
         @Override
         public boolean init(
@@ -1430,7 +1431,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
                 @org.jetbrains.annotations.Nullable SectionNode node,
                 @org.jetbrains.annotations.Nullable List<TriggerItem> triggerItems
         ) {
-            ParserInstance.get().getHintManager().set("value", Integer.class);
+            ParserInstance.get().getHintManager().set("value", Number.class);
             if (node != null) {
                 loadOptionalCode(node);
             }
@@ -1438,8 +1439,8 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
 
         @Override
-        protected Integer @org.jetbrains.annotations.Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            return new Integer[]{1};
+        protected Number @org.jetbrains.annotations.Nullable [] get(org.skriptlang.skript.lang.event.SkriptEvent event) {
+            return new Number[]{1L};
         }
 
         @Override
@@ -1448,8 +1449,8 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
 
         @Override
-        public Class<? extends Integer> getReturnType() {
-            return Integer.class;
+        public Class<? extends Number> getReturnType() {
+            return Number.class;
         }
 
         public boolean runManagedSection(org.skriptlang.skript.lang.event.SkriptEvent event) {
@@ -1464,7 +1465,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
 
     public static final class CaptureStatementFallbackHintedIntegerGameTestEffect extends ch.njol.skript.lang.Effect {
 
-        private Expression<Integer> value;
+        private Expression<Number> value;
 
         @Override
         @SuppressWarnings("unchecked")
@@ -1474,13 +1475,14 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
                 Kleenean isDelayed,
                 SkriptParser.ParseResult parseResult
         ) {
-            value = (Expression<Integer>) expressions[0];
+            value = (Expression<Number>) expressions[0];
             return true;
         }
 
         @Override
         protected void execute(org.skriptlang.skript.lang.event.SkriptEvent event) {
-            lastStatementFallbackHintedInteger = value.getSingle(event);
+            Number captured = value.getSingle(event);
+            lastStatementFallbackHintedInteger = captured == null ? null : captured.intValue();
         }
 
         @Override

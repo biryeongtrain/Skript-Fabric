@@ -133,8 +133,8 @@ public class ExprElement<T> extends SimpleExpression<T> implements KeyProviderEx
     private final Map<SkriptEvent, List<String>> cache = new WeakHashMap<>();
 
     private Expression<? extends T> expr;
-    private @Nullable Expression<Integer> startIndex;
-    private @Nullable Expression<Integer> endIndex;
+    private @Nullable Expression<Number> startIndex;
+    private @Nullable Expression<Number> endIndex;
     private ElementType type;
     private boolean queue;
     private boolean keyed;
@@ -151,9 +151,9 @@ public class ExprElement<T> extends SimpleExpression<T> implements KeyProviderEx
         }
         switch (type = types[parseResult.mark]) {
             case RANGE:
-                endIndex = (Expression<Integer>) expressions[1];
+                endIndex = (Expression<Number>) expressions[1];
             case FIRST_X_ELEMENTS, LAST_X_ELEMENTS, ORDINAL, TAIL_END_ORDINAL:
-                startIndex = (Expression<Integer>) expressions[0];
+                startIndex = (Expression<Number>) expressions[0];
                 break;
             default:
                 startIndex = null;
@@ -220,16 +220,21 @@ public class ExprElement<T> extends SimpleExpression<T> implements KeyProviderEx
         Integer resolvedStartIndex = 0;
         Integer resolvedEndIndex = 0;
         if (startIndex != null) {
-            resolvedStartIndex = startIndex.getSingle(event);
-            if (resolvedStartIndex == null || resolvedStartIndex <= 0 && type != ElementType.RANGE) {
+            Number startNumber = startIndex.getSingle(event);
+            if (startNumber == null) {
+                return Collections.emptyIterator();
+            }
+            resolvedStartIndex = startNumber.intValue();
+            if (resolvedStartIndex <= 0 && type != ElementType.RANGE) {
                 return Collections.emptyIterator();
             }
         }
         if (endIndex != null) {
-            resolvedEndIndex = endIndex.getSingle(event);
-            if (resolvedEndIndex == null) {
+            Number endNumber = endIndex.getSingle(event);
+            if (endNumber == null) {
                 return Collections.emptyIterator();
             }
+            resolvedEndIndex = endNumber.intValue();
         }
         return type.apply(iterator, resolvedStartIndex, resolvedEndIndex);
     }
@@ -243,16 +248,21 @@ public class ExprElement<T> extends SimpleExpression<T> implements KeyProviderEx
         Integer resolvedStartIndex = 0;
         Integer resolvedEndIndex = 0;
         if (startIndex != null) {
-            resolvedStartIndex = startIndex.getSingle(event);
-            if (resolvedStartIndex == null || resolvedStartIndex <= 0 && type != ElementType.RANGE) {
+            Number startNumber = startIndex.getSingle(event);
+            if (startNumber == null) {
+                return null;
+            }
+            resolvedStartIndex = startNumber.intValue();
+            if (resolvedStartIndex <= 0 && type != ElementType.RANGE) {
                 return null;
             }
         }
         if (endIndex != null) {
-            resolvedEndIndex = endIndex.getSingle(event);
-            if (resolvedEndIndex == null) {
+            Number endNumber = endIndex.getSingle(event);
+            if (endNumber == null) {
                 return null;
             }
+            resolvedEndIndex = endNumber.intValue();
         }
         return switch (type) {
             case FIRST_ELEMENT -> singletonArray((T) queueValue.pollFirst());

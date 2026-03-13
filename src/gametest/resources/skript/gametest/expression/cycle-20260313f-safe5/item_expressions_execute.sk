@@ -1,0 +1,10 @@
+on gametest cycle 20260313f safe5 item context:
+    set {safe5::level_before} to lane-safe5-enchantment level of lane-safe5-item
+    add 1 to lane-safe5-enchantment level of lane-safe5-item
+    set {safe5::level_after} to lane-safe5-enchantment level of lane-safe5-item
+    add lane-safe5-second-enchantment to enchantments of lane-safe5-item
+    set {safe5::type} to type of lane-safe5-itemstack
+    set {safe5::owner_before} to skull owner of lane-safe5-skull-item
+    set skull owner of lane-safe5-skull-item to lane-safe5-next-owner
+    set {safe5::owner_after} to skull owner of lane-safe5-skull-item
+    set test block at 4 1 0 to emerald_block

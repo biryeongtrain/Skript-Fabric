@@ -1,0 +1,2 @@
+on gametest cycle f script surfaces:
+    set {cyclef::support::weekly} to true

@@ -1,0 +1,3 @@
+on portal:
+    loop portal blocks:
+        set test block above loop-block to gold_block

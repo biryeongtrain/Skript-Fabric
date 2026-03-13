@@ -13,9 +13,9 @@ import org.skriptlang.skript.fabric.runtime.GameTestRuntimeContext;
 
 public final class EffSetTestBlock extends Effect {
 
-    private Expression<Integer> x;
-    private Expression<Integer> y;
-    private Expression<Integer> z;
+    private Expression<Number> x;
+    private Expression<Number> y;
+    private Expression<Number> z;
     private Expression<String> blockId;
 
     @Override
@@ -24,9 +24,9 @@ public final class EffSetTestBlock extends Effect {
         if (expressions.length != 4) {
             return false;
         }
-        x = (Expression<Integer>) expressions[0];
-        y = (Expression<Integer>) expressions[1];
-        z = (Expression<Integer>) expressions[2];
+        x = (Expression<Number>) expressions[0];
+        y = (Expression<Number>) expressions[1];
+        z = (Expression<Number>) expressions[2];
         blockId = (Expression<String>) expressions[3];
         return true;
     }
@@ -38,9 +38,9 @@ public final class EffSetTestBlock extends Effect {
             throw new IllegalStateException("set test block effect requires a GameTestHelper event handle.");
         }
 
-        Integer xValue = x.getSingle(event);
-        Integer yValue = y.getSingle(event);
-        Integer zValue = z.getSingle(event);
+        Number xValue = x.getSingle(event);
+        Number yValue = y.getSingle(event);
+        Number zValue = z.getSingle(event);
         String blockKey = blockId.getSingle(event);
         if (xValue == null || yValue == null || zValue == null || blockKey == null || blockKey.isBlank()) {
             throw new IllegalStateException(
@@ -59,7 +59,7 @@ public final class EffSetTestBlock extends Effect {
             throw new IllegalArgumentException("Unknown block id: " + blockKey);
         }
 
-        helper.setBlock(new BlockPos(xValue, yValue, zValue), block.defaultBlockState());
+        helper.setBlock(new BlockPos(xValue.intValue(), yValue.intValue(), zValue.intValue()), block.defaultBlockState());
     }
 
     @Override

@@ -1,0 +1,4 @@
+on gametest cycle f safe1 context:
+    set {cyclef::safe1::parse::integer} to "12" parsed as integer
+    set {cyclef::safe1::parse::failed} to "oops" parsed as integer
+    set {cyclef::safe1::parse::error} to parse error

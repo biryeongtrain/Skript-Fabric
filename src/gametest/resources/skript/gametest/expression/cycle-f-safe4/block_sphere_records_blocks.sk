@@ -1,0 +1,3 @@
+on gametest cycle f safe4 context:
+    set {cyclef::block_sphere::entries::*} to blocks in radius 1 around lane-f-center-location
+    set test block at 4 1 0 to emerald_block
