@@ -2492,102 +2492,75 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
         });
     }
 
-    @GameTest(maxTicks = 200, skyAccess = true)
+    @GameTest(skyAccess = true)
     public void beaconActivationExecutesRealScript(GameTestHelper helper) {
-        SkriptRuntime runtime = SkriptRuntime.instance();
         BlockPos beaconPos = helper.absolutePos(new BlockPos(0, 1, 0));
-        helper.startSequence()
-                .thenWaitUntil(() -> helper.assertTrue(
-                        RUNTIME_LOCK.compareAndSet(false, true),
-                        Component.literal("Waiting for exclusive Skript runtime access.")
-                ))
-                .thenExecute(() -> {
-                    Variables.clearAll();
-                    runtime.clearScripts();
-                    runtime.loadFromResource("skript/gametest/event/beacon_activation_marks_block.sk");
-                    helper.getLevel().setBlockAndUpdate(beaconPos, Blocks.BEACON.defaultBlockState());
-                    helper.getLevel().setBlockAndUpdate(beaconPos.above(), Blocks.AIR.defaultBlockState());
-                })
-                .thenIdle(80)
-                .thenExecute(() -> buildSingleTierBeaconBase(helper, beaconPos))
-                .thenWaitUntil(() -> {
-                    helper.assertTrue(
-                            PrivateBeaconAccess.levels(beaconAt(helper, beaconPos)) > 0,
-                            Component.literal("Expected the live beacon tick path to activate the beacon after building a base.")
-                    );
-                    helper.assertTrue(
-                            helper.getLevel().getBlockState(beaconPos.above()).is(Blocks.EMERALD_BLOCK),
-                            Component.literal("Expected beacon activation event to mark the block above the beacon.")
-                    );
-                })
-                .thenExecute(() -> {
-                    runtime.clearScripts();
-                    Variables.clearAll();
-                    RUNTIME_LOCK.set(false);
-                })
-                .thenSucceed();
+        helper.getLevel().setBlockAndUpdate(beaconPos, Blocks.BEACON.defaultBlockState());
+        helper.getLevel().setBlockAndUpdate(beaconPos.above(), Blocks.AIR.defaultBlockState());
+        invokeBeaconTick(helper, beaconPos);
+
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/beacon_activation_marks_block.sk");
+            buildSingleTierBeaconBase(helper, beaconPos);
+            invokeBeaconTick(helper, beaconPos);
+
+            helper.assertTrue(
+                    PrivateBeaconAccess.levels(beaconAt(helper, beaconPos)) > 0,
+                    Component.literal("Expected the live beacon tick path to activate the beacon after building a base.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(beaconPos.above()).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected beacon activation event to mark the block above the beacon.")
+            );
+            runtime.clearScripts();
+        });
     }
 
-    @GameTest(maxTicks = 200, skyAccess = true)
+    @GameTest(skyAccess = true)
     public void primaryBeaconEffectExecutesRealScript(GameTestHelper helper) {
-        SkriptRuntime runtime = SkriptRuntime.instance();
         BlockPos beaconPos = helper.absolutePos(new BlockPos(2, 1, 2));
-        helper.startSequence()
-                .thenWaitUntil(() -> helper.assertTrue(
-                        RUNTIME_LOCK.compareAndSet(false, true),
-                        Component.literal("Waiting for exclusive Skript runtime access.")
-                ))
-                .thenExecute(() -> {
-                    Variables.clearAll();
-                    runtime.clearScripts();
-                    runtime.loadFromResource("skript/gametest/event/primary_beacon_effect_marks_block.sk");
+        helper.getLevel().setBlockAndUpdate(beaconPos, Blocks.BEACON.defaultBlockState());
+        helper.getLevel().setBlockAndUpdate(beaconPos.above(), Blocks.AIR.defaultBlockState());
+        buildSingleTierBeaconBase(helper, beaconPos);
+        invokeBeaconTick(helper, beaconPos);
 
-                    ServerPlayer player = helper.makeMockServerPlayerInLevel();
-                    player.setGameMode(GameType.SURVIVAL);
-                    player.removeAllEffects();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.SURVIVAL);
+        player.removeAllEffects();
+        player.teleportTo(beaconPos.getX() + 0.5D, beaconPos.getY() + 1.0D, beaconPos.getZ() + 0.5D);
 
-                    helper.getLevel().setBlockAndUpdate(beaconPos, Blocks.BEACON.defaultBlockState());
-                    helper.getLevel().setBlockAndUpdate(beaconPos.above(), Blocks.AIR.defaultBlockState());
-                    buildSingleTierBeaconBase(helper, beaconPos);
-                    player.teleportTo(beaconPos.getX() + 0.5D, beaconPos.getY() + 1.0D, beaconPos.getZ() + 0.5D);
-                })
-                .thenIdle(80)
-                .thenExecute(() -> helper.assertTrue(
-                        PrivateBeaconAccess.levels(beaconAt(helper, beaconPos)) > 0,
-                        Component.literal("Expected the live beacon tick path to activate the beacon before applying effects.")
-                ))
-                .thenExecute(() -> {
-                    BeaconBlockEntity beacon = beaconAt(helper, beaconPos);
-                    PrivateBeaconAccess.setPrimaryPower(beacon, MobEffects.SPEED);
-                    beacon.setChanged();
-                    invokeBeaconApplyEffects(
-                            helper,
-                            beaconPos,
-                            PrivateBeaconAccess.levels(beacon),
-                            PrivateBeaconAccess.primaryPower(beacon),
-                            null
-                    );
-                })
-                .thenWaitUntil(() -> {
-                    ServerPlayer player = helper.getLevel().getServer().getPlayerList().getPlayers().stream()
-                            .filter(found -> found.blockPosition().closerThan(beaconPos, 2.0D))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalStateException("Expected beacon effect test player to still be present."));
-                    helper.assertTrue(
-                            player.hasEffect(MobEffects.SPEED),
-                            Component.literal("Expected beacon applyEffects to grant the configured primary effect to the nearby player.")
-                    );
-                    helper.assertTrue(
-                            helper.getLevel().getBlockState(beaconPos.above()).is(Blocks.GOLD_BLOCK),
-                            Component.literal("Expected primary beacon effect event to mark the block above the beacon.")
-                    );
-                })
-                .thenExecute(() -> {
-                    runtime.clearScripts();
-                    Variables.clearAll();
-                    RUNTIME_LOCK.set(false);
-                })
-                .thenSucceed();
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/primary_beacon_effect_marks_block.sk");
+
+            BeaconBlockEntity beacon = beaconAt(helper, beaconPos);
+            helper.assertTrue(
+                    PrivateBeaconAccess.levels(beacon) > 0,
+                    Component.literal("Expected the live beacon tick path to activate the beacon before applying effects.")
+            );
+            PrivateBeaconAccess.setPrimaryPower(beacon, MobEffects.SPEED);
+            beacon.setChanged();
+            invokeBeaconApplyEffects(
+                    helper,
+                    beaconPos,
+                    PrivateBeaconAccess.levels(beacon),
+                    PrivateBeaconAccess.primaryPower(beacon),
+                    null
+            );
+
+            helper.assertTrue(
+                    player.hasEffect(MobEffects.SPEED),
+                    Component.literal("Expected beacon applyEffects to grant the configured primary effect to the nearby player.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(beaconPos.above()).is(Blocks.GOLD_BLOCK),
+                    Component.literal("Expected primary beacon effect event to mark the block above the beacon.")
+            );
+            runtime.clearScripts();
+        });
     }
 
     @GameTest

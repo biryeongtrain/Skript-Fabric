@@ -180,10 +180,13 @@ public abstract class AbstractSkriptFabricGameTestSupport {
             if (!RUNTIME_LOCK.compareAndSet(false, true)) {
                 return;
             }
+            SkriptRuntime runtime = SkriptRuntime.instance();
             try {
+                runtime.clearScripts();
                 Variables.clearAll();
                 GameTestRuntimeContext.withHelper(helper, body::run);
             } finally {
+                runtime.clearScripts();
                 Variables.clearAll();
                 RUNTIME_LOCK.set(false);
             }
@@ -543,6 +546,22 @@ public abstract class AbstractSkriptFabricGameTestSupport {
             method.invoke(null, helper.getLevel(), pos, levels, primaryPower, secondaryPower);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Failed to invoke BeaconBlockEntity.applyEffects for GameTest.", exception);
+        }
+    }
+
+    protected void invokeBeaconTick(GameTestHelper helper, BlockPos pos) {
+        try {
+            Method method = BeaconBlockEntity.class.getDeclaredMethod(
+                    "tick",
+                    net.minecraft.world.level.Level.class,
+                    BlockPos.class,
+                    net.minecraft.world.level.block.state.BlockState.class,
+                    BeaconBlockEntity.class
+            );
+            method.setAccessible(true);
+            method.invoke(null, helper.getLevel(), pos, helper.getLevel().getBlockState(pos), beaconAt(helper, pos));
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to invoke BeaconBlockEntity.tick for GameTest.", exception);
         }
     }
 
