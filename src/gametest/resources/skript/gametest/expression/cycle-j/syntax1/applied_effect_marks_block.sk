@@ -1,0 +1,3 @@
+on primary beacon effect:
+    if "%applied effect%" contains "speed":
+        set test block above event-block to diamond_block

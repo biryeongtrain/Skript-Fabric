@@ -1009,6 +1009,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprMOTD.class);
         forceInitialize(ch.njol.skript.expressions.ExprMidpoint.class);
         forceInitialize(ch.njol.skript.expressions.ExprAffectedEntities.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAppliedEffect.class);
         forceInitialize(ch.njol.skript.expressions.ExprBarterInput.class);
         forceInitialize(ch.njol.skript.expressions.ExprConfig.class);
         forceInitialize(ch.njol.skript.expressions.ExprConsumedItem.class);
@@ -1028,6 +1029,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprMaxStack.class);
         forceInitialize(ch.njol.skript.expressions.ExprMods.class);
         forceInitialize(ch.njol.skript.expressions.ExprNamed.class);
+        forceInitialize(ch.njol.skript.expressions.ExprNearestEntity.class);
         forceInitialize(ch.njol.skript.expressions.ExprNoDamageTicks.class);
         forceInitialize(ch.njol.skript.expressions.ExprNode.class);
         forceInitialize(ch.njol.skript.expressions.ExprNumbers.class);
@@ -1056,6 +1058,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
         forceInitialize(ch.njol.skript.expressions.ExprScripts.class);
         forceInitialize(ch.njol.skript.expressions.ExprTamer.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTargetedBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprTimeState.class);
         forceInitialize(ch.njol.skript.expressions.ExprTool.class);
         forceInitialize(ch.njol.skript.expressions.ExprVersion.class);
