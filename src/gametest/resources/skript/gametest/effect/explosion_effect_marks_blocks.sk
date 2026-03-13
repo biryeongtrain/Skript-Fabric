@@ -1,0 +1,7 @@
+on load:
+    create explosion effect at 2, 1, 0
+    create explosion of force 4 at 8, 1, 0
+    if block at 2, 1, 1 is stone:
+        set block at 10, 1, 0 to gold block
+    if block at 8, 1, 1 is air:
+        set block at 11, 1, 0 to lime concrete

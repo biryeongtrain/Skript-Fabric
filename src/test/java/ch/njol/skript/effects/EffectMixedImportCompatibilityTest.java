@@ -137,11 +137,21 @@ public final class EffectMixedImportCompatibilityTest {
     }
 
     @Test
+    void explosionEffectParsesNormalAndVisualVariants() throws Exception {
+        EffExplosion normal = parseEffect("create explosion of force lane-f-test-number at lane-f-test-location", EffExplosion.class);
+        EffExplosion visual = parseEffect("create explosion effect at lane-f-test-location", EffExplosion.class);
+
+        assertEquals("lane-f-test-number", expression(normal, "force").toString(null, false));
+        assertEquals("lane-f-test-location", expression(normal, "locations").toString(null, false));
+        assertEquals("lane-f-test-location", expression(visual, "locations").toString(null, false));
+        assertFalse(readBoolean(visual, "blockDamage"));
+    }
+
+    @Test
     void blockedEffectsFailInitUntilCompatSurfaceExists() {
         assertFalse(new EffDrop().init(new Expression[]{new TestItemTypeExpression(), new TestStringExpression(), new TestLocationExpression()}, 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffTeleport().init(new Expression[]{new TestEntityExpression(), new TestStringExpression(), new TestLocationExpression(), new TestStringExpression()}, 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffWakeupSleep().init(new Expression[]{new TestLivingEntityExpression(), new TestStringExpression(), new TestLocationExpression()}, 0, Kleenean.FALSE, new ParseResult()));
-        assertFalse(new EffExplosion().init(new Expression[]{new TestNumberExpression(), new TestStringExpression(), new TestLocationExpression()}, 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffTree().init(new Expression[]{new TestStringExpression(), new TestStringExpression(), new TestLocationExpression()}, 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffElytraBoostConsume().init(new Expression<?>[0], 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffEntityVisibility().init(new Expression[]{new TestEntityExpression(), new TestPlayerExpression()}, 0, Kleenean.FALSE, new ParseResult()));

@@ -796,4 +796,32 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
             runtime.clearScripts();
         });
     }
+
+    @GameTest
+    public void explosionEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            BlockPos fakeNeighbor = helper.absolutePos(new BlockPos(2, 1, 1));
+            BlockPos realNeighbor = helper.absolutePos(new BlockPos(8, 1, 1));
+            helper.getLevel().setBlockAndUpdate(fakeNeighbor, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(realNeighbor, Blocks.STONE.defaultBlockState());
+
+            runtime.loadFromResource("skript/gametest/effect/explosion_effect_marks_blocks.sk");
+
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, new BlockPos(10, 1, 0));
+            helper.assertBlockPresent(Blocks.LIME_CONCRETE, new BlockPos(11, 1, 0));
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(fakeNeighbor).is(Blocks.STONE),
+                    Component.literal("Expected fake explosion effect to leave nearby blocks untouched.")
+            );
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(realNeighbor).isAir(),
+                    Component.literal("Expected explosion effect fixture to destroy the nearby block.")
+            );
+
+            runtime.clearScripts();
+        });
+    }
 }
