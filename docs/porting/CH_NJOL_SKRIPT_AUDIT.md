@@ -20,6 +20,19 @@ Baseline snapshot date: 2026-03-08
 | `P2` | `aliases`, `command`, `conditions`, `effects`, `entity`, `events`, `expressions`, `literals`, `localization` | import after core closure |
 | `P3` | `bukkitutil`, `doc`, `hooks`, `test`, `timings`, `update` | defer |
 
+## Reclassification Policy
+
+- The exact-path tracker stays in place for bookkeeping, but remaining files are no longer all treated as equal-priority parity work.
+- `Must Port`
+  - Remaining user-visible Skript surface that should still exist on Fabric.
+  - Current cluster: the remaining expression backlog, remaining sections, literals, arithmetic support, parser/value families, and `StructFunction`.
+- `Adapt`
+  - User-visible surfaces that need Fabric-native equivalents rather than literal Bukkit/Paper class parity.
+  - Current cluster: aliases, command surface, serializer/storage/config glue, slot/util wrappers, and Bukkit-shaped expressions such as chat/playerlist/server-icon/plugin-state/command metadata/teleport-cause/spawn-reason.
+- `Non-goal`
+  - Upstream files that are not worth reproducing on Fabric unless they become direct blockers.
+  - Current cluster: `bukkitutil`, `hooks`, `test`, `doc`, `timings`, `update`, bridge/tooling files, `StructAutoReload`, and explicit exclusions such as `ExprPlugins`.
+
 ## Active Blockers
 
 ### `Part 1A`

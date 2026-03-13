@@ -37,10 +37,22 @@ Last full verification: 2026-03-13
 
 ## Active Priority
 
-1. Keep Stage 8 counts frozen and accurate.
-2. Continue `Part 1A` (`lang` parser/loader/runtime closure).
-3. Continue `Part 1B` (`variables` / `classes` / `config` / `log` dependency closure).
-4. Resume broader syntax imports only when they no longer block `Part 1A` / `Part 1B`.
+1. Keep the exact-path tracker frozen and accurate, but treat it as bookkeeping rather than a literal parity target.
+2. Spend the next cycles on the `Must Port` bucket first: remaining user-visible expressions, remaining sections, remaining literals, and the core runtime pieces they directly depend on.
+3. Treat Bukkit-shaped command/alias/storage/chat/server-icon surfaces as `Adapt`, not strict exact-path targets; land Fabric-native equivalents when user-visible parity needs them.
+4. Treat plugin-ecosystem, Bukkit utility, hook integration, test harness, doc generator, updater, and bridge/tooling leftovers as `Non-goal` unless a concrete Fabric need appears.
+
+## Reclassification
+
+- `Must Port`
+  - Remaining user-visible Skript syntax that still matters on Fabric.
+  - Current examples: parser/runtime-heavy expressions such as `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`, `ExprValueWithin`, arithmetic support, remaining entity/block/banner/enchantment/sign/property expressions, remaining sections, literals, and `StructFunction`.
+- `Adapt`
+  - Surfaces that are still user-visible, but where Bukkit and Fabric concepts diverge enough that a literal class-for-class copy is the wrong target.
+  - Current examples: `aliases`, `command`, SQL/storage backends, serializer glue, slot/util wrappers, and expression families around chat/playerlist/server icon/plugin state/command metadata/teleport cause/spawn reason.
+- `Non-goal`
+  - Remaining upstream files that are not worth reproducing on Fabric unless they become direct blockers.
+  - Current examples: `bukkitutil`, `hooks`, `test`, `doc`, `timings`, `update`, `ModernSkriptBridge`, `PatcherTool`, `ServerPlatform`, `SkriptUpdater`, `StructAutoReload`, and explicit exclusions such as `ExprPlugins`.
 
 ## Latest Closed Core Slice
 
