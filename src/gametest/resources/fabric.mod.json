@@ -28,6 +28,7 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionCycleJSyntax1GameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionCycleISyntax1GameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionCycleFSafe1GameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricFunctionDeclarationGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneAGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneBGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEffectGameTest",

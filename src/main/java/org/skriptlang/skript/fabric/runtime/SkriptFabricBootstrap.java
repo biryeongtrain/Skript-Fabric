@@ -30,6 +30,7 @@ import ch.njol.skript.classes.data.SkriptClasses;
 import ch.njol.skript.literals.LitConsole;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.sections.SecIf;
+import ch.njol.skript.structures.StructFunction;
 import ch.njol.skript.structures.StructOptions;
 import org.skriptlang.skript.lang.properties.PropertyRegistry;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -195,6 +196,8 @@ public final class SkriptFabricBootstrap {
             Skript.setAcceptRegistrations(true);
             try {
                 StructOptions.register();
+                StructFunction.register();
+                ch.njol.skript.effects.EffReturn.register();
                 SecIf.register();
                 forceInitialize(ch.njol.skript.sections.SecLoop.class);
                 if (!hasCoreProperties()) {

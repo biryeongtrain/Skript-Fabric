@@ -1,0 +1,9 @@
+function double_value(value: integer) :: integer:
+    return {_value} * 2
+
+local function decorate_value(prefix: text, suffix: text = "tail") :: text:
+    return "%{_prefix}%:%{_suffix}%"
+
+on load:
+    set {function::double} to the result of the function named "double_value" with arguments 6
+    set {function::local} to the result of the function named "decorate_value" with arguments "head"
