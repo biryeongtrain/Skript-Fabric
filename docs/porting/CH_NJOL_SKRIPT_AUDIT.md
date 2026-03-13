@@ -7,8 +7,8 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `263`
-- Exact-path expressions missing: `77`
+- Exact-path missing in local tree: `261`
+- Exact-path expressions missing: `75`
 - Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
 ## Priority Matrix
@@ -88,19 +88,18 @@ Baseline snapshot date: 2026-03-08
 ## Latest Verified Merge
 
 - Landed:
-  - cycle I syntax expression `ExprNumbers`
-  - bootstrap/binding closure for `ExprNumbers`
-  - cycle I real `.sk` GameTest entrypoint wiring for `ExprNumbers`
+  - cycle J expressions `ExprAppliedEffect`, `ExprNearestEntity`, and `ExprTargetedBlock`
+  - bootstrap/binding closure for the cycle J expression bundle
+  - cycle J real `.sk` GameTest entrypoint wiring for applied-effect, nearest-entity, and targeted-block proof
 - Deferred:
-  - teleport-cause stayed out after the real-trigger GameTest still resolved a missing cause
-  - spawn-reason stayed out after the worker could not produce a GameTest-clean commit
-  - `ExprReadiedArrow`, `ExprAppliedEffect`, weather-change runtime dispatch, and `PrivateFishingHookAccess.currentState` stayed out this cycle
+  - parser-heavy expression closure such as `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`, and `ExprValueWithin`
+  - `PrivateFishingHookAccess.currentState`
 - Added compatibility coverage:
-  - `ExpressionCycle20260312ISyntax1CompatibilityTest`
-  - `ExpressionCycle20260312IBindingCompatibilityTest`
-  - `SkriptFabricExpressionCycleISyntax1GameTest`
+  - `ExpressionCycle20260313JCompatibilityTest`
+  - `ExpressionCycle20260313JBindingCompatibilityTest`
+  - `SkriptFabricExpressionCycleJSyntax1GameTest`
 - Verification refreshed on 2026-03-13:
-  - targeted cycle JUnit suite covering syntax1 I and bootstrap/binding I
-  - cycle I real `.sk` GameTest entrypoint for `ExprNumbers`
+  - targeted cycle JUnit suite covering cycle J compatibility and bootstrap/binding
+  - cycle J real `.sk` GameTest entrypoint for applied-effect, nearest-entity, and targeted-block proof
   - `./gradlew runGameTest --rerun-tasks`
-- Current runtime baseline after the refresh: `310 / 310` GameTests green on `main`; `ExprNumbers`, hanging payload coverage, and beacon runtime-lock contention are cleared
+- Current runtime baseline after the refresh: `313 / 313` GameTests green on `main`

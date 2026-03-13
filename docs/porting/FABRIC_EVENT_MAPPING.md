@@ -10,7 +10,7 @@ Last full verification: 2026-03-13
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.WorldLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.ItemLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.InventoryMoveRuntimeTest --warning-mode none --console=plain` passed
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `310 / 310` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `313 / 313` GameTests green on `main`
 
 ## Active Rows
 

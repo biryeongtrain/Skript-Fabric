@@ -22,27 +22,24 @@ Last full verification: 2026-03-13
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `925`, upstream `1189`, shortfall `264`
+- Upstream `ch/njol/skript` baseline: exact-path present `928`, upstream `1189`, shortfall `261`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `310 / 310` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313JCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313JBindingCompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `313 / 313` GameTests green on `main`
 
 ## Most Recent Merged Slice
 
-- public `on area cloud effect:`, `on player experience cooldown change:`, and `on block fertilize:` now use public syntax with real-trigger GameTests
-- `EvtBlock` now has live `burn`, `fade`, `form`, `drop`, `break`, `mine`, and `place` producers
-- `EvtItem` now has live `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `item despawn`, `item merge`, `inventory item move`, `inventory click`, and `stonecutting` producers
-- `EvtHarvestBlock` now uses the real ripe `SweetBerryBushBlock.useWithoutItem(...)` harvest path
-- public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path
-- `EvtWorld` now has live `save`, `initialization`, `loading`, and `unloading` producers
-- runtime bootstrap now force-initializes the recovered event activation bundle during full GameTest startup
+- `ExprAppliedEffect`, `ExprNearestEntity`, and `ExprTargetedBlock` now exist in the Fabric port with upstream-exact paths
+- runtime bootstrap now force-initializes the cycle J expression bundle during full GameTest startup
+- cycle J adds dedicated compatibility/binding JUnit plus real `.sk` GameTests for beacon effect, nearest-entity lookup, and targeted-block lookup
+- the targeted-block GameTest now uses an absolute-position player ray against a looked-at block, avoiding local/absolute coordinate mixups
 
 ## Do Next
 
 - Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
 - Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
 - Full-suite stabilization is closed for the current baseline.
-- Resume exact-path closure from `264` overall missing with focus on expressions `78` and the remaining non-event buckets.
+- Resume exact-path closure from `261` overall missing with focus on expressions `75` and the remaining non-event buckets.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.

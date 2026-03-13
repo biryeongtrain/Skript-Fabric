@@ -6,8 +6,8 @@ Last full verification: 2026-03-13
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `264`
-  - expressions missing: `78`
+  - overall missing: `261`
+  - expressions missing: `75`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -29,11 +29,11 @@ Last full verification: 2026-03-13
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `925`
-  - shortfall: `264`
+  - exact-path present locally: `928`
+  - shortfall: `261`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `310 / 310` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313JCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313JBindingCompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `313 / 313` GameTests green on `main`
 
 ## Active Priority
 
@@ -45,15 +45,11 @@ Last full verification: 2026-03-13
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
-  - public `on area cloud effect:`, `on player experience cooldown change:`, and `on block fertilize:` now use public syntax with dedicated real-trigger GameTests instead of `gametest ...` aliases
-  - `EvtBlock` now has live producers for `burn`, `fade`, `form`, `drop`, `break`, `mine`, and `place`
-  - `EvtItem` now has live producers for `dispense`, `player/entity drop`, `prepare craft`, `craft`, `player/entity pickup`, `consume`, `item despawn`, `item merge`, `inventory item move`, `inventory click`, and `stonecutting`
-  - `EvtHarvestBlock` now uses the real ripe `SweetBerryBushBlock.useWithoutItem(...)` harvest path
-  - public `on player leashing:` now uses the real `Leashable.setLeashedTo(...)` attach path, and `EvtWorld` now has live `save`, `initialization`, `loading`, and `unloading` producers
-  - runtime bootstrap now force-initializes the recovered event activation bundle so full GameTest startup sees the recovered public event syntaxes
-  - mixed event backfill coverage no longer has any event-facing `gametest ...` alias; hanging payload coverage now uses public `on break of item frame:` with a real item-frame break producer
-  - cycle I `ExprNumbers` now bootstraps, binds through `SecLoop`, and executes its real `.sk` GameTest path
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `310 / 310` GameTests green after central runtime cleanup and direct beacon tick/apply-effects verification
+  - `ExprAppliedEffect`, `ExprNearestEntity`, and `ExprTargetedBlock` now exist in the Fabric port with upstream-exact paths
+  - runtime bootstrap force-initializes the cycle J expression bundle during full GameTest startup
+  - cycle J adds targeted compatibility/binding JUnit plus a dedicated real `.sk` GameTest bundle for beacon effect, nearest-entity lookup, and targeted-block lookup
+  - cycle J GameTests use real runtime state: live beacon apply-effects, spawned entity distance resolution, and a real player ray against a looked-at block
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `313 / 313` GameTests green on `main`
 
 ## Open Gaps
 
