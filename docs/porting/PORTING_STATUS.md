@@ -6,8 +6,8 @@ Last full verification: 2026-03-13
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `261`
-  - expressions missing: `75`
+  - overall missing: `254`
+  - expressions missing: `68`
   - events missing: `0`
   - sections missing: `8`
   - command missing: `9`
@@ -29,11 +29,11 @@ Last full verification: 2026-03-13
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `928`
-  - shortfall: `261`
+  - exact-path present locally: `935`
+  - shortfall: `254`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313JCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313JBindingCompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `313 / 313` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313KCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313KBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313LCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313LBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionSyntaxS4CompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `318 / 318` GameTests green on `main`
 
 ## Active Priority
 
@@ -57,11 +57,11 @@ Last full verification: 2026-03-13
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
-  - `ExprAppliedEffect`, `ExprNearestEntity`, and `ExprTargetedBlock` now exist in the Fabric port with upstream-exact paths
-  - runtime bootstrap force-initializes the cycle J expression bundle during full GameTest startup
-  - cycle J adds targeted compatibility/binding JUnit plus a dedicated real `.sk` GameTest bundle for beacon effect, nearest-entity lookup, and targeted-block lookup
-  - cycle J GameTests use real runtime state: live beacon apply-effects, spawned entity distance resolution, and a real player ray against a looked-at block
-- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `313 / 313` GameTests green on `main`
+  - cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
+  - cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
+  - runtime bootstrap force-initializes the cycle K/L expression bundle during full GameTest startup
+  - cycle K/L add targeted compatibility/binding JUnit plus dedicated real `.sk` GameTests for core element/loop semantics, bell timing, lowest/highest solid block lookup, scaled item/entity literals, and projectile-force lookup
+- Landed with unit JUnit plus targeted Minecraft GameTest; full suite now completes `318 / 318` GameTests green on `main`
 
 ## Open Gaps
 

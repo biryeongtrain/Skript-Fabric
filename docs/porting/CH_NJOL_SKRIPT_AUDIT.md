@@ -7,8 +7,8 @@ Baseline snapshot date: 2026-03-08
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `261`
-- Exact-path expressions missing: `75`
+- Exact-path missing in local tree: `254`
+- Exact-path expressions missing: `68`
 - Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
 
 ## Priority Matrix
@@ -101,18 +101,23 @@ Baseline snapshot date: 2026-03-08
 ## Latest Verified Merge
 
 - Landed:
-  - cycle J expressions `ExprAppliedEffect`, `ExprNearestEntity`, and `ExprTargetedBlock`
-  - bootstrap/binding closure for the cycle J expression bundle
-  - cycle J real `.sk` GameTest entrypoint wiring for applied-effect, nearest-entity, and targeted-block proof
+  - cycle K expressions `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
+  - cycle L expression `ExprProjectileForce` plus live bow-force payload propagation
+  - bootstrap/binding closure for the cycle K/L expression bundle
+  - cycle K/L real `.sk` GameTest entrypoint wiring for core element/loop semantics, bell timing, lowest/highest solid block lookup, scaled item/entity literals, and projectile-force proof
 - Deferred:
   - parser-heavy expression closure such as `ExprArgument`, `ExprParse`, `ExprParseError`, `ExprValue`, and `ExprValueWithin`
   - `PrivateFishingHookAccess.currentState`
 - Added compatibility coverage:
-  - `ExpressionCycle20260313JCompatibilityTest`
-  - `ExpressionCycle20260313JBindingCompatibilityTest`
-  - `SkriptFabricExpressionCycleJSyntax1GameTest`
+  - `ExpressionCycle20260313KCompatibilityTest`
+  - `ExpressionCycle20260313KBindingCompatibilityTest`
+  - `ExpressionCycle20260313LCompatibilityTest`
+  - `ExpressionCycle20260313LBindingCompatibilityTest`
+  - `SkriptFabricExpressionCycleKSyntax1GameTest`
+  - `SkriptFabricExpressionCycleKSyntax2GameTest`
+  - `SkriptFabricExpressionCycleLSyntax1GameTest`
 - Verification refreshed on 2026-03-13:
-  - targeted cycle JUnit suite covering cycle J compatibility and bootstrap/binding
-  - cycle J real `.sk` GameTest entrypoint for applied-effect, nearest-entity, and targeted-block proof
+  - targeted cycle JUnit suite covering cycle K/L compatibility, bootstrap/binding, and the updated bow event-value shape
+  - cycle K/L real `.sk` GameTest entrypoints for core element/loop semantics, bell timing, lowest/highest solid block lookup, scaled item/entity literals, and projectile-force proof
   - `./gradlew runGameTest --rerun-tasks`
-- Current runtime baseline after the refresh: `313 / 313` GameTests green on `main`
+- Current runtime baseline after the refresh: `318 / 318` GameTests green on `main`

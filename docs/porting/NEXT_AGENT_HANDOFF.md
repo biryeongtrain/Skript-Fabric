@@ -22,24 +22,24 @@ Last full verification: 2026-03-13
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `928`, upstream `1189`, shortfall `261`
+- Upstream `ch/njol/skript` baseline: exact-path present `935`, upstream `1189`, shortfall `254`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313JCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313JBindingCompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `313 / 313` GameTests green on `main`
+  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313KCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313KBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313LCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313LBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionSyntaxS4CompatibilityTest --warning-mode none --console=plain` passed
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `318 / 318` GameTests green on `main`
 
 ## Most Recent Merged Slice
 
-- `ExprAppliedEffect`, `ExprNearestEntity`, and `ExprTargetedBlock` now exist in the Fabric port with upstream-exact paths
-- runtime bootstrap now force-initializes the cycle J expression bundle during full GameTest startup
-- cycle J adds dedicated compatibility/binding JUnit plus real `.sk` GameTests for beacon effect, nearest-entity lookup, and targeted-block lookup
-- the targeted-block GameTest now uses an absolute-position player ray against a looked-at block, avoiding local/absolute coordinate mixups
+- cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
+- cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
+- runtime bootstrap now force-initializes the cycle K/L expression bundle during full GameTest startup
+- cycle K/L add dedicated compatibility/binding JUnit plus real `.sk` GameTests for core element/loop semantics, bell timing, lowest/highest solid block lookup, scaled item/entity literals, and projectile-force lookup
 
 ## Do Next
 
 - Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
 - Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
 - Full-suite stabilization is closed for the current baseline.
-- Resume from the `Must Port` bucket rather than treating all `261` exact-path leftovers as equal-priority work.
+- Resume from the `Must Port` bucket rather than treating all `254` exact-path leftovers as equal-priority work.
 - Keep `Adapt` work scoped to Fabric-native replacements for user-visible behavior, not literal class parity.
 - Treat `Non-goal` leftovers as excluded from normal closure planning unless one becomes a direct blocker.
 - Immediate backlog remains expressions-first, with focus on the remaining user-visible expression bucket.
