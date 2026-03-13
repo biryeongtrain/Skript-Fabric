@@ -1059,9 +1059,12 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprSeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSimulationDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprSlotIndex.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSkull.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSignText.class);
         forceInitialize(ch.njol.skript.expressions.ExprSourceBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSpawnerType.class);
         forceInitialize(ch.njol.skript.expressions.ExprScripts.class);
         forceInitialize(ch.njol.skript.expressions.ExprTamer.class);
         forceInitialize(ch.njol.skript.expressions.ExprTargetedBlock.class);

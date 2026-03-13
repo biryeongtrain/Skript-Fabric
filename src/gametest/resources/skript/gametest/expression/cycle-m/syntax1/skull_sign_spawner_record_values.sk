@@ -1,0 +1,7 @@
+on gametest cycle m syntax1 context:
+    set {cyclem::skull} to skull of lane-m-offlineplayer
+    set line 2 of lane-m-sign-block to "cycle-m"
+    set {cyclem::sign-line} to line 2 of lane-m-sign-block
+    set spawner type of lane-m-spawner-block to a cow
+    set {cyclem::spawner-type} to spawner type of lane-m-spawner-block
+    set test block at 4 1 0 to emerald_block
