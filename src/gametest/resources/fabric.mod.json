@@ -31,6 +31,7 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricFunctionDeclarationGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneAGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionLaneBGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionCycle4GameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEffectGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricEventGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricPlayerEventInfraGameTest",

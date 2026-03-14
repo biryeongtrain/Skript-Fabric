@@ -64,11 +64,12 @@ final class FabricPlayerEventHandlesUnitTest {
         FabricLocation from = new FabricLocation(null, null);
         FabricLocation to = new FabricLocation(null, null);
 
-        FabricPlayerEventHandles.Teleport handle = (FabricPlayerEventHandles.Teleport) FabricPlayerEventHandles.teleport(null, from, to);
+        FabricPlayerEventHandles.Teleport handle = (FabricPlayerEventHandles.Teleport) FabricPlayerEventHandles.teleport(null, from, to, null);
 
         assertNull(handle.entity());
         assertEquals(from, handle.from());
         assertEquals(to, handle.to());
+        assertNull(handle.cause());
     }
 
     @Test

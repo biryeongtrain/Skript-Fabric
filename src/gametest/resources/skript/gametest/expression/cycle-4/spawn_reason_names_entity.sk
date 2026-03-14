@@ -1,0 +1,3 @@
+on spawn:
+    spawn reason is set
+    set test name of entity event-entity to "%spawn reason%"
