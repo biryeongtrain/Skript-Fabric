@@ -1,6 +1,8 @@
 package org.skriptlang.skript.bukkit.base.types;
 
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.classes.Parser;
+import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +16,27 @@ public final class PlayerClassInfo {
 
     public static void register() {
         ClassInfo<ServerPlayer> info = new ClassInfo<>(ServerPlayer.class, "player");
+        info.parser(new Parser<>() {
+            @Override
+            public @Nullable ServerPlayer parse(String input, ParseContext context) {
+                return null;
+            }
+
+            @Override
+            public boolean canParse(ParseContext context) {
+                return false;
+            }
+
+            @Override
+            public String toString(ServerPlayer player, int flags) {
+                return player.getGameProfile().getName();
+            }
+
+            @Override
+            public String toVariableNameString(ServerPlayer player) {
+                return "player:" + player.getStringUUID();
+            }
+        });
         info.setPropertyInfo(Property.NAME, new PlayerNameHandler());
         info.setPropertyInfo(Property.DISPLAY_NAME, new PlayerDisplayNameHandler());
         Classes.registerClassInfo(info);
