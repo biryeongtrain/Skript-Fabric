@@ -1,0 +1,4 @@
+on gametest location and vector context:
+    set vector length of locvec-mutable-vector to 5
+    set {locvec::vector_length} to vector length of locvec-mutable-vector
+    set {locvec::vector_after_length} to locvec-mutable-vector

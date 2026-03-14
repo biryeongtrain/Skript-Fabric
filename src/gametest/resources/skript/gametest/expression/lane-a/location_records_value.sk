@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::location} to lane-a-location

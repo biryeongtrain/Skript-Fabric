@@ -1,2 +1,0 @@
-on spawn:
-    set {cycle4::spawn_reason} to spawn reason

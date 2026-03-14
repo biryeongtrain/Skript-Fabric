@@ -1,0 +1,13 @@
+on use entity:
+    set max minecart speed of event-entity to 0.8
+    add 0.2 to max minecart speed of event-entity
+    set {scriptcmd::minecart::max_before_reset} to max minecart speed of event-entity
+    reset max minecart speed of event-entity
+    set {scriptcmd::minecart::max_after_reset} to max minecart speed of event-entity
+    set derailed velocity of event-entity to vector(1, 2, 3)
+    add vector(1, 0, -1) to derailed velocity of event-entity
+    set {scriptcmd::minecart::derailed} to derailed velocity of event-entity
+    set flying velocity of event-entity to vector(4, 5, 6)
+    remove vector(1, 1, 1) from flying velocity of event-entity
+    set {scriptcmd::minecart::flying} to flying velocity of event-entity
+    set test block under player event-player to emerald_block

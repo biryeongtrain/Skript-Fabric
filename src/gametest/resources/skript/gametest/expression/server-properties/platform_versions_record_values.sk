@@ -1,0 +1,5 @@
+on gametest server properties context:
+    set {serverprops::platform_version} to craftbukkit version
+    set {serverprops::fabric_version} to fabric version
+    set {serverprops::minecraft_version} to minecraft version
+    set {serverprops::skript_version} to skript version

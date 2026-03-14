@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::light_level} to block light level of lane-a-location

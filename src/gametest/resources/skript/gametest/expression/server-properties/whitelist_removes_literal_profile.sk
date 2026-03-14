@@ -1,0 +1,3 @@
+on gametest server properties context:
+    remove serverprops-listed-profile from whitelist
+    set {serverprops::whitelist_after_remove::*} to whitelist

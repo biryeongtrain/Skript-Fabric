@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::location_offset} to lane-a-location offset by lane-a-vector

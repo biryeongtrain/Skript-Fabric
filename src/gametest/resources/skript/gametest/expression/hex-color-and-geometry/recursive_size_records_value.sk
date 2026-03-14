@@ -1,0 +1,8 @@
+on gametest hex color and geometry context:
+    set {hexgeo::recursive_size::source::plain} to "emerald_block"
+    set {hexgeo::recursive_size::source::group} to "diamond_block"
+    set {hexgeo::recursive_size::source::group::1} to "gold_block"
+    set {hexgeo::recursive_size::source::group::nested::2} to "lapis_block"
+    set {hexgeo::recursive_size::count} to recursive size of {hexgeo::recursive_size::source::*}
+    if {hexgeo::recursive_size::count} is 4:
+        set test block at 4 1 0 to emerald_block

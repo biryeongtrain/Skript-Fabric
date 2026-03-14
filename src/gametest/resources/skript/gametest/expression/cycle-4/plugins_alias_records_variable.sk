@@ -1,2 +1,0 @@
-on gametest cycle 4 context:
-    set {cycle4::plugins::*} to loaded plugins

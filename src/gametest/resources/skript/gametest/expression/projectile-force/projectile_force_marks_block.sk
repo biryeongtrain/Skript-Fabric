@@ -1,0 +1,3 @@
+on skeleton shoot bow:
+    set {projectileforce::projectile_force} to projectile force
+    set test block at 4 1 0 to emerald_block

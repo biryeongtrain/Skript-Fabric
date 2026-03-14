@@ -1,0 +1,2 @@
+on gametest server properties context:
+    set {serverprops::language} to current language of event-player

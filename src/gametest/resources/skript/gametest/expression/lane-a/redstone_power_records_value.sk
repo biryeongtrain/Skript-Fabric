@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::redstone_power} to redstone power of event-block

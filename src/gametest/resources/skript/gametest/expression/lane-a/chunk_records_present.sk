@@ -1,3 +1,0 @@
-on gametest lane a context:
-    if chunk of lane-a-location is set:
-        set {lanea::chunk_present} to true

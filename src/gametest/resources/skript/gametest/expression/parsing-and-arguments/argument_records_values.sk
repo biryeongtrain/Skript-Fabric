@@ -1,0 +1,6 @@
+on command "say":
+    set {parseargs::argument::first} to argument 1
+    set {parseargs::argument::second} to argument 2
+    set {parseargs::argument::last} to last argument
+    set {parseargs::argument::all::*} to arguments
+    set test block under player command sender to "emerald_block"

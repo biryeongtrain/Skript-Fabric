@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::seed} to seed of lane-a-world

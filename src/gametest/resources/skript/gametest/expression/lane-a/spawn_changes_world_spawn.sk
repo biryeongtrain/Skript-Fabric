@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set spawn location of lane-a-world to location at x = __SPAWN_X__, y = __SPAWN_Y__, and z = __SPAWN_Z__ in world lane-a-world

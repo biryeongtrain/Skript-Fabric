@@ -1,0 +1,2 @@
+on gametest color and banner context:
+    set {colorbanner::banner_color} to color of colorbanner-block

@@ -1,2 +1,0 @@
-on gametest cycle j syntax1 context:
-    set test block above target block of event-player to emerald_block

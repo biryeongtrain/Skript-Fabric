@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::vector_normalized} to normalized vector(0, 3, 4)

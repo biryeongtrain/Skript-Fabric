@@ -1,0 +1,3 @@
+on gametest location and vector context:
+    if chunk of locvec-location is set:
+        set {locvec::chunk_present} to true

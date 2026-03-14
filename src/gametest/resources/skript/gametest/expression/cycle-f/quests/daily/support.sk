@@ -1,2 +1,0 @@
-on gametest cycle f script surfaces:
-    set {cyclef::support::daily} to true

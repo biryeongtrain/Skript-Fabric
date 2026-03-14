@@ -1,3 +1,0 @@
-on gametest cycle k syntax2 context:
-    if resonating time of event-block is 9 ticks:
-        set test block above event-block to iron_block

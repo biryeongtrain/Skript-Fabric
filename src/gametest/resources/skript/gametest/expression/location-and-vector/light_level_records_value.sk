@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::light_level} to block light level of locvec-location

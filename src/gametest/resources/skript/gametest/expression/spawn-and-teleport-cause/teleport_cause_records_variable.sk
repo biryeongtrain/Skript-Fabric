@@ -1,0 +1,2 @@
+on teleport:
+    set {spawnteleport::teleport_cause} to teleport cause

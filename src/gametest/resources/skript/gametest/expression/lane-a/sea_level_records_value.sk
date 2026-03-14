@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::sea_level} to sea level of lane-a-world

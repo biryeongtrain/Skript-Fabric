@@ -1,2 +1,0 @@
-on gametest lane b context:
-    set {laneb::player_protocol_version} to protocol version of event-player

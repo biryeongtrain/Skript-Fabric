@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::vector_cross} to vector(1, 0, 0) cross vector(0, 1, 0)

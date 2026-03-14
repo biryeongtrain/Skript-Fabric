@@ -1,3 +1,0 @@
-on gametest lane b context:
-    remove lane-b-listed-profile from whitelist
-    set {laneb::whitelist_after_remove::*} to whitelist

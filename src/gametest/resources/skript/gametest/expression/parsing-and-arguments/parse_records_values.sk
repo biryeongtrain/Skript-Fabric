@@ -1,0 +1,4 @@
+on gametest parsing and arguments context:
+    set {parseargs::parse::integer} to "12" parsed as integer
+    set {parseargs::parse::failed} to "oops" parsed as integer
+    set {parseargs::parse::error} to parse error

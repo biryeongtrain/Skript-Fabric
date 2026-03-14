@@ -1,0 +1,2 @@
+on gametest beacon and spatial query context:
+    set test block above target block of event-player to emerald_block

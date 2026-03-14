@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set spawn location of locvec-world to location at x = __SPAWN_X__, y = __SPAWN_Y__, and z = __SPAWN_Z__ in world locvec-world

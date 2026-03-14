@@ -1,0 +1,10 @@
+on gametest item enchant and skull context:
+    set {itemenchant::level_before} to itemenchant-enchantment level of itemenchant-item
+    add 1 to itemenchant-enchantment level of itemenchant-item
+    set {itemenchant::level_after} to itemenchant-enchantment level of itemenchant-item
+    add itemenchant-second-enchantment to enchantments of itemenchant-item
+    set {itemenchant::type} to type of itemenchant-itemstack
+    set {itemenchant::owner_before} to skull owner of itemenchant-skull-item
+    set skull owner of itemenchant-skull-item to itemenchant-next-owner
+    set {itemenchant::owner_after} to skull owner of itemenchant-skull-item
+    set test block at 4 1 0 to emerald_block

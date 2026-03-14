@@ -1,8 +1,0 @@
-on gametest cycle f safe4 context:
-    set {cyclef::recursive_size::source::plain} to "emerald_block"
-    set {cyclef::recursive_size::source::group} to "diamond_block"
-    set {cyclef::recursive_size::source::group::1} to "gold_block"
-    set {cyclef::recursive_size::source::group::nested::2} to "lapis_block"
-    set {cyclef::recursive_size::count} to recursive size of {cyclef::recursive_size::source::*}
-    if {cyclef::recursive_size::count} is 4:
-        set test block at 4 1 0 to emerald_block

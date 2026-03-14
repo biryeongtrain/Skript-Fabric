@@ -1,0 +1,2 @@
+on gametest server properties context:
+    set {serverprops::ops::*} to all operators

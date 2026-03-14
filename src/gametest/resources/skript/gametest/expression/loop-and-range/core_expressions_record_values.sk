@@ -1,0 +1,11 @@
+on gametest loop and range context:
+    set {looprange::first} to first element out of looprange-values
+    set {looprange::range::*} to elements from 2 to 3 out of looprange-values
+    set {looprange::scaled} to 3 of looprange-itemtype
+    loop looprange-values:
+        if loop-iteration is 2:
+            set {looprange::previous} to previous loop-value
+            set {looprange::current} to loop-value
+            set {looprange::next} to next loop-value
+    if {looprange::first} is "alpha":
+        set test block at 4 1 0 to emerald_block

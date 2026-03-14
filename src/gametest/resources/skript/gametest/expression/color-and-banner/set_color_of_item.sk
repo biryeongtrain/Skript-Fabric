@@ -1,0 +1,2 @@
+on gametest color and banner context:
+    set color of colorbanner-item to colorbanner-color

@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::humidity} to humidity of event-block

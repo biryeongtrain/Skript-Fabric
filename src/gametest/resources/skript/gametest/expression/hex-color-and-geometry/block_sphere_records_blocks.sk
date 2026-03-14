@@ -1,0 +1,3 @@
+on gametest hex color and geometry context:
+    set {hexgeo::block_sphere::entries::*} to blocks in radius 1 around hexgeo-center-location
+    set test block at 4 1 0 to emerald_block

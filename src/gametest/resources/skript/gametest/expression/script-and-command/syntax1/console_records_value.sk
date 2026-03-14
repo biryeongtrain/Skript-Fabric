@@ -1,0 +1,2 @@
+on server tick:
+    set {scriptcmd::console} to console

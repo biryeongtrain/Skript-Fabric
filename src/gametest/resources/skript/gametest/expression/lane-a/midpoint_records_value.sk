@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::midpoint} to midpoint between lane-a-location and lane-a-second-location

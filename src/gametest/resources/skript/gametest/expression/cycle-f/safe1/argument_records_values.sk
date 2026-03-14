@@ -1,6 +1,0 @@
-on command "say":
-    set {cyclef::safe1::argument::first} to argument 1
-    set {cyclef::safe1::argument::second} to argument 2
-    set {cyclef::safe1::argument::last} to last argument
-    set {cyclef::safe1::argument::all::*} to arguments
-    set test block under player command sender to "emerald_block"

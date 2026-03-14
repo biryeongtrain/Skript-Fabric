@@ -1,0 +1,2 @@
+on gametest server properties context:
+    set {serverprops::max_players} to max players count

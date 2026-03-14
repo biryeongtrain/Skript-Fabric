@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "AllayAccessor",
+    "BannerBlockEntityAccessor",
     "AreaEffectCloudMixin",
     "AbstractMinecartCollisionMixin",
     "AbstractArrowMixin",
@@ -102,7 +103,10 @@
     "VillagerPotionCauseMixin",
     "WardenPotionCauseMixin",
     "WitherRosePotionCauseMixin",
-    "ZombieVillagerPotionCauseMixin"
+    "ZombieVillagerPotionCauseMixin",
+    "EntitySoundAccessor",
+    "LivingEntitySoundAccessor",
+    "MobSoundAccessor"
   ],
   "client": [
   ],

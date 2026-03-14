@@ -1,0 +1,2 @@
+on gametest script and command context:
+    set {scriptcmd::support::daily} to true

@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::difficulty} to difficulty of locvec-world

@@ -1,0 +1,2 @@
+on gametest color and banner context:
+    set {colorbanner::pattern} to a "creeper" banner pattern colored red

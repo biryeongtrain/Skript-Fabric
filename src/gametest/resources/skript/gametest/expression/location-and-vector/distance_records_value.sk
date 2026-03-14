@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::distance} to distance between locvec-location and location at x = __TARGET_X__, y = __TARGET_Y__, and z = __TARGET_Z__ in world locvec-world

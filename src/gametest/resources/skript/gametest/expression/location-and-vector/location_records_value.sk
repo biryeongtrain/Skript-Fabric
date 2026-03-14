@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::location} to locvec-location

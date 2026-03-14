@@ -1,0 +1,4 @@
+on gametest location and vector context:
+    set x component of locvec-mutable-vector to 7
+    set {locvec::vector_x_component} to x component of locvec-mutable-vector
+    set {locvec::vector_after_x_component} to locvec-mutable-vector

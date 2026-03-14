@@ -1,3 +1,0 @@
-on skeleton shoot bow:
-    set {cyclel::syntax1::projectile_force} to projectile force
-    set test block at 4 1 0 to emerald_block

@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::chunk_x} to chunk x-coordinate of chunk of locvec-location

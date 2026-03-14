@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::vector_dot} to vector(1, 2, 3) dot vector(4, 5, 6)

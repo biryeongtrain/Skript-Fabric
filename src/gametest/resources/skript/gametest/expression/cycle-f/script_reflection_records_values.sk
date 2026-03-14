@@ -1,9 +1,0 @@
-on gametest cycle f script surfaces:
-    set {cyclef::reflection::current} to current script
-    set {cyclef::reflection::named} to script named "skript/gametest/expression/cycle-f/quests/daily/support.sk"
-    set {cyclef::reflection::directory_count} to 0
-    loop scripts in directory "skript/gametest/expression/cycle-f/quests":
-        add 1 to {cyclef::reflection::directory_count}
-        set {cyclef::reflection::directory::%loop-index%} to loop-script
-    set {cyclef::reflection::single_result} to result of lane-f-result-executable
-    set {cyclef::reflection::plural_result::*} to results of lane-f-result-executable with arguments lane-f-result-args

@@ -1,2 +1,0 @@
-on gametest lane b context:
-    set {laneb::ip} to ip address of event-player

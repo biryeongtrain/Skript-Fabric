@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::sea_level} to sea level of locvec-world

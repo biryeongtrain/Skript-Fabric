@@ -1,5 +1,0 @@
-on gametest lane a context:
-    set {lanea::vector_pitch} to pitch of vector(0, 1, 0)
-    set yaw of lane-a-mutable-vector to 180
-    set {lanea::vector_yaw_after} to yaw of lane-a-mutable-vector
-    set {lanea::vector_after_yaw} to lane-a-mutable-vector

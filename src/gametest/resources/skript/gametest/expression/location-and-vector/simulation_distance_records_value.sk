@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::simulation_distance} to simulation distance of locvec-world

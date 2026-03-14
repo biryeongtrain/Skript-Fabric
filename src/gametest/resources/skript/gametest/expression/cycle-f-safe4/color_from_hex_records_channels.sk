@@ -1,4 +1,0 @@
-on gametest cycle f safe4 context:
-    set {cyclef::color_from_hex::rgb} to color from hex code "#FFBBA7"
-    set {cyclef::color_from_hex::argb} to color from hex code "AA3366CC"
-    set test block at 4 1 0 to emerald_block

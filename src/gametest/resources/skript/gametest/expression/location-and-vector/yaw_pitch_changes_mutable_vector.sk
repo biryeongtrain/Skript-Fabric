@@ -1,0 +1,5 @@
+on gametest location and vector context:
+    set {locvec::vector_pitch} to pitch of vector(0, 1, 0)
+    set yaw of locvec-mutable-vector to 180
+    set {locvec::vector_yaw_after} to yaw of locvec-mutable-vector
+    set {locvec::vector_after_yaw} to locvec-mutable-vector

@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::midpoint} to midpoint between locvec-location and locvec-second-location

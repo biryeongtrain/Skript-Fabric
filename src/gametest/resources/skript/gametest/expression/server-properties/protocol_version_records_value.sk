@@ -1,0 +1,2 @@
+on gametest server properties context:
+    set {serverprops::protocol_version} to protocol version

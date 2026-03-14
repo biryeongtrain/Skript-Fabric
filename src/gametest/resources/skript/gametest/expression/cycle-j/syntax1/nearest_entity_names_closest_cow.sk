@@ -1,3 +1,0 @@
-on gametest cycle j syntax1 context:
-    set {_nearest} to nearest cow relative to {cyclej::syntax1::origin}
-    set test name of entity {_nearest} to "nearest cow"

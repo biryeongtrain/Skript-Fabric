@@ -1,6 +1,0 @@
-on command "say":
-    set {cyclef::command::current_label} to main command label
-    set {cyclef::command::current_usage} to usage
-    set {cyclef::command::named_label} to main command label of command "/minecraft:say cycle-f live hook"
-    set {cyclef::command::named_usage} to usage of command "say"
-    set test block under player command sender to emerald_block

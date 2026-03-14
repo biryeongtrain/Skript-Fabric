@@ -1,6 +1,0 @@
-on gametest cycle f safe1 context:
-    set {cyclef::safe1::value::before} to string value of lane-f-safe1-valued
-    set string value of lane-f-safe1-valued to "beta"
-    set {cyclef::safe1::value::after_set} to string value of lane-f-safe1-valued
-    delete string value of lane-f-safe1-valued
-    set {cyclef::safe1::value::after_delete} to string value of lane-f-safe1-valued

@@ -1,2 +1,0 @@
-on gametest lane b context:
-    set {laneb::language} to current language of event-player

@@ -1,4 +1,0 @@
-on gametest lane a context:
-    set x component of lane-a-mutable-vector to 7
-    set {lanea::vector_x_component} to x component of lane-a-mutable-vector
-    set {lanea::vector_after_x_component} to lane-a-mutable-vector

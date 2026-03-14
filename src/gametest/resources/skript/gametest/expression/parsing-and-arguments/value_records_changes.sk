@@ -1,0 +1,6 @@
+on gametest parsing and arguments context:
+    set {parseargs::value::before} to string value of parseargs-valued
+    set string value of parseargs-valued to "beta"
+    set {parseargs::value::after_set} to string value of parseargs-valued
+    delete string value of parseargs-valued
+    set {parseargs::value::after_delete} to string value of parseargs-valued

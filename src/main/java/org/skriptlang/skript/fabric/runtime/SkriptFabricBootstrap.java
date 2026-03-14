@@ -1157,6 +1157,20 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ExprLastDamage.class);
         forceInitialize(ExprLevelProgress.class);
         forceInitialize(ExprMaxFreezeTicks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprNewBannerPattern.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBannerPatterns.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBannerItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntitySound.class);
+        forceInitialize(ch.njol.skript.expressions.ExprColorOf.class);
+        // Properties Module
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprName.class);
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprCustomName.class);
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprScale.class);
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprAmount.class);
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprNumber.class);
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprSize.class);
+        forceInitialize(org.skriptlang.skript.common.properties.expressions.PropExprWXYZ.class);
+        forceInitialize(org.skriptlang.skript.common.properties.conditions.PropCondIsEmpty.class);
     }
 
     private static void registerRecoveredEffectBundle() {

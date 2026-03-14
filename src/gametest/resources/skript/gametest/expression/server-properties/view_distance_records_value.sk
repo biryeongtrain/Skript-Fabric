@@ -1,0 +1,2 @@
+on gametest server properties context:
+    set {serverprops::view_distance} to view distance of event-player

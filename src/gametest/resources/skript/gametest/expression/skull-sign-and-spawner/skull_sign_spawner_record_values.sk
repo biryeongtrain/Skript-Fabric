@@ -1,0 +1,7 @@
+on gametest skull sign and spawner context:
+    set {skullsign::skull} to skull of skullsign-offlineplayer
+    set line 2 of skullsign-sign-block to "cycle-m"
+    set {skullsign::sign-line} to line 2 of skullsign-sign-block
+    set spawner type of skullsign-spawner-block to a cow
+    set {skullsign::spawner-type} to spawner type of skullsign-spawner-block
+    set test block at 4 1 0 to emerald_block

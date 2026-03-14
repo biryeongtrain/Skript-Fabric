@@ -1,0 +1,5 @@
+on gametest hex color and geometry context:
+    set {_color} to color from hex code "#FF0000"
+    set {hexgeo::hex_code} to hex code of {_color}
+    if {hexgeo::hex_code} is "FF0000":
+        set test block at 4 1 0 to emerald_block

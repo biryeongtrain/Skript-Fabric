@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::event_block_data} to block data of event-block

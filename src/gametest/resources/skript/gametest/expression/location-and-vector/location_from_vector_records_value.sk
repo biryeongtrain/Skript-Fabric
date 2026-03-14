@@ -1,0 +1,2 @@
+on gametest location and vector context:
+    set {locvec::location_from_vector} to location of locvec-vector in locvec-world

@@ -1,0 +1,3 @@
+on gametest beacon and spatial query context:
+    set {_nearest} to nearest cow relative to {spatial::origin}
+    set test name of entity {_nearest} to "nearest cow"

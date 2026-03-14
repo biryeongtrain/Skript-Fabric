@@ -1,2 +1,0 @@
-on gametest lane a context:
-    set {lanea::vector_between} to vector from lane-a-location to lane-a-second-location

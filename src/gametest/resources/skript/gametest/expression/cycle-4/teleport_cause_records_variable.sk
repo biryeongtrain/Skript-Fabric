@@ -1,2 +1,0 @@
-on teleport:
-    set {cycle4::teleport_cause} to teleport cause

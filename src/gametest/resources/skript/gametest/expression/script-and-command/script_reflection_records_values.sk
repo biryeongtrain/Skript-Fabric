@@ -1,0 +1,9 @@
+on gametest script and command context:
+    set {scriptcmd::reflection::current} to current script
+    set {scriptcmd::reflection::named} to script named "skript/gametest/expression/script-and-command/quests/daily/support.sk"
+    set {scriptcmd::reflection::directory_count} to 0
+    loop scripts in directory "skript/gametest/expression/script-and-command/quests":
+        add 1 to {scriptcmd::reflection::directory_count}
+        set {scriptcmd::reflection::directory::%loop-index%} to loop-script
+    set {scriptcmd::reflection::single_result} to result of scriptcmd-executable
+    set {scriptcmd::reflection::plural_result::*} to results of scriptcmd-executable with arguments scriptcmd-args

@@ -1,0 +1,2 @@
+on gametest spawn and teleport cause context:
+    set {spawnteleport::plugins::*} to loaded plugins
