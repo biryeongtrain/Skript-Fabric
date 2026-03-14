@@ -1,0 +1,2 @@
+on kick:
+    set test block at 20 1 2 to diamond_block

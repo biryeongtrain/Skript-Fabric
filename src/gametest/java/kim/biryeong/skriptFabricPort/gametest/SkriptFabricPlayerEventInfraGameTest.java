@@ -477,6 +477,88 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
         });
     }
 
+    @GameTest
+    public void joinEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/join_marks_block.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+            String expectedName = "join-" + player.getGameProfile().getName();
+            helper.assertTrue(
+                    player.getCustomName() != null && expectedName.equals(player.getCustomName().getString()),
+                    Component.literal("Expected join event to resolve %%event-player%% to player name but got: "
+                            + (player.getCustomName() == null ? "null" : player.getCustomName().getString()))
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void connectEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/connect_names_player.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+            helper.assertTrue(
+                    player.getCustomName() != null && "connect hook".equals(player.getCustomName().getString()),
+                    Component.literal("Expected connect event script to rename the player during the pre-join path.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void kickEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/kick_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(20, 1, 2));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            player.connection.disconnect(Component.literal("test kick"));
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.DIAMOND_BLOCK),
+                    Component.literal("Expected kick event script to mark the block with diamond_block.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
+    @GameTest
+    public void quitEventExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/event/quit_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(20, 1, 3));
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            helper.getLevel().getServer().getPlayerList().remove(player);
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected quit event script to mark the block with emerald_block.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
     private static boolean inventoryContains(ServerPlayer player, net.minecraft.world.item.Item item) {
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             if (player.getInventory().getItem(slot).is(item)) {

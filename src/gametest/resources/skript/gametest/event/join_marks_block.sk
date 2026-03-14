@@ -1,0 +1,2 @@
+on join:
+    set test name of player to "join-%event-player%"

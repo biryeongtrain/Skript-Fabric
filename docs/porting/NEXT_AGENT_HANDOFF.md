@@ -45,6 +45,20 @@ Last full verification: 2026-03-13
 - Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
 - Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
 - Full-suite stabilization is closed for the current baseline.
+- Behavior-gap audit is now active in parallel with the exact-path tracker; do not assume an existing file means the upstream user-visible syntax actually works.
+- Highest-impact confirmed unusable surfaces:
+  - `on join`, `on connect`, `on kick`, `on quit`
+  - typed particle/game-effect positions such as function parameters
+  - `command /...:`
+  - `aliases:`
+  - `auto reload`
+- Confirmed narrowed event syntaxes:
+  - `EvtGameMode`, `EvtWeatherChange`, `EvtPlayerArmorChange`, `EvtClick`, `EvtHarvestBlock`, `EvtResourcePackResponse`
+  - omitted simple-event registrations: `Jump`, `Hand Item Swap`, `Server List Ping`
+- Confirmed command-surface behavior gaps:
+  - `all script commands` returns nothing
+  - `is a skript command` checks Brigadier root commands, not script-defined commands
+  - command info readers still return `null` for several upstream fields
 - Resume from the `Must Port` bucket rather than treating all `228` exact-path leftovers as equal-priority work.
 - Keep `Adapt` work scoped to Fabric-native replacements for user-visible behavior, not literal class parity.
 - Treat `Non-goal` leftovers as excluded from normal closure planning unless one becomes a direct blocker.

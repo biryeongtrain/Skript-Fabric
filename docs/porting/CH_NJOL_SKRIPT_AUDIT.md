@@ -88,6 +88,12 @@ Baseline snapshot date: 2026-03-08
     - `ExprXYZComponent`
     - `ExprYawPitch`
 - Most upstream condition/effect/expression families are still absent and stay behind `Part 1A` / `Part 1B`.
+- Exact-path parity is no longer enough to claim user-visible closure.
+- Confirmed behavior-only gaps inside existing files now include:
+  - missing simple-event registrations for `join`, `connect`, `kick`, `quit`, `jump`, `hand item swap`, `server list ping`
+  - missing particle/game-effect class-info registration for typed script positions
+  - narrowed event patterns in `EvtGameMode`, `EvtWeatherChange`, `EvtPlayerArmorChange`, `EvtClick`, `EvtHarvestBlock`, and `EvtResourcePackResponse`
+  - dead command-surface branches such as `all script commands` and partial `command info`
 
 ## Part Tracker
 

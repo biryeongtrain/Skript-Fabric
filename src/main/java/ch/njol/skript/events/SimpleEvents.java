@@ -22,7 +22,11 @@ public final class SimpleEvents {
         EvtExperienceChange.register();
         EvtExperienceCooldownChange.register();
         EvtExperienceSpawn.register();
+        EvtConnect.register();
         EvtFirstJoin.register();
+        EvtJoin.register();
+        EvtKick.register();
+        EvtQuit.register();
         EvtFirework.register();
         EvtGameMode.register();
         EvtGrow.register();

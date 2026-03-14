@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -117,6 +118,7 @@ public final class SkriptFabricEventBridge {
             ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
             ServerWorldEvents.LOAD.register(SkriptFabricEventBridge::dispatchWorldLoad);
             ServerWorldEvents.UNLOAD.register(SkriptFabricEventBridge::dispatchWorldUnload);
+            ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> dispatchQuit(handler.getPlayer()));
             registered = true;
         }
     }
@@ -1138,6 +1140,46 @@ public final class SkriptFabricEventBridge {
         ServerLevel level = player.level();
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 FabricPlayerEventHandles.firstJoin(firstJoin),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchJoin(ServerPlayer player) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.join(),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchConnect(ServerPlayer player) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.connect(),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchKick(ServerPlayer player, @Nullable net.minecraft.network.chat.Component reason) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.kick(reason),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchQuit(ServerPlayer player) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                FabricPlayerEventHandles.quit(),
                 level.getServer(),
                 level,
                 player

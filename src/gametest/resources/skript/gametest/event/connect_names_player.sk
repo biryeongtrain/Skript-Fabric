@@ -1,0 +1,2 @@
+on connect:
+    set test name of player to "connect hook"

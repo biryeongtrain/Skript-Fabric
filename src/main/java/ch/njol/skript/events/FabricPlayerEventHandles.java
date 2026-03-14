@@ -123,4 +123,32 @@ public final class FabricPlayerEventHandles {
 
     record ExperienceChange(ServerPlayer player, int amount) {
     }
+
+    public static Object join() {
+        return new Join();
+    }
+
+    public static Object connect() {
+        return new Connect();
+    }
+
+    public static Object kick(@Nullable net.minecraft.network.chat.Component reason) {
+        return new Kick(reason);
+    }
+
+    public static Object quit() {
+        return new Quit();
+    }
+
+    record Join() {
+    }
+
+    record Connect() {
+    }
+
+    record Kick(@Nullable net.minecraft.network.chat.Component reason) {
+    }
+
+    record Quit() {
+    }
 }

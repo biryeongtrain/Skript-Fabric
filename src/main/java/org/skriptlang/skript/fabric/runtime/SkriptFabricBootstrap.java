@@ -1168,12 +1168,15 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtExperienceChange.register();
         ch.njol.skript.events.EvtExperienceCooldownChange.register();
         ch.njol.skript.events.EvtExperienceSpawn.register();
+        ch.njol.skript.events.EvtConnect.register();
         ch.njol.skript.events.EvtFirstJoin.register();
         ch.njol.skript.events.EvtGameMode.register();
         ch.njol.skript.events.EvtGrow.register();
         ch.njol.skript.events.EvtHarvestBlock.register();
         ch.njol.skript.events.EvtHealing.register();
         ch.njol.skript.events.EvtItem.register();
+        ch.njol.skript.events.EvtJoin.register();
+        ch.njol.skript.events.EvtKick.register();
         ch.njol.skript.events.EvtLeash.register();
         ch.njol.skript.events.EvtMove.register();
         ch.njol.skript.events.EvtMoveOn.register();
@@ -1185,6 +1188,7 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtPeriodical.register();
         ch.njol.skript.events.EvtPortal.register();
         ch.njol.skript.events.EvtPressurePlate.register();
+        ch.njol.skript.events.EvtQuit.register();
         ch.njol.skript.events.EvtResourcePackResponse.register();
         ch.njol.skript.events.EvtRespawn.register();
         ch.njol.skript.events.EvtScript.register();

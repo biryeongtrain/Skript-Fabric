@@ -54,6 +54,34 @@ Last full verification: 2026-03-13
   - Remaining upstream files that are not worth reproducing on Fabric unless they become direct blockers.
   - Current examples: `bukkitutil`, `hooks`, `test`, `doc`, `timings`, `update`, `ModernSkriptBridge`, `PatcherTool`, `ServerPlatform`, `SkriptUpdater`, `StructAutoReload`, and explicit exclusions such as `ExprPlugins`.
 
+## Confirmed Behavior Gaps
+
+- The exact-path tracker does not catch registration, class-info, or runtime-surface gaps inside existing files.
+- Confirmed gaps as of 2026-03-13:
+  - Fully unusable user-visible surfaces:
+  - `on join`, `on connect`, `on kick`, and `on quit` are unavailable.
+  - Upstream `SimpleEvents` registers them, but the local [SimpleEvents.java](../../src/main/java/ch/njol/skript/events/SimpleEvents.java) only covers `EvtFirstJoin` and `EvtRespawn` for that player-session family.
+  - The local [FabricPlayerEventHandles.java](../../src/main/java/ch/njol/skript/events/FabricPlayerEventHandles.java) also has no join/connect/kick/quit handles, so the gap is both syntax and producer-side.
+  - Particle/game-effect types are unavailable in typed syntax positions.
+  - The local port ships [EffPlayEffect.java](../../src/main/java/org/skriptlang/skript/bukkit/particles/elements/effects/EffPlayEffect.java) and particle-producing expressions, but there is no local equivalent of upstream `ParticleModule.registerClasses()` for `particle`, `game effect`, or `entity effect` type names.
+  - Current symptom: values like `white dust` can be produced inline, but typed signatures and variables that rely on class-info parsing, for example function parameters, do not accept particle/game-effect types.
+  - `command /foo:` and `aliases:` are unavailable.
+  - `StructCommand` and `StructAliases` remain absent, so the Bukkit-style script command and aliases surfaces do not exist even though the Fabric-native `/skript` runtime command now exists.
+  - `auto reload` is unavailable.
+  - There is no local `StructAutoReload`, and no bootstrap registration path for it.
+  - Partially unusable or narrowed user-visible surfaces:
+  - `EvtGameMode` only accepts literal mode names instead of upstream `%gamemode%`.
+  - `EvtWeatherChange` only accepts `clear|rain|thunder` instead of upstream `weathertype`.
+  - `EvtPlayerArmorChange` only accepts hardcoded armor slots instead of upstream `%equipmentslot%`.
+  - `EvtClick` drops upstream `/blockdata` targeting.
+  - `EvtHarvestBlock` drops upstream `/blockdatas` targeting.
+  - `EvtResourcePackResponse` is narrowed to fixed literal states instead of upstream `resourcepackstates`.
+  - Upstream `Jump`, `Hand Item Swap`, and `Server List Ping` simple events are still omitted from the local `SimpleEvents` registration list.
+  - Command-related behavior gaps remain even where files exist:
+  - [ExprAllCommands.java](../../src/main/java/ch/njol/skript/expressions/ExprAllCommands.java) returns an empty array for the `all script commands` branch.
+  - [CondIsSkriptCommand.java](../../src/main/java/ch/njol/skript/conditions/CondIsSkriptCommand.java) checks the Brigadier root command list, not a script-command registry.
+  - [ExprCommandInfo.java](../../src/main/java/ch/njol/skript/expressions/ExprCommandInfo.java) still hardcodes several upstream info readers to `null`.
+
 ## Latest Closed Core Slice
 
 - Latest landed runtime/GameTest slice:
