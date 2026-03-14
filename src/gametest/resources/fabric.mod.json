@@ -41,7 +41,8 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInvulnerableGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricMixedRuntimeBackfillGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSilentGameTest",
-      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSprintingGameTest"
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSprintingGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionPropertiesAndSoundGameTest"
     ]
   }
 }

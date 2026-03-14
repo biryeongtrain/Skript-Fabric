@@ -1,0 +1,2 @@
+on gametest properties and sound context:
+    set {props::death_sound} to death sound of propsound-entity

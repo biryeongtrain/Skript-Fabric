@@ -16,6 +16,7 @@ import kim.biryeong.skriptFabric.mixin.MobSoundAccessor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
@@ -79,23 +80,23 @@ public class ExprEntitySound extends SimpleExpression<String> {
 	}
 
 	private static final Patterns<SoundType> patterns = new Patterns<>(new Object[][]{
-		{"[the] (damage|hurt) sound[s] of %livingentities%", SoundType.DAMAGE},
-		{"%livingentities%'[s] (damage|hurt) sound[s]", SoundType.DAMAGE},
+		{"[the] (damage|hurt) sound[s] of %entities%", SoundType.DAMAGE},
+		{"%entities%'[s] (damage|hurt) sound[s]", SoundType.DAMAGE},
 
-		{"[the] death sound[s] of %livingentities%", SoundType.DEATH},
-		{"%livingentities%'[s] death sound[s]", SoundType.DEATH},
+		{"[the] death sound[s] of %entities%", SoundType.DEATH},
+		{"%entities%'[s] death sound[s]", SoundType.DEATH},
 
-		{"[the] [high:(tall|high)|(low|normal)] fall damage sound[s] [from [[a] height [of]] %-number%] of %livingentities%", SoundType.FALL},
-		{"%livingentities%'[s] [high:(tall|high)|low:(low|normal)] fall [damage] sound[s] [from [[a] height [of]] %-number%]", SoundType.FALL},
+		{"[the] [high:(tall|high)|(low|normal)] fall damage sound[s] [from [[a] height [of]] %-number%] of %entities%", SoundType.FALL},
+		{"%entities%'[s] [high:(tall|high)|low:(low|normal)] fall [damage] sound[s] [from [[a] height [of]] %-number%]", SoundType.FALL},
 
-		{"[the] swim[ming] sound[s] of %livingentities%", SoundType.SWIM},
-		{"%livingentities%'[s] swim[ming] sound[s]", SoundType.SWIM},
+		{"[the] swim[ming] sound[s] of %entities%", SoundType.SWIM},
+		{"%entities%'[s] swim[ming] sound[s]", SoundType.SWIM},
 
-		{"[the] [fast:(fast|speedy)] splash sound[s] of %livingentities%", SoundType.SPLASH},
-		{"%livingentities%'[s] [fast:(fast|speedy)] splash sound[s]", SoundType.SPLASH},
+		{"[the] [fast:(fast|speedy)] splash sound[s] of %entities%", SoundType.SPLASH},
+		{"%entities%'[s] [fast:(fast|speedy)] splash sound[s]", SoundType.SPLASH},
 
-		{"[the] ambient sound[s] of %livingentities%", SoundType.AMBIENT},
-		{"%livingentities%'[s] ambient sound[s]", SoundType.AMBIENT}
+		{"[the] ambient sound[s] of %entities%", SoundType.AMBIENT},
+		{"%entities%'[s] ambient sound[s]", SoundType.AMBIENT}
 	});
 
 	static {
@@ -105,7 +106,7 @@ public class ExprEntitySound extends SimpleExpression<String> {
 	private boolean bigOrSpeedy;
 	private SoundType soundType;
 	private Expression<Number> height;
-	private Expression<LivingEntity> entities;
+	private Expression<Entity> entities;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -114,7 +115,7 @@ public class ExprEntitySound extends SimpleExpression<String> {
 		bigOrSpeedy = parseResult.hasTag("high") || parseResult.hasTag("fast");
 		if (soundType == SoundType.FALL)
 			height = (Expression<Number>) exprs[0];
-		entities = (Expression<LivingEntity>) ((soundType == SoundType.FALL) ? exprs[1] : exprs[0]);
+		entities = (Expression<Entity>) ((soundType == SoundType.FALL) ? exprs[1] : exprs[0]);
 		return true;
 	}
 
@@ -123,7 +124,8 @@ public class ExprEntitySound extends SimpleExpression<String> {
 		int height = this.height == null ? -1 : this.height.getOptionalSingle(event).orElse(-1).intValue();
 
 		return entities.stream(event)
-			.map(entity -> soundType.getSound(entity, height, bigOrSpeedy))
+			.filter(e -> e instanceof LivingEntity)
+			.map(e -> soundType.getSound((LivingEntity) e, height, bigOrSpeedy))
 			.filter(Objects::nonNull)
 			.distinct()
 			.map((SoundEvent sound) -> {

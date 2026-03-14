@@ -1,0 +1,3 @@
+on gametest properties and sound context:
+    set display name of propsound-entity to "TestCustomName"
+    set {props::display_name} to display name of propsound-entity

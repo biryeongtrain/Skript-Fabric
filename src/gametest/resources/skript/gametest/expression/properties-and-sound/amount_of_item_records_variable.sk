@@ -1,0 +1,2 @@
+on gametest properties and sound context:
+    set {props::item_amount} to amount of propsound-item

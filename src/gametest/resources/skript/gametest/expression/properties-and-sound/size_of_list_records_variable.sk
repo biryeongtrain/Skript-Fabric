@@ -1,0 +1,5 @@
+on gametest properties and sound context:
+    set {_list::1} to 1
+    set {_list::2} to 2
+    set {_list::3} to 3
+    set {props::list_size} to size of {_list::*}

@@ -1,0 +1,4 @@
+on gametest properties and sound context:
+    set {props::loc_x} to x of propsound-location
+    set {props::loc_y} to y of propsound-location
+    set {props::loc_z} to z of propsound-location

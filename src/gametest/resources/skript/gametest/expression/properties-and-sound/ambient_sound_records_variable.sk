@@ -1,0 +1,2 @@
+on gametest properties and sound context:
+    set {props::ambient_sound} to ambient sound of propsound-entity

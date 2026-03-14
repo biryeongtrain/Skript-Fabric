@@ -1,0 +1,2 @@
+on gametest properties and sound context:
+    set {props::banner_item} to "creeper" banner pattern item

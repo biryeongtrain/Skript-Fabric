@@ -1,0 +1,2 @@
+on gametest properties and sound context:
+    set {props::player_name} to name of propsound-player
