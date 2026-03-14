@@ -1,6 +1,6 @@
 package kim.biryeong.skriptFabric.mixin;
 
-import java.util.Locale;
+import ch.njol.skript.events.FabricEventCompatHandles;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -18,10 +18,17 @@ abstract class ServerCommonPacketListenerImplMixin {
     private void skript$trackResourcePackResponse(ServerboundResourcePackPacket packet, CallbackInfo callbackInfo) {
         if ((Object) this instanceof ServerGamePacketListenerImpl listener) {
             FabricPlayerClientState.setResourcePackStatus(listener.player, packet.action());
-            SkriptFabricEventBridge.dispatchResourcePackResponse(
-                    listener.player,
-                    packet.action().name().toLowerCase(Locale.ENGLISH)
-            );
+            FabricEventCompatHandles.ResourcePackState state = switch (packet.action()) {
+                case ACCEPTED -> FabricEventCompatHandles.ResourcePackState.ACCEPTED;
+                case DECLINED -> FabricEventCompatHandles.ResourcePackState.DECLINED;
+                case FAILED_DOWNLOAD -> FabricEventCompatHandles.ResourcePackState.FAILED_DOWNLOAD;
+                case SUCCESSFULLY_LOADED -> FabricEventCompatHandles.ResourcePackState.SUCCESSFULLY_LOADED;
+                case DOWNLOADED -> FabricEventCompatHandles.ResourcePackState.DOWNLOADED;
+                case INVALID_URL -> FabricEventCompatHandles.ResourcePackState.INVALID_URL;
+                case FAILED_RELOAD -> FabricEventCompatHandles.ResourcePackState.FAILED_RELOAD;
+                case DISCARDED -> FabricEventCompatHandles.ResourcePackState.DISCARDED;
+            };
+            SkriptFabricEventBridge.dispatchResourcePackResponse(listener.player, state);
         }
     }
 }

@@ -1,6 +1,7 @@
 package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.ScriptCommandContext;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -20,7 +21,7 @@ public class ExprCommandSender extends SimpleExpression<ServerPlayer> {
 
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        if (!getParser().isCurrentEvent(COMMAND_EVENT_CLASS)) {
+        if (!getParser().isCurrentEvent(COMMAND_EVENT_CLASS) && !getParser().isCurrentEvent(ScriptCommandContext.class)) {
             Skript.error("The command sender expression can only be used in command events");
             return false;
         }
@@ -29,6 +30,11 @@ public class ExprCommandSender extends SimpleExpression<ServerPlayer> {
 
     @Override
     protected ServerPlayer @Nullable [] get(SkriptEvent event) {
+        // Script command context: extract player from CommandSourceStack
+        if (event.handle() instanceof ScriptCommandContext context) {
+            ServerPlayer player = context.source().getPlayer();
+            return player == null ? new ServerPlayer[0] : new ServerPlayer[]{player};
+        }
         return event.player() == null ? new ServerPlayer[0] : new ServerPlayer[]{event.player()};
     }
 

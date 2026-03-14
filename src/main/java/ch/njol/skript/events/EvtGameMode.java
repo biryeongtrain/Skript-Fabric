@@ -19,23 +19,16 @@ public final class EvtGameMode extends SkriptEvent {
         }
         Skript.registerEvent(
                 EvtGameMode.class,
-                "game[ ]mode change",
-                "game[ ]mode change to survival",
-                "game[ ]mode change to creative",
-                "game[ ]mode change to adventure",
-                "game[ ]mode change to spectator"
+                "game[ ]mode change [to %-gamemode%]"
         );
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parser) {
-        mode = switch (matchedPattern) {
-            case 1 -> GameType.SURVIVAL;
-            case 2 -> GameType.CREATIVE;
-            case 3 -> GameType.ADVENTURE;
-            case 4 -> GameType.SPECTATOR;
-            default -> null;
-        };
+        if (args.length > 0 && args[0] != null) {
+            mode = ((Literal<GameType>) args[0]).getSingle(null);
+        }
         return true;
     }
 

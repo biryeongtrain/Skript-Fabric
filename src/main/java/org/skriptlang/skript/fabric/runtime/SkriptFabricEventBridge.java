@@ -1126,7 +1126,7 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
-    public static void dispatchResourcePackResponse(ServerPlayer player, @Nullable String status) {
+    public static void dispatchResourcePackResponse(ServerPlayer player, @Nullable FabricEventCompatHandles.ResourcePackState status) {
         ServerLevel level = player.level();
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.ResourcePackResponse(status),
@@ -1885,6 +1885,26 @@ public final class SkriptFabricEventBridge {
         public void setHatchingType(EntityType<?> hatchingType) {
             this.hatchingType = hatchingType;
         }
+    }
+
+    public static void dispatchJump(ServerPlayer player) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Jump(),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchHandItemSwap(ServerPlayer player) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.HandItemSwap(),
+                level.getServer(),
+                level,
+                player
+        ));
     }
 
     private static @Nullable ServerPlayer resolveLootingPlayer(LootContext context, @Nullable Entity contextEntity) {

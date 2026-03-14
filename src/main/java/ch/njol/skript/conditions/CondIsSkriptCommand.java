@@ -1,6 +1,7 @@
 package ch.njol.skript.conditions;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.Commands;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -43,16 +44,6 @@ public final class CondIsSkriptCommand extends Condition {
     }
 
     private static boolean commandExists(SkriptEvent event, String command) {
-        String normalized = command.startsWith("/") ? command.substring(1) : command;
-        int firstSpace = normalized.indexOf(' ');
-        if (firstSpace >= 0) {
-            normalized = normalized.substring(0, firstSpace);
-        }
-        if (normalized.isBlank()) {
-            return false;
-        }
-        String label = normalized.toLowerCase(Locale.ENGLISH);
-        return event.server().getCommands().getDispatcher().getRoot().getChildren().stream()
-                .anyMatch(node -> node.getName().equalsIgnoreCase(label));
+        return Commands.getCommand(command) != null;
     }
 }

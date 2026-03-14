@@ -25,7 +25,12 @@ public final class FabricEventCompatHandles {
     public record GameMode(@Nullable GameType mode) {
     }
 
-    public record ResourcePackResponse(@Nullable String status) {
+    public enum ResourcePackState {
+        ACCEPTED, DECLINED, FAILED_DOWNLOAD, SUCCESSFULLY_LOADED,
+        DOWNLOADED, INVALID_URL, FAILED_RELOAD, DISCARDED
+    }
+
+    public record ResourcePackResponse(@Nullable ResourcePackState status) {
     }
 
     public record Healing(Entity entity, @Nullable String reason, float amount) implements FabricEntityEventHandle {
@@ -33,6 +38,8 @@ public final class FabricEventCompatHandles {
 
     public record Portal(Entity entity, boolean player) implements FabricEntityEventHandle {
     }
+
+    public enum WeatherType { CLEAR, RAIN, THUNDER }
 
     public record WeatherChange(boolean rain, boolean thunder) {
     }
@@ -85,21 +92,7 @@ public final class FabricEventCompatHandles {
     }
 
     public enum ArmorSlot {
-        HEAD("helmet"),
-        CHEST("chestplate"),
-        LEGS("leggings"),
-        FEET("boots");
-
-        private final String text;
-
-        ArmorSlot(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
+        HELMET, CHESTPLATE, LEGGINGS, BOOTS
     }
 
     public record PlayerArmorChange(@Nullable ArmorSlot slot) {
@@ -273,6 +266,12 @@ public final class FabricEventCompatHandles {
         public Entity entity() {
             return entity != null ? entity : vehicle;
         }
+    }
+
+    public record Jump() {
+    }
+
+    public record HandItemSwap() {
     }
 
     public static @Nullable String effectName(@Nullable net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect) {

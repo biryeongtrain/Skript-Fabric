@@ -6,8 +6,12 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import java.util.Iterator;
+import java.util.function.Consumer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
 
 public abstract class EntityData<E extends Entity> {
 
@@ -118,5 +122,38 @@ public abstract class EntityData<E extends Entity> {
             return false;
         }
         return codeName.equals(other.codeName);
+    }
+
+    public @Nullable net.minecraft.world.entity.EntityType<?> getMinecraftEntityType() {
+        if (this instanceof SimpleEntityData simple && simple.isExactType()) {
+            return simple.getMinecraftType();
+        }
+        if (this instanceof ExactEntityData<?> exact) {
+            return exact.getMinecraftType();
+        }
+        return null;
+    }
+
+    public @Nullable E spawn(FabricLocation location) {
+        return spawn(location, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public @Nullable E spawn(FabricLocation location, @Nullable Consumer<E> consumer) {
+        net.minecraft.world.entity.EntityType<?> mcType = getMinecraftEntityType();
+        if (mcType == null) {
+            return null;
+        }
+        ServerLevel level = location.level();
+        Entity entity = mcType.create(level, EntitySpawnReason.TRIGGERED);
+        if (entity == null) {
+            return null;
+        }
+        entity.setPos(location.position());
+        if (consumer != null) {
+            consumer.accept((E) entity);
+        }
+        level.addFreshEntity(entity);
+        return (E) entity;
     }
 }

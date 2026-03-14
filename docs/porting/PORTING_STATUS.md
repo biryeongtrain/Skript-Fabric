@@ -1,25 +1,26 @@
 # Skript-Fabric Porting Status
 
-Last condensed: 2026-03-13
-Last full verification: 2026-03-13
+Last condensed: 2026-03-14
+Last full verification: 2026-03-14
 
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `228`
-  - expressions missing: `44`
+  - overall missing: `216`
+  - expressions missing: `41`
   - events missing: `0`
-  - sections missing: `8`
+  - sections missing: `0`
   - command missing: `9`
   - aliases missing: `9`
   - exact-path missing in `conditions`, `effects`, `lang`, `config`, `patterns`, `registrations`: `0`
 - Source ports complete:
   - conditions: `28 / 28`
-  - expressions: `84 / 84`
+  - expressions: `85 / 85`
   - effects: `24 / 24`
-- Runtime-backed `Evt*.java`: `48 / 53`
+  - sections: `9 / 9`
+- Runtime-backed `Evt*.java`: `52 / 53`
 - Synthetic/partial `Evt*.java`: `0 / 53`
-- Non-runtime/manual `Evt*.java`: `5 / 53`
+- Non-runtime/manual `Evt*.java`: `1 / 53`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
   - `breeding`: `12 / 12`
@@ -29,11 +30,11 @@ Last full verification: 2026-03-13
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `961`
-  - shortfall: `228`
+  - exact-path present locally: `973`
+  - shortfall: `216`
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `335 / 335` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `340 / 340` GameTests green on `main`
 
 ## Active Priority
 
@@ -57,30 +58,17 @@ Last full verification: 2026-03-13
 ## Confirmed Behavior Gaps
 
 - The exact-path tracker does not catch registration, class-info, or runtime-surface gaps inside existing files.
-- Confirmed gaps as of 2026-03-13:
+- Confirmed gaps as of 2026-03-14:
   - Fully unusable user-visible surfaces:
-  - `on join`, `on connect`, `on kick`, and `on quit` are unavailable.
-  - Upstream `SimpleEvents` registers them, but the local [SimpleEvents.java](../../src/main/java/ch/njol/skript/events/SimpleEvents.java) only covers `EvtFirstJoin` and `EvtRespawn` for that player-session family.
-  - The local [FabricPlayerEventHandles.java](../../src/main/java/ch/njol/skript/events/FabricPlayerEventHandles.java) also has no join/connect/kick/quit handles, so the gap is both syntax and producer-side.
   - Particle/game-effect types are unavailable in typed syntax positions.
   - The local port ships [EffPlayEffect.java](../../src/main/java/org/skriptlang/skript/bukkit/particles/elements/effects/EffPlayEffect.java) and particle-producing expressions, but there is no local equivalent of upstream `ParticleModule.registerClasses()` for `particle`, `game effect`, or `entity effect` type names.
   - Current symptom: values like `white dust` can be produced inline, but typed signatures and variables that rely on class-info parsing, for example function parameters, do not accept particle/game-effect types.
-  - `command /foo:` and `aliases:` are unavailable.
-  - `StructCommand` and `StructAliases` remain absent, so the Bukkit-style script command and aliases surfaces do not exist even though the Fabric-native `/skript` runtime command now exists.
   - `auto reload` is unavailable.
   - There is no local `StructAutoReload`, and no bootstrap registration path for it.
   - Partially unusable or narrowed user-visible surfaces:
-  - `EvtGameMode` only accepts literal mode names instead of upstream `%gamemode%`.
-  - `EvtWeatherChange` only accepts `clear|rain|thunder` instead of upstream `weathertype`.
-  - `EvtPlayerArmorChange` only accepts hardcoded armor slots instead of upstream `%equipmentslot%`.
   - `EvtClick` drops upstream `/blockdata` targeting.
   - `EvtHarvestBlock` drops upstream `/blockdatas` targeting.
-  - `EvtResourcePackResponse` is narrowed to fixed literal states instead of upstream `resourcepackstates`.
-  - Upstream `Jump`, `Hand Item Swap`, and `Server List Ping` simple events are still omitted from the local `SimpleEvents` registration list.
-  - Command-related behavior gaps remain even where files exist:
-  - [ExprAllCommands.java](../../src/main/java/ch/njol/skript/expressions/ExprAllCommands.java) returns an empty array for the `all script commands` branch.
-  - [CondIsSkriptCommand.java](../../src/main/java/ch/njol/skript/conditions/CondIsSkriptCommand.java) checks the Brigadier root command list, not a script-command registry.
-  - [ExprCommandInfo.java](../../src/main/java/ch/njol/skript/expressions/ExprCommandInfo.java) still hardcodes several upstream info readers to `null`.
+  - Upstream `Server List Ping` simple event is still omitted from the local `SimpleEvents` registration list (requires cross-thread dispatch infrastructure).
 
 ## Latest Closed Core Slice
 
@@ -95,11 +83,15 @@ Last full verification: 2026-03-13
   - cycle K adds upstream-exact `ExprElement`, `ExprLoopValue`, `ExprLowestHighestSolidBlock`, `ExprResonatingTime`, `ExprRingingTime`, and `ExprXOf`
   - cycle L adds upstream-exact `ExprProjectileForce` and extends the live bow producer with projectile force payload
   - cycle M adds `ExprSkull`, `ExprSignText`, and `ExprSpawnerType`
+  - cycle N ports `SecFilter`, `SecFor`, `ExprTransform`, `ExprValueWithin` (loop/filter/transform expressions)
+  - cycle O ports full `org.skriptlang.skript.log.runtime` package (RuntimeError, RuntimeErrorManager, RuntimeErrorCatcher, ErrorSource, Frame, RuntimeErrorFilter, RuntimeErrorConsumer, RuntimeErrorProducer, SyntaxRuntimeErrorProducer) + `SecCatchErrors` + `Skript.getRuntimeErrorManager()`
+  - cycle P ports remaining sections: `SecWhile` (while/do-while loops), `ExprSecCreateWorldBorder` (virtual world borders), `EffSecSpawn` (entity spawning with section), `EffSecShoot` (projectile shooting with section) + adds `EntityData.spawn()` Fabric-native entity spawning infrastructure
   - function declaration loading now lands `StructFunction` plus bootstrap registration for `EffReturn`
   - real `.sk` GameTest now proves declared global and local functions execute during runtime load
   - runtime bootstrap force-initializes the landed cycle F expression bundles during full GameTest startup
   - cycle F adds targeted compatibility/binding JUnit plus dedicated real `.sk` GameTests for every surviving worker lane
-- Landed with targeted Minecraft GameTest; current full suite completes `335 / 335` GameTests green
+- Player session events `on join`, `on connect`, `on kick`, `on quit` now landed with full mixin/Fabric API backing, `SkriptTextPlaceholders` Skript expression resolution, and `PlayerClassInfo` Parser for proper player name display
+- Landed with targeted Minecraft GameTest; current full suite completes `340 / 340` GameTests green
 
 ## Open Gaps
 

@@ -42,13 +42,14 @@ public class ExprLastResourcePackResponse extends SimpleExpression<String> imple
             return new String[0];
         }
         ServerPlayer eventPlayer = event.player();
-        String status = handle.status();
+        FabricEventCompatHandles.ResourcePackState status = handle.status();
         if (eventPlayer == null || status == null) {
             return new String[0];
         }
+        String statusName = status.name().toLowerCase().replace('_', ' ');
         return players.stream(event)
                 .filter(player -> player == eventPlayer)
-                .map(player -> status)
+                .map(player -> statusName)
                 .toArray(String[]::new);
     }
 

@@ -3,6 +3,7 @@ package ch.njol.skript.events;
 import ch.njol.skript.classes.EnumClassInfo;
 import ch.njol.skript.entity.EntityData;
 import ch.njol.skript.registrations.Classes;
+import net.minecraft.world.level.GameType;
 
 final class EventClassInfoRegistrar {
 
@@ -16,6 +17,10 @@ final class EventClassInfoRegistrar {
             return;
         }
         EntityData.register();
+        registerEnum(GameType.class, "gamemode", "game modes");
+        registerEnum(FabricEventCompatHandles.WeatherType.class, "weathertype", "weather types");
+        registerEnum(FabricEventCompatHandles.ArmorSlot.class, "armorslot", "armor slots");
+        registerEnum(FabricEventCompatHandles.ResourcePackState.class, "resourcepackstate", "resource pack states");
         registered = true;
     }
 

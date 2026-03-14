@@ -8,35 +8,25 @@ import org.jetbrains.annotations.Nullable;
 
 public final class EvtWeatherChange extends SkriptEvent {
 
-    private enum Weather {
-        CLEAR,
-        RAIN,
-        THUNDER
-    }
-
-    private @Nullable Weather target;
+    private @Nullable FabricEventCompatHandles.WeatherType target;
 
     public static synchronized void register() {
+        EventClassInfoRegistrar.register();
         if (EventSyntaxRegistry.isRegistered(EvtWeatherChange.class)) {
             return;
         }
         Skript.registerEvent(
                 EvtWeatherChange.class,
-                "weather change",
-                "weather change to clear",
-                "weather change to rain",
-                "weather change to thunder"
+                "weather change [to %-weathertype%]"
         );
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parser) {
-        target = switch (matchedPattern) {
-            case 1 -> Weather.CLEAR;
-            case 2 -> Weather.RAIN;
-            case 3 -> Weather.THUNDER;
-            default -> null;
-        };
+        if (args.length > 0 && args[0] != null) {
+            target = ((Literal<FabricEventCompatHandles.WeatherType>) args[0]).getSingle(null);
+        }
         return true;
     }
 

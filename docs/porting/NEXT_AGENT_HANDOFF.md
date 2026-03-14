@@ -1,7 +1,7 @@
 # Next Agent Handoff
 
-Last condensed: 2026-03-13
-Last full verification: 2026-03-13
+Last condensed: 2026-03-14
+Last full verification: 2026-03-14
 
 ## Read Order
 
@@ -16,16 +16,16 @@ Last full verification: 2026-03-13
 ## Current State
 
 - Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
-- Runtime-backed `Evt*.java`: `48 / 53`
+- Runtime-backed `Evt*.java`: `52 / 53`
 - Synthetic/partial `Evt*.java`: `0 / 53`
-- Non-runtime/manual `Evt*.java`: `5 / 53`
+- Non-runtime/manual `Evt*.java`: `1 / 53`
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
 - Upstream `ch/njol/skript` baseline: exact-path present `961`, upstream `1189`, shortfall `228`
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `335 / 335` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `340 / 340` GameTests green on `main`
 
 ## Most Recent Merged Slice
 
@@ -42,12 +42,11 @@ Last full verification: 2026-03-13
 
 ## Do Next
 
-- Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `48 / 53` live and `5 / 53` non-runtime/manual.
+- Event-hook closure for runtime-backed `Evt*.java` is complete; keep docs and tests aligned with `52 / 53` live and `1 / 53` non-runtime/manual.
 - Event-facing synthetic alias cleanup is also closed for the remaining hanging payload case; do not reintroduce `gametest ...` event aliases where public syntax plus real producer already exist.
 - Full-suite stabilization is closed for the current baseline.
 - Behavior-gap audit is now active in parallel with the exact-path tracker; do not assume an existing file means the upstream user-visible syntax actually works.
 - Highest-impact confirmed unusable surfaces:
-  - `on join`, `on connect`, `on kick`, `on quit`
   - typed particle/game-effect positions such as function parameters
   - `command /...:`
   - `aliases:`

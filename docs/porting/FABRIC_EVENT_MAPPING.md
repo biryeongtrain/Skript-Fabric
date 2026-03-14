@@ -1,16 +1,16 @@
 # Fabric Event Mapping
 
-Last condensed: 2026-03-13
-Last full verification: 2026-03-13
+Last condensed: 2026-03-14
+Last full verification: 2026-03-14
 
 ## Snapshot
 
-- Active event rows: `75`
+- Active event rows: `79`
 - Tracked live rows below are runtime-backed; other implemented event syntaxes may still be synthetic-handle-only.
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.EventBridgeBindingTest --tests org.skriptlang.skript.fabric.runtime.WorldLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.ItemLifecycleRuntimeTest --tests org.skriptlang.skript.fabric.runtime.InventoryMoveRuntimeTest --warning-mode none --console=plain` passed
   - `./gradlew test --tests ch.njol.skript.events.EventCompatibilityTest --tests org.skriptlang.skript.fabric.runtime.HarvestBlockRuntimeTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `313 / 313` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `340 / 340` GameTests green on `main`
 
 ## Active Rows
 
@@ -47,7 +47,11 @@ Last full verification: 2026-03-13
 | `on entity block change` | `Sheep.ate()` mixin path |
 | `on [entity] target` / `on [entity] un-target` | `Mob.setTarget(LivingEntity)` mixin path |
 | `on gamemode change` | `ServerPlayerGameMode.changeGameModeForPlayer(GameType)` |
+| `on connect` | `PlayerList.placeNewPlayer` HEAD mixin — pre-join semantics |
+| `on join` / `on login` / `on logging in` / `on joining` | `PlayerList.placeNewPlayer` RETURN mixin — player in world |
 | `on first join` | `PlayerList.placeNewPlayer(Connection, ServerPlayer, CommonListenerCookie)` |
+| `on kick` / `on being kicked` | `ServerCommonPacketListenerImpl.disconnect(Component)` mixin path |
+| `on quit` / `on disconnect` / `on leave` | `ServerPlayConnectionEvents.DISCONNECT` |
 | `on armor change` / slot-specific armor change | `LivingEntity.onEquipItem(EquipmentSlot, ItemStack, ItemStack)` |
 | `on respawn` | `PlayerList.respawn(ServerPlayer, boolean, Entity.RemovalReason)` |
 | `on teleport` | `Entity.teleportTo(...)` mixin path |
@@ -90,9 +94,9 @@ Last full verification: 2026-03-13
 ## Open Parity Note
 
 - `Evt*.java` runtime audit:
-  - runtime-backed: `48 / 53`
+  - runtime-backed: `52 / 53`
   - synthetic/partial: `0 / 53`
-  - non-runtime/manual: `5 / 53`
+  - non-runtime/manual: `1 / 53`
 - Runtime-backed closure is complete for event-hook families; only non-runtime/manual `Evt*.java` remain outside the live bucket.
 - Event-facing synthetic alias backlog is now `0`; hanging payload coverage runs through public `on break of item frame:` with the real item-frame break path.
 - Remaining cross-cutting gap is not limited to dispatch:

@@ -1,6 +1,7 @@
 package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.ScriptCommandContext;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -43,7 +44,7 @@ public class ExprArgument extends SimpleExpression<String> {
 
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        if (!getParser().isCurrentEvent(COMMAND_EVENT_CLASS)) {
+        if (!getParser().isCurrentEvent(COMMAND_EVENT_CLASS) && !getParser().isCurrentEvent(ScriptCommandContext.class)) {
             Skript.error("The argument expression can only be used in command events");
             return false;
         }
@@ -78,6 +79,11 @@ public class ExprArgument extends SimpleExpression<String> {
 
     @Override
     protected String @Nullable [] get(SkriptEvent event) {
+        // Script command context: return typed arguments as strings
+        if (event.handle() instanceof ScriptCommandContext context) {
+            return getFromScriptCommand(context);
+        }
+
         String fullCommand = readCommand(event.handle());
         if (fullCommand == null || fullCommand.isBlank()) {
             return new String[0];
@@ -94,6 +100,37 @@ public class ExprArgument extends SimpleExpression<String> {
             case ORDINAL -> arguments.length < ordinal ? new String[0] : new String[]{arguments[ordinal - 1]};
             case SINGLE -> arguments.length == 1 ? new String[]{arguments[0]} : new String[0];
             case ALL -> arguments;
+            default -> new String[0];
+        };
+    }
+
+    private String[] getFromScriptCommand(ScriptCommandContext context) {
+        Object[] parsedArgs = context.parsedArguments();
+        if (parsedArgs == null || parsedArgs.length == 0) {
+            return new String[0];
+        }
+        return switch (what) {
+            case LAST -> {
+                Object last = parsedArgs[parsedArgs.length - 1];
+                yield last == null ? new String[0] : new String[]{String.valueOf(last)};
+            }
+            case ORDINAL -> {
+                if (ordinal < 1 || ordinal > parsedArgs.length || parsedArgs[ordinal - 1] == null)
+                    yield new String[0];
+                yield new String[]{String.valueOf(parsedArgs[ordinal - 1])};
+            }
+            case SINGLE -> {
+                if (parsedArgs.length == 1 && parsedArgs[0] != null)
+                    yield new String[]{String.valueOf(parsedArgs[0])};
+                yield new String[0];
+            }
+            case ALL -> {
+                String[] result = new String[parsedArgs.length];
+                for (int i = 0; i < parsedArgs.length; i++) {
+                    result[i] = parsedArgs[i] == null ? "" : String.valueOf(parsedArgs[i]);
+                }
+                yield result;
+            }
             default -> new String[0];
         };
     }

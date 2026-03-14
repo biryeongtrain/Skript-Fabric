@@ -42,7 +42,7 @@ public class CondPermission extends Condition {
         return players.check(event, player -> permissions.check(event, permission -> hasPermission(player, permission)), isNegated());
     }
 
-    static boolean hasPermission(ServerPlayer player, String permission) {
+    public static boolean hasPermission(ServerPlayer player, String permission) {
         return matchesPermission(permission, candidate -> checkPermission(player, candidate));
     }
 

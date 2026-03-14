@@ -1,6 +1,8 @@
 package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.Commands;
+import ch.njol.skript.command.ScriptCommand;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -19,13 +21,28 @@ public class ExprCommandInfo extends SimpleExpression<String> {
 
     private enum InfoType {
         NAME(CommandNode::getName),
-        DESCRIPTION(node -> null),
+        DESCRIPTION(node -> {
+            ScriptCommand sc = Commands.getCommand(node.getName());
+            return sc != null ? sc.getDescription() : null;
+        }),
         LABEL(CommandNode::getName),
-        USAGE(node -> "/" + node.getUsageText()),
-        ALIASES(node -> null),
-        PERMISSION(node -> null),
-        PERMISSION_MESSAGE(node -> null),
-        PLUGIN(node -> null);
+        USAGE(node -> {
+            ScriptCommand sc = Commands.getCommand(node.getName());
+            return sc != null && sc.getUsage() != null ? sc.getUsage() : "/" + node.getUsageText();
+        }),
+        ALIASES(node -> null), // handled separately in get()
+        PERMISSION(node -> {
+            ScriptCommand sc = Commands.getCommand(node.getName());
+            return sc != null ? sc.getPermission() : null;
+        }),
+        PERMISSION_MESSAGE(node -> {
+            ScriptCommand sc = Commands.getCommand(node.getName());
+            return sc != null ? sc.getPermissionMessage() : null;
+        }),
+        PLUGIN(node -> {
+            ScriptCommand sc = Commands.getCommand(node.getName());
+            return sc != null ? "Skript" : null;
+        });
 
         private final Function<CommandNode<?>, @Nullable String> reader;
 
@@ -127,6 +144,11 @@ public class ExprCommandInfo extends SimpleExpression<String> {
     }
 
     private List<String> resolveAliases(SkriptEvent event, CommandNode<?> command) {
+        // Try ScriptCommand aliases first
+        ScriptCommand sc = Commands.getCommand(command.getName());
+        if (sc != null) {
+            return sc.getAliases();
+        }
         if (event.server() == null) {
             return List.of();
         }

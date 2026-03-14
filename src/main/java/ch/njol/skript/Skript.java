@@ -19,6 +19,7 @@ import org.skriptlang.skript.lang.experiment.ExperimentRegistry;
 import org.skriptlang.skript.lang.entry.EntryValidator;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
+import org.skriptlang.skript.log.runtime.RuntimeErrorManager;
 import org.skriptlang.skript.registration.SyntaxRegistryService;
 
 public class Skript implements SkriptAddon {
@@ -26,6 +27,7 @@ public class Skript implements SkriptAddon {
     private static final Logger LOGGER = LoggerFactory.getLogger("skript-fabric");
     private static final Skript INSTANCE = new Skript();
     private static volatile boolean acceptRegistrations = false;
+    private static volatile @Nullable RuntimeErrorManager runtimeErrorManager;
     private static volatile boolean debug = false;
     private static volatile @Nullable ch.njol.skript.util.Version minecraftVersion;
 
@@ -95,6 +97,20 @@ public class Skript implements SkriptAddon {
 
     public static boolean isRunningMinecraft(int... version) {
         return getMinecraftVersion().compareTo(version) >= 0;
+    }
+
+    public static RuntimeErrorManager getRuntimeErrorManager() {
+        RuntimeErrorManager manager = runtimeErrorManager;
+        if (manager != null) {
+            return manager;
+        }
+        synchronized (Skript.class) {
+            if (runtimeErrorManager == null) {
+                RuntimeErrorManager.refresh();
+                runtimeErrorManager = RuntimeErrorManager.getInstance();
+            }
+            return runtimeErrorManager;
+        }
     }
 
     public static ExperimentRegistry experiments() {

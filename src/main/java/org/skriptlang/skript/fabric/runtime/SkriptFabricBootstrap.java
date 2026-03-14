@@ -6,6 +6,7 @@ import ch.njol.skript.conditions.CondItemInHand;
 import ch.njol.skript.conditions.CondIsWearing;
 import ch.njol.skript.conditions.CondPermission;
 import ch.njol.skript.expressions.ExprAI;
+import ch.njol.skript.expressions.arithmetic.ExprArithmetic;
 import ch.njol.skript.expressions.ExprAttackCooldown;
 import ch.njol.skript.expressions.ExprChestInventory;
 import ch.njol.skript.expressions.ExprEnderChest;
@@ -197,9 +198,17 @@ public final class SkriptFabricBootstrap {
             try {
                 StructOptions.register();
                 StructFunction.register();
+                ch.njol.skript.structures.StructCommand.register();
                 ch.njol.skript.effects.EffReturn.register();
                 SecIf.register();
                 forceInitialize(ch.njol.skript.sections.SecLoop.class);
+                ch.njol.skript.sections.SecFilter.register();
+                ch.njol.skript.sections.SecFor.register();
+                ch.njol.skript.sections.SecCatchErrors.register();
+                ch.njol.skript.sections.SecWhile.register();
+                ch.njol.skript.sections.ExprSecCreateWorldBorder.register();
+                ch.njol.skript.sections.EffSecSpawn.register();
+                ch.njol.skript.sections.EffSecShoot.register();
                 if (!hasCoreProperties()) {
                     Property.registerDefaultProperties();
                 }
@@ -917,6 +926,7 @@ public final class SkriptFabricBootstrap {
                         "reset %object%",
                         "delete %object%"
                 );
+                ExprArithmetic.registerExpression();
                 registerRecoveredEffectBundle();
             } finally {
                 Skript.setAcceptRegistrations(false);
@@ -999,6 +1009,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprCommandBlockCommand.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommand.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommandInfo.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCmdCooldownInfo.class);
         forceInitialize(ch.njol.skript.expressions.ExprCommandSender.class);
         forceInitialize(ch.njol.skript.expressions.ExprCompassTarget.class);
         forceInitialize(ch.njol.skript.expressions.ExprDamage.class);
@@ -1008,6 +1019,8 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprElement.class);
         forceInitialize(ch.njol.skript.expressions.ExprEnchantmentLevel.class);
         forceInitialize(ch.njol.skript.expressions.ExprEnchantments.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntity.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntities.class);
         forceInitialize(ch.njol.skript.expressions.ExprExperience.class);
         forceInitialize(ch.njol.skript.expressions.ExprFinalDamage.class);
         forceInitialize(ch.njol.skript.expressions.ExprHealReason.class);
@@ -1115,6 +1128,9 @@ public final class SkriptFabricBootstrap {
         forceInitialize(org.skriptlang.skript.common.expressions.ExprColorFromHexCode.class);
         forceInitialize(org.skriptlang.skript.common.expressions.ExprHexCode.class);
         forceInitialize(org.skriptlang.skript.common.expressions.ExprRecursiveSize.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTransform.class);
+        forceInitialize(ch.njol.skript.expressions.ExprValueWithin.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCaughtErrors.class);
     }
 
     private static void initializeRecoveredExpressionBundle() {

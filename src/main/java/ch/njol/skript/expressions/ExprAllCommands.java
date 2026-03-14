@@ -1,6 +1,8 @@
 package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.Commands;
+import ch.njol.skript.command.ScriptCommand;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -27,7 +29,12 @@ public class ExprAllCommands extends SimpleExpression<String> {
 
     @Override
     protected String @Nullable [] get(SkriptEvent event) {
-        if (event.server() == null || scriptCommandsOnly) {
+        if (scriptCommandsOnly) {
+            return Commands.getCommands().stream()
+                    .map(ScriptCommand::getName)
+                    .toArray(String[]::new);
+        }
+        if (event.server() == null) {
             return new String[0];
         }
         return event.server().getCommands().getDispatcher().getRoot().getChildren().stream()

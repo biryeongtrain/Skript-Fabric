@@ -1,6 +1,7 @@
 package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.ScriptCommandContext;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Events;
 import ch.njol.skript.doc.Example;
@@ -35,7 +36,7 @@ public class ExprCommand extends SimpleExpression<String> {
 
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        if (!getParser().isCurrentEvent(COMMAND_EVENT_CLASS)) {
+        if (!getParser().isCurrentEvent(COMMAND_EVENT_CLASS) && !getParser().isCurrentEvent(ScriptCommandContext.class)) {
             Skript.error("The command expression can only be used in command events");
             return false;
         }
@@ -45,6 +46,18 @@ public class ExprCommand extends SimpleExpression<String> {
 
     @Override
     protected @Nullable String[] get(SkriptEvent event) {
+        // Script command context
+        if (event.handle() instanceof ScriptCommandContext context) {
+            if (fullCommand) {
+                String full = context.commandLabel();
+                if (!context.arguments().isEmpty()) {
+                    full = full + " " + context.arguments();
+                }
+                return new String[]{full};
+            }
+            return new String[]{context.commandLabel()};
+        }
+
         String raw = readCommand(event.handle());
         if (raw == null) {
             return new String[0];

@@ -21,10 +21,10 @@ abstract class LivingEntityArmorChangeMixin {
             return;
         }
         FabricEventCompatHandles.ArmorSlot compatSlot = switch (slot) {
-            case HEAD -> FabricEventCompatHandles.ArmorSlot.HEAD;
-            case CHEST -> FabricEventCompatHandles.ArmorSlot.CHEST;
-            case LEGS -> FabricEventCompatHandles.ArmorSlot.LEGS;
-            case FEET -> FabricEventCompatHandles.ArmorSlot.FEET;
+            case HEAD -> FabricEventCompatHandles.ArmorSlot.HELMET;
+            case CHEST -> FabricEventCompatHandles.ArmorSlot.CHESTPLATE;
+            case LEGS -> FabricEventCompatHandles.ArmorSlot.LEGGINGS;
+            case FEET -> FabricEventCompatHandles.ArmorSlot.BOOTS;
             default -> null;
         };
         if (compatSlot == null) {

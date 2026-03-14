@@ -30,9 +30,11 @@ public final class SimpleEvents {
         EvtFirework.register();
         EvtGameMode.register();
         EvtGrow.register();
+        EvtHandItemSwap.register();
         EvtHarvestBlock.register();
         EvtHealing.register();
         EvtItem.register();
+        EvtJump.register();
         EvtLeash.register();
         EvtMove.register();
         EvtMoveOn.register();

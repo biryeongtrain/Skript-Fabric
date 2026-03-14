@@ -1,7 +1,7 @@
 # Implemented Syntax Inventory
 
-Last condensed: 2026-03-11
-Last full verification: 2026-03-11
+Last condensed: 2026-03-14
+Last full verification: 2026-03-14
 
 This is a maintenance summary of the active Fabric runtime surface. It is not a parity claim.
 
@@ -9,9 +9,10 @@ This is a maintenance summary of the active Fabric runtime surface. It is not a 
 
 - Source ports complete:
   - conditions: `28 / 28`
-  - expressions: `84 / 84`
+  - expressions: `85 / 85`
   - effects: `24 / 24`
-- Verified Fabric GameTests: `230 / 230`
+  - sections: `9 / 9`
+- Verified Fabric GameTests: `340 / 340`
 - Recent narrow closure:
   - legacy `parseStatic` flags
   - explicit-literal-only `Classes.getPatternInfos(...)`
@@ -42,6 +43,10 @@ This is a maintenance summary of the active Fabric runtime surface. It is not a 
 - brewing complete
 - brewing fuel
 - entity potion effect
+- connect
+- join / login
+- kick
+- quit / disconnect / leave
 - fishing
 - loot generate
 - player input
@@ -61,6 +66,17 @@ This is a maintenance summary of the active Fabric runtime surface. It is not a 
 - section fallback diagnostics
 - plain-effect section ownership
 - list-variable reindexing and natural numeric ordering
+- `SecFilter` — filter variable lists with conditions (match any/all)
+- `SecFor` — for-each loop with key/value variable extraction
+- `ExprTransform` — list transformation/mapping with input expressions
+- `ExprValueWithin` — extract typed values from lists/variables
+- `SecCatchErrors` — catch runtime errors section with `ExprCaughtErrors`
+- `SecWhile` — while/do-while loop section
+- `ExprSecCreateWorldBorder` — virtual world border creation section expression
+- `EffSecSpawn` — entity spawning with optional section for pre-spawn configuration
+- `EffSecShoot` — projectile/entity shooting with optional section
+- `RuntimeErrorManager` — full runtime error producer/consumer/filter/frame infrastructure
+- `EntityData.spawn()` — Fabric-native entity spawning from EntityData
 
 ## Recent User-Visible Families Already Landed
 
