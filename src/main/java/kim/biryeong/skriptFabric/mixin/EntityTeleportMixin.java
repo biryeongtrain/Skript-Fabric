@@ -1,10 +1,12 @@
 package kim.biryeong.skriptFabric.mixin;
 
+import ch.njol.skript.events.TeleportCause;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
+import org.skriptlang.skript.fabric.runtime.TeleportCauseCapture;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -44,7 +46,8 @@ abstract class EntityTeleportMixin {
         if (fromPosition.equals(toPosition)) {
             return;
         }
-        SkriptFabricEventBridge.dispatchTeleport(self, fromLevel, fromPosition, toPosition);
+        TeleportCause cause = TeleportCauseCapture.getOrDefault(TeleportCause.UNKNOWN);
+        SkriptFabricEventBridge.dispatchTeleport(self, fromLevel, fromPosition, toPosition, cause);
     }
 
     @Redirect(

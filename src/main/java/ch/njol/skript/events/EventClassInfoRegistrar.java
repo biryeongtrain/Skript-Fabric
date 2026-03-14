@@ -21,6 +21,8 @@ final class EventClassInfoRegistrar {
         registerEnum(FabricEventCompatHandles.WeatherType.class, "weathertype", "weather types");
         registerEnum(FabricEventCompatHandles.ArmorSlot.class, "armorslot", "armor slots");
         registerEnum(FabricEventCompatHandles.ResourcePackState.class, "resourcepackstate", "resource pack states");
+        registerEnum(SpawnReason.class, "spawnreason", "spawn reasons");
+        registerEnum(TeleportCause.class, "teleportcause", "teleport causes");
         registered = true;
     }
 

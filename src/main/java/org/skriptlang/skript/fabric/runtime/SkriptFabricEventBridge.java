@@ -261,8 +261,11 @@ public final class SkriptFabricEventBridge {
 
     private static void dispatchEntityLoad(Entity entity, ServerLevel level) {
         if (!(entity instanceof net.minecraft.world.entity.player.Player)) {
+            net.minecraft.world.entity.EntitySpawnReason captured = SpawnReasonCapture.consume();
+            ch.njol.skript.events.SpawnReason reason = captured != null
+                    ? ch.njol.skript.events.SpawnReason.fromMinecraft(captured) : null;
             SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                    new FabricEventCompatHandles.EntityLifecycle(entity, true),
+                    new FabricEventCompatHandles.EntityLifecycle(entity, true, reason),
                     level.getServer(),
                     level,
                     entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
@@ -293,7 +296,7 @@ public final class SkriptFabricEventBridge {
             return;
         }
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.EntityLifecycle(entity, false),
+                new FabricEventCompatHandles.EntityLifecycle(entity, false, null),
                 serverLevel.getServer(),
                 serverLevel,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
@@ -1273,12 +1276,13 @@ public final class SkriptFabricEventBridge {
         }
     }
 
-    public static void dispatchTeleport(Entity entity, ServerLevel level, Vec3 fromPosition, Vec3 toPosition) {
+    public static void dispatchTeleport(Entity entity, ServerLevel level, Vec3 fromPosition, Vec3 toPosition, @Nullable ch.njol.skript.events.TeleportCause cause) {
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 FabricPlayerEventHandles.teleport(
                         entity,
                         new FabricLocation(level, fromPosition),
-                        new FabricLocation(level, toPosition)
+                        new FabricLocation(level, toPosition),
+                        cause
                 ),
                 level.getServer(),
                 level,

@@ -1101,9 +1101,11 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprSourceBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpeed.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawn.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSpawnReason.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpawnerType.class);
         forceInitialize(ch.njol.skript.expressions.ExprScripts.class);
         forceInitialize(ch.njol.skript.expressions.ExprScriptsOld.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTeleportCause.class);
         forceInitialize(ch.njol.skript.expressions.ExprTamer.class);
         forceInitialize(ch.njol.skript.expressions.ExprTargetedBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprTimeState.class);
@@ -1131,6 +1133,16 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprTransform.class);
         forceInitialize(ch.njol.skript.expressions.ExprValueWithin.class);
         forceInitialize(ch.njol.skript.expressions.ExprCaughtErrors.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSentCommands.class);
+        forceInitialize(ch.njol.skript.expressions.ExprOnScreenKickMessage.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTablistName.class);
+        forceInitialize(ch.njol.skript.expressions.ExprPlayerlistHeaderFooter.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntityStorageEntityCount.class);
+        forceInitialize(ch.njol.skript.expressions.ExprPlayerChatCompletions.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHiddenPlayers.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMessage.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSpectatorTarget.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTablistedPlayers.class);
     }
 
     private static void initializeRecoveredExpressionBundle() {

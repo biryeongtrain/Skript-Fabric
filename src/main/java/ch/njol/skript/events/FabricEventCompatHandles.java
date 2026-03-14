@@ -158,7 +158,7 @@ public final class FabricEventCompatHandles {
         }
     }
 
-    public record EntityLifecycle(Entity entity, boolean spawn) implements FabricEntityEventHandle {
+    public record EntityLifecycle(Entity entity, boolean spawn, @Nullable SpawnReason spawnReason) implements FabricEntityEventHandle {
     }
 
     public record EntityBlockChange(ServerLevel level, BlockPos position, Entity entity, @Nullable BlockState from, @Nullable BlockState to)

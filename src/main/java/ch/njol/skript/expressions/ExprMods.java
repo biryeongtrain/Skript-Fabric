@@ -16,11 +16,15 @@ public class ExprMods extends SimpleExpression<String> {
         Skript.registerExpression(
                 ExprMods.class,
                 String.class,
-                "[(all [[of] the]|the)] [loaded] mod[s] [ids]");
+                "[(all [[of] the]|the)] [loaded] mod[s] [ids]",
+                "[(all [[of] the]|the)] [loaded] plugins");
     }
+
+    private boolean pluginsPattern;
 
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        pluginsPattern = matchedPattern == 1;
         return true;
     }
 
@@ -43,6 +47,6 @@ public class ExprMods extends SimpleExpression<String> {
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
-        return "loaded mod ids";
+        return pluginsPattern ? "loaded plugins" : "loaded mod ids";
     }
 }

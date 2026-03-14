@@ -55,6 +55,7 @@ final class FabricEffectEventHandles {
         private final LivingEntity entity;
         private final List<ItemStack> drops;
         private int droppedExp;
+        private @Nullable net.minecraft.network.chat.Component deathMessage;
 
         EntityDeath(LivingEntity entity) {
             this(entity, new ArrayList<>(), 0);
@@ -64,6 +65,7 @@ final class FabricEffectEventHandles {
             this.entity = entity;
             this.drops = drops;
             this.droppedExp = droppedExp;
+            this.deathMessage = entity.getCombatTracker().getDeathMessage();
         }
 
         @Override
@@ -81,6 +83,14 @@ final class FabricEffectEventHandles {
 
         public void setDroppedExp(int droppedExp) {
             this.droppedExp = droppedExp;
+        }
+
+        public @Nullable net.minecraft.network.chat.Component deathMessage() {
+            return deathMessage;
+        }
+
+        public void setDeathMessage(@Nullable net.minecraft.network.chat.Component deathMessage) {
+            this.deathMessage = deathMessage;
         }
     }
 

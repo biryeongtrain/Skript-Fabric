@@ -54,9 +54,10 @@ public final class FabricPlayerEventHandles {
     public static Object teleport(
             Entity entity,
             @Nullable FabricLocation from,
-            @Nullable FabricLocation to
+            @Nullable FabricLocation to,
+            @Nullable TeleportCause cause
     ) {
-        return new Teleport(entity, from, to);
+        return new Teleport(entity, from, to, cause);
     }
 
     public static Object experienceChange(ServerPlayer player, int amount) {
@@ -101,7 +102,7 @@ public final class FabricPlayerEventHandles {
         }
     }
 
-    record Spectate(
+    public record Spectate(
             SpectateAction action,
             @Nullable Entity currentTarget,
             @Nullable Entity newTarget
@@ -114,10 +115,11 @@ public final class FabricPlayerEventHandles {
         STOP
     }
 
-    record Teleport(
+    public record Teleport(
             Entity entity,
             @Nullable FabricLocation from,
-            @Nullable FabricLocation to
+            @Nullable FabricLocation to,
+            @Nullable TeleportCause cause
     ) implements FabricEntityEventHandle {
     }
 
@@ -140,15 +142,52 @@ public final class FabricPlayerEventHandles {
         return new Quit();
     }
 
-    record Join() {
+    static final class Join {
+        private @Nullable net.minecraft.network.chat.Component message;
+
+        Join() {
+        }
+
+        public @Nullable net.minecraft.network.chat.Component message() {
+            return message;
+        }
+
+        public void setMessage(@Nullable net.minecraft.network.chat.Component message) {
+            this.message = message;
+        }
     }
 
     record Connect() {
     }
 
-    record Kick(@Nullable net.minecraft.network.chat.Component reason) {
+    static final class Kick {
+        private @Nullable net.minecraft.network.chat.Component reason;
+
+        Kick(@Nullable net.minecraft.network.chat.Component reason) {
+            this.reason = reason;
+        }
+
+        public @Nullable net.minecraft.network.chat.Component reason() {
+            return reason;
+        }
+
+        public void setReason(@Nullable net.minecraft.network.chat.Component reason) {
+            this.reason = reason;
+        }
     }
 
-    record Quit() {
+    static final class Quit {
+        private @Nullable net.minecraft.network.chat.Component message;
+
+        Quit() {
+        }
+
+        public @Nullable net.minecraft.network.chat.Component message() {
+            return message;
+        }
+
+        public void setMessage(@Nullable net.minecraft.network.chat.Component message) {
+            this.message = message;
+        }
     }
 }
