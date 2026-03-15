@@ -209,14 +209,10 @@ public class Variable<T> implements Expression<T>, KeyReceiverExpression<T>, Key
                     return new Variable<>(variableString, narrowedTypes, true, isEphemeral, isPlural, null);
                 }
 
-                String expectedTypes = Classes.toString(Arrays.stream(types)
-                        .map(type -> Classes.getSuperClassInfo(type).getCodeName())
-                        .toArray(String[]::new), false);
-                String actualTypes = Classes.toString(hints.stream()
-                        .map(type -> Classes.getSuperClassInfo(type).getCodeName())
-                        .toArray(String[]::new), false);
-                Skript.error("Expected variable '{_" + variableString.toString(null)
-                        + "}' to be " + expectedTypes + ", but it is " + actualTypes);
+                // Type hints don't match the desired types. Return null without logging
+                // an error — during pattern backtracking the parser tries the same variable
+                // in multiple type slots and most attempts are expected to fail. If no parse
+                // path succeeds, the statement-level error will be reported instead.
                 return null;
             }
         }

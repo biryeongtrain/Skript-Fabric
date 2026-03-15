@@ -70,13 +70,17 @@ public final class SkriptLogger {
             }
         }
         Level level = entry.getLevel();
-        String message = entry.getMessage();
+        String formatted = entry.toFormattedString();
         if (level.intValue() >= Level.SEVERE.intValue()) {
-            LOGGER.error(message);
+            for (String line : formatted.split("\n")) {
+                LOGGER.error("[Skript] {}", line);
+            }
         } else if (level.intValue() >= Level.WARNING.intValue()) {
-            LOGGER.warn(message);
+            for (String line : formatted.split("\n")) {
+                LOGGER.warn("[Skript] {}", line);
+            }
         } else {
-            LOGGER.debug(message);
+            LOGGER.debug(formatted);
         }
     }
 

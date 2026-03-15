@@ -46,7 +46,7 @@ public abstract class Effect extends Statement {
 
         EffectSection section = EffectSection.parse(
                 expression,
-                defaultError,
+                null, // Don't pass defaultError — EffectSection failing should be silent
                 sectionNode,
                 allowEffectSectionClaim,
                 triggerItems

@@ -149,6 +149,7 @@ public final class SkriptRuntime {
 
         SectionNode root = parseScript(source, scriptName);
         Config config = new Config(stripExtension(scriptName), fileName, file);
+        root.propagateConfig(config);
         List<Structure> structures = new ArrayList<>();
         Script script = new Script(config, structures);
 

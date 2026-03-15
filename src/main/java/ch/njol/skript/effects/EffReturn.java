@@ -74,33 +74,53 @@ public class EffReturn extends Effect {
         Expression<?> convertedExpr;
         try {
             convertedExpr = exprs[0].getConvertedExpression(returnType);
+            if (convertedExpr == null && exprs[0] instanceof ch.njol.skript.lang.Variable<?> variable
+                    && variable.getReturnType() == Object.class) {
+                // Allow Object-typed variables (e.g. {_none}) in typed return statements.
+                // At runtime the variable may be null (unset), which is valid for early return.
+                convertedExpr = exprs[0];
+            }
             if (convertedExpr == null) {
-                String typeName = Classes.getSuperClassInfo(returnType).getName().withIndefiniteArticle();
-                log.printErrors(handler + " is declared to return " + typeName + ", but " + exprs[0].toString(null, false) + " is not of that type.");
+                // Don't print errors here — let the parsing framework try other syntax elements
+                // (e.g. EffDoIf with "return X if Y") before reporting errors.
+                // Returning false silently allows EffDoIf to handle the statement.
+                log.clear();
                 return false;
             }
-            log.printLog();
+            // Don't propagate intermediate conversion errors — the conversion succeeded
+            // (possibly via Variable bypass) so discard any error-level log entries.
+            log.clear();
         } finally {
             log.stop();
         }
 
         if (handler.isSingleReturnValue() && !convertedExpr.isSingle()) {
             String typeName = Classes.getSuperClassInfo(returnType).getName().getSingular();
+            System.out.println("[DEBUG EffReturn] isSingleReturnValue=" + handler.isSingleReturnValue() + " convertedExpr.isSingle=" + convertedExpr.isSingle() + " for " + exprs[0]);
             Skript.error(handler + " is defined to only return a single " + typeName + ", but this return statement can return multiple values.");
             return false;
         }
         value = convertedExpr;
 
-        List<TriggerSection> innerSections = parser.getSectionsUntil((TriggerSection) handler);
-        innerSections.add(0, (TriggerSection) handler);
-        breakLevels = innerSections.size();
-        if (parser.getCurrentSections().size() < breakLevels) {
+        if (handler instanceof TriggerSection handlerSection) {
+            List<TriggerSection> innerSections = parser.getSectionsUntil(handlerSection);
+            innerSections.add(0, handlerSection);
+            breakLevels = innerSections.size();
+            if (parser.getCurrentSections().size() < breakLevels) {
+                breakLevels = -1;
+            }
+            sectionsToExit = innerSections.stream()
+                    .filter(SectionExitHandler.class::isInstance)
+                    .map(SectionExitHandler.class::cast)
+                    .toList();
+        } else {
+            // Handler is not a TriggerSection (e.g. ScriptFunction) — stop entire trigger
             breakLevels = -1;
+            sectionsToExit = parser.getCurrentSections().stream()
+                    .filter(SectionExitHandler.class::isInstance)
+                    .map(SectionExitHandler.class::cast)
+                    .toList();
         }
-        sectionsToExit = innerSections.stream()
-                .filter(SectionExitHandler.class::isInstance)
-                .map(SectionExitHandler.class::cast)
-                .toList();
         return true;
     }
 
@@ -111,7 +131,10 @@ public class EffReturn extends Effect {
         for (SectionExitHandler section : sectionsToExit) {
             section.exit(event);
         }
-        return ((TriggerSection) handler).getNext();
+        if (handler instanceof TriggerSection handlerSection) {
+            return handlerSection.getNext();
+        }
+        return null;
     }
 
     @Override

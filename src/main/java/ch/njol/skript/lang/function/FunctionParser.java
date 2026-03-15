@@ -168,6 +168,19 @@ public final class FunctionParser {
     }
 
     private static @Nullable ResolvedType resolveType(String rawType) {
+        // Try singularization first to detect plural forms (e.g. "ints" -> "int", plural=true)
+        String singular = singularizeUserInput(rawType);
+        if (singular != null) {
+            ClassInfo<?> singularInfo = Classes.getClassInfoFromUserInput(singular);
+            if (singularInfo == null) {
+                singularInfo = guessClassInfo(singular);
+            }
+            if (singularInfo != null) {
+                return new ResolvedType(singularInfo, true);
+            }
+        }
+
+        // Then try original as-is (singular form)
         ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(rawType);
         if (classInfo == null) {
             classInfo = guessClassInfo(rawType);
@@ -176,19 +189,7 @@ public final class FunctionParser {
             return new ResolvedType(classInfo, false);
         }
 
-        String singular = singularizeUserInput(rawType);
-        if (singular == null) {
-            return null;
-        }
-
-        ClassInfo<?> singularInfo = Classes.getClassInfoFromUserInput(singular);
-        if (singularInfo == null) {
-            singularInfo = guessClassInfo(singular);
-        }
-        if (singularInfo == null) {
-            return null;
-        }
-        return new ResolvedType(singularInfo, true);
+        return null;
     }
 
     private static @Nullable String singularizeUserInput(String rawType) {

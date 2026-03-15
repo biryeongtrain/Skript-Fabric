@@ -38,11 +38,14 @@ public class PropExprSize extends PropertyBaseExpression<ExpressionPropertyHandl
 	public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
 		useProperties = parseResult.hasTag("s") || expressions[0].isSingle();
 		if (useProperties) {
-			return super.init(expressions, matchedPattern, isDelayed, parseResult);
-		} else {
-			this.exprs = PropExprAmount.asExprList(expressions[0]);
-			return LiteralUtils.canInitSafely(this.exprs);
+			if (super.init(expressions, matchedPattern, isDelayed, parseResult)) {
+				return true;
+			}
+			// Fall back to list-length mode if property lookup fails
+			useProperties = false;
 		}
+		this.exprs = PropExprAmount.asExprList(expressions[0]);
+		return LiteralUtils.canInitSafely(this.exprs);
 	}
 
 	@Override

@@ -384,26 +384,39 @@ public class SkriptParser {
                         org.skriptlang.skript.registration.SyntaxRegistry.EXPRESSION
                 );
 
+        // Pass 1: type-specific candidates (expressions whose static return type matches)
         List<SyntaxInfo.Expression<?, ?>> candidates = new ArrayList<>();
+        // Pass 2 fallback: Object-returning expressions (e.g. ExprArithmetic) that may
+        // return a compatible type at runtime but whose static return type is Object.class
+        List<SyntaxInfo.Expression<?, ?>> wildcardCandidates = new ArrayList<>();
         for (SyntaxInfo.Expression<?, ?> info : registered) {
             if (canReturn(info.returnType(), returnTypes)) {
                 candidates.add(info);
+            } else if (info.returnType() == Object.class) {
+                wildcardCandidates.add(info);
             }
         }
-        if (candidates.isEmpty()) {
-            return null;
+
+        if (!candidates.isEmpty()) {
+            Expression<?> expression = (Expression<?>) parseModern(
+                    input, (Iterator) candidates.iterator(), context, null);
+            if (expression != null) {
+                return (Expression<? extends T>) expression;
+            }
         }
 
-        Expression<?> expression = (Expression<?>) parseModern(
-                input,
-                (Iterator) candidates.iterator(),
-                context,
-                null
-        );
-        if (expression == null) {
-            return null;
+        // Fallback: try Object-returning expressions that were excluded by the type filter.
+        // These run AFTER type-specific expressions so they don't steal matches
+        // (e.g. ExprArithmetic matching "event-player" as "event" - "player").
+        if (!wildcardCandidates.isEmpty()) {
+            Expression<?> expression = (Expression<?>) parseModern(
+                    input, (Iterator) wildcardCandidates.iterator(), context, null);
+            if (expression != null) {
+                return (Expression<? extends T>) expression;
+            }
         }
-        return (Expression<? extends T>) expression;
+
+        return null;
     }
 
     @SuppressWarnings("unchecked")

@@ -10,6 +10,8 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.KeyedValue;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import net.minecraft.world.phys.Vec3;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
 import java.text.DecimalFormat;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -375,6 +377,67 @@ public final class DefaultFunctions {
                 } catch (IllegalArgumentException ex) {
                     return null;
                 }
+            }
+        });
+
+        Functions.register(new SimpleJavaFunction<Number>(
+                "clamp",
+                new Parameter[]{
+                        new Parameter<>("value", numberInfo, true, null),
+                        new Parameter<>("min", numberInfo, true, null),
+                        new Parameter<>("max", numberInfo, true, null)
+                },
+                numberInfo,
+                true
+        ) {
+            @Override
+            public Number[] executeSimple(Object[][] params) {
+                double value = ((Number) params[0][0]).doubleValue();
+                double min = ((Number) params[1][0]).doubleValue();
+                double max = ((Number) params[2][0]).doubleValue();
+                return new Number[]{Math.max(min, Math.min(max, value))};
+            }
+        });
+
+        ClassInfo<Vec3> vectorInfo = classInfo(Vec3.class);
+        Functions.register(new SimpleJavaFunction<Vec3>(
+                "vector",
+                new Parameter[]{
+                        new Parameter<>("x", numberInfo, true, null),
+                        new Parameter<>("y", numberInfo, true, null),
+                        new Parameter<>("z", numberInfo, true, null)
+                },
+                vectorInfo,
+                true
+        ) {
+            @Override
+            public Vec3[] executeSimple(Object[][] params) {
+                double x = ((Number) params[0][0]).doubleValue();
+                double y = ((Number) params[1][0]).doubleValue();
+                double z = ((Number) params[2][0]).doubleValue();
+                return new Vec3[]{new Vec3(x, y, z)};
+            }
+        });
+
+        ClassInfo<FabricLocation> locationInfo = classInfo(FabricLocation.class);
+        Functions.register(new SimpleJavaFunction<FabricLocation>(
+                "location",
+                new Parameter[]{
+                        new Parameter<>("x", numberInfo, true, null),
+                        new Parameter<>("y", numberInfo, true, null),
+                        new Parameter<>("z", numberInfo, true, null),
+                        new Parameter<>("yaw", numberInfo, true, new SimpleLiteral<>(0, true)),
+                        new Parameter<>("pitch", numberInfo, true, new SimpleLiteral<>(0, true))
+                },
+                locationInfo,
+                true
+        ) {
+            @Override
+            public FabricLocation[] executeSimple(Object[][] params) {
+                double x = ((Number) params[0][0]).doubleValue();
+                double y = ((Number) params[1][0]).doubleValue();
+                double z = ((Number) params[2][0]).doubleValue();
+                return new FabricLocation[]{new FabricLocation(null, new Vec3(x, y, z))};
             }
         });
     }

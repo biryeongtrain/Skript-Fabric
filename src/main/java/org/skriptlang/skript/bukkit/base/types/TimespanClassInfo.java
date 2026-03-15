@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class TimespanClassInfo {
 
-    private static final Pattern SIMPLE_TIMESPAN = Pattern.compile("^\\s*(\\d+)\\s+([a-zA-Z]+)\\s*$");
+    private static final Pattern SIMPLE_TIMESPAN = Pattern.compile("^\\s*(\\d+(?:\\.\\d+)?)\\s+([a-zA-Z]+)\\s*$");
 
     private TimespanClassInfo() {
     }
@@ -38,9 +38,9 @@ public final class TimespanClassInfo {
             if (!matcher.matches()) {
                 return null;
             }
-            long amount;
+            double amount;
             try {
-                amount = Long.parseLong(matcher.group(1));
+                amount = Double.parseDouble(matcher.group(1));
             } catch (NumberFormatException exception) {
                 return null;
             }
@@ -48,7 +48,7 @@ public final class TimespanClassInfo {
             if (period == null) {
                 return null;
             }
-            return new Timespan(period, amount);
+            return new Timespan(Math.round(amount * period.millis()));
         }
     }
 }

@@ -2,9 +2,12 @@ package ch.njol.skript.expressions;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
+import ch.njol.skript.expressions.arithmetic.ExprArithmetic;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.parser.ParserInstance;
+import ch.njol.skript.lang.parser.ParsingStack;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.log.SkriptLogger;
@@ -23,6 +26,15 @@ public class ExprTimes extends SimpleExpression<Long> {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        // Reject if being parsed as an operand of an arithmetic expression.
+        // Prevents "1440 / {_stepSize} times" from being consumed as "1440 / (ExprTimes)".
+        ParsingStack stack = ParserInstance.get().getParsingStack();
+        for (ParsingStack.Element element : stack) {
+            if (element.getSyntaxElementClass() == ExprArithmetic.class) {
+                return false;
+            }
+        }
+
         end = matchedPattern == 0 ? (Expression<Number>) exprs[0] : new SimpleLiteral<>((long) matchedPattern, false);
 
         if (end instanceof Literal<?> literal) {

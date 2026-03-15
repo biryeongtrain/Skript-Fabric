@@ -125,6 +125,10 @@ public class SectionNode extends Node implements Iterable<Node> {
         nodeMap().put(node);
     }
 
+    public void propagateConfig(Config config) {
+        attachConfig(this, config);
+    }
+
     private static void attachConfig(Node node, @Nullable Config config) {
         node.setConfig(config);
         if (node instanceof SectionNode sectionNode) {

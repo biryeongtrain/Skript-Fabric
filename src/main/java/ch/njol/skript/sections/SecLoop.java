@@ -91,6 +91,10 @@ public class SecLoop extends LoopSection {
             return false;
         }
         Expression<?> recoveredExpression = recoverKnownLoopExpression(expression);
+        if (recoveredExpression == null && parseResult.expr != null && parseResult.expr.length() > 5) {
+            // Try recovering from the raw parse string (handles variable expressions like {_var} - 1)
+            recoveredExpression = recoverFromRawString(parseResult.expr.substring(5).trim());
+        }
         if (recoveredExpression != null) {
             expression = recoveredExpression;
         }
@@ -275,9 +279,12 @@ public class SecLoop extends LoopSection {
             return null;
         }
 
-        Number start = parseLoopNumber(matcher.group(2).trim());
-        Number end = parseLoopNumber(matcher.group(3).trim());
-        if (start == null || end == null) {
+        String startStr = matcher.group(2).trim();
+        String endStr = matcher.group(3).trim();
+
+        Expression<Number> startExpr = parseLoopNumberExpression(startStr);
+        Expression<Number> endExpr = parseLoopNumberExpression(endStr);
+        if (startExpr == null || endExpr == null) {
             return null;
         }
 
@@ -291,10 +298,7 @@ public class SecLoop extends LoopSection {
         ch.njol.skript.lang.SkriptParser.ParseResult parseResult = new ch.njol.skript.lang.SkriptParser.ParseResult();
         parseResult.expr = text;
         if (!numbers.init(
-                new Expression[]{
-                        new SimpleLiteral<>(start, false),
-                        new SimpleLiteral<>(end, false)
-                },
+                new Expression[]{startExpr, endExpr},
                 mode,
                 Kleenean.FALSE,
                 parseResult
@@ -304,11 +308,100 @@ public class SecLoop extends LoopSection {
         return numbers;
     }
 
-    private static @Nullable Number parseLoopNumber(String input) {
-        try {
-            return Double.parseDouble(input.replace("_", ""));
-        } catch (NumberFormatException ignored) {
+    private static @Nullable Expression<?> recoverFromRawString(String rawExpr) {
+        Matcher matcher = EXPR_NUMBERS_PATTERN.matcher(rawExpr);
+        if (!matcher.matches()) {
             return null;
         }
+
+        String startStr = matcher.group(2).trim();
+        String endStr = matcher.group(3).trim();
+
+        // Parse end first to avoid Variable.newInstance side effects on parser state
+        Expression<Number> endExpr = parseLoopNumberExpression(endStr);
+        Expression<Number> startExpr = parseLoopNumberExpression(startStr);
+        if (startExpr == null || endExpr == null) {
+            return null;
+        }
+
+        int mode = switch (matcher.group(1).toLowerCase(java.util.Locale.ENGLISH)) {
+            case "integers" -> 1;
+            case "decimals" -> 2;
+            default -> 0;
+        };
+
+        ExprNumbers numbers = new ExprNumbers();
+        ch.njol.skript.lang.SkriptParser.ParseResult pr = new ch.njol.skript.lang.SkriptParser.ParseResult();
+        pr.expr = rawExpr;
+        boolean initResult = numbers.init(
+                new Expression[]{startExpr, endExpr},
+                mode,
+                Kleenean.FALSE,
+                pr
+        );
+        if (!initResult) {
+            return null;
+        }
+        return numbers;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static @Nullable Expression<Number> parseLoopNumberExpression(String input) {
+        // Try literal number first
+        try {
+            Number number = Double.parseDouble(input.replace("_", ""));
+            return new SimpleLiteral<>(number, false);
+        } catch (NumberFormatException ignored) {
+        }
+        // Try parsing as a Skript expression
+        Expression<?> expr = new ch.njol.skript.lang.SkriptParser(input, ch.njol.skript.lang.SkriptParser.ALL_FLAGS, ch.njol.skript.lang.ParseContext.DEFAULT)
+                .parseExpression(new Class[]{Object.class});
+        // If parse failed or returned a non-Number literal, try stripping outer parens
+        if (input.startsWith("(") && input.endsWith(")")) {
+            boolean shouldTryStripped = (expr == null)
+                    || (!Number.class.isAssignableFrom(expr.getReturnType())
+                        && expr.getReturnType() != Object.class);
+            if (shouldTryStripped) {
+                String stripped = input.substring(1, input.length() - 1).trim();
+                Expression<?> strippedExpr = new ch.njol.skript.lang.SkriptParser(stripped, ch.njol.skript.lang.SkriptParser.ALL_FLAGS, ch.njol.skript.lang.ParseContext.DEFAULT)
+                        .parseExpression(new Class[]{Object.class});
+                if (strippedExpr != null) {
+                    // Only use stripped result if it's better than the original
+                    if (expr == null
+                            || Number.class.isAssignableFrom(strippedExpr.getReturnType())
+                            || strippedExpr.getReturnType() == Object.class
+                            || strippedExpr instanceof ch.njol.skript.expressions.arithmetic.ExprArithmetic) {
+                        expr = strippedExpr;
+                    }
+                }
+            }
+        }
+        if (expr != null) {
+            if (Number.class.isAssignableFrom(expr.getReturnType())) {
+                return (Expression<Number>) expr;
+            }
+            Expression<? extends Number> converted = expr.getConvertedExpression(Number.class);
+            if (converted != null) {
+                return (Expression<Number>) converted;
+            }
+            // Allow Object-typed expressions (variables, arithmetic with variables) that may resolve to Number at runtime
+            if (expr.getReturnType() == Object.class || expr.canReturn(Number.class)) {
+                return (Expression<Number>) expr;
+            }
+            // Allow ExprArithmetic even with non-Number return type (e.g. String from unresolved variable types)
+            // At runtime, variables will contain numbers and arithmetic will operate numerically
+            if (expr instanceof ch.njol.skript.expressions.arithmetic.ExprArithmetic) {
+                return (Expression<Number>) expr;
+            }
+        }
+        // Fallback: try direct variable reference (e.g. {_start})
+        if (input.startsWith("{") && input.endsWith("}")) {
+            String varName = input.substring(1, input.length() - 1);
+            Variable<?> var = Variable.newInstance(varName, new Class[]{Object.class});
+            if (var != null) {
+                return (Expression<Number>) (Expression<?>) var;
+            }
+        }
+        return null;
     }
 }

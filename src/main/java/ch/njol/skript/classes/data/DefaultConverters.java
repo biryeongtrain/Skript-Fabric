@@ -1,6 +1,9 @@
 package ch.njol.skript.classes.data;
 
 import ch.njol.skript.registrations.Converters;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
 
 /**
  * Java-only subset of upstream default converters.
@@ -17,6 +20,15 @@ public final class DefaultConverters {
         registerIfMissing(Number.class, Integer.class, Number::intValue);
         registerIfMissing(Number.class, Long.class, Number::longValue);
         registerIfMissing(Number.class, Short.class, Number::shortValue);
+
+        // Entity → FabricLocation (entity's current position)
+        registerIfMissing(Entity.class, FabricLocation.class,
+                entity -> {
+                    if (entity.level() instanceof ServerLevel serverLevel) {
+                        return new FabricLocation(serverLevel, entity.position());
+                    }
+                    return new FabricLocation(null, entity.position());
+                });
     }
 
     private static <F, T> void registerIfMissing(

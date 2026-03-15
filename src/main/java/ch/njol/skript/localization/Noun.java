@@ -91,12 +91,21 @@ public class Noun extends Message {
 
     public String getIndefiniteArticle() {
         validate();
-        return gender == PLURAL || gender == NO_GENDER ? "" : indefiniteArticles.get(gender);
+        if (gender == PLURAL || gender == NO_GENDER) {
+            return "";
+        }
+        return gender >= 0 && gender < indefiniteArticles.size() ? indefiniteArticles.get(gender) : "";
     }
 
     public String getDefiniteArticle() {
         validate();
-        return gender == PLURAL ? definitePluralArticle : gender == NO_GENDER ? "" : definiteArticles.get(gender);
+        if (gender == PLURAL) {
+            return definitePluralArticle;
+        }
+        if (gender == NO_GENDER) {
+            return "";
+        }
+        return gender >= 0 && gender < definiteArticles.size() ? definiteArticles.get(gender) : "";
     }
 
     public int getGender() {
@@ -115,10 +124,12 @@ public class Noun extends Message {
             return "";
         }
         if ((flags & Language.F_DEFINITE_ARTICLE) != 0) {
-            return definiteArticles.get(gender) + " ";
+            return gender >= 0 && gender < definiteArticles.size()
+                    ? definiteArticles.get(gender) + " " : "";
         }
         if ((flags & Language.F_INDEFINITE_ARTICLE) != 0) {
-            return indefiniteArticles.get(gender) + " ";
+            return gender >= 0 && gender < indefiniteArticles.size()
+                    ? indefiniteArticles.get(gender) + " " : "";
         }
         return "";
     }

@@ -1,11 +1,17 @@
 package kim.biryeong.skriptFabricPort.gametest;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.expressions.ExprTimes;
+import ch.njol.skript.expressions.arithmetic.ExprArithmetic;
+import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Literal;
+import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.common.AnyValued;
 import ch.njol.skript.variables.Variables;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
@@ -117,6 +123,70 @@ public final class SkriptFabricExpressionParsingAndArgumentsGameTest extends Abs
             Variables.clearAll();
             VALUE_FIXTURE.changeValue("alpha");
         });
+    }
+
+    /**
+     * Verifies that "10 / 2 times" parses as ExprTimes wrapping arithmetic (not ExprArithmetic consuming "2 times").
+     * This is the literal-only version of the "loop 1440 / {_stepSize} times" pattern.
+     */
+    @GameTest
+    @SuppressWarnings("unchecked")
+    public void arithmeticDivisionTimesParsesAsExprTimes(GameTestHelper helper) {
+        // "10 / 2 times" with Object.class (SecLoop's %objects% slot)
+        Expression<?> timesExpr = new SkriptParser("10 / 2 times", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{Object.class});
+        helper.assertTrue(
+                timesExpr instanceof ExprTimes,
+                Component.literal("Expected ExprTimes but got " + (timesExpr == null ? "null" : timesExpr.getClass().getSimpleName()))
+        );
+        helper.assertTrue(
+                !timesExpr.isSingle(),
+                Component.literal("Expected non-single expression for times")
+        );
+        Long[] values = ((ExprTimes) timesExpr).getArray(SkriptEvent.EMPTY);
+        Long[] expected = {1L, 2L, 3L, 4L, 5L};
+        helper.assertTrue(
+                Arrays.equals(expected, values),
+                Component.literal("Expected " + Arrays.toString(expected) + " but got " + Arrays.toString(values))
+        );
+
+        // Standalone arithmetic still works
+        Expression<?> arithExpr = new SkriptParser("10 / 2", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                .parseExpression(new Class[]{Object.class});
+        helper.assertTrue(
+                arithExpr instanceof ExprArithmetic,
+                Component.literal("Expected ExprArithmetic but got " + (arithExpr == null ? "null" : arithExpr.getClass().getSimpleName()))
+        );
+
+        helper.succeed();
+    }
+
+    /**
+     * Verifies that "event-player" is NOT consumed by ExprArithmetic as "event" - "player".
+     * The 2-pass approach in parseRegisteredExpression ensures type-specific expressions
+     * (like ExprEventPlayer) are tried before Object-returning wildcard expressions (like ExprArithmetic).
+     */
+    @GameTest
+    @SuppressWarnings("unchecked")
+    public void eventPlayerIsNotParsedAsArithmetic(GameTestHelper helper) {
+        ch.njol.skript.lang.parser.ParserInstance parser = ch.njol.skript.lang.parser.ParserInstance.get();
+        parser.setCurrentEvent("gametest", net.minecraft.server.level.ServerPlayer.class);
+        try {
+            Expression<?> expr = new SkriptParser("event-player", SkriptParser.ALL_FLAGS, ParseContext.DEFAULT)
+                    .parseExpression(new Class[]{Object.class});
+            helper.assertTrue(
+                    expr != null,
+                    Component.literal("Expected event-player to parse but got null")
+            );
+            helper.assertTrue(
+                    !(expr instanceof ExprArithmetic),
+                    Component.literal("event-player must NOT be parsed as ExprArithmetic, but got " + expr.getClass().getSimpleName())
+            );
+        } finally {
+            parser.deleteCurrentEvent();
+        }
+
+        helper.succeed();
     }
 
     private static void ensureSupportRegistered() {

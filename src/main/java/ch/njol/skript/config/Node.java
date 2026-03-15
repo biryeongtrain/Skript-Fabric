@@ -60,7 +60,7 @@ public class Node implements NodeNavigator {
         return config;
     }
 
-    void setConfig(Config config) {
+    public void setConfig(Config config) {
         this.config = config;
     }
 

@@ -25,21 +25,82 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public final class CondCompare extends Condition {
 
+    // Pattern indices:
+    // 0: %objects% (is|are) (greater|more|higher|bigger|larger) than %objects%
+    // 1: %objects% > %objects%
+    // 2: %objects% (is|are) (greater|more|higher|bigger|larger) than or equal to %objects%
+    // 3: %objects% >= %objects%
+    // 4: %objects% (is|are) (less|smaller|lower) than %objects%
+    // 5: %objects% < %objects%
+    // 6: %objects% (is|are) (less|smaller|lower) than or equal to %objects%
+    // 7: %objects% <= %objects%
+    // 8: %objects% (is|are) %objects%
+    // 9: %objects% (isn't|is not|aren't|are not) %objects%
+    // 10: %objects% is between %objects% and %objects%
+    // 11: %objects% is not between %objects% and %objects%
+
     private Expression<?> left;
     private Expression<?> right;
+    private @Nullable Expression<?> third;
+    private Relation relation;
+    private boolean isBetween;
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        if (expressions.length != 2) {
-            return false;
-        }
         Class<?> leftReturnType = expressions[0].getReturnType();
         if (leftReturnType != Object.class && Entity.class.isAssignableFrom(leftReturnType)) {
             return false;
         }
         left = expressions[0];
         right = expressions[1];
-        setNegated(matchedPattern > 0);
+
+        switch (matchedPattern) {
+            case 0, 1 -> {
+                relation = Relation.GREATER;
+                if (expressions.length != 2) return false;
+            }
+            case 2, 3 -> {
+                relation = Relation.GREATER_OR_EQUAL;
+                if (expressions.length != 2) return false;
+            }
+            case 4, 5 -> {
+                relation = Relation.SMALLER;
+                if (expressions.length != 2) return false;
+            }
+            case 6, 7 -> {
+                relation = Relation.SMALLER_OR_EQUAL;
+                if (expressions.length != 2) return false;
+            }
+            case 8 -> {
+                relation = Relation.EQUAL;
+                if (expressions.length != 2) return false;
+            }
+            case 9 -> {
+                relation = Relation.NOT_EQUAL;
+                if (expressions.length != 2) return false;
+            }
+            case 10 -> {
+                relation = Relation.EQUAL; // placeholder, between uses custom logic
+                isBetween = true;
+                if (expressions.length != 3) return false;
+                third = expressions[2];
+            }
+            case 11 -> {
+                relation = Relation.EQUAL;
+                isBetween = true;
+                setNegated(true);
+                if (expressions.length != 3) return false;
+                third = expressions[2];
+            }
+            default -> {
+                return false;
+            }
+        }
+
+        if (matchedPattern == 9 || matchedPattern == 11) {
+            setNegated(true);
+        }
+
         return true;
     }
 
@@ -47,24 +108,46 @@ public final class CondCompare extends Condition {
     public boolean check(SkriptEvent event) {
         Object[] leftValues = left.getAll(event);
         Object[] rightValues = right.getAll(event);
-        boolean equal = false;
+
+        if (isBetween) {
+            Object[] thirdValues = third != null ? third.getAll(event) : new Object[0];
+            boolean result = false;
+            for (Object leftValue : leftValues) {
+                for (Object rightValue : rightValues) {
+                    for (Object thirdValue : thirdValues) {
+                        Relation lowerBound = compare(leftValue, rightValue);
+                        Relation upperBound = compare(leftValue, thirdValue);
+                        if (Relation.GREATER_OR_EQUAL.isImpliedBy(lowerBound)
+                                && Relation.SMALLER_OR_EQUAL.isImpliedBy(upperBound)) {
+                            result = true;
+                            break;
+                        }
+                    }
+                    if (result) break;
+                }
+                if (result) break;
+            }
+            return isNegated() ? !result : result;
+        }
+
+        boolean matched = false;
         for (Object leftValue : leftValues) {
             for (Object rightValue : rightValues) {
-                if (compare(leftValue, rightValue) == Relation.EQUAL) {
-                    equal = true;
+                Relation cmp = compare(leftValue, rightValue);
+                if (relation.isImpliedBy(cmp)) {
+                    matched = true;
                     break;
                 }
             }
-            if (equal) {
-                break;
-            }
+            if (matched) break;
         }
-        return isNegated() ? !equal : equal;
+        return matched;
     }
 
     private Relation compare(@Nullable Object leftValue, @Nullable Object rightValue) {
         if (leftValue instanceof Number leftNumber && rightValue instanceof Number rightNumber) {
-            return Relation.get(Double.compare(leftNumber.doubleValue(), rightNumber.doubleValue()) == 0);
+            int cmp = Double.compare(leftNumber.doubleValue(), rightNumber.doubleValue());
+            return Relation.get(cmp);
         }
         if (leftValue instanceof Number leftNumber && rightValue instanceof String rightString) {
             return Relation.get(matchesNumericAlias(leftNumber, rightString));
@@ -292,7 +375,19 @@ public final class CondCompare extends Condition {
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
-        String operator = isNegated() ? " is not " : " is ";
+        if (isBetween) {
+            String prefix = isNegated() ? " is not between " : " is between ";
+            return left.toString(event, debug) + prefix + right.toString(event, debug)
+                    + " and " + (third != null ? third.toString(event, debug) : "?");
+        }
+        String operator = switch (relation) {
+            case GREATER -> " is greater than ";
+            case GREATER_OR_EQUAL -> " is greater than or equal to ";
+            case SMALLER -> " is less than ";
+            case SMALLER_OR_EQUAL -> " is less than or equal to ";
+            case NOT_EQUAL -> " is not ";
+            default -> " is ";
+        };
         return left.toString(event, debug) + operator + right.toString(event, debug);
     }
 }

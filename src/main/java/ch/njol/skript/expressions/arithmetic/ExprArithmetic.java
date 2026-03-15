@@ -227,11 +227,11 @@ public class ExprArithmetic<L, R, T> extends SimpleExpression<T> {
 	}
 
 	private boolean error(Class<?> firstClass, Class<?> secondClass) {
-		ClassInfo<?> first = Classes.getSuperClassInfo(firstClass), second = Classes.getSuperClassInfo(secondClass);
-		if (first.getC() != Object.class && second.getC() != Object.class)
-			Skript.error(operator.getName() + " can't be performed on " +
-				first.getName().withIndefiniteArticle() + " and " +
-				second.getName().withIndefiniteArticle());
+		// Errors are intentionally not logged here. During expression parsing, the parser
+		// tries multiple operator splits (e.g. subtraction on "loop-iteration-2") and most
+		// fail. Logging Skript.error() for each failure produces confusing noise even when
+		// the expression eventually parses via a different operator. The statement-level
+		// ParseLogHandler will report the appropriate error if nothing parses at all.
 		return false;
 	}
 

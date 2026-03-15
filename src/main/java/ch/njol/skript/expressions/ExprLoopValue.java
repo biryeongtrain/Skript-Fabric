@@ -49,7 +49,7 @@ public class ExprLoopValue extends SimpleExpression<Object> {
     static {
         String[] patterns = new String[LOOP_STATES.length];
         for (LoopState state : LOOP_STATES) {
-            patterns[state.ordinal()] = "[the] " + state.pattern + " loop-<.+>";
+            patterns[state.ordinal()] = "[the] " + state.pattern + " loop-<[\\w-]+>";
         }
         Skript.registerExpression(ExprLoopValue.class, Object.class, patterns);
     }

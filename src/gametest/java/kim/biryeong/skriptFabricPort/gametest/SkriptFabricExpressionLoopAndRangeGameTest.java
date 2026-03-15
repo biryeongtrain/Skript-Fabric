@@ -52,6 +52,43 @@ public final class SkriptFabricExpressionLoopAndRangeGameTest extends AbstractSk
         });
     }
 
+    /**
+     * Verifies that loop-iteration-1 and loop-iteration-2 correctly reference
+     * the outer and inner loops respectively in a nested loop structure.
+     */
+    @GameTest
+    public void nestedLoopIterationReferencesCorrectLoop(GameTestHelper helper) {
+        ensureSupportRegistered();
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            runtime.loadFromResource("skript/gametest/expression/loop-and-range/nested_loop_iteration_record_values.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(4, 1, 0));
+            int executed = dispatch(runtime, helper, new LoopAndRangeHandle());
+            assertExecuted(helper, executed, "nested loop iteration");
+
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(net.minecraft.world.level.block.Blocks.EMERALD_BLOCK),
+                    Component.literal("Expected nested loop iteration fixture to mark the verification block.")
+            );
+            Object outer = Variables.getVariable("looprange::nested::outer", null, false);
+            helper.assertTrue(
+                    outer instanceof Number n && n.longValue() == 2,
+                    Component.literal("Expected loop-iteration-1 to be 2 but got " + outer)
+            );
+            Object inner = Variables.getVariable("looprange::nested::inner", null, false);
+            helper.assertTrue(
+                    inner instanceof Number n && n.longValue() == 1,
+                    Component.literal("Expected loop-iteration-2 to be 1 but got " + inner)
+            );
+
+            runtime.clearScripts();
+            Variables.clearAll();
+        });
+    }
+
     private static void ensureSupportRegistered() {
         if (!SUPPORT_REGISTERED.compareAndSet(false, true)) {
             return;
