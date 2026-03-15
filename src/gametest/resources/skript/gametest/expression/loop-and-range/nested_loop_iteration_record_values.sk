@@ -1,0 +1,10 @@
+on gametest loop and range context:
+    loop 3 times:
+        loop 2 times:
+            if loop-iteration-1 is 2:
+                if loop-iteration-2 is 1:
+                    set {looprange::nested::outer} to loop-iteration-1
+                    set {looprange::nested::inner} to loop-iteration-2
+    if {looprange::nested::outer} is 2:
+        if {looprange::nested::inner} is 1:
+            set test block at 4 1 0 to emerald_block

@@ -24,6 +24,11 @@ public final class SkriptRuntimeLifecycle {
         try {
             SkriptScriptOperationResult result = scriptService.loadAll();
             logger.info("Loaded {} Skript script(s) from {}", result.affectedFiles(), scriptService.root());
+            if (!result.errors().isEmpty()) {
+                for (var entry : result.errors().entrySet()) {
+                    logger.error("Failed to load script '{}': {}", entry.getKey(), entry.getValue());
+                }
+            }
         } catch (Exception exception) {
             logger.error("Failed to load Skript scripts from {}", scriptService.root(), exception);
         }

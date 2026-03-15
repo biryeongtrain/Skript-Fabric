@@ -517,6 +517,65 @@ public final class SkriptFabricEventBridge {
         );
     }
 
+    public static void dispatchEnchantPrepare(
+            ServerLevel level,
+            ServerPlayer player,
+            ItemStack item,
+            int enchantmentBonus,
+            @Nullable java.util.List<net.minecraft.world.item.enchantment.EnchantmentInstance> offers
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EnchantPrepare(item.copy(), enchantmentBonus, offers),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchEnchantApply(
+            ServerLevel level,
+            ServerPlayer player,
+            ItemStack item,
+            java.util.List<net.minecraft.world.item.enchantment.EnchantmentInstance> enchantments,
+            int cost
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EnchantApply(item.copy(), enchantments, cost),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchMending(
+            ServerLevel level,
+            LivingEntity entity,
+            ItemStack item,
+            int repairAmount,
+            @Nullable ExperienceOrb experienceOrb
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Mending(entity, item.copy(), repairAmount, experienceOrb),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
+        ));
+    }
+
+    public static void dispatchChat(
+            ServerLevel level,
+            ServerPlayer player,
+            String message,
+            @Nullable java.util.List<ServerPlayer> recipients
+    ) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Chat(message, recipients),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
     public static void dispatchInventoryClick(ServerPlayer player, ItemStack clickedStack) {
         if (clickedStack.isEmpty()) {
             return;

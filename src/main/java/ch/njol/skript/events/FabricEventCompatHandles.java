@@ -1,12 +1,18 @@
 package ch.njol.skript.events;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import java.util.List;
 import java.util.Set;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
@@ -281,5 +287,45 @@ public final class FabricEventCompatHandles {
         return effect.unwrapKey()
                 .map(key -> key.location().getPath())
                 .orElseGet(() -> BuiltInRegistries.MOB_EFFECT.getKey(effect.value()).getPath());
+    }
+
+    public record EnchantPrepare(
+            ItemStack item,
+            int enchantmentBonus,
+            @Nullable List<EnchantmentInstance> offers
+    ) implements FabricItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return item;
+        }
+    }
+
+    public record EnchantApply(
+            ItemStack item,
+            List<EnchantmentInstance> enchantments,
+            int cost
+    ) implements FabricItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return item;
+        }
+    }
+
+    public record Mending(
+            LivingEntity entity,
+            ItemStack item,
+            int repairAmount,
+            @Nullable ExperienceOrb experienceOrb
+    ) implements FabricEntityEventHandle, FabricItemEventHandle {
+        @Override
+        public ItemStack itemStack() {
+            return item;
+        }
+    }
+
+    public record Chat(
+            String message,
+            @Nullable List<ServerPlayer> recipients
+    ) {
     }
 }

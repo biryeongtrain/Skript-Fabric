@@ -134,6 +134,7 @@ import org.skriptlang.skript.bukkit.base.types.PlayerClassInfo;
 import org.skriptlang.skript.bukkit.base.types.QuaternionClassInfo;
 import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
 import org.skriptlang.skript.bukkit.base.types.TimespanClassInfo;
+import org.skriptlang.skript.bukkit.base.types.ParticleClassInfo;
 import org.skriptlang.skript.bukkit.base.types.VectorClassInfo;
 import org.skriptlang.skript.bukkit.base.types.WorldClassInfo;
 import org.skriptlang.skript.fabric.SkriptFabric;
@@ -209,6 +210,9 @@ public final class SkriptFabricBootstrap {
                 ch.njol.skript.sections.ExprSecCreateWorldBorder.register();
                 ch.njol.skript.sections.EffSecSpawn.register();
                 ch.njol.skript.sections.EffSecShoot.register();
+                ch.njol.skript.sections.SecCreateGui.register();
+                ch.njol.skript.effects.EffFormatGuiSlot.register();
+                ch.njol.skript.effects.EffOpenLastGui.register();
                 if (!hasCoreProperties()) {
                     Property.registerDefaultProperties();
                 }
@@ -444,8 +448,30 @@ public final class SkriptFabricBootstrap {
                 );
                 Skript.registerCondition(
                         CondCompare.class,
+                        // 0: GREATER
+                        "%objects% (is|are) (greater|more|higher|bigger|larger) than %objects%",
+                        // 1: GREATER (operator)
+                        "%objects% \\> %objects%",
+                        // 2: GREATER_OR_EQUAL
+                        "%objects% (is|are) (greater|more|higher|bigger|larger) than or equal to %objects%",
+                        // 3: GREATER_OR_EQUAL (operator)
+                        "%objects% \\>= %objects%",
+                        // 4: SMALLER
+                        "%objects% (is|are) (less|smaller|lower) than %objects%",
+                        // 5: SMALLER (operator)
+                        "%objects% \\< %objects%",
+                        // 6: SMALLER_OR_EQUAL
+                        "%objects% (is|are) (less|smaller|lower) than or equal to %objects%",
+                        // 7: SMALLER_OR_EQUAL (operator)
+                        "%objects% \\<= %objects%",
+                        // 8: EQUAL
                         "%objects% (is|are) %objects%",
-                        "%objects% (isn't|is not|aren't|are not) %objects%"
+                        // 9: NOT_EQUAL
+                        "%objects% (isn't|is not|aren't|are not) %objects%",
+                        // 10: BETWEEN
+                        "%objects% is between %objects% and %objects%",
+                        // 11: NOT BETWEEN
+                        "%objects% is not between %objects% and %objects%"
                 );
                 Skript.registerEvent(EvtFabricBlockBreak.class, "on block break");
                 Skript.registerEvent(EvtAttackEntity.class, "on attack entity");
@@ -772,7 +798,9 @@ public final class SkriptFabricBootstrap {
                         "event-player",
                         "event player",
                         "the event-player",
-                        "the event player"
+                        "the event player",
+                        "player",
+                        "the player"
                 );
                 Skript.registerExpression(
                         ExprEventEntity.class,
@@ -803,13 +831,13 @@ public final class SkriptFabricBootstrap {
                         String.class,
                         "[a|%-integer%] random [:alphanumeric] character[s] (from|between) %string% (to|and) %string%"
                 );
-                Skript.registerExpression(
-                        ExprTimes.class,
-                        Long.class,
-                        "%number% time[s]",
-                        "once",
-                        "twice",
-                        "thrice"
+                Skript.instance().syntaxRegistry().register(
+                        SyntaxRegistry.EXPRESSION,
+                        SyntaxInfo.Expression.<ExprTimes, Long>builder(ExprTimes.class, Long.class)
+                                .patterns("%number% time[s]", "once", "twice", "thrice")
+                                .originClassPath(ExprTimes.class.getName())
+                                .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                                .build()
                 );
                 initializeRecoveredSyntaxCoreExpressionBundle();
                 initializeRecoveredExpressionBundle();
@@ -926,11 +954,16 @@ public final class SkriptFabricBootstrap {
                         "reset %object%",
                         "delete %object%"
                 );
+                ch.njol.skript.classes.data.DefaultOperations.register();
                 ExprArithmetic.registerExpression();
+                ch.njol.skript.classes.data.DefaultFunctions.register();
                 registerRecoveredEffectBundle();
             } finally {
                 Skript.setAcceptRegistrations(false);
             }
+
+            ch.njol.skript.classes.data.DefaultComparators.register();
+            ch.njol.skript.classes.data.DefaultConverters.register();
 
             bootstrapped = true;
             SkriptFabric.LOGGER.info("Initialized minimal Skript Fabric runtime bootstrap.");
@@ -965,6 +998,7 @@ public final class SkriptFabricBootstrap {
         registerClassInfoIfMissing("block", BlockClassInfo::register);
         registerClassInfoIfMissing("slot", SlotClassInfo::register);
         registerClassInfoIfMissing("vector", VectorClassInfo::register);
+        registerClassInfoIfMissing("particle", ParticleClassInfo::register);
         registerClassInfoIfMissing("equippablecomponent", EquippableComponentClassInfo::register);
     }
 
@@ -1053,6 +1087,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLeashHolder.class);
         forceInitialize(ch.njol.skript.expressions.ExprLevel.class);
         forceInitialize(ch.njol.skript.expressions.ExprLowestHighestSolidBlock.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLoopIteration.class);
         forceInitialize(ch.njol.skript.expressions.ExprLoopValue.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxDurability.class);
         forceInitialize(ch.njol.skript.expressions.ExprMaxHealth.class);
@@ -1118,6 +1153,8 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprVectorDotProduct.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorLength.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorNormalize.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorFromYawAndPitch.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorSpherical.class);
         forceInitialize(ch.njol.skript.expressions.ExprViewDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprWardenAngryAt.class);
         forceInitialize(ch.njol.skript.expressions.ExprWardenEntityAnger.class);
