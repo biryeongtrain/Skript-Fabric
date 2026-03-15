@@ -1,7 +1,7 @@
 # Implemented Syntax Inventory
 
-Last condensed: 2026-03-14
-Last full verification: 2026-03-14
+Last condensed: 2026-03-15
+Last full verification: 2026-03-15
 
 This is a maintenance summary of the active Fabric runtime surface. It is not a parity claim.
 
@@ -12,7 +12,7 @@ This is a maintenance summary of the active Fabric runtime surface. It is not a 
   - expressions: `85 / 85`
   - effects: `24 / 24`
   - sections: `9 / 9`
-- Verified Fabric GameTests: `340 / 340`
+- Verified Fabric GameTests: `371 / 371`
 - Recent narrow closure:
   - legacy `parseStatic` flags
   - explicit-literal-only `Classes.getPatternInfos(...)`
@@ -77,6 +77,26 @@ This is a maintenance summary of the active Fabric runtime surface. It is not a 
 - `EffSecShoot` — projectile/entity shooting with optional section
 - `RuntimeErrorManager` — full runtime error producer/consumer/filter/frame infrastructure
 - `EntityData.spawn()` — Fabric-native entity spawning from EntityData
+
+## Built-in Functions
+
+- **Math**: `floor`, `ceil`/`ceiling`, `round`, `abs`, `mod`, `exp`, `ln`, `log`, `sqrt`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `clamp`
+- **Aggregate**: `sum`, `product`, `max`, `min`
+- **Boolean**: `isNaN`
+- **String**: `concat`, `formatNumber`
+- **Conversion**: `toBase`, `fromBase`, `calcExperience`
+- **Date**: `date`
+- **Spatial**: `vector(x, y, z)`, `location(x, y, z, [yaw], [pitch])`
+
+## Cycle 17 Parsing Fixes
+
+- `ExprLoopValue` regex constrained to `[\\w-]+` (no longer greedily matches arithmetic operators)
+- `ExprArithmetic` error noise suppressed during parsing backtracking
+- `Variable` type-hint mismatch noise suppressed during parsing backtracking
+- `ExprTimes` ParsingStack guard vs ExprArithmetic ambiguity
+- 2-pass `parseRegisteredExpression` (type-specific first, Object-wildcard second)
+- `DefaultOperations`, `DefaultComparators`, `DefaultConverters` registrations added
+- `ExprLoopIteration` forceInitialize added
 
 ## Recent User-Visible Families Already Landed
 

@@ -1,7 +1,7 @@
 # Skript-Fabric Porting Status
 
-Last condensed: 2026-03-14
-Last full verification: 2026-03-14
+Last condensed: 2026-03-15
+Last full verification: 2026-03-15
 
 ## Snapshot
 
@@ -34,7 +34,7 @@ Last full verification: 2026-03-14
   - shortfall: `216`
 - Latest verification:
   - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `340 / 340` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `371 / 371` GameTests green on `main`
 
 ## Active Priority
 
@@ -91,7 +91,20 @@ Last full verification: 2026-03-14
   - runtime bootstrap force-initializes the landed cycle F expression bundles during full GameTest startup
   - cycle F adds targeted compatibility/binding JUnit plus dedicated real `.sk` GameTests for every surviving worker lane
 - Player session events `on join`, `on connect`, `on kick`, `on quit` now landed with full mixin/Fabric API backing, `SkriptTextPlaceholders` Skript expression resolution, and `PlayerClassInfo` Parser for proper player name display
-- Landed with targeted Minecraft GameTest; current full suite completes `340 / 340` GameTests green
+- Cycle 17 — expression parsing and runtime fixes:
+  - `ExprLoopValue` regex constrained: `<.+>` → `<[\\w-]+>` to prevent greedy match of arithmetic operators (fixes `loop-iteration-2 / 30` parsing)
+  - `ExprArithmetic.error()` error noise suppressed during parsing backtracking
+  - `Variable.newInstance()` type-hint mismatch error noise suppressed during parsing backtracking
+  - `ExprTimes` ParsingStack guard: rejects init when ExprArithmetic is on the stack (fixes `loop N times` vs arithmetic ambiguity)
+  - 2-pass `parseRegisteredExpression`: type-specific candidates first, Object-returning wildcards second (fixes `event-player` being consumed as arithmetic)
+  - `DefaultOperations.register()` call added (fixes ExprArithmetic having zero patterns)
+  - `DefaultComparators.register()`, `DefaultConverters.register()` calls added
+  - `ExprLoopIteration` forceInitialize added (fixes `loop-iteration-2` not resolving)
+  - `vector(x,y,z)` function registered in DefaultFunctions (fixes `vector(0, expr, 0)` syntax)
+  - `location(x,y,z,[yaw],[pitch])` function registered in DefaultFunctions
+  - `clamp(value,min,max)` function registered in DefaultFunctions
+  - GameTest additions: `arithmeticDivisionTimesParsesAsExprTimes`, `eventPlayerIsNotParsedAsArithmetic`, `nestedLoopIterationReferencesCorrectLoop`
+- Landed with targeted Minecraft GameTest; current full suite completes `371 / 371` GameTests green
 
 ## Open Gaps
 
@@ -100,6 +113,9 @@ Last full verification: 2026-03-14
 - Function namespace/default-parameter/runtime parity beyond the current fixes.
 - Variable runtime is still an in-memory bridge, not upstream-complete.
 - Cross-cutting Stage 8 parity gap: ambiguous bare item-id compare, for example `event-item is wheat`.
+- Missing built-in functions vs Bukkit Skript: `rgb` (color constructor — no ParticleModule class-info backing yet).
+- `StructCommand` (user-defined `/command` blocks) not yet ported — requires Brigadier adapter.
+- `printLog(true)` in Statement/ScriptLoader still outputs error noise from failed sub-attempts on successful parse.
 
 ## Reference Docs
 
