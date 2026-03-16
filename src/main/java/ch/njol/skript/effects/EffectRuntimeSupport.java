@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.SkriptFabric;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.placeholder.SkriptTextPlaceholders;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -41,7 +42,7 @@ final class EffectRuntimeSupport {
         if (value instanceof String string) {
             return SkriptTextPlaceholders.resolveComponent(string, event);
         }
-        return Component.literal(stringOf(value));
+        return SkriptFabric.byMiniMessage(stringOf(value));
     }
 
     static String stringOf(@Nullable Object value) {
