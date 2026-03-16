@@ -31,6 +31,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import sun.misc.Unsafe;
@@ -52,6 +53,7 @@ final class ExpressionSyntaxS4CompatibilityTest {
         ParserInstance.get().deleteCurrentEvent();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parseCoverageIncludesStrongSyntax4Subset() {
         assertInstanceOf(ExprVehicle.class, parseExpression("vehicle of lane-s4-entity", Object.class));

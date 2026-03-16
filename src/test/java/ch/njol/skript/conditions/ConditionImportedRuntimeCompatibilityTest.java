@@ -28,6 +28,7 @@ import net.minecraft.core.Holder;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.damagesource.DamageSourceTypeSupport;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
@@ -68,6 +69,7 @@ class ConditionImportedRuntimeCompatibilityTest {
         assertDoesNotThrow(CondRespawnLocation::new);
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void eventBoundConditionsKeepExpectedChecksAndStrings() {
         CondCancelled cancelled = new CondCancelled();

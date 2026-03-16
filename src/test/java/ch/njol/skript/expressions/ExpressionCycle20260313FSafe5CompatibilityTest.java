@@ -40,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -78,6 +79,7 @@ final class ExpressionCycle20260313FSafe5CompatibilityTest {
         ParserInstance.get().deleteCurrentEvent();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void expressionsParseAgainstLaneLocalSources() throws Exception {
         Class<?> commandEventClass = Class.forName("ch.njol.skript.events.FabricPlayerEventHandles$Command");

@@ -17,6 +17,7 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.LivingEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -36,6 +37,7 @@ final class ExpressionCycle20260313LCompatibilityTest {
         ParserInstance.get().deleteCurrentEvent();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsCycle20260313lExpressions() {
         ParserInstance.get().setCurrentEvent("shoot bow", FabricEventCompatHandles.EntityShootBow.class);

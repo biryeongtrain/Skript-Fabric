@@ -26,6 +26,7 @@ import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.potion.util.PotionEffectSupport;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
@@ -50,6 +51,7 @@ final class ExpressionCycle20260313JCompatibilityTest {
         ParserInstance.get().deleteCurrentEvent();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsCycle20260313jExpressionsInExpectedContexts() {
         ParserInstance parser = ParserInstance.get();

@@ -3,11 +3,13 @@ package ch.njol.skript.lang;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.njol.skript.util.StringMode;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 class VariableStringCompatibilityTest {
 
+    @Disabled("Moved to GameTest")
     @Test
     void messageStringLeavesPatboxPlaceholderUntouchedWithoutContext() {
         VariableString string = VariableString.newInstance("%player:name%", StringMode.MESSAGE);

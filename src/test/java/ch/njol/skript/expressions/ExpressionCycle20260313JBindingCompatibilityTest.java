@@ -14,6 +14,7 @@ import net.minecraft.server.Bootstrap;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
@@ -39,6 +40,7 @@ final class ExpressionCycle20260313JBindingCompatibilityTest {
         SkriptRuntime.instance().clearScripts();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void bootstrapRegistersCycle20260313jExpressions() {
         assertExpressionRegistered(ExprAppliedEffect.class);

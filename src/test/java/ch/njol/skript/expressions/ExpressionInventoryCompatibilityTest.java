@@ -17,6 +17,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricInventory;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
@@ -30,6 +31,7 @@ class ExpressionInventoryCompatibilityTest {
         Bootstrap.bootStrap();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void customChestInventoryUsesRowsAndTitle() {
         ExprChestInventory inventoryExpression = new ExprChestInventory();

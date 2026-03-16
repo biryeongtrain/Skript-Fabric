@@ -24,6 +24,7 @@ import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
@@ -43,6 +44,7 @@ final class ExpressionCycle20260313MCompatibilityTest {
         ensureSupportRegistered();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsCycle20260313mExpressions() {
         assertInstanceOf(ExprSkull.class, parseExpression("skull of lane-m-offlineplayer", FabricItemType.class));

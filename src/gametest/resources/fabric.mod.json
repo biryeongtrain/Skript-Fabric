@@ -42,7 +42,11 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricMixedRuntimeBackfillGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSilentGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSprintingGameTest",
-      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionPropertiesAndSoundGameTest"
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionPropertiesAndSoundGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionBindingBatchGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricExpressionParseBatchGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricRuntimeBatchGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricConditionAndEventBatchGameTest"
     ]
   }
 }

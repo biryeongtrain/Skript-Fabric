@@ -32,6 +32,7 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.base.effects.EffChange;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -64,6 +65,7 @@ final class ExpressionCycle20260312Syntax4CompatibilityTest {
         }
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parseCoverageIncludesLandedSyntax4Slice() throws Exception {
         assertInstanceOf(ExprFromUUID.class, parseExpression("offline player from lane-c20260312-s4-uuid", GameProfile.class));

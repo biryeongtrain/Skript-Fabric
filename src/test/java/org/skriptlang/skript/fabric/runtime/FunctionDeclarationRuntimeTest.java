@@ -13,6 +13,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 final class FunctionDeclarationRuntimeTest {
@@ -30,6 +31,7 @@ final class FunctionDeclarationRuntimeTest {
         Variables.clearAll();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void runtimeLoadsFunctionDeclarationsAndUnloadsTheirRegistrations() throws IOException {
         Path script = Files.createTempFile("function-runtime", ".sk");

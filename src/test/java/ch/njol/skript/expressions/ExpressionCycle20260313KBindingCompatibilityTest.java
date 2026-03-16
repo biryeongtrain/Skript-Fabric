@@ -15,6 +15,7 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -41,6 +42,7 @@ final class ExpressionCycle20260313KBindingCompatibilityTest {
         SkriptRuntime.instance().clearScripts();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void bootstrapRegistersCycle20260313kExpressions() {
         assertExpressionRegistered(ExprElement.class);

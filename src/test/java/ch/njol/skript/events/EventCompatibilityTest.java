@@ -24,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.fabric.runtime.FabricEntityUnleashHandle;
@@ -484,6 +485,7 @@ final class EventCompatibilityTest {
     }
 
     @Test
+    @Disabled("Moved to GameTest")
     void blockEventParsesPublicItemFrameBreakSyntaxAndChecksHangingHandle() throws Exception {
         EvtBlock event = parseEvent("break of item frame", EvtBlock.class);
 

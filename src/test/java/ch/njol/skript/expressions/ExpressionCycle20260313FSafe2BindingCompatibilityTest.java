@@ -17,6 +17,7 @@ import net.minecraft.server.Bootstrap;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -44,6 +45,7 @@ final class ExpressionCycle20260313FSafe2BindingCompatibilityTest {
         ParserInstance.get().setCurrentScript(null);
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void bootstrapRegistersCycle20260313fExpressions() {
         assertExpressionRegistered(ExprCommandInfo.class);
@@ -52,6 +54,7 @@ final class ExpressionCycle20260313FSafe2BindingCompatibilityTest {
         assertExpressionRegistered(ExprScriptsOld.class);
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsCycle20260313fExpressionsThroughBootstrap() {
         ParserInstance.get().setCurrentScript(new Script(new Config("lane-f-binding", "lane-f-binding.sk", null), java.util.List.of()));

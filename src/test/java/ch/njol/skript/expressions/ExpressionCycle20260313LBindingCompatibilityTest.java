@@ -10,6 +10,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
@@ -31,6 +32,7 @@ final class ExpressionCycle20260313LBindingCompatibilityTest {
         SkriptRuntime.instance().clearScripts();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void bootstrapRegistersCycle20260313lExpressions() {
         assertExpressionRegistered(ExprProjectileForce.class);

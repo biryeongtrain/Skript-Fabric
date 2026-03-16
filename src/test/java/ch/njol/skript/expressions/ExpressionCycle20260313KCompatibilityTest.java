@@ -33,6 +33,7 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.particles.particleeffects.ParticleEffect;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
@@ -56,6 +57,7 @@ final class ExpressionCycle20260313KCompatibilityTest {
         ParserInstance.get().setCurrentSections(List.of());
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsCycle20260313kExpressions() {
         assertInstanceOf(ExprElement.class, parseExpression("first element out of lane-k-values", Object.class));
@@ -111,6 +113,7 @@ final class ExpressionCycle20260313KCompatibilityTest {
         assertEquals(2, scaledEntity.getAmount());
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void loopValueReadsPreviousCurrentAndNextFromCurrentLoop() {
         ParserInstance parser = ParserInstance.get();

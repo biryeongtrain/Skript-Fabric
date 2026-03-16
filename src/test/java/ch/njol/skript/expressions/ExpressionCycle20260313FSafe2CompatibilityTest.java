@@ -26,6 +26,7 @@ import net.minecraft.server.Bootstrap;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
@@ -53,6 +54,7 @@ final class ExpressionCycle20260313FSafe2CompatibilityTest {
         setLoadedScripts(List.of());
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsSafeLaneTwoExpressions() {
         ParserInstance.get().setCurrentScript(script("lane-safe2", "lane-safe2.sk"));

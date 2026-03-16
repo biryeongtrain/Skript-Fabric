@@ -35,14 +35,14 @@ class ConditionEffectClosureCompatibilityTest {
         equal.init(new Expression[]{
                 new SimpleLiteral<>(1, false),
                 new SimpleLiteral<>("1", false)
-        }, 0, Kleenean.FALSE, parseResult(""));
+        }, 8, Kleenean.FALSE, parseResult(""));
         assertTrue(equal.check(SkriptEvent.EMPTY));
 
         CondCompare negated = new CondCompare();
         negated.init(new Expression[]{
                 new SimpleLiteral<>(1, false),
                 new SimpleLiteral<>("1", false)
-        }, 1, Kleenean.FALSE, parseResult(""));
+        }, 9, Kleenean.FALSE, parseResult(""));
         assertFalse(negated.check(SkriptEvent.EMPTY));
     }
 

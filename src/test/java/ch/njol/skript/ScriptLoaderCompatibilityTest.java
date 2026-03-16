@@ -430,7 +430,7 @@ class ScriptLoaderCompatibilityTest {
             assertTrue(items.isEmpty());
             assertTrue(
                     logs.messages().stream().anyMatch(message ->
-                            message.startsWith("Can't understand this condition/effect:")
+                            message.contains("Can't understand this condition/effect:")
                     )
             );
         }

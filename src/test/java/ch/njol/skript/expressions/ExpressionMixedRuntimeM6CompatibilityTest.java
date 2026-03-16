@@ -35,6 +35,7 @@ import net.minecraft.server.Bootstrap;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -60,6 +61,7 @@ public final class ExpressionMixedRuntimeM6CompatibilityTest {
         Functions.clear();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void assignedExpressionsParseThroughRegistry() {
         assertInstanceOf(ExprCaughtErrors.class, parseExpression("last caught runtime errors", String.class));

@@ -27,6 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricInventory;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -48,6 +49,7 @@ final class ExpressionInventoryContainerCompatibilityTest {
         ParserInstance.get().deleteCurrentEvent();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parseCoverageIncludesInventoryContainerBundle() {
         assertInstanceOf(ExprOpenedInventory.class, parseExpression("open inventory of lane-m2-player", FabricInventory.class));
@@ -60,6 +62,7 @@ final class ExpressionInventoryContainerCompatibilityTest {
         assertTrue(hotbarSlot.init(new Expression[]{new TestPlayerExpression()}, 0, ch.njol.util.Kleenean.FALSE, parseResult("current hotbar slot")));
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void pickupDelayExpressionReadsAndMutatesItemEntities() throws Exception {
         ItemEntity itemEntity = allocateItemEntity();

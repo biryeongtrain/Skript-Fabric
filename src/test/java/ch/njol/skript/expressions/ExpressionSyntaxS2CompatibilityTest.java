@@ -26,6 +26,7 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricBootstrap;
@@ -43,6 +44,7 @@ class ExpressionSyntaxS2CompatibilityTest {
         ensureSyntax();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsWorldBorderBundleSyntax() {
         assertInstanceOf(ExprWorlds.class, parseExpression("all worlds", ServerLevel.class));

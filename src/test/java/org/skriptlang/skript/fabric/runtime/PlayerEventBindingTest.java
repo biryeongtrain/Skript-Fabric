@@ -13,6 +13,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerPlayer;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.bukkit.base.expressions.ExprEventPlayer;
 import org.skriptlang.skript.bukkit.base.expressions.ExprEventEntity;
@@ -39,6 +40,7 @@ final class PlayerEventBindingTest {
         assertInstanceOf(ExprEventEntity.class, parseExpressionInEvent("event-entity", resolveEventClass("ch.njol.skript.events.FabricPlayerEventHandles$Teleport")));
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void commandHandleBindsCommandExpressions() {
         Class<?> commandEventClass = resolveEventClass("ch.njol.skript.events.FabricPlayerEventHandles$Command");

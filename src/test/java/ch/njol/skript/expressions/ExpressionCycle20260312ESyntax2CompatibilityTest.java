@@ -31,6 +31,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
@@ -61,6 +62,7 @@ final class ExpressionCycle20260312ESyntax2CompatibilityTest {
         assertInstanceOf(ExprWardenEntityAnger.class, parseExpression("anger level of lane-e2-livingentity towards lane-e2-livingentity", Integer.class));
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void plainNamedAndItemFlagsProduceDerivedItemTypes() {
         FabricItemType base = new FabricItemType(new ItemStack(Items.DIAMOND_SWORD));

@@ -35,6 +35,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.fabric.compat.FabricLocation;
@@ -54,6 +55,7 @@ class ExpressionWorldTimeBundleCompatibilityTest {
         ensureSyntax();
     }
 
+    @Disabled("Moved to GameTest")
     @Test
     void parserBindsPrioritizedWorldSubsetSyntax() {
         assertInstanceOf(ExprWorld.class, parseExpression("world of lane-s2-first-location", ServerLevel.class));
