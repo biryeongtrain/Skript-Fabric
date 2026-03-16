@@ -1,0 +1,23 @@
+on enchant prepare:
+    send "Enchantment bonus: %enchantment bonus%" to player
+    send "Offers: %enchantment offers%" to player
+
+on item enchant:
+    send "Applied enchantments: %applied enchantments%" to player
+    send "Exp cost: %displayed enchanting cost%" to player
+
+command /testenchant:
+    trigger:
+        enchant player's tool with sharpness 5
+        send "Enchanted your tool with Sharpness 5!" to player
+
+command /testdisenchant:
+    trigger:
+        disenchant player's tool
+        send "Disenchanted your tool!" to player
+
+command /testenchant2:
+    trigger:
+        enchant player's tool with fire aspect 2
+        enchant player's tool with unbreaking 3
+        send "Enchanted your tool with Fire Aspect 2 and Unbreaking 3!" to player

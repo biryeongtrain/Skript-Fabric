@@ -153,6 +153,7 @@ import org.skriptlang.skript.bukkit.base.effects.EffSetTestItemName;
 import org.skriptlang.skript.bukkit.base.effects.EffSetTestBlockUnderPlayer;
 import org.skriptlang.skript.bukkit.base.effects.EffSilence;
 import org.skriptlang.skript.bukkit.base.effects.EffSprinting;
+import ch.njol.skript.events.EvtServerListPing;
 import org.skriptlang.skript.fabric.syntax.event.EvtAttackEntity;
 import org.skriptlang.skript.fabric.syntax.event.EvtBrewingFuel;
 import org.skriptlang.skript.fabric.syntax.event.EvtDamage;
@@ -484,6 +485,7 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEvent(EvtFabricUseBlock.class, "on use block");
                 Skript.registerEvent(EvtUseEntity.class, "on use entity");
                 Skript.registerEvent(EvtUseItem.class, "on use item");
+                Skript.registerEvent(EvtServerListPing.class, "on server [list] ping");
                 registerRecoveredEventActivationBundle();
                 Skript.registerExpression(
                         ExprChestInventory.class,
@@ -1000,6 +1002,8 @@ public final class SkriptFabricBootstrap {
         registerClassInfoIfMissing("vector", VectorClassInfo::register);
         registerClassInfoIfMissing("particle", ParticleClassInfo::register);
         registerClassInfoIfMissing("equippablecomponent", EquippableComponentClassInfo::register);
+        registerClassInfoIfMissing("enchantment", org.skriptlang.skript.bukkit.base.types.EnchantmentClassInfo::register);
+        registerClassInfoIfMissing("enchantmenttype", org.skriptlang.skript.bukkit.base.types.EnchantmentTypeClassInfo::register);
     }
 
     private static void registerClassInfoIfMissing(String codeName, Runnable registrar) {
@@ -1051,8 +1055,14 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprDifficulty.class);
         forceInitialize(ch.njol.skript.expressions.ExprDistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprElement.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAppliedEnchantments.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantingExpCost.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantmentBonus.class);
         forceInitialize(ch.njol.skript.expressions.ExprEnchantmentLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantmentOffer.class);
         forceInitialize(ch.njol.skript.expressions.ExprEnchantments.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMendingRepairAmount.class);
         forceInitialize(ch.njol.skript.expressions.ExprEntity.class);
         forceInitialize(ch.njol.skript.expressions.ExprEntities.class);
         forceInitialize(ch.njol.skript.expressions.ExprExperience.class);
@@ -1071,6 +1081,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLocationVectorOffset.class);
         forceInitialize(ch.njol.skript.expressions.ExprMOTD.class);
         forceInitialize(ch.njol.skript.expressions.ExprMe.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMetadata.class);
         forceInitialize(ch.njol.skript.expressions.ExprMidpoint.class);
         forceInitialize(ch.njol.skript.expressions.ExprAffectedEntities.class);
         forceInitialize(ch.njol.skript.expressions.ExprAppliedEffect.class);
@@ -1097,6 +1108,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprMaxStack.class);
         forceInitialize(ch.njol.skript.expressions.ExprMinecartDerailedFlyingVelocity.class);
         forceInitialize(ch.njol.skript.expressions.ExprMods.class);
+        forceInitialize(ch.njol.skript.expressions.ExprName.class);
         forceInitialize(ch.njol.skript.expressions.ExprNamed.class);
         forceInitialize(ch.njol.skript.expressions.ExprNearestEntity.class);
         forceInitialize(ch.njol.skript.expressions.ExprNoDamageTicks.class);
@@ -1148,6 +1160,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprTypeOf.class);
         forceInitialize(ch.njol.skript.expressions.ExprValue.class);
         forceInitialize(ch.njol.skript.expressions.ExprVersion.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVersionString.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorBetweenLocations.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorCrossProduct.class);
         forceInitialize(ch.njol.skript.expressions.ExprVectorDotProduct.class);
@@ -1180,6 +1193,15 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprMessage.class);
         forceInitialize(ch.njol.skript.expressions.ExprSpectatorTarget.class);
         forceInitialize(ch.njol.skript.expressions.ExprTablistedPlayers.class);
+        forceInitialize(ch.njol.skript.expressions.ExprChatFormat.class);
+        forceInitialize(ch.njol.skript.expressions.ExprChatRecipients.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHoverList.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLastLoadedServerIcon.class);
+        forceInitialize(ch.njol.skript.expressions.ExprServerIcon.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntitySnapshot.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEvtInitiator.class);
+        forceInitialize(ch.njol.skript.expressions.ExprSpawnEggEntity.class);
+        forceInitialize(ch.njol.skript.expressions.ExprReadiedArrow.class);
     }
 
     private static void initializeRecoveredExpressionBundle() {
@@ -1253,6 +1275,7 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtGrow.register();
         ch.njol.skript.events.EvtHarvestBlock.register();
         ch.njol.skript.events.EvtHealing.register();
+        ch.njol.skript.events.EvtInventoryMove.register();
         ch.njol.skript.events.EvtItem.register();
         ch.njol.skript.events.EvtJoin.register();
         ch.njol.skript.events.EvtKick.register();
@@ -1268,6 +1291,7 @@ public final class SkriptFabricBootstrap {
         ch.njol.skript.events.EvtPortal.register();
         ch.njol.skript.events.EvtPressurePlate.register();
         ch.njol.skript.events.EvtQuit.register();
+        ch.njol.skript.events.EvtReadyArrow.register();
         ch.njol.skript.events.EvtResourcePackResponse.register();
         ch.njol.skript.events.EvtRespawn.register();
         ch.njol.skript.events.EvtScript.register();

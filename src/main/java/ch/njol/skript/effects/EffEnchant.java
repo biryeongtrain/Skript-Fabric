@@ -10,7 +10,11 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.Patterns;
 import ch.njol.util.Kleenean;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.EnchantmentType;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
@@ -65,7 +69,37 @@ public class EffEnchant extends Effect {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void execute(SkriptEvent event) {
+        FabricItemType[] itemTypes = items != null ? items.getArray(event) : null;
+        if (itemTypes == null) return;
+
+        switch (operation) {
+            case ENCHANT -> {
+                EnchantmentType[] types = enchantments != null
+                        ? ((Expression<EnchantmentType>) enchantments).getArray(event)
+                        : null;
+                if (types == null) return;
+                for (FabricItemType itemType : itemTypes) {
+                    ItemStack stack = itemType.toStack();
+                    for (EnchantmentType type : types) {
+                        EnchantmentHelper.updateEnchantments(stack, mutable ->
+                                mutable.set(type.enchantment(), type.level()));
+                    }
+                    itemType.applyPrototype(stack);
+                }
+            }
+            case DISENCHANT -> {
+                for (FabricItemType itemType : itemTypes) {
+                    ItemStack stack = itemType.toStack();
+                    EnchantmentHelper.setEnchantments(stack, ItemEnchantments.EMPTY);
+                    itemType.applyPrototype(stack);
+                }
+            }
+            case ENCHANT_AT_LEVEL -> {
+                // TODO: implement random enchantment at level using EnchantmentHelper.selectEnchantment()
+            }
+        }
     }
 
     @Override
