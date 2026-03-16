@@ -1,7 +1,7 @@
 # Next Agent Handoff
 
-Last condensed: 2026-03-14
-Last full verification: 2026-03-14
+Last condensed: 2026-03-16
+Last full verification: 2026-03-16
 
 ## Read Order
 
@@ -15,17 +15,19 @@ Last full verification: 2026-03-14
 
 ## Current State
 
-- Source ports complete: conditions `28 / 28`, expressions `84 / 84`, effects `24 / 24`
+- Source ports complete: conditions `28 / 28`, expressions `85 / 85`, effects `24 / 24`, sections `9 / 9`
 - Runtime-backed `Evt*.java`: `52 / 53`
 - Synthetic/partial `Evt*.java`: `0 / 53`
 - Non-runtime/manual `Evt*.java`: `1 / 53`
+- Total `Evt*.java` files: `86` (includes duplicates across packages and Fabric-specific events)
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete slice: `breeding (12 / 12)`, `input (5 / 5)`, `interactions (6 / 6)`
 - Remaining package-local Stage 8 scope: `191 / 214`
-- Upstream `ch/njol/skript` baseline: exact-path present `961`, upstream `1189`, shortfall `228`
+- Upstream `ch/njol/skript` baseline: exact-path present `1015`, upstream `1189`, shortfall `174`
+- Exact-path expression shortfall: `2` (package-info.java + ExprPlugins.java — both Non-goal)
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `340 / 340` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `369 / 372` GameTests (3 pre-existing parse-diagnostic failures)
+  - `.sk` script files in `src/gametest/resources`: `410`
 
 ## Most Recent Merged Slice
 
@@ -53,7 +55,7 @@ Last full verification: 2026-03-14
   - `auto reload`
 - Confirmed narrowed event syntaxes:
   - `EvtGameMode`, `EvtWeatherChange`, `EvtPlayerArmorChange`, `EvtClick`, `EvtHarvestBlock`, `EvtResourcePackResponse`
-  - omitted simple-event registrations: `Jump`, `Hand Item Swap`, `Server List Ping`
+  - previously omitted simple-event registrations now landed: `Jump`, `Hand Item Swap`, `Server List Ping`
 - Confirmed command-surface behavior gaps:
   - `all script commands` returns nothing
   - `is a skript command` checks Brigadier root commands, not script-defined commands
@@ -61,7 +63,8 @@ Last full verification: 2026-03-14
 - Resume from the `Must Port` bucket rather than treating all `228` exact-path leftovers as equal-priority work.
 - Keep `Adapt` work scoped to Fabric-native replacements for user-visible behavior, not literal class parity.
 - Treat `Non-goal` leftovers as excluded from normal closure planning unless one becomes a direct blocker.
-- Immediate backlog remains expressions-first, with focus on the remaining user-visible expression bucket now that cycle F cut expressions missing from `65` to `44`.
+- Expression exact-path closure is effectively complete: only `2` upstream expression files remain unported (package-info.java and ExprPlugins.java), both classified as Non-goal.
+- Immediate backlog shifts to: Particle/game-effect type registration, narrowed event patterns, and StructCommand.
 - Keep `PrivateFishingHookAccess.currentState` out until the accessor target is corrected and revalidated in GameTest.
 - Keep Stage 8 package counts unchanged unless you actually audit another package.
 - If user-visible `.sk` behavior changes, add real `.sk` coverage and rerun GameTests.

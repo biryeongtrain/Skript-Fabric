@@ -19,7 +19,7 @@ public final class EvtGameMode extends SkriptEvent {
         }
         Skript.registerEvent(
                 EvtGameMode.class,
-                "game[ ]mode change [to %-gamemode%]"
+                "game[ ]mode change [to %gamemode%]"
         );
     }
 

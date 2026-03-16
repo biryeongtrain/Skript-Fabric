@@ -5,6 +5,8 @@ import ch.njol.skript.lang.function.Parameter;
 import ch.njol.skript.lang.function.SimpleJavaFunction;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Color;
+import ch.njol.skript.util.ColorRGB;
 import ch.njol.skript.util.Date;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.KeyedValue;
@@ -399,47 +401,77 @@ public final class DefaultFunctions {
             }
         });
 
-        ClassInfo<Vec3> vectorInfo = classInfo(Vec3.class);
-        Functions.register(new SimpleJavaFunction<Vec3>(
-                "vector",
-                new Parameter[]{
-                        new Parameter<>("x", numberInfo, true, null),
-                        new Parameter<>("y", numberInfo, true, null),
-                        new Parameter<>("z", numberInfo, true, null)
-                },
-                vectorInfo,
-                true
-        ) {
-            @Override
-            public Vec3[] executeSimple(Object[][] params) {
-                double x = ((Number) params[0][0]).doubleValue();
-                double y = ((Number) params[1][0]).doubleValue();
-                double z = ((Number) params[2][0]).doubleValue();
-                return new Vec3[]{new Vec3(x, y, z)};
-            }
-        });
+        registerOptionalFunctions(numberInfo, longInfo);
+    }
 
-        ClassInfo<FabricLocation> locationInfo = classInfo(FabricLocation.class);
-        Functions.register(new SimpleJavaFunction<FabricLocation>(
-                "location",
-                new Parameter[]{
-                        new Parameter<>("x", numberInfo, true, null),
-                        new Parameter<>("y", numberInfo, true, null),
-                        new Parameter<>("z", numberInfo, true, null),
-                        new Parameter<>("yaw", numberInfo, true, new SimpleLiteral<>(0, true)),
-                        new Parameter<>("pitch", numberInfo, true, new SimpleLiteral<>(0, true))
-                },
-                locationInfo,
-                true
-        ) {
-            @Override
-            public FabricLocation[] executeSimple(Object[][] params) {
-                double x = ((Number) params[0][0]).doubleValue();
-                double y = ((Number) params[1][0]).doubleValue();
-                double z = ((Number) params[2][0]).doubleValue();
-                return new FabricLocation[]{new FabricLocation(null, new Vec3(x, y, z))};
-            }
-        });
+    private static void registerOptionalFunctions(ClassInfo<Number> numberInfo, ClassInfo<Long> longInfo) {
+        ClassInfo<Vec3> vectorInfo = Classes.getExactClassInfo(Vec3.class);
+        if (vectorInfo != null) {
+            Functions.register(new SimpleJavaFunction<Vec3>(
+                    "vector",
+                    new Parameter[]{
+                            new Parameter<>("x", numberInfo, true, null),
+                            new Parameter<>("y", numberInfo, true, null),
+                            new Parameter<>("z", numberInfo, true, null)
+                    },
+                    vectorInfo,
+                    true
+            ) {
+                @Override
+                public Vec3[] executeSimple(Object[][] params) {
+                    double x = ((Number) params[0][0]).doubleValue();
+                    double y = ((Number) params[1][0]).doubleValue();
+                    double z = ((Number) params[2][0]).doubleValue();
+                    return new Vec3[]{new Vec3(x, y, z)};
+                }
+            });
+        }
+
+        ClassInfo<FabricLocation> locationInfo = Classes.getExactClassInfo(FabricLocation.class);
+        if (locationInfo != null) {
+            Functions.register(new SimpleJavaFunction<FabricLocation>(
+                    "location",
+                    new Parameter[]{
+                            new Parameter<>("x", numberInfo, true, null),
+                            new Parameter<>("y", numberInfo, true, null),
+                            new Parameter<>("z", numberInfo, true, null),
+                            new Parameter<>("yaw", numberInfo, true, new SimpleLiteral<>(0, true)),
+                            new Parameter<>("pitch", numberInfo, true, new SimpleLiteral<>(0, true))
+                    },
+                    locationInfo,
+                    true
+            ) {
+                @Override
+                public FabricLocation[] executeSimple(Object[][] params) {
+                    double x = ((Number) params[0][0]).doubleValue();
+                    double y = ((Number) params[1][0]).doubleValue();
+                    double z = ((Number) params[2][0]).doubleValue();
+                    return new FabricLocation[]{new FabricLocation(null, new Vec3(x, y, z))};
+                }
+            });
+        }
+
+        ClassInfo<Color> colorInfo = Classes.getExactClassInfo(Color.class);
+        if (colorInfo != null) {
+            Functions.register(new SimpleJavaFunction<Color>(
+                    "rgb",
+                    new Parameter[]{
+                            new Parameter<>("red", longInfo, true, null),
+                            new Parameter<>("green", longInfo, true, null),
+                            new Parameter<>("blue", longInfo, true, null)
+                    },
+                    colorInfo,
+                    true
+            ) {
+                @Override
+                public Color[] executeSimple(Object[][] params) {
+                    int red = ((Long) params[0][0]).intValue();
+                    int green = ((Long) params[1][0]).intValue();
+                    int blue = ((Long) params[2][0]).intValue();
+                    return new Color[]{new ColorRGB(red, green, blue)};
+                }
+            });
+        }
     }
 
     private static void registerUnaryNumberFunction(

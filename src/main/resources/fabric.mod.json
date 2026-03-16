@@ -23,7 +23,6 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
-    "minecraft": "${minecraft_version}",
-    "stimuli": ">=0.5.2+1.21.8"
+    "minecraft": "${minecraft_version}"
   }
 }

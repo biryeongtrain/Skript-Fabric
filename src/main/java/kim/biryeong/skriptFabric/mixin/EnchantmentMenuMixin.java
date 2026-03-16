@@ -31,9 +31,7 @@ public abstract class EnchantmentMenuMixin {
 	@Shadow @Final public int[] enchantClue;
 	@Shadow @Final public int[] levelClue;
 	@Shadow @Final private ContainerLevelAccess access;
-
-	@Shadow
-	public abstract ItemStack getEnchantItem();
+	@Shadow @Final private net.minecraft.world.Container enchantSlots;
 
 	@Unique
 	private Player skript$player;
@@ -56,7 +54,7 @@ public abstract class EnchantmentMenuMixin {
 		access.execute((level, pos) -> {
 			if (!(level instanceof ServerLevel serverLevel)) return;
 
-			ItemStack item = getEnchantItem();
+			ItemStack item = enchantSlots.getItem(0);
 			if (item.isEmpty()) return;
 
 			// Calculate approximate bookshelf bonus from costs
@@ -93,7 +91,7 @@ public abstract class EnchantmentMenuMixin {
 		if (!(player instanceof ServerPlayer serverPlayer)) return;
 
 		ServerLevel level = (ServerLevel) serverPlayer.level();
-		ItemStack item = getEnchantItem();
+		ItemStack item = enchantSlots.getItem(0);
 
 		int expCost = (id >= 0 && id < costs.length) ? costs[id] : 0;
 

@@ -17,14 +17,15 @@ public final class EvtResourcePackResponse extends SkriptEvent {
         }
         Skript.registerEvent(
                 EvtResourcePackResponse.class,
-                "resource pack [request] response [%-resourcepackstate%]"
+                "resource pack [request] response",
+                "resource pack [request] %resourcepackstates%"
         );
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Literal<?>[] args, int matchedPattern, ParseResult parser) {
-        if (args.length > 0 && args[0] != null) {
+        if (matchedPattern == 1 && args.length > 0 && args[0] != null) {
             state = ((Literal<FabricEventCompatHandles.ResourcePackState>) args[0]).getSingle(null);
         }
         return true;

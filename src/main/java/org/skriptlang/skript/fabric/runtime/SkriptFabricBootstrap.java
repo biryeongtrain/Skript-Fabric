@@ -135,6 +135,7 @@ import org.skriptlang.skript.bukkit.base.types.QuaternionClassInfo;
 import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
 import org.skriptlang.skript.bukkit.base.types.TimespanClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ParticleClassInfo;
+import org.skriptlang.skript.bukkit.base.types.GameEffectClassInfo;
 import org.skriptlang.skript.bukkit.base.types.VectorClassInfo;
 import org.skriptlang.skript.bukkit.base.types.WorldClassInfo;
 import org.skriptlang.skript.fabric.SkriptFabric;
@@ -1001,6 +1002,7 @@ public final class SkriptFabricBootstrap {
         registerClassInfoIfMissing("slot", SlotClassInfo::register);
         registerClassInfoIfMissing("vector", VectorClassInfo::register);
         registerClassInfoIfMissing("particle", ParticleClassInfo::register);
+        registerClassInfoIfMissing("gameeffect", GameEffectClassInfo::register);
         registerClassInfoIfMissing("equippablecomponent", EquippableComponentClassInfo::register);
         registerClassInfoIfMissing("enchantment", org.skriptlang.skript.bukkit.base.types.EnchantmentClassInfo::register);
         registerClassInfoIfMissing("enchantmenttype", org.skriptlang.skript.bukkit.base.types.EnchantmentTypeClassInfo::register);

@@ -53,9 +53,10 @@
 | 20 | slot | SlotClassInfo | Inventory slot type |
 | 21 | vector | VectorClassInfo | Vec3 vector type |
 | 22 | particle | ParticleClassInfo | Particle type |
-| 23 | equippablecomponent | EquippableComponentClassInfo | Equippable component type |
-| 24 | enchantment | EnchantmentClassInfo | Enchantment (Holder) type |
-| 25 | enchantmenttype | EnchantmentTypeClassInfo | Enchantment + level pair type |
+| 23 | gameeffect | GameEffectClassInfo | Game effect type |
+| 24 | equippablecomponent | EquippableComponentClassInfo | Equippable component type |
+| 25 | enchantment | EnchantmentClassInfo | Enchantment (Holder) type |
+| 26 | enchantmenttype | EnchantmentTypeClassInfo | Enchantment + level pair type |
 
 ---
 
@@ -156,6 +157,7 @@
 | 79 | EvtWorld | on world load/unload/save |
 | 80 | EvtCommand | on command |
 | 81 | EvtEntityBlockChange | on entity block change |
+| 82 | EvtRealTime | at time in real time |
 
 ---
 
@@ -1025,9 +1027,9 @@
 |----------|-------|
 | Structures | 3 |
 | Sections | 13 |
-| ClassInfo Types | 25 |
-| Events | 81 |
+| ClassInfo Types | 26 |
+| Events | 82 |
 | Conditions | 162 |
 | Effects | 105 |
 | Expressions | 391 |
-| **Total** | **780** |
+| **Total** | **782** |

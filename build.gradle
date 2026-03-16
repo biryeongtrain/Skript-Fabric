@@ -1,9 +1,10 @@
 plugins {
     id 'fabric-loom' version '1.15-SNAPSHOT'
     id 'maven-publish'
+    id "net.linguica.maven-settings" version "0.5"
 }
 
-version = project.mod_version
+version = project.mod_version + "+" + project.minecraft_version
 group = project.maven_group
 
 base {
@@ -30,7 +31,6 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "xyz.nucleoid:stimuli:${project.stimuli_version}"
     modImplementation include("eu.pb4:placeholder-api:2.7.2+1.21.8")
     modImplementation include("eu.pb4:sgui:1.10.2+1.21.8")
     compileOnly "net.luckperms:api:5.5"
@@ -284,9 +284,9 @@ publishing {
 
     // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+        maven {
+            name = "qf-repo"
+            url = "https://repo.biryeong.kim/releases/"
+        }
     }
 }

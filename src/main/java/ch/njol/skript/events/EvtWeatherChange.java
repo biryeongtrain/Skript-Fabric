@@ -17,7 +17,7 @@ public final class EvtWeatherChange extends SkriptEvent {
         }
         Skript.registerEvent(
                 EvtWeatherChange.class,
-                "weather change [to %-weathertype%]"
+                "weather change [to %-weathertypes%]"
         );
     }
 

@@ -1,15 +1,17 @@
 # `ch/njol/skript` Audit And Closure Plan
 
-Last condensed: 2026-03-13
+Last condensed: 2026-03-16
 Baseline snapshot date: 2026-03-08
 
 ## Baseline
 
 - Upstream snapshot: `e6ec744`
 - Upstream `ch/njol/skript`: `1189` Java files
-- Exact-path missing in local tree: `228`
-- Exact-path expressions missing: `44`
-- Exact-path events / sections / command / aliases missing: `0 / 8 / 9 / 9`
+- Exact-path present locally: `1015`
+- Exact-path missing in local tree: `174`
+- Exact-path expressions missing: `2` (package-info.java + ExprPlugins.java — both Non-goal)
+- Exact-path events / sections / conditions / effects missing: `0 / 0 / 0 / 0`
+- Exact-path command / aliases / structures / literals missing: `6 / 9 / 2 / 1`
 
 ## Priority Matrix
 
@@ -87,10 +89,10 @@ Baseline snapshot date: 2026-03-08
     - `ExprVectorNormalize`
     - `ExprXYZComponent`
     - `ExprYawPitch`
-- Most upstream condition/effect/expression families are still absent and stay behind `Part 1A` / `Part 1B`.
+- Exact-path parity for conditions, effects, expressions, events, and sections is now closed (0 missing in each category except 2 Non-goal expression files).
 - Exact-path parity is no longer enough to claim user-visible closure.
 - Confirmed behavior-only gaps inside existing files now include:
-  - missing simple-event registrations for `join`, `connect`, `kick`, `quit`, `jump`, `hand item swap`, `server list ping`
+  - previously missing simple-event registrations now all landed: `join`, `connect`, `kick`, `quit`, `jump`, `hand item swap`, `server list ping`
   - missing particle/game-effect class-info registration for typed script positions
   - narrowed event patterns in `EvtGameMode`, `EvtWeatherChange`, `EvtPlayerArmorChange`, `EvtClick`, `EvtHarvestBlock`, and `EvtResourcePackResponse`
   - dead command-surface branches such as `all script commands` and partial `command info`
@@ -168,4 +170,4 @@ Baseline snapshot date: 2026-03-08
   - targeted cycle JUnit suite covering cycle M compatibility and bootstrap/binding
   - cycle M real `.sk` GameTest entrypoint for skull, live sign text, and spawner-type mutation
   - `./gradlew runGameTest --rerun-tasks`
-- Current runtime baseline after the refresh: `319 / 319` GameTests green on `main`
+- Current runtime baseline after the refresh: `369 / 372` GameTests (3 pre-existing parse-diagnostic failures, 410 `.sk` script files)

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.events.FabricEventCompatHandles;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
@@ -113,7 +114,7 @@ final class ExpressionPlayerServerCompatibilityTest {
         assertEquals(
                 "accepted",
                 response.getSingle(new SkriptEvent(
-                        new ch.njol.skript.events.FabricEventCompatHandles.ResourcePackResponse("accepted"),
+                        new ch.njol.skript.events.FabricEventCompatHandles.ResourcePackResponse(FabricEventCompatHandles.ResourcePackState.ACCEPTED),
                         null,
                         null,
                         player

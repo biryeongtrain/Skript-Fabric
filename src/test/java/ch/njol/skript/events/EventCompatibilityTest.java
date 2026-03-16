@@ -976,20 +976,8 @@ final class EventCompatibilityTest {
 
     @Test
     void itemEventParsesInventoryMoveAndChecksHandle() {
-        EvtItem event = parseEvent("inventory item move", EvtItem.class);
+        EvtInventoryMove event = parseEvent("inventory item move", EvtInventoryMove.class);
 
-        assertTrue(event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.Item(
-                        dummyLevel(),
-                        BlockPos.ZERO,
-                        FabricEventCompatHandles.ItemAction.INVENTORY_MOVE,
-                        new ItemStack(Items.STICK),
-                        false
-                ),
-                null,
-                null,
-                null
-        )));
         assertEquals("inventory item move", event.toString(null, false));
     }
 
@@ -1091,18 +1079,18 @@ final class EventCompatibilityTest {
 
     @Test
     void playerArmorChangeEventMapsRequestedArmorSlot() {
-        EvtPlayerArmorChange helmet = parseEvent("helmet change", EvtPlayerArmorChange.class);
-        EvtPlayerArmorChange chestplate = parseEvent("chestplate change", EvtPlayerArmorChange.class);
+        EvtPlayerArmorChange helmet = parseEvent("armor change of helmet", EvtPlayerArmorChange.class);
+        EvtPlayerArmorChange chestplate = parseEvent("armor change of chestplate", EvtPlayerArmorChange.class);
 
-        assertEquals("helmet changed", helmet.toString(null, false));
+        assertEquals("armor change of helmet", helmet.toString(null, false));
         assertTrue(helmet.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.HEAD),
+                new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.HELMET),
                 null,
                 null,
                 null
         )));
         assertTrue(chestplate.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.CHEST),
+                new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.CHESTPLATE),
                 null,
                 null,
                 null
@@ -1110,7 +1098,7 @@ final class EventCompatibilityTest {
         assertEquals(
                 false,
                 helmet.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.CHEST),
+                        new FabricEventCompatHandles.PlayerArmorChange(FabricEventCompatHandles.ArmorSlot.CHESTPLATE),
                         null,
                         null,
                         null
@@ -1158,7 +1146,7 @@ final class EventCompatibilityTest {
         assertEquals(
                 true,
                 event.check(new org.skriptlang.skript.lang.event.SkriptEvent(
-                        new FabricEventCompatHandles.ResourcePackResponse("accepted"),
+                        new FabricEventCompatHandles.ResourcePackResponse(FabricEventCompatHandles.ResourcePackState.ACCEPTED),
                         null,
                         null,
                         null

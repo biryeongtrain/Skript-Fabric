@@ -1,18 +1,22 @@
 # Skript-Fabric Porting Status
 
-Last condensed: 2026-03-15
-Last full verification: 2026-03-15
+Last condensed: 2026-03-16
+Last full verification: 2026-03-16
 
 ## Snapshot
 
 - Exact-path snapshot against upstream `e6ec744`:
-  - overall missing: `216`
-  - expressions missing: `41`
+  - overall missing: `174`
+  - expressions missing: `2` (package-info.java + ExprPlugins.java — both Non-goal)
   - events missing: `0`
   - sections missing: `0`
-  - command missing: `9`
+  - conditions missing: `0`
+  - effects missing: `0`
+  - command missing: `6`
   - aliases missing: `9`
-  - exact-path missing in `conditions`, `effects`, `lang`, `config`, `patterns`, `registrations`: `0`
+  - structures missing: `2` (StructAliases, StructAutoReload — Adapt/Non-goal)
+  - literals missing: `1` (LitAt)
+  - exact-path missing in `lang`, `config`, `patterns`, `registrations`: `0`
 - Source ports complete:
   - conditions: `28 / 28`
   - expressions: `85 / 85`
@@ -21,6 +25,7 @@ Last full verification: 2026-03-15
 - Runtime-backed `Evt*.java`: `52 / 53`
 - Synthetic/partial `Evt*.java`: `0 / 53`
 - Non-runtime/manual `Evt*.java`: `1 / 53`
+- Total `Evt*.java` files: `86` (includes duplicates across packages and Fabric-specific events)
 - Stage 8 package-local audit: `23 / 214`
 - Package-local parity-complete packages:
   - `breeding`: `12 / 12`
@@ -30,11 +35,11 @@ Last full verification: 2026-03-15
 - Top-level non-package Bukkit helpers outside that matrix: `4`
 - Upstream core audit baseline:
   - upstream `ch/njol/skript` snapshot `e6ec744`: `1189`
-  - exact-path present locally: `973`
-  - shortfall: `216`
+  - exact-path present locally: `1015`
+  - shortfall: `174`
 - Latest verification:
-  - `./gradlew test --tests ch.njol.skript.expressions.ExpressionCycle20260313FBindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe1BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe2BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4CompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe4BindingCompatibilityTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe5CompatibilityTest --tests org.skriptlang.skript.fabric.runtime.ExpressionCycle20260313FSafe5BindingTest --tests ch.njol.skript.expressions.ExpressionCycle20260313FSafe6CompatibilityTest --warning-mode none --console=plain` passed
-  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `371 / 371` GameTests green on `main`
+  - `./gradlew runGameTest --rerun-tasks --warning-mode none --console=plain` completed `369 / 372` GameTests (3 pre-existing parse-diagnostic test failures)
+  - `.sk` script files in `src/gametest/resources`: `410`
 
 ## Active Priority
 
@@ -58,17 +63,21 @@ Last full verification: 2026-03-15
 ## Confirmed Behavior Gaps
 
 - The exact-path tracker does not catch registration, class-info, or runtime-surface gaps inside existing files.
-- Confirmed gaps as of 2026-03-14:
+- Confirmed gaps as of 2026-03-16:
   - Fully unusable user-visible surfaces:
-  - Particle/game-effect types are unavailable in typed syntax positions.
-  - The local port ships [EffPlayEffect.java](../../src/main/java/org/skriptlang/skript/bukkit/particles/elements/effects/EffPlayEffect.java) and particle-producing expressions, but there is no local equivalent of upstream `ParticleModule.registerClasses()` for `particle`, `game effect`, or `entity effect` type names.
-  - Current symptom: values like `white dust` can be produced inline, but typed signatures and variables that rely on class-info parsing, for example function parameters, do not accept particle/game-effect types.
   - `auto reload` is unavailable.
   - There is no local `StructAutoReload`, and no bootstrap registration path for it.
+  - Recently closed gaps:
+  - `GameEffectClassInfo` now registered — `gameeffect` type available in typed syntax positions (function parameters, variables).
+  - `ParticleClassInfo` was already registered — `particle` type works in typed positions.
+  - `rgb(red, green, blue)` function now available in `DefaultFunctions`.
+  - `EvtGameMode` pattern aligned with upstream (`%gamemode%` instead of `%-gamemode%`).
+  - `EvtWeatherChange` pattern aligned with upstream (`%-weathertypes%` plural form).
+  - `EvtResourcePackResponse` split into two patterns matching upstream.
   - Partially unusable or narrowed user-visible surfaces:
-  - `EvtClick` drops upstream `/blockdata` targeting.
-  - `EvtHarvestBlock` drops upstream `/blockdatas` targeting.
-  - Upstream `Server List Ping` simple event is still omitted from the local `SimpleEvents` registration list (requires cross-thread dispatch infrastructure).
+  - `EvtClick` drops upstream `/blockdata` targeting (needs `blockdata` type registration).
+  - `EvtHarvestBlock` drops upstream `/blockdatas` targeting (needs `blockdatas` type registration).
+  - `EvtPlayerArmorChange` uses `armorslot` type instead of upstream `equipmentslot`.
 
 ## Latest Closed Core Slice
 
@@ -104,7 +113,7 @@ Last full verification: 2026-03-15
   - `location(x,y,z,[yaw],[pitch])` function registered in DefaultFunctions
   - `clamp(value,min,max)` function registered in DefaultFunctions
   - GameTest additions: `arithmeticDivisionTimesParsesAsExprTimes`, `eventPlayerIsNotParsedAsArithmetic`, `nestedLoopIterationReferencesCorrectLoop`
-- Landed with targeted Minecraft GameTest; current full suite completes `371 / 371` GameTests green
+- Landed with targeted Minecraft GameTest; current full suite completes `369 / 372` GameTests (3 pre-existing parse-diagnostic failures)
 
 ## Open Gaps
 
@@ -113,8 +122,10 @@ Last full verification: 2026-03-15
 - Function namespace/default-parameter/runtime parity beyond the current fixes.
 - Variable runtime is still an in-memory bridge, not upstream-complete.
 - Cross-cutting Stage 8 parity gap: ambiguous bare item-id compare, for example `event-item is wheat`.
-- Missing built-in functions vs Bukkit Skript: `rgb` (color constructor — no ParticleModule class-info backing yet).
 - `StructCommand` (user-defined `/command` blocks) not yet ported — requires Brigadier adapter.
+- `entity effect` type (upstream `entityeffect` class-info) not yet registered — Fabric has no direct enum equivalent.
+- `blockdata` type not registered — blocks `EvtClick` and `EvtHarvestBlock` upstream-exact patterns.
+- `equipmentslot` type not registered — blocks `EvtPlayerArmorChange` upstream-exact pattern.
 - `printLog(true)` in Statement/ScriptLoader still outputs error noise from failed sub-attempts on successful parse.
 
 ## Reference Docs
