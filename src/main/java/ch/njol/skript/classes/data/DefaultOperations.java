@@ -25,8 +25,13 @@ public final class DefaultOperations {
         registerNumberOperation(Operator.ADDITION, DefaultOperations::addNumbers);
         registerNumberOperation(Operator.SUBTRACTION, DefaultOperations::subtractNumbers);
         registerNumberOperation(Operator.MULTIPLICATION, DefaultOperations::multiplyNumbers);
-        registerNumberOperation(Operator.DIVISION, Number.class,
-                (left, right) -> left.doubleValue() / right.doubleValue());
+        registerNumberOperation(Operator.DIVISION,
+                (left, right) -> {
+                    if (isInteger(left, right) && right.longValue() != 0 && left.longValue() % right.longValue() == 0) {
+                        return left.longValue() / right.longValue();
+                    }
+                    return left.doubleValue() / right.doubleValue();
+                });
         registerNumberOperation(Operator.EXPONENTIATION, Number.class,
                 (left, right) -> Math.pow(left.doubleValue(), right.doubleValue()));
         if (!Arithmetics.exactDifferenceExists(Number.class)) {

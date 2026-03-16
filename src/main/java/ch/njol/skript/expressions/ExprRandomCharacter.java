@@ -12,7 +12,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 
 public class ExprRandomCharacter extends SimpleExpression<String> {
 
-    private @Nullable Expression<Integer> amount;
+    private @Nullable Expression<Number> amount;
     private Expression<String> from;
     private Expression<String> to;
     private boolean alphanumeric;
@@ -20,7 +20,7 @@ public class ExprRandomCharacter extends SimpleExpression<String> {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        amount = (Expression<Integer>) exprs[0];
+        amount = (Expression<Number>) exprs[0];
         from = (Expression<String>) exprs[1];
         to = (Expression<String>) exprs[2];
         alphanumeric = parseResult.hasTag("alphanumeric");
@@ -29,8 +29,12 @@ public class ExprRandomCharacter extends SimpleExpression<String> {
 
     @Override
     protected String @Nullable [] get(SkriptEvent event) {
-        Integer requested = amount == null ? 1 : amount.getSingle(event);
-        if (requested == null || requested <= 0) {
+        Number raw = amount == null ? 1 : amount.getSingle(event);
+        if (raw == null) {
+            return new String[0];
+        }
+        int requested = raw.intValue();
+        if (requested <= 0) {
             return new String[0];
         }
 
@@ -71,8 +75,8 @@ public class ExprRandomCharacter extends SimpleExpression<String> {
     @SuppressWarnings("unchecked")
     public boolean isSingle() {
         if (amount instanceof Literal<?> literal) {
-            Integer literalAmount = ((Literal<Integer>) literal).getSingle(SkriptEvent.EMPTY);
-            return literalAmount != null && literalAmount == 1;
+            Number literalAmount = ((Literal<Number>) literal).getSingle(SkriptEvent.EMPTY);
+            return literalAmount != null && literalAmount.intValue() == 1;
         }
         return amount == null;
     }

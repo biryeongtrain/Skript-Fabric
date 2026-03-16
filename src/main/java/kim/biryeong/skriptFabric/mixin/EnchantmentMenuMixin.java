@@ -90,7 +90,7 @@ public abstract class EnchantmentMenuMixin {
 		if (!cir.getReturnValue()) return;
 		if (!(player instanceof ServerPlayer serverPlayer)) return;
 
-		ServerLevel level = (ServerLevel) serverPlayer.level();
+		ServerLevel level = serverPlayer.level();
 		ItemStack item = enchantSlots.getItem(0);
 
 		int expCost = (id >= 0 && id < costs.length) ? costs[id] : 0;

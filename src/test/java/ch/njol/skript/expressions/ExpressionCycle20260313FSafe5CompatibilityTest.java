@@ -170,7 +170,7 @@ final class ExpressionCycle20260313FSafe5CompatibilityTest {
         }
         registerClassInfo(ServerPlayer.class, "player");
         registerClassInfo(GameProfile.class, "offlineplayer");
-        if (Classes.getExactClassInfo(Enchantment.class) == null) {
+        if (Classes.getClassInfoNoError("enchantment") == null) {
             Classes.registerClassInfo(new ClassInfo<>(Enchantment.class, "enchantment").user("enchantments?"));
         }
         Skript.registerExpression(TestItemExpression.class, FabricItemType.class, "lane-safe5-item");

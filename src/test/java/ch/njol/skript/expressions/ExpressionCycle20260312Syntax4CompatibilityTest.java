@@ -154,7 +154,7 @@ final class ExpressionCycle20260312Syntax4CompatibilityTest {
     }
 
     private static <T> void registerClassInfo(Class<T> type, String codeName) {
-        if (Classes.getExactClassInfo(type) == null) {
+        if (Classes.getExactClassInfo(type) == null && Classes.getClassInfoNoError(codeName) == null) {
             Classes.registerClassInfo(new ClassInfo<>(type, codeName));
         }
     }

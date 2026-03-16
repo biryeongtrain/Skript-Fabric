@@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.SkriptFabric;
 import org.skriptlang.skript.lang.event.CurrentSkriptEvent;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
@@ -53,15 +54,15 @@ public final class SkriptTextPlaceholders {
         }
 
         if (!PATBOX_PLACEHOLDER.matcher(value).find()) {
-            return Component.literal(value);
+            return SkriptFabric.byMiniMessage(value);
         }
 
         PlaceholderContext context = createContext(event != null ? event : CurrentSkriptEvent.get());
         if (context == null) {
-            return Component.literal(value);
+            return SkriptFabric.byMiniMessage(value);
         }
 
-        return Placeholders.parseText(Component.literal(value), context);
+        return Placeholders.parseText(SkriptFabric.byMiniMessage(value), context);
     }
 
     @SuppressWarnings("unchecked")
