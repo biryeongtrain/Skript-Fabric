@@ -290,7 +290,7 @@ publishing {
     repositories {
         maven {
             name = "qf-repo"
-            url = "https://repo.biryeong.kim/releases/"
+            url = "https://repo.biryeong.kim/snapshots/"
         }
     }
 }

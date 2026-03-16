@@ -14,7 +14,7 @@ first, you have to add dependency to your project.
 ```groovy
 repositories {
     maven {
-        url("https://repo.biryeong.kim/releases/")
+        url("https://repo.biryeong.kim/snapshots/")
     }
 }
   ```
