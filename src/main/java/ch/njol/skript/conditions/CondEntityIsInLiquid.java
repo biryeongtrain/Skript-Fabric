@@ -9,6 +9,8 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import java.lang.reflect.Method;
+
+import kim.biryeong.skriptFabric.mixin.EntityAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.Entity;
 
@@ -20,8 +22,6 @@ import net.minecraft.world.entity.Entity;
 @Example("player is in bubble column")
 @Since("2.6.1")
 public class CondEntityIsInLiquid extends PropertyCondition<Entity> {
-
-    private static final Method IS_IN_RAIN_METHOD = findIsInRainMethod();
 
     private static final int IN_WATER = 1;
     private static final int IN_LAVA = 2;
@@ -71,20 +71,6 @@ public class CondEntityIsInLiquid extends PropertyCondition<Entity> {
     }
 
     private static boolean isInRain(Entity entity) {
-        try {
-            return (boolean) IS_IN_RAIN_METHOD.invoke(entity);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to read rain state for entity.", exception);
-        }
-    }
-
-    private static Method findIsInRainMethod() {
-        try {
-            Method method = Entity.class.getDeclaredMethod("isInRain");
-            method.setAccessible(true);
-            return method;
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to access entity rain state.", exception);
-        }
+        return ((EntityAccessor) entity).callIsInRain();
     }
 }
