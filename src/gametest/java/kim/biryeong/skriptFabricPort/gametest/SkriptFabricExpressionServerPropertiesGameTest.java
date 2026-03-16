@@ -75,7 +75,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
                     Component.literal("Expected ExprMods to include fabricloader.")
             );
             helper.assertTrue(
-                    loadedMods().containsValue("skript-fabric-port-gametest"),
+                    loadedMods().containsValue("skfabric-gametest"),
                     Component.literal("Expected ExprMods to include the gametest mod id.")
             );
             assertNumber(helper, "serverprops::online_players_count", helper.getLevel().getServer().getPlayerCount());
@@ -94,7 +94,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
                     helper,
                     "serverprops::skript_version",
                     FabricLoader.getInstance()
-                            .getModContainer("skript-fabric-port")
+                            .getModContainer("skfabric")
                             .map(container -> container.getMetadata().getVersion().getFriendlyString())
                             .orElse("unknown")
             );

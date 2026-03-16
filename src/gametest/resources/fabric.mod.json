@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "skript-fabric-port-gametest",
+  "id": "skfabric-gametest",
   "version": "0.0.0",
-  "name": "Skript-Fabric-port GameTests",
+  "name": "skfabric GameTests",
   "description": "",
   "authors": [],
   "contact": {},

@@ -238,7 +238,7 @@ public final class SkriptFabricExpressionSpawnAndTeleportCauseGameTest extends A
                     Component.literal("Expected 'loaded plugins' to include 'fabricloader'.")
             );
             helper.assertTrue(
-                    plugins.containsValue("skript-fabric-port-gametest"),
+                    plugins.containsValue("skfabric-gametest"),
                     Component.literal("Expected 'loaded plugins' to include the gametest mod id.")
             );
             runtime.clearScripts();

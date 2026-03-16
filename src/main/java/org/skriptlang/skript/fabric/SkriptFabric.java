@@ -10,7 +10,7 @@ import org.skriptlang.skript.fabric.runtime.SkriptRuntimeServices;
 
 public final class SkriptFabric implements ModInitializer {
 
-    public static final String MOD_ID = "skript-fabric-port";
+    public static final String MOD_ID = "skfabric";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     @Override

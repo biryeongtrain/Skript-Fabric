@@ -1502,7 +1502,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
         }
 
         static TestLogAppender attach() {
-            Logger logger = (Logger) LogManager.getLogger("skript-fabric");
+            Logger logger = (Logger) LogManager.getLogger("skfabric");
             TestLogAppender appender = new TestLogAppender(logger);
             appender.start();
             logger.addAppender(appender);

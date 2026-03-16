@@ -78,7 +78,7 @@ public class ExprVersion extends SimpleExpression<String> {
             @Override
             String get() {
                 return FabricLoader.getInstance()
-                        .getModContainer("skript-fabric-port")
+                        .getModContainer("skfabric")
                         .map(container -> container.getMetadata().getVersion().getFriendlyString())
                         .orElse("unknown");
             }

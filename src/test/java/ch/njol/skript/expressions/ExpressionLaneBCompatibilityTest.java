@@ -123,7 +123,7 @@ final class ExpressionLaneBCompatibilityTest {
         assertTrue(skript.init(new Expression[0], 0, ch.njol.util.Kleenean.FALSE, skriptResult));
         assertEquals(
                 FabricLoader.getInstance()
-                        .getModContainer("skript-fabric-port")
+                        .getModContainer("skfabric")
                         .map(container -> container.getMetadata().getVersion().getFriendlyString())
                         .orElse("unknown"),
                 skript.getSingle(SkriptEvent.EMPTY)
