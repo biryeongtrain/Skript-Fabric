@@ -3684,4 +3684,41 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
         }
     }
 
+    @GameTest
+    public void cancelDamageEventPreventsHurt(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            Variables.clearAll();
+            runtime.loadFromResource("skript/gametest/event/cancel_damage_sets_variable.sk");
+
+            Zombie zombie = helper.getLevel().getEntitiesOfClass(Zombie.class,
+                    helper.getLevel().getWorldBorder().getCollisionShape().bounds()).stream().findFirst().orElse(null);
+            if (zombie == null) {
+                zombie = new Zombie(EntityType.ZOMBIE, helper.getLevel());
+                zombie.setPos(helper.absolutePos(new BlockPos(0, 2, 0)).getCenter());
+                helper.getLevel().addFreshEntity(zombie);
+            }
+
+            float healthBefore = zombie.getHealth();
+
+            // Dispatch damage via the Fabric callback
+            boolean allowed = ServerLivingEntityEvents.ALLOW_DAMAGE.invoker().allowDamage(
+                    zombie,
+                    zombie.damageSources().generic(),
+                    5.0f
+            );
+
+            helper.assertTrue(
+                    Boolean.TRUE.equals(Variables.getVariable("gametest::cancel_damage_ran", null, false)),
+                    Component.literal("Expected the on-damage script to execute and set the variable.")
+            );
+            helper.assertTrue(
+                    !allowed,
+                    Component.literal("Expected ALLOW_DAMAGE to return false when script cancels the event.")
+            );
+            runtime.clearScripts();
+        });
+    }
+
 }

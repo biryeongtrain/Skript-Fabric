@@ -311,15 +311,44 @@ public final class FabricEventCompatHandles {
         }
     }
 
-    public record Mending(
-            LivingEntity entity,
-            ItemStack item,
-            int repairAmount,
-            @Nullable ExperienceOrb experienceOrb
-    ) implements FabricEntityEventHandle, FabricItemEventHandle {
+    public static final class Mending implements FabricEntityEventHandle, FabricItemEventHandle {
+
+        private final LivingEntity entity;
+        private final ItemStack item;
+        private int repairAmount;
+        private final @Nullable ExperienceOrb experienceOrb;
+
+        public Mending(LivingEntity entity, ItemStack item, int repairAmount, @Nullable ExperienceOrb experienceOrb) {
+            this.entity = entity;
+            this.item = item;
+            this.repairAmount = repairAmount;
+            this.experienceOrb = experienceOrb;
+        }
+
+        @Override
+        public LivingEntity entity() {
+            return entity;
+        }
+
         @Override
         public ItemStack itemStack() {
             return item;
+        }
+
+        public ItemStack item() {
+            return item;
+        }
+
+        public int repairAmount() {
+            return repairAmount;
+        }
+
+        public void setRepairAmount(int repairAmount) {
+            this.repairAmount = repairAmount;
+        }
+
+        public @Nullable ExperienceOrb experienceOrb() {
+            return experienceOrb;
         }
     }
 

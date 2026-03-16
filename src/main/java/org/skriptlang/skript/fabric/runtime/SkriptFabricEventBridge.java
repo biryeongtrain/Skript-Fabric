@@ -13,6 +13,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -64,6 +65,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.piglin.Piglin;
@@ -170,15 +172,15 @@ public final class SkriptFabricEventBridge {
         if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
         }
-        dispatchClick(serverLevel, pos.immutable(), FabricEventCompatHandles.ClickType.LEFT, null, level.getBlockState(pos), player.getItemInHand(hand), serverPlayer);
-        return InteractionResult.PASS;
+        boolean cancelled = dispatchClick(serverLevel, pos.immutable(), FabricEventCompatHandles.ClickType.LEFT, null, level.getBlockState(pos), player.getItemInHand(hand), serverPlayer);
+        return cancelled ? InteractionResult.FAIL : InteractionResult.PASS;
     }
 
     private static InteractionResult dispatchUseBlock(net.minecraft.world.entity.player.Player player, Level level, InteractionHand hand, BlockHitResult hitResult) {
         if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
         }
-        dispatchClick(
+        boolean cancelled = dispatchClick(
                 serverLevel,
                 hitResult.getBlockPos().immutable(),
                 FabricEventCompatHandles.ClickType.RIGHT,
@@ -187,13 +189,14 @@ public final class SkriptFabricEventBridge {
                 player.getItemInHand(hand),
                 serverPlayer
         );
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricUseBlockHandle(serverLevel, serverPlayer, hand, hitResult),
                 serverLevel.getServer(),
                 serverLevel,
                 serverPlayer
-        ));
-        return InteractionResult.PASS;
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return (cancelled || event.isCancelled()) ? InteractionResult.FAIL : InteractionResult.PASS;
     }
 
     private static InteractionResult dispatchAttackEntity(
@@ -209,14 +212,15 @@ public final class SkriptFabricEventBridge {
         if (entity instanceof Interaction interaction) {
             FabricInteractionState.recordAttack(interaction, serverPlayer);
         }
-        dispatchClick(serverLevel, entity.blockPosition().immutable(), FabricEventCompatHandles.ClickType.LEFT, entity, null, player.getItemInHand(hand), serverPlayer);
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        boolean cancelled = dispatchClick(serverLevel, entity.blockPosition().immutable(), FabricEventCompatHandles.ClickType.LEFT, entity, null, player.getItemInHand(hand), serverPlayer);
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricAttackEntityHandle(serverLevel, serverPlayer, hand, entity, hitResult),
                 serverLevel.getServer(),
                 serverLevel,
                 serverPlayer
-        ));
-        return InteractionResult.PASS;
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return (cancelled || event.isCancelled()) ? InteractionResult.FAIL : InteractionResult.PASS;
     }
 
     private static InteractionResult dispatchUseEntity(
@@ -232,14 +236,15 @@ public final class SkriptFabricEventBridge {
         if (entity instanceof Interaction interaction) {
             FabricInteractionState.recordInteract(interaction, serverPlayer);
         }
-        dispatchClick(serverLevel, entity.blockPosition().immutable(), FabricEventCompatHandles.ClickType.RIGHT, entity, null, player.getItemInHand(hand), serverPlayer);
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        boolean cancelled = dispatchClick(serverLevel, entity.blockPosition().immutable(), FabricEventCompatHandles.ClickType.RIGHT, entity, null, player.getItemInHand(hand), serverPlayer);
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricUseEntityHandle(serverLevel, serverPlayer, hand, entity, hitResult),
                 serverLevel.getServer(),
                 serverLevel,
                 serverPlayer
-        ));
-        return InteractionResult.PASS;
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return (cancelled || event.isCancelled()) ? InteractionResult.FAIL : InteractionResult.PASS;
     }
 
     private static InteractionResult dispatchUseItem(
@@ -250,13 +255,15 @@ public final class SkriptFabricEventBridge {
         if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
         }
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        boolean cancelled = dispatchClick(serverLevel, serverPlayer.blockPosition().immutable(), FabricEventCompatHandles.ClickType.RIGHT, null, null, player.getItemInHand(hand), serverPlayer);
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricUseItemHandle(serverLevel, serverPlayer, hand),
                 serverLevel.getServer(),
                 serverLevel,
                 serverPlayer
-        ));
-        return InteractionResult.PASS;
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return (cancelled || event.isCancelled()) ? InteractionResult.FAIL : InteractionResult.PASS;
     }
 
     private static void dispatchEntityLoad(Entity entity, ServerLevel level) {
@@ -282,13 +289,14 @@ public final class SkriptFabricEventBridge {
         if (!(entity.level() instanceof ServerLevel serverLevel)) {
             return true;
         }
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricDamageHandle(serverLevel, entity, source, amount),
                 serverLevel.getServer(),
                 serverLevel,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
-        ));
-        return true;
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return !event.isCancelled();
     }
 
     private static void dispatchDeath(LivingEntity entity, DamageSource source) {
@@ -517,6 +525,38 @@ public final class SkriptFabricEventBridge {
         );
     }
 
+    public static boolean dispatchInventoryMoveEvent(Container source, Container destination, Container initiator) {
+        ServerLevel level = inventoryMoveLevel(destination);
+        if (level == null) {
+            level = inventoryMoveLevel(source);
+        }
+        if (level == null) {
+            return false;
+        }
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricInventoryMoveHandle(source, destination, initiator),
+                level.getServer(),
+                level,
+                null
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return event.isCancelled();
+    }
+
+    public static boolean dispatchReadyArrow(ServerPlayer player, ItemStack bow, ItemStack arrow) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricReadyArrowHandle(bow, arrow),
+                level.getServer(),
+                level,
+                player
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return event.isCancelled();
+    }
+
     public static void dispatchEnchantPrepare(
             ServerLevel level,
             ServerPlayer player,
@@ -547,33 +587,43 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
-    public static void dispatchMending(
+    public static FabricEventCompatHandles.Mending dispatchMending(
             ServerLevel level,
             LivingEntity entity,
             ItemStack item,
             int repairAmount,
             @Nullable ExperienceOrb experienceOrb
     ) {
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.Mending(entity, item.copy(), repairAmount, experienceOrb),
+        FabricEventCompatHandles.Mending handle = new FabricEventCompatHandles.Mending(entity, item.copy(), repairAmount, experienceOrb);
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
                 level.getServer(),
                 level,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
-        ));
+        );
+        SkriptRuntime.instance().dispatch(event);
+        if (event.isCancelled()) {
+            handle.setRepairAmount(0);
+        }
+        return handle;
     }
 
-    public static void dispatchChat(
-            ServerLevel level,
+    public static FabricChatHandle dispatchChat(
             ServerPlayer player,
-            String message,
-            @Nullable java.util.List<ServerPlayer> recipients
+            Component message,
+            Set<ServerPlayer> recipients
     ) {
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.Chat(message, recipients),
+        ServerLevel level = (ServerLevel) player.level();
+        FabricChatHandle handle = new FabricChatHandle(player, message, "<%1$s> %2$s", recipients);
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
                 level.getServer(),
                 level,
                 player
-        ));
+        );
+        SkriptRuntime.instance().dispatch(event);
+        handle.setCancelled(event.isCancelled());
+        return handle;
     }
 
     public static void dispatchInventoryClick(ServerPlayer player, ItemStack clickedStack) {
@@ -927,9 +977,9 @@ public final class SkriptFabricEventBridge {
         );
     }
 
-    public static void dispatchPlayerItemConsume(ServerPlayer player, ItemStack itemStack) {
-        dispatchCompatItem(
-                player.level(),
+    public static boolean dispatchPlayerItemConsume(ServerPlayer player, ItemStack itemStack) {
+        return dispatchCompatItem(
+                (ServerLevel) player.level(),
                 player.blockPosition().immutable(),
                 FabricEventCompatHandles.ItemAction.CONSUME,
                 itemStack,
@@ -991,7 +1041,7 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
-    private static void dispatchCompatItem(
+    private static boolean dispatchCompatItem(
             ServerLevel level,
             BlockPos pos,
             FabricEventCompatHandles.ItemAction action,
@@ -999,12 +1049,14 @@ public final class SkriptFabricEventBridge {
             boolean entityEvent,
             @Nullable ServerPlayer player
     ) {
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.Item(level, pos, action, itemStack.copy(), entityEvent),
                 level.getServer(),
                 level,
                 player
-        ));
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return event.isCancelled();
     }
 
     private static @Nullable ServerLevel inventoryMoveLevel(Container container) {
@@ -1021,7 +1073,7 @@ public final class SkriptFabricEventBridge {
         return null;
     }
 
-    private static void dispatchClick(
+    private static boolean dispatchClick(
             ServerLevel level,
             BlockPos pos,
             FabricEventCompatHandles.ClickType clickType,
@@ -1030,7 +1082,7 @@ public final class SkriptFabricEventBridge {
             ItemStack tool,
             @Nullable ServerPlayer player
     ) {
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
                 new FabricEventCompatHandles.Click(
                         level,
                         pos,
@@ -1042,7 +1094,9 @@ public final class SkriptFabricEventBridge {
                 level.getServer(),
                 level,
                 player
-        ));
+        );
+        SkriptRuntime.instance().dispatch(event);
+        return event.isCancelled();
     }
 
     public static void dispatchPotionEffect(
@@ -1986,5 +2040,16 @@ public final class SkriptFabricEventBridge {
         }
 
         return null;
+    }
+
+    public static FabricServerListPingHandle dispatchServerListPing(List<String> currentSample) {
+        FabricServerListPingHandle handle = new FabricServerListPingHandle(new ArrayList<>(currentSample));
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                null,
+                null,
+                null
+        ));
+        return handle;
     }
 }

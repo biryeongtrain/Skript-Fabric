@@ -41,12 +41,12 @@ public final class EffCancelEvent extends Effect {
             Skript.error("An event cannot be cancelled after it has already passed");
             return false;
         }
-        Skript.error("Event cancellation is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        event.setCancelled(cancel);
     }
 
     @Override

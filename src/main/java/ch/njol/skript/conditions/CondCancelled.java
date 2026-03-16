@@ -37,7 +37,7 @@ public class CondCancelled extends Condition {
 
     @Override
     public boolean check(SkriptEvent event) {
-        return ConditionRuntimeSupport.booleanMethod(event.handle(), false, "isCancelled", "cancelled") ^ isNegated();
+        return event.isCancelled() ^ isNegated();
     }
 
     @Override

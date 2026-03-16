@@ -16,7 +16,8 @@ abstract class ItemStackConsumeMixin {
 
     @Inject(
             method = "finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;",
-            at = @At("HEAD")
+            at = @At("HEAD"),
+            cancellable = true
     )
     private void skript$dispatchPlayerConsume(Level level, LivingEntity livingEntity, CallbackInfoReturnable<ItemStack> cir) {
         if (!(level instanceof ServerLevel) || !(livingEntity instanceof ServerPlayer serverPlayer)) {
@@ -24,7 +25,10 @@ abstract class ItemStackConsumeMixin {
         }
         ItemStack itemStack = (ItemStack) (Object) this;
         if (!itemStack.isEmpty()) {
-            SkriptFabricEventBridge.dispatchPlayerItemConsume(serverPlayer, itemStack.copy());
+            boolean cancelled = SkriptFabricEventBridge.dispatchPlayerItemConsume(serverPlayer, itemStack.copy());
+            if (cancelled) {
+                cir.setReturnValue(itemStack);
+            }
         }
     }
 }

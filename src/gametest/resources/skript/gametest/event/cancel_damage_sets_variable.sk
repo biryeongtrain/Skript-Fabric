@@ -1,0 +1,3 @@
+on damage:
+    set {gametest::cancel_damage_ran} to true
+    cancel event
