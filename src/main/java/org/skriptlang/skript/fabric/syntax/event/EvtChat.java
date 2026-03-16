@@ -4,7 +4,7 @@ import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleEvent;
 import org.jetbrains.annotations.Nullable;
-import ch.njol.skript.events.FabricEventCompatHandles;
+import org.skriptlang.skript.fabric.runtime.FabricChatEventHandle;
 
 public final class EvtChat extends SimpleEvent {
 
@@ -15,7 +15,7 @@ public final class EvtChat extends SimpleEvent {
 
     @Override
     public boolean check(org.skriptlang.skript.lang.event.SkriptEvent event) {
-        return event.handle() instanceof FabricEventCompatHandles.Chat;
+        return event.handle() instanceof FabricChatEventHandle;
     }
 
     @Override
