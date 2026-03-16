@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -19,6 +20,15 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("force all players to stop flying")
 @Since("2.2-dev34")
 public class EffMakeFly extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffMakeFly.class,
+                "force %players% to [(start|1¦stop)] fly[ing]",
+                "make %players% (start|1¦stop) flying",
+                "make %players% fly"
+        );
+    }
 
     private Expression<ServerPlayer> players;
     private boolean flying;

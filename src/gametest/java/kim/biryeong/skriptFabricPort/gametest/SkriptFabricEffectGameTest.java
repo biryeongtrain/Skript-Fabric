@@ -52,6 +52,9 @@ import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Dolphin;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Illusioner;
 import net.minecraft.world.entity.monster.Spider;
@@ -272,6 +275,152 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
                     cow.getItemBySlot(EquipmentSlot.HEAD).is(Items.DIAMOND_HELMET),
                     Component.literal("Expected equip effect to place a diamond helmet on the target entity.")
             );
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void recoveredMobAndPlayerEffectsExecuteRealScript(GameTestHelper helper) {
+        Wolf wolf = (Wolf) helper.spawnWithNoFreeWill(EntityType.WOLF, 0.5F, 1.0F, 0.5F);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/recovered_mob_effects_mark_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            wolf.setCustomNameVisible(false);
+            wolf.setLeftHanded(false);
+            wolf.setCanPickUpLoot(false);
+            wolf.setTame(false, true);
+            wolf.dropLeash();
+            wolf.setRemainingFireTicks(0);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.getAbilities().mayfly = false;
+            player.getAbilities().flying = false;
+            player.onUpdateAbilities();
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    wolf,
+                    new EntityHitResult(wolf)
+            ));
+            helper.assertTrue(
+                    result == InteractionResult.PASS,
+                    Component.literal("Expected recovered effect batch to keep Fabric use-entity callback flow in PASS state.")
+            );
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, markerPos);
+            helper.assertTrue(wolf.isCustomNameVisible(), Component.literal("Expected custom-name effect to show the wolf's custom name."));
+            helper.assertTrue(wolf.isLeftHanded(), Component.literal("Expected handedness effect to make the wolf left-handed."));
+            helper.assertTrue(wolf.getRemainingFireTicks() > 0, Component.literal("Expected ignite effect to set fire ticks on the wolf."));
+            helper.assertTrue(wolf.isTame(), Component.literal("Expected tame effect to tame the wolf."));
+            helper.assertTrue(wolf.canPickUpLoot(), Component.literal("Expected pick-up-items effect to allow loot pickup."));
+            helper.assertTrue(wolf.isLeashed() && wolf.getLeashHolder() == player, Component.literal("Expected leash effect to attach the wolf to the player."));
+            helper.assertTrue(player.getAbilities().mayfly && player.getAbilities().flying, Component.literal("Expected make-fly effect to enable and start player flight."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void recoveredShearEffectExecutesRealScript(GameTestHelper helper) {
+        Sheep sheep = (Sheep) helper.spawnWithNoFreeWill(EntityType.SHEEP, 0.5F, 1.0F, 0.5F);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/recovered_shear_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+            sheep.setSheared(false);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    sheep,
+                    new EntityHitResult(sheep)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS, Component.literal("Expected shear effect callback flow to stay PASS."));
+            helper.assertBlockPresent(Blocks.LIME_WOOL, markerPos);
+            helper.assertTrue(sheep.isSheared(), Component.literal("Expected shear effect to shear the sheep."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void recoveredAxolotlPlayDeadEffectExecutesRealScript(GameTestHelper helper) {
+        Axolotl axolotl = (Axolotl) helper.spawnWithNoFreeWill(EntityType.AXOLOTL, 0.5F, 1.0F, 0.5F);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/recovered_axolotl_play_dead_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+            axolotl.setPlayingDead(false);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    axolotl,
+                    new EntityHitResult(axolotl)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS, Component.literal("Expected axolotl play-dead effect callback flow to stay PASS."));
+            helper.assertBlockPresent(Blocks.BLUE_WOOL, markerPos);
+            helper.assertTrue(axolotl.isPlayingDead(), Component.literal("Expected play-dead effect to toggle axolotl state."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void recoveredHorseEatingEffectExecutesRealScript(GameTestHelper helper) {
+        Horse horse = (Horse) helper.spawnWithNoFreeWill(EntityType.HORSE, 0.5F, 1.0F, 0.5F);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/recovered_horse_eating_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+            horse.setEating(false);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player,
+                    helper.getLevel(),
+                    InteractionHand.MAIN_HAND,
+                    horse,
+                    new EntityHitResult(horse)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS, Component.literal("Expected horse eating effect callback flow to stay PASS."));
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, markerPos);
+            helper.assertTrue(horse.isEating(), Component.literal("Expected eating effect to set horse eating state."));
             runtime.clearScripts();
             helper.succeed();
         });

@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -19,6 +20,15 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("extinguish the player")
 @Since("1.4")
 public class EffIgnite extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffIgnite.class,
+                "(ignite|set fire to) %entities% [for %-timespan%]",
+                "(set|light) %entities% on fire [for %-timespan%]",
+                "extinguish %entities%"
+        );
+    }
 
     private static final int DEFAULT_DURATION = 8 * 20;
 

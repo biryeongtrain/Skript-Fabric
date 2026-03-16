@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -26,6 +27,15 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
     """)
 @Since("2.3")
 public class EffLeash extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffLeash.class,
+                "(leash|lead) %livingentities% to %entity%",
+                "make %entity% (leash|lead) %livingentities%",
+                "un(leash|lead) [holder of] %livingentities%"
+        );
+    }
 
     private Expression<LivingEntity> targets;
     private @Nullable Expression<Entity> holder;

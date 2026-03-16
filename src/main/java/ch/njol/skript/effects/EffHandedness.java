@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -22,6 +23,10 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("make all zombies in radius 10 of player right handed")
 @Since("2.8.0")
 public class EffHandedness extends Effect {
+
+    static {
+        Skript.registerEffect(EffHandedness.class, "make %livingentities% (:left|right)( |-)handed");
+    }
 
     private Expression<LivingEntity> livingEntities;
     private boolean leftHanded;

@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -19,6 +20,10 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("untame {_wolf}")
 @Since("2.10")
 public class EffTame extends Effect {
+
+    static {
+        Skript.registerEffect(EffTame.class, "[:un](tame|domesticate) %entities%");
+    }
 
     private Expression<Entity> entities;
     private boolean tame;

@@ -20,6 +20,14 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Since("2.10")
 public class EffCustomName extends Effect {
 
+    static {
+        Skript.registerEffect(
+                EffCustomName.class,
+                "(:show|hide) [the] (custom|display)[ ]name of %entities%",
+                "(:show|hide) %entities%'[s] (custom|display)[ ]name"
+        );
+    }
+
     private Expression<Entity> entities;
     private boolean showCustomName;
 

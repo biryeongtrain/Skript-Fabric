@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -18,6 +19,16 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("make last spawned axolotl play dead")
 @Since("2.11")
 public class EffPlayingDead extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffPlayingDead.class,
+                "make %livingentities% (start playing|play) dead",
+                "force %livingentities% to (start playing|play) dead",
+                "make %livingentities% (stop playing|not play) dead",
+                "force %livingentities% to (stop playing|not play) dead"
+        );
+    }
 
     private Expression<LivingEntity> entities;
     private boolean playDead;

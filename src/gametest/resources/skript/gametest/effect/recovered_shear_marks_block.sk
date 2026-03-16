@@ -1,0 +1,3 @@
+on right click on sheep:
+    shear event-entity
+    set test block under player event-player to lime_wool

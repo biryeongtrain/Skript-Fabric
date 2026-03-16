@@ -783,6 +783,16 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.effects.EffTransform.register();
         ch.njol.skript.effects.EffVehicle.register();
         ch.njol.skript.effects.EffZombify.register();
+        forceInitialize(ch.njol.skript.effects.EffCustomName.class);
+        forceInitialize(ch.njol.skript.effects.EffEating.class);
+        forceInitialize(ch.njol.skript.effects.EffHandedness.class);
+        forceInitialize(ch.njol.skript.effects.EffIgnite.class);
+        forceInitialize(ch.njol.skript.effects.EffLeash.class);
+        forceInitialize(ch.njol.skript.effects.EffMakeFly.class);
+        forceInitialize(ch.njol.skript.effects.EffPlayingDead.class);
+        forceInitialize(ch.njol.skript.effects.EffShear.class);
+        forceInitialize(ch.njol.skript.effects.EffTame.class);
+        forceInitialize(ch.njol.skript.effects.EffToggleCanPickUpItems.class);
         forceInitialize(ch.njol.skript.effects.EffEnforceWhitelist.class);
         forceInitialize(ch.njol.skript.effects.EffRespawn.class);
 

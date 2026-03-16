@@ -1,0 +1,9 @@
+on right click on wolf:
+    show the custom name of event-entity
+    make event-entity left-handed
+    ignite event-entity for 1 second
+    leash event-entity to player
+    tame event-entity
+    allow event-entity to pick up items
+    make player fly
+    set test block under player event-player to emerald_block

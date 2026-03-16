@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -23,6 +24,14 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
     """)
 @Since("2.8.0")
 public class EffToggleCanPickUpItems extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffToggleCanPickUpItems.class,
+                "allow %livingentities% to pick([ ]up items| items up)",
+                "(forbid|disallow) %livingentities% (from|to) pick([ing | ]up items|[ing] items up)"
+        );
+    }
 
     private Expression<LivingEntity> entities;
     private boolean allowPickUp;

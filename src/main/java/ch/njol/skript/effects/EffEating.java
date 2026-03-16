@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -23,6 +24,14 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
     """)
 @Since("2.11")
 public class EffEating extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffEating.class,
+                "make %livingentities% (:start|stop) eating",
+                "force %livingentities% to (:start|stop) eating"
+        );
+    }
 
     private Expression<LivingEntity> entities;
     private boolean start;

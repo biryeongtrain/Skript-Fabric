@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -21,6 +22,14 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
     """)
 @Since("2.0 (cows, sheep & snowmen), 2.8.0 (all shearable entities)")
 public class EffShear extends Effect {
+
+    static {
+        Skript.registerEffect(
+                EffShear.class,
+                "[:force] shear %livingentities%",
+                "un[-]shear %livingentities%"
+        );
+    }
 
     private Expression<LivingEntity> entities;
     private boolean force;
