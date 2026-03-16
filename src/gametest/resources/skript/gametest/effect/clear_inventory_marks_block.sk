@@ -1,0 +1,3 @@
+on use entity:
+    clear the inventory of player
+    set test block under player event-player to green_wool

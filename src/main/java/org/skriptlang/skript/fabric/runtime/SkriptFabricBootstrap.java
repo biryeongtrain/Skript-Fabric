@@ -952,10 +952,11 @@ public final class SkriptFabricBootstrap {
                 Skript.registerEffect(
                         EffChange.class,
                         "set %object% to %object%",
-                        "add %object% to %object%",
+                        "(add|give) %object% to %object%",
+                        "give %object% %object%",
                         "remove %object% from %object%",
                         "reset %object%",
-                        "delete %object%"
+                        "(delete|clear) %object%"
                 );
                 ch.njol.skript.classes.data.DefaultOperations.register();
                 ExprArithmetic.registerExpression();

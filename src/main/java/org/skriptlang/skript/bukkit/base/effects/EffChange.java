@@ -26,26 +26,37 @@ public final class EffChange extends Effect {
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         switch (matchedPattern) {
             case 0 -> {
+                // set %object% to %object%
                 mode = ChangeMode.SET;
                 changed = expressions[0];
                 changeWith = expressions[1];
             }
             case 1 -> {
+                // (add|give) %object% to %object%
                 mode = ChangeMode.ADD;
                 changeWith = expressions[0];
                 changed = expressions[1];
             }
             case 2 -> {
+                // give %object% %object%  (give <target> <items>)
+                mode = ChangeMode.ADD;
+                changed = expressions[0];
+                changeWith = expressions[1];
+            }
+            case 3 -> {
+                // remove %object% from %object%
                 mode = ChangeMode.REMOVE;
                 changeWith = expressions[0];
                 changed = expressions[1];
             }
-            case 3 -> {
+            case 4 -> {
+                // reset %object%
                 mode = ChangeMode.RESET;
                 changed = expressions[0];
                 changeWith = null;
             }
-            case 4 -> {
+            case 5 -> {
+                // (delete|clear) %object%
                 mode = ChangeMode.DELETE;
                 changed = expressions[0];
                 changeWith = null;
@@ -122,7 +133,7 @@ public final class EffChange extends Effect {
             case REMOVE -> "remove " + (changeWith == null ? "" : changeWith.toString(event, debug)) + " from "
                     + changed.toString(event, debug);
             case RESET -> "reset " + changed.toString(event, debug);
-            case DELETE -> "delete " + changed.toString(event, debug);
+            case DELETE -> "clear " + changed.toString(event, debug);
         };
     }
 }
