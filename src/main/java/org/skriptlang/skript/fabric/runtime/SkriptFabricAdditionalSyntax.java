@@ -137,6 +137,13 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.events.EvtTeleport.register();
         ch.njol.skript.events.EvtVehicleCollision.register();
         ch.njol.skript.events.EvtWeatherChange.register();
+        ch.njol.skript.events.EvtTame.register();
+        ch.njol.skript.events.EvtCombust.register();
+        ch.njol.skript.events.EvtProjectileHit.register();
+        ch.njol.skript.events.EvtProjectileLaunch.register();
+        ch.njol.skript.events.EvtBed.register();
+        ch.njol.skript.events.EvtLightning.register();
+        ch.njol.skript.events.EvtFoodLevelChange.register();
         Skript.registerEvent(EvtBucketCatch.class, EvtBucketCatch.patterns());
         Skript.registerEvent(EvtBreeding.class, EvtBreeding.patterns());
         Skript.registerEvent(EvtBrewingComplete.class, EvtBrewingComplete.patterns());
@@ -736,6 +743,83 @@ final class SkriptFabricAdditionalSyntax {
         forceInitialize(ch.njol.skript.expressions.ExprPortalCooldown.class);
         forceInitialize(ch.njol.skript.expressions.ExprBreakSpeed.class);
 
+        // ===== Missing Expression registrations =====
+        forceInitialize(ch.njol.skript.expressions.ExprARGB.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAbsorbedBlocks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprActiveItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAllCommands.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAllayJukebox.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAmount.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAmountOfItems.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAngle.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAnvilRepairCost.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAnvilText.class);
+        forceInitialize(ch.njol.skript.expressions.ExprArmorChangeItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAttachedBlock.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBeaconEffects.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBeaconRange.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBeaconTier.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBeehiveFlower.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBeehiveHoneyLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBlockHardness.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBlockSound.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBlocks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprBrushableItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCharges.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCreeperMaxFuseTicks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprCursorSlot.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDamagedItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDomestication.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDropsOfBlock.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDuplicateCooldown.class);
+        forceInitialize(ch.njol.skript.expressions.ExprDustedStage.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEgg.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEnchantmentOfferCost.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntityAttribute.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntityItemUseTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntityOwner.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEntitySize.class);
+        forceInitialize(ch.njol.skript.expressions.ExprEventExpression.class);
+        forceInitialize(ch.njol.skript.expressions.ExprExperienceCooldown.class);
+        forceInitialize(ch.njol.skript.expressions.ExprFireworkEffect.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHotbarButton.class);
+        forceInitialize(ch.njol.skript.expressions.ExprHotbarSlot.class);
+        forceInitialize(ch.njol.skript.expressions.ExprInventoryAction.class);
+        forceInitialize(ch.njol.skript.expressions.ExprInventoryCloseReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItem.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemFlags.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemWithCustomModelData.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemWithEnchantmentGlint.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemWithLore.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItemWithTooltip.class);
+        forceInitialize(ch.njol.skript.expressions.ExprItems.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLastDeathLocation.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLastLoginTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLastResourcePackResponse.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMoonPhase.class);
+        forceInitialize(ch.njol.skript.expressions.ExprNoDamageTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprPushedBlocks.class);
+        forceInitialize(ch.njol.skript.expressions.ExprRespawnLocation.class);
+        forceInitialize(ch.njol.skript.expressions.ExprRespawnReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprScoreboardTags.class);
+        forceInitialize(ch.njol.skript.expressions.ExprStringColor.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTimePlayed.class);
+        forceInitialize(ch.njol.skript.expressions.ExprTransformReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprUnbreakable.class);
+        forceInitialize(ch.njol.skript.expressions.ExprUnleashReason.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorAngleBetween.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorCylindrical.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorFromDirection.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorFromXYZ.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorOfLocation.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorProjection.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorRandom.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVectorSquaredLength.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVelocity.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVillagerLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVillagerProfession.class);
+        forceInitialize(ch.njol.skript.expressions.ExprVillagerType.class);
+
         // ===== Cycle 9: Batch 3 — Effects (49 register + 2 forceInitialize) =====
         ch.njol.skript.effects.EffAllayCanDuplicate.register();
         ch.njol.skript.effects.EffAllayDuplicate.register();
@@ -796,6 +880,20 @@ final class SkriptFabricAdditionalSyntax {
         forceInitialize(ch.njol.skript.effects.EffEnforceWhitelist.class);
         forceInitialize(ch.njol.skript.effects.EffRespawn.class);
 
+        // ===== Missing Effect registrations =====
+        ch.njol.skript.effects.EffClearEntityStorage.register();
+        ch.njol.skript.effects.EffConnect.register();
+        ch.njol.skript.effects.EffDrop.register();
+        ch.njol.skript.effects.EffElytraBoostConsume.register();
+        ch.njol.skript.effects.EffEntityVisibility.register();
+        ch.njol.skript.effects.EffInsertEntityStorage.register();
+        ch.njol.skript.effects.EffMakeSay.register();
+        ch.njol.skript.effects.EffReleaseEntityStorage.register();
+        ch.njol.skript.effects.EffScriptFile.register();
+        ch.njol.skript.effects.EffTeleport.register();
+        ch.njol.skript.effects.EffTree.register();
+        ch.njol.skript.effects.EffWakeupSleep.register();
+
         // ===== Cycle 9: Batch 4 — Upstream Events (40) =====
         ch.njol.skript.events.EvtAreaCloudEffect.register();
         ch.njol.skript.events.EvtAtTime.register();
@@ -805,6 +903,7 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.events.EvtBlockFertilize.register();
         ch.njol.skript.events.EvtBookEdit.register();
         ch.njol.skript.events.EvtBookSign.register();
+        ch.njol.skript.events.EvtChunk.register();
         ch.njol.skript.events.EvtClick.register();
         ch.njol.skript.events.EvtConnect.register();
         ch.njol.skript.events.EvtDamage.register();
@@ -818,6 +917,8 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.events.EvtExplosionPrime.register();
         ch.njol.skript.events.EvtFirework.register();
         ch.njol.skript.events.EvtFirstJoin.register();
+        ch.njol.skript.events.EvtFlightToggle.register();
+        ch.njol.skript.events.EvtGlideToggle.register();
         ch.njol.skript.events.EvtHandItemSwap.register();
         ch.njol.skript.events.EvtHarvestBlock.register();
         ch.njol.skript.events.EvtHealing.register();
@@ -836,7 +937,33 @@ final class SkriptFabricAdditionalSyntax {
         ch.njol.skript.events.EvtRespawn.register();
         ch.njol.skript.events.EvtScript.register();
         ch.njol.skript.events.EvtSkript.register();
+        ch.njol.skript.events.EvtSneakToggle.register();
+        ch.njol.skript.events.EvtSprintToggle.register();
+        ch.njol.skript.events.EvtSwimToggle.register();
         ch.njol.skript.events.EvtWorld.register();
+        ch.njol.skript.events.EvtRealTime.register();
+        ch.njol.skript.events.EvtReadyArrow.register();
+        ch.njol.skript.events.EvtResurrect.register();
+        Skript.registerEvent(ch.njol.skript.events.EvtServerListPing.class, "server [list] ping");
+        ch.njol.skript.events.EvtSheepRegrowWool.register();
+        ch.njol.skript.events.EvtSlimeSplit.register();
+        ch.njol.skript.events.EvtToolChange.register();
+        ch.njol.skript.events.EvtVehicleCreate.register();
+        ch.njol.skript.events.EvtVehicleDamage.register();
+        ch.njol.skript.events.EvtVehicleDestroy.register();
+        ch.njol.skript.events.EvtVehicleEnter.register();
+        ch.njol.skript.events.EvtVehicleExit.register();
+        ch.njol.skript.events.EvtEntityMount.register();
+        ch.njol.skript.events.EvtEntityDismount.register();
+        ch.njol.skript.events.EvtPlayerWorldChange.register();
+        ch.njol.skript.events.EvtBellRing.register();
+        ch.njol.skript.events.EvtBellResonate.register();
+        ch.njol.skript.events.EvtBatToggleSleep.register();
+        ch.njol.skript.events.EvtLanguageChange.register();
+
+        // ===== Missing Structures =====
+        ch.njol.skript.structures.StructExample.register();
+        ch.njol.skript.structures.StructUsing.register();
     }
 
     private static void forceInitialize(Class<?> type) {

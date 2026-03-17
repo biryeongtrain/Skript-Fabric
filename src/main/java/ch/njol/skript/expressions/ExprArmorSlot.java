@@ -8,9 +8,9 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.PropertyExpression;
 import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.SyntaxStringBuilder;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -29,7 +29,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("set chestplate of the player to diamond chestplate")
 @Keywords("armor")
 @Since("1.0")
-public final class ExprArmorSlot extends PropertyExpression<LivingEntity, Slot> {
+public final class ExprArmorSlot extends SimpleExpression<Slot> {
 
     private static final Set<EquipmentSlot> ARMOR_SLOTS = EnumSet.of(
             EquipmentSlot.HEAD,
@@ -44,36 +44,25 @@ public final class ExprArmorSlot extends PropertyExpression<LivingEntity, Slot> 
                 Slot.class,
                 PropertyExpression.getPatterns("armo[u]r[s] [item:item[s]]", "livingentities")
         );
-        Skript.registerExpression(
-                ExprArmorSlot.class,
-                Slot.class,
-                PropertyExpression.getPatterns("%-*equipmentslots% [item:item[s]]", "livingentities")
-        );
     }
 
-    private @Nullable Literal<EquipmentSlot> requestedSlots;
+    private Expression<?> entityExpr;
     private boolean explicitItem;
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        if (expressions.length > 1 && expressions[0] != null) {
-            requestedSlots = (Literal<EquipmentSlot>) expressions[0];
-        }
         explicitItem = parseResult.hasTag("item");
-        setExpr((Expression<? extends LivingEntity>) expressions[expressions.length - 1]);
+        entityExpr = expressions[expressions.length - 1];
         return true;
     }
 
     @Override
-    protected Slot[] get(SkriptEvent event, LivingEntity[] source) {
+    protected Slot[] get(SkriptEvent event) {
         List<Slot> slots = new ArrayList<>();
-        EquipmentSlot[] selected = requestedSlots == null ? ARMOR_SLOTS.toArray(EquipmentSlot[]::new) : requestedSlots.getArray(event);
-        for (LivingEntity entity : source) {
-            for (EquipmentSlot slot : selected) {
-                if (ARMOR_SLOTS.contains(slot)) {
-                    slots.add(new ArmorBackedSlot(entity, slot));
-                }
+        for (Object obj : entityExpr.getAll(event)) {
+            if (!(obj instanceof LivingEntity living)) continue;
+            for (EquipmentSlot slot : ARMOR_SLOTS) {
+                slots.add(new ArmorBackedSlot(living, slot));
             }
         }
         return slots.toArray(Slot[]::new);
@@ -81,7 +70,7 @@ public final class ExprArmorSlot extends PropertyExpression<LivingEntity, Slot> 
 
     @Override
     public boolean isSingle() {
-        return requestedSlots != null && requestedSlots.isSingle() && getExpr().isSingle();
+        return false;
     }
 
     @Override
@@ -92,15 +81,11 @@ public final class ExprArmorSlot extends PropertyExpression<LivingEntity, Slot> 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
         SyntaxStringBuilder builder = new SyntaxStringBuilder(event, debug);
-        if (requestedSlots == null) {
-            builder.append("armor");
-        } else {
-            builder.append(requestedSlots);
-        }
+        builder.append("armor");
         if (explicitItem) {
             builder.append("items");
         }
-        builder.append("of", getExpr());
+        builder.append("of", entityExpr);
         return builder.toString();
     }
 

@@ -1,7 +1,9 @@
 package kim.biryeong.skriptFabric.mixin;
 
+import net.minecraft.network.protocol.common.ServerboundClientInformationPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.player.Input;
@@ -34,7 +36,14 @@ abstract class ServerGamePacketListenerImplMixin {
     )
     private void skript$dispatchPlayerInput(ServerboundPlayerInputPacket packet, CallbackInfo callbackInfo) {
         Input previousInput = player.getLastClientInput();
-        SkriptFabricEventBridge.dispatchPlayerInput(player, packet.input(), previousInput);
+        Input currentInput = packet.input();
+        if (previousInput.shift() != currentInput.shift()) {
+            SkriptFabricEventBridge.dispatchSneakToggle(player, currentInput.shift());
+        }
+        if (previousInput.sprint() != currentInput.sprint()) {
+            SkriptFabricEventBridge.dispatchSprintToggle(player, currentInput.sprint());
+        }
+        SkriptFabricEventBridge.dispatchPlayerInput(player, currentInput, previousInput);
     }
 
     @Inject(method = "handleMovePlayer", at = @At("HEAD"))
@@ -75,5 +84,23 @@ abstract class ServerGamePacketListenerImplMixin {
     @Inject(method = "handleMovePlayer", at = @At("TAIL"))
     private void skript$clearCapturedMove(ServerboundMovePlayerPacket packet, CallbackInfo callbackInfo) {
         skript$moveFromPosition = null;
+    }
+
+    @Inject(method = "handleSetCarriedItem", at = @At("HEAD"))
+    private void skript$dispatchToolChange(ServerboundSetCarriedItemPacket packet, CallbackInfo callbackInfo) {
+        int previousSlot = player.getInventory().getSelectedSlot();
+        int newSlot = packet.getSlot();
+        if (previousSlot != newSlot) {
+            SkriptFabricEventBridge.dispatchToolChange(player, previousSlot, newSlot);
+        }
+    }
+
+    @Inject(method = "handleClientInformation", at = @At("HEAD"))
+    private void skript$dispatchLanguageChange(ServerboundClientInformationPacket packet, CallbackInfo callbackInfo) {
+        String previousLanguage = player.clientInformation().language();
+        String newLanguage = packet.information().language();
+        if (!previousLanguage.equals(newLanguage)) {
+            SkriptFabricEventBridge.dispatchLanguageChange(player, newLanguage);
+        }
     }
 }

@@ -24,7 +24,7 @@ import org.skriptlang.skript.registration.SyntaxRegistryService;
 
 public class Skript implements SkriptAddon {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("skript-fabric");
+    private static final Logger LOGGER = LoggerFactory.getLogger("skfabric");
     private static final Skript INSTANCE = new Skript();
     private static volatile boolean acceptRegistrations = false;
     private static volatile @Nullable RuntimeErrorManager runtimeErrorManager;

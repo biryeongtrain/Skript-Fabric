@@ -17,7 +17,7 @@ import org.skriptlang.skript.fabric.compat.FabricBlock;
 public class ExprCharges extends SimplePropertyExpression<FabricBlock, Integer> {
 
     static {
-        register(ExprCharges.class, Integer.class, "charge[s]", "blocks");
+        register(ExprCharges.class, Integer.class, "[:max[imum]] charge[s]", "blocks");
     }
 
     @Override

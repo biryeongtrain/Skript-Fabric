@@ -202,6 +202,8 @@ public final class SkriptFabricBootstrap {
                 StructOptions.register();
                 StructFunction.register();
                 ch.njol.skript.structures.StructCommand.register();
+                ch.njol.skript.structures.StructAliases.register();
+                ch.njol.skript.structures.StructAutoReload.register();
                 ch.njol.skript.effects.EffReturn.register();
                 SecIf.register();
                 forceInitialize(ch.njol.skript.sections.SecLoop.class);
@@ -227,7 +229,11 @@ public final class SkriptFabricBootstrap {
                         "%slot% is empty",
                         "%slot% is not empty",
                         "%inventory% is empty",
-                        "%inventory% is not empty"
+                        "%inventory% is not empty",
+                        "%strings% (is|are) empty",
+                        "%strings% (isn't|is not|aren't|are not) empty",
+                        "%numbered% (is|are) empty",
+                        "%numbered% (isn't|is not|aren't|are not) empty"
                 );
                 Skript.registerCondition(
                         CondIsNamed.class,
@@ -509,8 +515,8 @@ public final class SkriptFabricBootstrap {
                 Skript.registerExpression(
                         ExprInventoryInfo.class,
                         Object.class,
-                        "(1¦holder[s]|2¦[amount of] rows|3¦[amount of] slots) of %inventories%",
-                        "%inventories%'[s] (1¦holder[s]|2¦[amount of] rows|3¦[amount of] slots)"
+                        "(1¦holder[s]|2¦[amount of] rows|3¦[amount of] slots|4¦viewer[s]) of %inventories%",
+                        "%inventories%'[s] (1¦holder[s]|2¦[amount of] rows|3¦[amount of] slots|4¦viewer[s])"
                 );
                 Skript.registerExpression(
                         ExprInventorySlot.class,
@@ -954,7 +960,10 @@ public final class SkriptFabricBootstrap {
                         "set %object% to %object%",
                         "(add|give) %object% to %object%",
                         "give %object% %object%",
+                        "increase %object% by %object%",
+                        "(reduce|decrease) %object% by %object%",
                         "remove %object% from %object%",
+                        "remove all %object% from %object%",
                         "reset %object%",
                         "(delete|clear) %object%"
                 );
@@ -1037,8 +1046,10 @@ public final class SkriptFabricBootstrap {
     private static void initializeRecoveredSyntaxCoreExpressionBundle() {
         forceInitialize(ch.njol.skript.expressions.ExprAttacked.class);
         forceInitialize(ch.njol.skript.expressions.ExprAttacker.class);
+        forceInitialize(ch.njol.skript.expressions.ExprArmorSlot.class);
         forceInitialize(ch.njol.skript.expressions.ExprArgument.class);
         forceInitialize(ch.njol.skript.expressions.ExprAltitude.class);
+        forceInitialize(ch.njol.skript.expressions.ExprAllBannedEntries.class);
         forceInitialize(ch.njol.skript.expressions.ExprBlock.class);
         forceInitialize(ch.njol.skript.expressions.ExprBlockSphere.class);
         forceInitialize(ch.njol.skript.expressions.ExprBlockData.class);
@@ -1070,10 +1081,12 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprEntities.class);
         forceInitialize(ch.njol.skript.expressions.ExprExperience.class);
         forceInitialize(ch.njol.skript.expressions.ExprFinalDamage.class);
+        forceInitialize(ch.njol.skript.expressions.ExprFunction.class);
         forceInitialize(ch.njol.skript.expressions.ExprHealReason.class);
         forceInitialize(ch.njol.skript.expressions.ExprHumidity.class);
         forceInitialize(ch.njol.skript.expressions.ExprIP.class);
         forceInitialize(ch.njol.skript.expressions.ExprItemCooldown.class);
+        forceInitialize(ch.njol.skript.expressions.ExprKeyed.class);
         forceInitialize(ch.njol.skript.expressions.ExprLastDamageCause.class);
         forceInitialize(ch.njol.skript.expressions.ExprLanguage.class);
         forceInitialize(ch.njol.skript.expressions.ExprLightLevel.class);
@@ -1084,6 +1097,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLocationVectorOffset.class);
         forceInitialize(ch.njol.skript.expressions.ExprMOTD.class);
         forceInitialize(ch.njol.skript.expressions.ExprMe.class);
+        forceInitialize(ch.njol.skript.expressions.ExprMemory.class);
         forceInitialize(ch.njol.skript.expressions.ExprMetadata.class);
         forceInitialize(ch.njol.skript.expressions.ExprMidpoint.class);
         forceInitialize(ch.njol.skript.expressions.ExprAffectedEntities.class);
@@ -1119,6 +1133,7 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprNumbers.class);
         forceInitialize(ch.njol.skript.expressions.ExprOfflinePlayers.class);
         forceInitialize(ch.njol.skript.expressions.ExprOnlinePlayersCount.class);
+        forceInitialize(ch.njol.skript.expressions.ExprOpenedInventory.class);
         forceInitialize(ch.njol.skript.expressions.ExprOps.class);
         forceInitialize(ch.njol.skript.expressions.ExprPandaGene.class);
         forceInitialize(ch.njol.skript.expressions.ExprParse.class);
@@ -1128,10 +1143,12 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprPing.class);
         forceInitialize(ch.njol.skript.expressions.ExprPlain.class);
         forceInitialize(ch.njol.skript.expressions.ExprPermissions.class);
+        forceInitialize(ch.njol.skript.expressions.ExprPickupDelay.class);
         forceInitialize(ch.njol.skript.expressions.ExprPlayerProtocolVersion.class);
         forceInitialize(ch.njol.skript.expressions.ExprPortal.class);
         forceInitialize(ch.njol.skript.expressions.ExprProtocolVersion.class);
         forceInitialize(ch.njol.skript.expressions.ExprProjectileForce.class);
+        forceInitialize(ch.njol.skript.expressions.ExprProjectileCriticalState.class);
         forceInitialize(ch.njol.skript.expressions.ExprQuitReason.class);
         forceInitialize(ch.njol.skript.expressions.ExprResonatingTime.class);
         forceInitialize(ch.njol.skript.expressions.ExprResult.class);
@@ -1175,6 +1192,14 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprWardenAngryAt.class);
         forceInitialize(ch.njol.skript.expressions.ExprWardenEntityAnger.class);
         forceInitialize(ch.njol.skript.expressions.ExprWhitelist.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorder.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorderCenter.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorderDamageAmount.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorderDamageBuffer.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorderSize.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorderWarningDistance.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldBorderWarningTime.class);
+        forceInitialize(ch.njol.skript.expressions.ExprWorldEnvironment.class);
         forceInitialize(ch.njol.skript.expressions.ExprWithFireResistance.class);
         forceInitialize(ch.njol.skript.expressions.ExprWithItemFlags.class);
         forceInitialize(ch.njol.skript.expressions.ExprXOf.class);

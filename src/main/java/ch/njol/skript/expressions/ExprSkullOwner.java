@@ -24,7 +24,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public final class ExprSkullOwner extends SimplePropertyExpression<Object, GameProfile> {
 
     static {
-        register(ExprSkullOwner.class, GameProfile.class, "(head|skull) owner", "slots/itemtypes/itemstacks");
+        register(ExprSkullOwner.class, GameProfile.class, "(head|skull) owner", "slots/itemtypes/itemstacks/blocks");
     }
 
     @Override

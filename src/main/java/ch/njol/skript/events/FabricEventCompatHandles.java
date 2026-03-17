@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.Set;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
@@ -280,6 +283,21 @@ public final class FabricEventCompatHandles {
     public record HandItemSwap() {
     }
 
+    public record SneakToggle(boolean sneaking) {
+    }
+
+    public record SprintToggle(boolean sprinting) {
+    }
+
+    public record FlightToggle(boolean flying) {
+    }
+
+    public record GlideToggle() {
+    }
+
+    public record SwimToggle(Entity entity, boolean swimming) implements FabricEntityEventHandle {
+    }
+
     public static @Nullable String effectName(@Nullable net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect) {
         if (effect == null) {
             return null;
@@ -356,5 +374,184 @@ public final class FabricEventCompatHandles {
             String message,
             @Nullable List<ServerPlayer> recipients
     ) {
+    }
+
+    public record ChunkLoad(net.minecraft.world.level.chunk.LevelChunk chunk) {
+    }
+
+    public record ChunkUnload(net.minecraft.world.level.chunk.LevelChunk chunk) {
+    }
+
+    public record VehicleCreate(Entity vehicle) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return vehicle;
+        }
+    }
+
+    public record VehicleDamage(Entity vehicle, @Nullable Entity attacker) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return vehicle;
+        }
+    }
+
+    public record VehicleDestroy(Entity vehicle, @Nullable Entity attacker) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return vehicle;
+        }
+    }
+
+    public record VehicleEnter(Entity vehicle, Entity passenger) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return passenger;
+        }
+    }
+
+    public record VehicleExit(Entity vehicle, Entity passenger) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return passenger;
+        }
+    }
+
+    public record EntityMount(Entity entity, Entity vehicle) implements FabricEntityEventHandle {
+    }
+
+    public record EntityDismount(Entity entity, Entity vehicle) implements FabricEntityEventHandle {
+    }
+
+    public record ResurrectAttempt(LivingEntity entity) implements FabricEntityEventHandle {
+    }
+
+    public record PlayerWorldChange(ServerPlayer player) {
+    }
+
+    public record SheepRegrowWool(Entity sheep) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return sheep;
+        }
+    }
+
+    public record SlimeSplit(Entity slime) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return slime;
+        }
+    }
+
+    public record BellRing(ServerLevel level, BlockPos position) implements FabricBlockEventHandle {
+    }
+
+    public record BellResonate(ServerLevel level, BlockPos position) implements FabricBlockEventHandle {
+    }
+
+    public record BatToggleSleep(Entity bat, boolean resting) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return bat;
+        }
+    }
+
+    public record ToolChange(ServerPlayer player, int previousSlot, int newSlot) {
+    }
+
+    public record LanguageChange(ServerPlayer player, String language) {
+    }
+
+    public record Tame(TamableAnimal entity, net.minecraft.world.entity.player.Player player) implements FabricEntityEventHandle {
+    }
+
+    public record Combust(Entity entity, int duration) implements FabricEntityEventHandle {
+    }
+
+    public record ProjectileHit(Projectile projectile, @Nullable Entity hitEntity) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return projectile;
+        }
+    }
+
+    public record ProjectileLaunch(Projectile projectile) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return projectile;
+        }
+    }
+
+    public record BedEnter(ServerPlayer player) {
+    }
+
+    public record BedLeave(ServerPlayer player) {
+    }
+
+    public record LightningStrike(LightningBolt lightning) implements FabricEntityEventHandle {
+        @Override
+        public Entity entity() {
+            return lightning;
+        }
+    }
+
+    public record FoodLevelChange(ServerPlayer player, int oldLevel, int newLevel) {
+    }
+
+    public record SignChange(ServerPlayer player, BlockPos pos, String[] lines, boolean front) implements FabricBlockEventHandle {
+        @Override
+        public ServerLevel level() {
+            return (ServerLevel) player.level();
+        }
+
+        @Override
+        public BlockPos position() {
+            return pos;
+        }
+    }
+
+    public record BlockDamage(ServerPlayer player, BlockPos pos) implements FabricBlockEventHandle {
+        @Override
+        public ServerLevel level() {
+            return (ServerLevel) player.level();
+        }
+
+        @Override
+        public BlockPos position() {
+            return pos;
+        }
+    }
+
+    public record BucketUse(ServerPlayer player, boolean fill) {
+    }
+
+    public record InventoryOpen(ServerPlayer player) {
+    }
+
+    public record InventoryClose(ServerPlayer player) {
+    }
+
+    public record InventoryDrag(ServerPlayer player) {
+    }
+
+    public record LeavesDecay(ServerLevel level, BlockPos pos) implements FabricBlockEventHandle {
+        @Override
+        public BlockPos position() {
+            return pos;
+        }
+    }
+
+    public record SpongeAbsorb(ServerLevel level, BlockPos pos) implements FabricBlockEventHandle {
+        @Override
+        public BlockPos position() {
+            return pos;
+        }
+    }
+
+    public record SpawnChange(ServerLevel level, BlockPos pos) implements FabricBlockEventHandle {
+        @Override
+        public BlockPos position() {
+            return pos;
+        }
     }
 }

@@ -3,19 +3,26 @@ package ch.njol.skript.expressions;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import ch.njol.util.Math2;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
-import net.minecraft.server.level.ServerLevel;
 
-public class ExprSimulationDistance extends SimplePropertyExpression<ServerLevel, Integer> {
+public class ExprSimulationDistance extends SimplePropertyExpression<Object, Integer> {
 
     static {
-        register(ExprSimulationDistance.class, Integer.class, "simulation distance[s]", "worlds");
+        register(ExprSimulationDistance.class, Integer.class, "simulation distance[s]", "players/worlds");
     }
 
     @Override
-    public @Nullable Integer convert(ServerLevel world) {
-        return world.getServer().getPlayerList().getSimulationDistance();
+    public @Nullable Integer convert(Object object) {
+        if (object instanceof ServerPlayer player) {
+            return ExpressionRuntimeSupport.playerSimulationDistance(player);
+        }
+        if (object instanceof ServerLevel world) {
+            return world.getServer().getPlayerList().getSimulationDistance();
+        }
+        return null;
     }
 
     @Override
@@ -28,8 +35,11 @@ public class ExprSimulationDistance extends SimplePropertyExpression<ServerLevel
 
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
-        for (ServerLevel world : getExpr().getArray(event)) {
-            int current = world.getServer().getPlayerList().getSimulationDistance();
+        for (Object source : getExpr().getArray(event)) {
+            Integer current = convert(source);
+            if (current == null) {
+                continue;
+            }
             int next = switch (mode) {
                 case SET -> delta == null ? current : ((Number) delta[0]).intValue();
                 case DELETE, RESET -> 10;
@@ -37,7 +47,12 @@ public class ExprSimulationDistance extends SimplePropertyExpression<ServerLevel
                 case REMOVE -> current - ((Number) delta[0]).intValue();
                 default -> current;
             };
-            world.getServer().getPlayerList().setSimulationDistance((int) Math2.fit(2, next, 32));
+            next = (int) Math2.fit(2, next, 32);
+            if (source instanceof ServerPlayer player) {
+                ExpressionRuntimeSupport.setPlayerSimulationDistance(player, next);
+            } else if (source instanceof ServerLevel world) {
+                world.getServer().getPlayerList().setSimulationDistance(next);
+            }
         }
     }
 

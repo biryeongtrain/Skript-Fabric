@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.Holder;
@@ -120,6 +121,8 @@ public final class SkriptFabricEventBridge {
             ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
             ServerWorldEvents.LOAD.register(SkriptFabricEventBridge::dispatchWorldLoad);
             ServerWorldEvents.UNLOAD.register(SkriptFabricEventBridge::dispatchWorldUnload);
+            ServerChunkEvents.CHUNK_LOAD.register((level, chunk) -> dispatchChunkLoad(level, chunk));
+            ServerChunkEvents.CHUNK_UNLOAD.register((level, chunk) -> dispatchChunkUnload(level, chunk));
             ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> dispatchQuit(handler.getPlayer()));
             registered = true;
         }
@@ -2024,6 +2027,56 @@ public final class SkriptFabricEventBridge {
         ));
     }
 
+    public static void dispatchSneakToggle(ServerPlayer player, boolean sneaking) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SneakToggle(sneaking),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchSprintToggle(ServerPlayer player, boolean sprinting) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SprintToggle(sprinting),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchFlightToggle(ServerPlayer player, boolean flying) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.FlightToggle(flying),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchGlideToggle(ServerPlayer player) {
+        ServerLevel level = player.level();
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.GlideToggle(),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchSwimToggle(Entity entity, boolean swimming) {
+        if (!(entity.level() instanceof ServerLevel level)) return;
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SwimToggle(entity, swimming),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
     private static @Nullable ServerPlayer resolveLootingPlayer(LootContext context, @Nullable Entity contextEntity) {
         Player lastDamagePlayer = context.getOptionalParameter(LootContextParams.LAST_DAMAGE_PLAYER);
         if (lastDamagePlayer instanceof ServerPlayer serverPlayer) {
@@ -2042,8 +2095,8 @@ public final class SkriptFabricEventBridge {
         return null;
     }
 
-    public static FabricServerListPingHandle dispatchServerListPing(List<String> currentSample) {
-        FabricServerListPingHandle handle = new FabricServerListPingHandle(new ArrayList<>(currentSample));
+    public static FabricServerListPingHandle dispatchServerListPing(List<String> currentSample, int protocolVersion) {
+        FabricServerListPingHandle handle = new FabricServerListPingHandle(new ArrayList<>(currentSample), protocolVersion);
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
                 handle,
                 null,
@@ -2051,5 +2104,322 @@ public final class SkriptFabricEventBridge {
                 null
         ));
         return handle;
+    }
+
+    public static void dispatchChunkLoad(ServerLevel level, net.minecraft.world.level.chunk.LevelChunk chunk) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ChunkLoad(chunk),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchChunkUnload(ServerLevel level, net.minecraft.world.level.chunk.LevelChunk chunk) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ChunkUnload(chunk),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchVehicleCreate(ServerLevel level, Entity vehicle) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.VehicleCreate(vehicle),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchVehicleDamage(ServerLevel level, Entity vehicle, @Nullable Entity attacker) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.VehicleDamage(vehicle, attacker),
+                level.getServer(),
+                level,
+                attacker instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchVehicleDestroy(ServerLevel level, Entity vehicle, @Nullable Entity attacker) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.VehicleDestroy(vehicle, attacker),
+                level.getServer(),
+                level,
+                attacker instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchVehicleEnter(ServerLevel level, Entity vehicle, Entity passenger) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.VehicleEnter(vehicle, passenger),
+                level.getServer(),
+                level,
+                passenger instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchVehicleExit(ServerLevel level, Entity vehicle, Entity passenger) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.VehicleExit(vehicle, passenger),
+                level.getServer(),
+                level,
+                passenger instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchEntityMount(ServerLevel level, Entity entity, Entity vehicle) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityMount(entity, vehicle),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchEntityDismount(ServerLevel level, Entity entity, Entity vehicle) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.EntityDismount(entity, vehicle),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchResurrectAttempt(ServerLevel level, LivingEntity entity) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ResurrectAttempt(entity),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchPlayerWorldChange(ServerPlayer player, ServerLevel fromLevel) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.PlayerWorldChange(player),
+                fromLevel.getServer(),
+                fromLevel,
+                player
+        ));
+    }
+
+    public static void dispatchSheepRegrowWool(ServerLevel level, Entity sheep) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SheepRegrowWool(sheep),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchSlimeSplit(ServerLevel level, Entity slime) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SlimeSplit(slime),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchBellRing(ServerLevel level, net.minecraft.core.BlockPos pos) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BellRing(level, pos.immutable()),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchBellResonate(ServerLevel level, net.minecraft.core.BlockPos pos) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BellResonate(level, pos.immutable()),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchBatToggleSleep(ServerLevel level, Entity bat, boolean resting) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BatToggleSleep(bat, resting),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchToolChange(ServerPlayer player, int previousSlot, int newSlot) {
+        if (!(player.level() instanceof ServerLevel level)) return;
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ToolChange(player, previousSlot, newSlot),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchLanguageChange(ServerPlayer player, String language) {
+        if (!(player.level() instanceof ServerLevel level)) return;
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.LanguageChange(player, language),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchTame(ServerLevel level, net.minecraft.world.entity.TamableAnimal animal, net.minecraft.world.entity.player.Player player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Tame(animal, player),
+                level.getServer(),
+                level,
+                player instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchCombust(ServerLevel level, Entity entity, int durationTicks) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.Combust(entity, durationTicks),
+                level.getServer(),
+                level,
+                entity instanceof ServerPlayer sp ? sp : null
+        ));
+    }
+
+    public static void dispatchProjectileHit(ServerLevel level, net.minecraft.world.entity.projectile.Projectile projectile, @Nullable Entity hitEntity) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ProjectileHit(projectile, hitEntity),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchProjectileLaunch(ServerLevel level, net.minecraft.world.entity.projectile.Projectile projectile) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.ProjectileLaunch(projectile),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchBedEnter(ServerLevel level, ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BedEnter(player),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchBedLeave(ServerLevel level, ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BedLeave(player),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchLightningStrike(ServerLevel level, net.minecraft.world.entity.LightningBolt lightning) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.LightningStrike(lightning),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchFoodLevelChange(ServerLevel level, ServerPlayer player, int oldLevel, int newLevel) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.FoodLevelChange(player, oldLevel, newLevel),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchSignChange(ServerLevel level, ServerPlayer player, BlockPos pos, String[] lines, boolean front) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SignChange(player, pos.immutable(), lines.clone(), front),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchBlockDamage(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BlockDamage(player, pos.immutable()),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchBucketUse(ServerLevel level, ServerPlayer player, boolean fill) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.BucketUse(player, fill),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchInventoryOpen(ServerLevel level, ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.InventoryOpen(player),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchInventoryClose(ServerLevel level, ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.InventoryClose(player),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchInventoryDrag(ServerLevel level, ServerPlayer player) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.InventoryDrag(player),
+                level.getServer(),
+                level,
+                player
+        ));
+    }
+
+    public static void dispatchLeavesDecay(ServerLevel level, BlockPos pos) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.LeavesDecay(level, pos.immutable()),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchSpongeAbsorb(ServerLevel level, BlockPos pos) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SpongeAbsorb(level, pos.immutable()),
+                level.getServer(),
+                level,
+                null
+        ));
+    }
+
+    public static void dispatchSpawnChange(ServerLevel level, BlockPos pos) {
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                new FabricEventCompatHandles.SpawnChange(level, pos.immutable()),
+                level.getServer(),
+                level,
+                null
+        ));
     }
 }

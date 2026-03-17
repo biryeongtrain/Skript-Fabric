@@ -17,7 +17,8 @@ public class ExprAmount extends SimpleExpression<Number> {
 
     static {
         Skript.registerExpression(ExprAmount.class, Number.class,
-                "[the] (amount|number|size) of %objects%");
+                "[the] (amount|number|size) of %objects%",
+                "[the] (amount|number|size) of %numbered%");
     }
 
     private ExpressionList<?> expressions;

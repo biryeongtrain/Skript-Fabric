@@ -33,7 +33,9 @@ public class ExprCmdCooldownInfo extends SimpleExpression<Object> {
 		Skript.registerExpression(ExprCmdCooldownInfo.class, Object.class,
 				"[the] remaining cooldown",
 				"[the] cooldown [time|duration]",
-				"[the] cooldown bypass [permission]");
+				"[the] cooldown bypass [permission]",
+				"[the] elapsed cooldown [time]",
+				"[the] last usage [date|time]");
 	}
 
 	private CooldownInfoType type = CooldownInfoType.REMAINING;

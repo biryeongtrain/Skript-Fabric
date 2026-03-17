@@ -13,7 +13,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public class ExprYawPitch extends SimplePropertyExpression<Object, Float> {
 
     static {
-        register(ExprYawPitch.class, Float.class, "(:yaw|pitch)", "entities/vectors");
+        register(ExprYawPitch.class, Float.class, "(:yaw|pitch)", "entities/locations/vectors");
     }
 
     private boolean yaw;

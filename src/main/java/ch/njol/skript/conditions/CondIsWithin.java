@@ -49,8 +49,8 @@ public class CondIsWithin extends Condition {
                 CondIsWithin.class,
                 "%locations% (is|are) within %location% and %location%",
                 "%locations% (isn't|is not|aren't|are not) within %location% and %location%",
-                "%locations% (is|are) (within|in[side [of]]) %entities/worlds/blocks%",
-                "%locations% (isn't|is not|aren't|are not) (within|in[side [of]]) %entities/worlds/blocks%"
+                "%locations% (is|are) (within|in[side [of]]) %entities/worlds/blocks/chunks%",
+                "%locations% (isn't|is not|aren't|are not) (within|in[side [of]]) %entities/worlds/blocks/chunks%"
         );
     }
 

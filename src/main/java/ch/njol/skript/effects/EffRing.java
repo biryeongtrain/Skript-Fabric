@@ -9,7 +9,10 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -46,12 +49,23 @@ public final class EffRing extends Effect {
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         entity = matchedPattern == 0 ? null : (Expression<Entity>) exprs[0];
         blocks = (Expression<FabricBlock>) exprs[matchedPattern];
-        Skript.error("Bell ringing is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        Entity ringer = entity != null ? entity.getSingle(event) : null;
+        for (FabricBlock fabricBlock : blocks.getArray(event)) {
+            BlockState state = fabricBlock.state();
+            if (!(state.getBlock() instanceof BellBlock bellBlock))
+                continue;
+            Direction facing = state.getValue(BellBlock.FACING);
+            if (ringer != null) {
+                bellBlock.attemptToRing(ringer, fabricBlock.level(), fabricBlock.position(), facing);
+            } else {
+                bellBlock.attemptToRing(fabricBlock.level(), fabricBlock.position(), facing);
+            }
+        }
     }
 
     @Override

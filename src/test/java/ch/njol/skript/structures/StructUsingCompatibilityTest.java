@@ -93,7 +93,7 @@ class StructUsingCompatibilityTest {
         }
 
         static TestLogAppender attach() {
-            Logger logger = (Logger) LogManager.getLogger("skript-fabric");
+            Logger logger = (Logger) LogManager.getLogger("skfabric");
             TestLogAppender appender = new TestLogAppender(logger);
             appender.start();
             appender.logger.addAppender(appender);

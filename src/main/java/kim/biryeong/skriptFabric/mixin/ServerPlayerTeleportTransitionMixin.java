@@ -46,6 +46,9 @@ abstract class ServerPlayerTeleportTransitionMixin {
             return;
         }
         Vec3 toPosition = self.position();
+        if (self.level() != fromLevel) {
+            SkriptFabricEventBridge.dispatchPlayerWorldChange(self, fromLevel);
+        }
         if (fromPosition.equals(toPosition) && self.level() == fromLevel) {
             return;
         }

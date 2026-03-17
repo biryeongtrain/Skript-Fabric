@@ -1,6 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
 import com.mojang.authlib.GameProfile;
+import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket;
 import net.minecraft.network.protocol.status.ServerStatus;
@@ -46,7 +47,8 @@ abstract class ServerStatusMixin {
             }
         }
 
-        FabricServerListPingHandle handle = SkriptFabricEventBridge.dispatchServerListPing(currentSample);
+        int currentProtocol = SharedConstants.getProtocolVersion();
+        FabricServerListPingHandle handle = SkriptFabricEventBridge.dispatchServerListPing(currentSample, currentProtocol);
 
         List<String> modifiedSample = handle.playerSample();
         List<GameProfile> newProfiles = new ArrayList<>();
@@ -64,10 +66,21 @@ abstract class ServerStatusMixin {
 
         ServerStatus.Players newPlayers = new ServerStatus.Players(max, online, newProfiles);
 
+        // Use the handle's protocol version (may have been modified by scripts)
+        Optional<ServerStatus.Version> version;
+        if (handle.protocolVersion() != currentProtocol) {
+            version = Optional.of(new ServerStatus.Version(
+                    SharedConstants.getCurrentVersion().name(),
+                    handle.protocolVersion()
+            ));
+        } else {
+            version = this.status.version();
+        }
+
         ServerStatus newStatus = new ServerStatus(
                 this.status.description(),
                 Optional.of(newPlayers),
-                this.status.version(),
+                version,
                 this.status.favicon(),
                 this.status.enforcesSecureChat()
         );

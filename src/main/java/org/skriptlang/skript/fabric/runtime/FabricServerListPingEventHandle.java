@@ -8,4 +8,8 @@ import java.util.List;
 public interface FabricServerListPingEventHandle {
 
     List<String> playerSample();
+
+    int protocolVersion();
+
+    void setProtocolVersion(int version);
 }

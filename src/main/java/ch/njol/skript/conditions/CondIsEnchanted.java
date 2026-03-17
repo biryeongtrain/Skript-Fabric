@@ -10,8 +10,8 @@ public final class CondIsEnchanted extends PropertyCondition<FabricItemType> {
     static {
         Skript.registerCondition(
                 CondIsEnchanted.class,
-                "%itemtypes% (is|are) enchanted",
-                "%itemtypes% (isn't|is not|aren't|are not) enchanted",
+                "%itemtypes% (is|are) enchanted [with %-enchantmenttypes%]",
+                "%itemtypes% (isn't|is not|aren't|are not) enchanted [with %-enchantmenttypes%]",
                 "%itemtypes% (is|are) [an] enchanted item[s]",
                 "%itemtypes% (isn't|is not|aren't|are not) [an] enchanted item[s]",
                 "%itemtypes% (has|have) enchantments",

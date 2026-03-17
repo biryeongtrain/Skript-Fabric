@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public final class SkriptLogger {
 
-    static final Logger LOGGER = LoggerFactory.getLogger("skript-fabric");
+    static final Logger LOGGER = LoggerFactory.getLogger("skfabric");
     static final Level SEVERE = Level.SEVERE;
     static final Level DEBUG = Level.INFO;
     private static Verbosity verbosity = Verbosity.NORMAL;

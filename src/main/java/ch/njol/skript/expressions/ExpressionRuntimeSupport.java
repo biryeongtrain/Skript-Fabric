@@ -152,6 +152,15 @@ final class ExpressionRuntimeSupport {
         return invokeIntSetter(player, value, "setViewDistance");
     }
 
+    static int playerSimulationDistance(ServerPlayer player) {
+        Integer value = invokeInt(player, "getSimulationDistance", "requestedSimulationDistance");
+        return value == null ? player.getServer().getPlayerList().getSimulationDistance() : value;
+    }
+
+    static boolean setPlayerSimulationDistance(ServerPlayer player, int value) {
+        return invokeIntSetter(player, value, "setSimulationDistance");
+    }
+
     private static GameProfile[] configEntriesAsProfiles(@Nullable Object configList) {
         if (configList == null) {
             return new GameProfile[0];

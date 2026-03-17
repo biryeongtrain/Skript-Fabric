@@ -6,6 +6,7 @@ import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.level.block.state.BlockState;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,9 +21,13 @@ abstract class SheepMixin {
     @Unique
     private BlockState skript$previousEatState;
 
+    @Unique
+    private boolean skript$wasSheared;
+
     @Inject(method = "ate", at = @At("HEAD"))
     private void skript$capturePreEatState(CallbackInfo callbackInfo) {
         Sheep sheep = (Sheep) (Object) this;
+        skript$wasSheared = sheep.isSheared();
         if (!(sheep.level() instanceof ServerLevel serverLevel)) {
             skript$previousEatPos = null;
             skript$previousEatState = null;
@@ -49,6 +54,9 @@ abstract class SheepMixin {
                     skript$previousEatState,
                     current
             );
+        }
+        if (skript$wasSheared && !sheep.isSheared()) {
+            SkriptFabricEventBridge.dispatchSheepRegrowWool(serverLevel, sheep);
         }
         skript$previousEatPos = null;
         skript$previousEatState = null;

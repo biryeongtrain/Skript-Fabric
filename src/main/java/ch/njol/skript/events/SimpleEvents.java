@@ -52,5 +52,14 @@ public final class SimpleEvents {
         EvtVehicleCollision.register();
         EvtWeatherChange.register();
         EvtWorld.register();
+        EvtSignChange.register();
+        EvtBlockDamage.register();
+        EvtBucket.register();
+        EvtInventoryOpen.register();
+        EvtInventoryClose.register();
+        EvtInventoryDrag.register();
+        EvtLeavesDecay.register();
+        EvtSpongeAbsorb.register();
+        EvtSpawnChange.register();
     }
 }
