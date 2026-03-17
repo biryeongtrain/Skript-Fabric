@@ -48,7 +48,8 @@
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricRuntimeBatchGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricConditionAndEventBatchGameTest",
       "kim.biryeong.skriptFabricPort.gametest.SkriptFabricInventoryGameTest",
-      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSimpleEventBatchGameTest"
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricSimpleEventBatchGameTest",
+      "kim.biryeong.skriptFabricPort.gametest.SkriptFabricMixinIntegrationGameTest"
     ]
   }
 }
