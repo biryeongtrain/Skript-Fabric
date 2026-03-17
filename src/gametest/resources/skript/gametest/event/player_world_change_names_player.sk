@@ -1,0 +1,2 @@
+on player world change:
+    set test name of entity event-player to "world changed"

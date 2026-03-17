@@ -1,0 +1,2 @@
+on bed leave:
+    set test block at 0 1 0 to redstone_block

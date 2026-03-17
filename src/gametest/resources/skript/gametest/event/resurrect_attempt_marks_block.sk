@@ -1,0 +1,2 @@
+on resurrect attempt:
+    set test block at 0 1 0 to redstone_block

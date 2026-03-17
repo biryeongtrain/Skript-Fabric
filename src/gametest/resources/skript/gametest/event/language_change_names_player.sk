@@ -1,0 +1,2 @@
+on language change:
+    set test name of entity event-player to "language changed"
