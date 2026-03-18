@@ -18,7 +18,7 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Name("Damage")
 @Description({
         "How much damage is done in a damage event.",
-        "On this compatibility surface the event damage value is currently read-only."
+        "Can be changed with set, add, or remove."
 })
 @Example("""
 	on damage:
@@ -51,12 +51,25 @@ public class ExprDamage extends SimpleExpression<Number> {
 
     @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        Skript.error("The damage value cannot currently be changed on this compatibility surface");
-        return null;
+        return switch (mode) {
+            case SET, ADD, REMOVE -> new Class[]{Number.class};
+            default -> null;
+        };
     }
 
     @Override
     public void change(SkriptEvent event, @Nullable Object[] delta, ChangeMode mode) {
+        if (!(event.handle() instanceof FabricDamageEventHandle handle)) return;
+        if (!(handle instanceof org.skriptlang.skript.fabric.runtime.FabricDamageHandle mutableHandle)) return;
+        if (delta == null || delta.length == 0 || !(delta[0] instanceof Number number)) return;
+        float current = mutableHandle.amount();
+        float value = number.floatValue();
+        switch (mode) {
+            case SET -> mutableHandle.setAmount(Math.max(0, value));
+            case ADD -> mutableHandle.setAmount(Math.max(0, current + value));
+            case REMOVE -> mutableHandle.setAmount(Math.max(0, current - value));
+            default -> {}
+        }
     }
 
     @Override

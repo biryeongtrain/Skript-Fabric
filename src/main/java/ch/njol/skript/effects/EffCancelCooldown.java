@@ -1,6 +1,8 @@
 package ch.njol.skript.effects;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.command.ScriptCommand;
+import ch.njol.skript.command.ScriptCommandContext;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
@@ -44,13 +46,17 @@ public final class EffCancelCooldown extends Effect {
 
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        if (!getParser().isCurrentEvent(ScriptCommandContext.class)) {
+            Skript.error("The cancel cooldown effect can only be used in a command trigger");
+            return false;
+        }
         cancel = matchedPattern == 0;
-        Skript.error("The cancel cooldown effect is not available in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        ScriptCommand.CANCEL_COOLDOWN.set(cancel);
     }
 
     @Override

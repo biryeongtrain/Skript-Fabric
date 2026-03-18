@@ -8,8 +8,13 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.util.Direction;
 import ch.njol.util.Kleenean;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.compat.FabricLocation;
+import org.skriptlang.skript.fabric.compat.StructureType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Tree")
@@ -35,18 +40,44 @@ public class EffTree extends Effect {
         registered = true;
     }
 
+    @Nullable
+    private Expression<StructureType> treeType;
+    private Expression<FabricLocation> locations;
+
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parser) {
-        Skript.error("EffTree is blocked in the Fabric port until StructureType and Direction compatibility are imported.");
-        return false;
+        treeType = (Expression<StructureType>) exprs[0];
+        locations = Direction.combine(
+                (Expression<? extends Direction>) exprs[1],
+                (Expression<? extends FabricLocation>) exprs[2]
+        );
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        StructureType type;
+        if (treeType != null) {
+            type = treeType.getSingle(event);
+        } else {
+            type = StructureType.fromName("oak");
+        }
+        if (type == null) {
+            type = StructureType.fromName("oak");
+        }
+        if (type == null) {
+            return;
+        }
+        for (FabricLocation loc : locations.getArray(event)) {
+            if (loc.level() instanceof ServerLevel serverLevel) {
+                type.place(serverLevel, BlockPos.containing(loc.position()));
+            }
+        }
     }
 
     @Override
     public String toString(@Nullable SkriptEvent event, boolean debug) {
-        return "grow tree";
+        return "grow " + (treeType != null ? treeType.toString(event, debug) + " " : "tree ") + locations.toString(event, debug);
     }
 }

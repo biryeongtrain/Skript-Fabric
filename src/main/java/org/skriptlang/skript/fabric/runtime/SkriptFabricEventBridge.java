@@ -97,6 +97,7 @@ public final class SkriptFabricEventBridge {
     private static final @Nullable Constructor<?> ELYTRA_BOOST_EFFECT_HANDLE_CTOR = resolveElytraBoostEffectHandleCtor();
     private static final @Nullable Method ELYTRA_BOOST_SHOULD_CONSUME = resolveElytraBoostEffectMethod("shouldConsume");
     private static final ThreadLocal<@Nullable DeathCapture> ACTIVE_DEATH_CAPTURE = new ThreadLocal<>();
+    private static final ThreadLocal<Float> MODIFIED_DAMAGE = new ThreadLocal<>();
     private static volatile boolean registered;
 
     private SkriptFabricEventBridge() {
@@ -294,14 +295,25 @@ public final class SkriptFabricEventBridge {
         if (!(entity.level() instanceof ServerLevel serverLevel)) {
             return true;
         }
+        FabricDamageHandle handle = new FabricDamageHandle(serverLevel, entity, source, amount);
         org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricDamageHandle(serverLevel, entity, source, amount),
+                handle,
                 serverLevel.getServer(),
                 serverLevel,
                 entity instanceof ServerPlayer serverPlayer ? serverPlayer : null
         );
         SkriptRuntime.instance().dispatch(event);
-        return !event.isCancelled();
+        if (event.isCancelled()) return false;
+        if (handle.amount() != amount) {
+            MODIFIED_DAMAGE.set(handle.amount());
+        }
+        return true;
+    }
+
+    public static @Nullable Float consumeModifiedDamage() {
+        Float val = MODIFIED_DAMAGE.get();
+        MODIFIED_DAMAGE.remove();
+        return val;
     }
 
     private static void dispatchDeath(LivingEntity entity, DamageSource source) {
@@ -765,12 +777,17 @@ public final class SkriptFabricEventBridge {
     }
 
     public static void dispatchExperienceSpawn(ServerLevel level, ExperienceOrb orb) {
-        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricEventCompatHandles.ExperienceSpawn(orb.getValue()),
+        FabricEventCompatHandles.ExperienceSpawn handle = new FabricEventCompatHandles.ExperienceSpawn(orb.getValue());
+        org.skriptlang.skript.lang.event.SkriptEvent event = new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
                 level.getServer(),
                 level,
                 null
-        ));
+        );
+        SkriptRuntime.instance().dispatch(event);
+        if (handle.amount() != orb.getValue()) {
+            ((kim.biryeong.skriptFabric.mixin.ExperienceOrbAccessor) orb).skript$setValue(handle.amount());
+        }
     }
 
     public static void dispatchFirework(ServerLevel level, FireworkRocketEntity firework) {

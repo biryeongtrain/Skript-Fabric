@@ -78,7 +78,15 @@ public final class FabricEventCompatHandles {
     public record AreaEffectCloudApply(@Nullable java.util.List<LivingEntity> affectedEntities) {
     }
 
-    public record ExperienceSpawn(int amount) {
+    public static final class ExperienceSpawn {
+        private int amount;
+
+        public ExperienceSpawn(int amount) {
+            this.amount = amount;
+        }
+
+        public int amount() { return amount; }
+        public void setAmount(int amount) { this.amount = amount; }
     }
 
     public record ExperienceCooldownChange(@Nullable String reason) {

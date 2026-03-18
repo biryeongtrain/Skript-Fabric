@@ -1,0 +1,3 @@
+on damage:
+    set damage to 0
+    set test block under player event-player to lime_concrete

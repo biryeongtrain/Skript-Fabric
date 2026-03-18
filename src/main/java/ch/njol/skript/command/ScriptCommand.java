@@ -34,6 +34,8 @@ public final class ScriptCommand {
 		PLAYERS, CONSOLE, BOTH
 	}
 
+	public static final ThreadLocal<Boolean> CANCEL_COOLDOWN = ThreadLocal.withInitial(() -> false);
+
 	private final String name;
 	private final List<String> aliases;
 	private final @Nullable String description;
@@ -251,9 +253,10 @@ public final class ScriptCommand {
 		trigger.execute(event);
 
 		// Update cooldown (stored in Commands registry to survive reloads)
-		if (cooldownMillis > 0 && player != null) {
+		if (cooldownMillis > 0 && player != null && !CANCEL_COOLDOWN.get()) {
 			Commands.getCooldowns(name).put(player.getUUID(), System.currentTimeMillis());
 		}
+		CANCEL_COOLDOWN.remove();
 
 		return 1;
 	}

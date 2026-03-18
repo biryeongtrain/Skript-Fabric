@@ -133,6 +133,7 @@ import org.skriptlang.skript.bukkit.base.types.OfflinePlayerClassInfo;
 import org.skriptlang.skript.bukkit.base.types.PlayerClassInfo;
 import org.skriptlang.skript.bukkit.base.types.QuaternionClassInfo;
 import org.skriptlang.skript.bukkit.base.types.SlotClassInfo;
+import org.skriptlang.skript.bukkit.base.types.StructureTypeClassInfo;
 import org.skriptlang.skript.bukkit.base.types.TimespanClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ParticleClassInfo;
 import org.skriptlang.skript.bukkit.base.types.GameEffectClassInfo;
@@ -1016,6 +1017,7 @@ public final class SkriptFabricBootstrap {
         registerClassInfoIfMissing("equippablecomponent", EquippableComponentClassInfo::register);
         registerClassInfoIfMissing("enchantment", org.skriptlang.skript.bukkit.base.types.EnchantmentClassInfo::register);
         registerClassInfoIfMissing("enchantmenttype", org.skriptlang.skript.bukkit.base.types.EnchantmentTypeClassInfo::register);
+        registerClassInfoIfMissing("structuretype", StructureTypeClassInfo::register);
     }
 
     private static void registerClassInfoIfMissing(String codeName, Runnable registrar) {

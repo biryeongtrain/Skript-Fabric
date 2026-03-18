@@ -17,7 +17,8 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Experience")
-@Description("How much experience was spawned in an experience spawn event.")
+@Description({"How much experience was spawned in an experience spawn event.",
+        "Can be changed with set, add, or remove."})
 @Example("""
 	on experience spawn:
 		send "%spawned experience%" to player
@@ -49,12 +50,31 @@ public class ExprExperience extends SimpleExpression<Experience> {
 
     @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        Skript.error("The experience value cannot currently be changed on this compatibility surface");
-        return null;
+        return switch (mode) {
+            case SET, ADD, REMOVE -> new Class[]{Experience.class, Number.class};
+            default -> null;
+        };
     }
 
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
+        if (!(event.handle() instanceof FabricEventCompatHandles.ExperienceSpawn handle)) return;
+        if (delta == null || delta.length == 0) return;
+        int value;
+        if (delta[0] instanceof Experience exp) {
+            value = exp.getXP();
+        } else if (delta[0] instanceof Number number) {
+            value = number.intValue();
+        } else {
+            return;
+        }
+        int current = handle.amount();
+        switch (mode) {
+            case SET -> handle.setAmount(Math.max(0, value));
+            case ADD -> handle.setAmount(Math.max(0, current + value));
+            case REMOVE -> handle.setAmount(Math.max(0, current - value));
+            default -> {}
+        }
     }
 
     @Override

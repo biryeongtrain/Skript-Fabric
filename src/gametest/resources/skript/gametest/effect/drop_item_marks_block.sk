@@ -1,0 +1,3 @@
+on load:
+    drop 1 stone at 2, 2, 2
+    set block at 5, 1, 0 to gold block

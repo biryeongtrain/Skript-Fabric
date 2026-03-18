@@ -3,8 +3,6 @@ package kim.biryeong.skriptFabric.mixin;
 import kim.biryeong.skriptFabric.EntityVisibilityManager;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,12 +23,9 @@ abstract class ServerEntityMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    private void skript$checkEntityVisibility(ServerPlayerConnection connection, CallbackInfo ci) {
-        if (connection instanceof ServerGamePacketListenerImpl listener) {
-            ServerPlayer viewer = listener.player;
-            if (EntityVisibilityManager.instance().isHidden(entity.getUUID(), viewer.getUUID())) {
-                ci.cancel();
-            }
+    private void skript$checkEntityVisibility(ServerPlayer viewer, CallbackInfo ci) {
+        if (EntityVisibilityManager.instance().isHidden(entity.getUUID(), viewer.getUUID())) {
+            ci.cancel();
         }
     }
 }
