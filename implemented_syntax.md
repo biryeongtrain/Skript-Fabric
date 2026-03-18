@@ -27,7 +27,7 @@
 | 12 | ExprSecCreateLootContext | Loot context creation section |
 | 13 | ExprSecPotionEffect | Potion effect creation section |
 
-## ClassInfo Types (25)
+## ClassInfo Types (26)
 
 | # | Code Name | Class | Description |
 |---|-----------|-------|-------------|
@@ -57,6 +57,7 @@
 | 24 | equippablecomponent | EquippableComponentClassInfo | Equippable component type |
 | 25 | enchantment | EnchantmentClassInfo | Enchantment (Holder) type |
 | 26 | enchantmenttype | EnchantmentTypeClassInfo | Enchantment + level pair type |
+| 27 | structuretype | StructureTypeClassInfo | Tree/structure type for grow effect |
 
 ---
 
@@ -481,6 +482,10 @@
 | 111 | EffConnect | transfer player to server |
 | 112 | EffElytraBoostConsume | prevent/allow firework consume on elytra boost |
 | 113 | EffEntityVisibility | hide/reveal entities for players |
+| 114 | EffDrop | drop items/experiences at location |
+| 115 | EffTeleport | teleport entities to location |
+| 116 | EffTree | grow/create tree at location |
+| 117 | EffWakeupSleep | make entities sleep/wake up |
 
 ---
 
@@ -536,7 +541,7 @@
 | 29 | ExprDamageLocation | damage location |
 | 30 | ExprSourceLocation | source location |
 | 31 | ExprFoodExhaustion | food exhaustion |
-| 32 | ExprDamage | damage |
+| 32 | ExprDamage | damage (get/set/add/remove) |
 | 33 | ExprDamageCause | damage cause |
 | 34 | ExprFinalDamage | final damage |
 | 35 | ExprLastDamageCause | last damage cause |
@@ -858,7 +863,7 @@
 
 | # | Class | Description |
 |---|-------|-------------|
-| 249 | ExprExperience | experience |
+| 249 | ExprExperience | experience (get/set/add/remove) |
 | 250 | ExprLevel | level |
 | 251 | ExprExperienceCooldownChangeReason | experience cooldown change reason |
 
