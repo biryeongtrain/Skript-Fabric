@@ -154,7 +154,7 @@ public final class EffectMixedImportCompatibilityTest {
         assertFalse(new EffWakeupSleep().init(new Expression[]{new TestLivingEntityExpression(), new TestStringExpression(), new TestLocationExpression()}, 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffTree().init(new Expression[]{new TestStringExpression(), new TestStringExpression(), new TestLocationExpression()}, 0, Kleenean.FALSE, new ParseResult()));
         assertFalse(new EffElytraBoostConsume().init(new Expression<?>[0], 0, Kleenean.FALSE, new ParseResult()));
-        assertFalse(new EffEntityVisibility().init(new Expression[]{new TestEntityExpression(), new TestPlayerExpression()}, 0, Kleenean.FALSE, new ParseResult()));
+        assertTrue(new EffEntityVisibility().init(new Expression[]{new TestEntityExpression(), new TestPlayerExpression()}, 0, Kleenean.FALSE, new ParseResult()));
     }
 
     private <T extends Effect> T parseEffect(String input, Class<T> effectClass) {

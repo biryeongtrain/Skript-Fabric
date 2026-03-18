@@ -94,6 +94,8 @@ public final class SkriptFabricEventBridge {
     private static final @Nullable Method EXPLOSION_PRIME_EFFECT_RADIUS = resolveExplosionPrimeEffectMethod("radius");
     private static final @Nullable Constructor<?> HANGING_BREAK_EFFECT_HANDLE_CTOR = resolveHangingBreakEffectHandleCtor();
     private static final @Nullable Constructor<?> HANGING_PLACE_EFFECT_HANDLE_CTOR = resolveHangingPlaceEffectHandleCtor();
+    private static final @Nullable Constructor<?> ELYTRA_BOOST_EFFECT_HANDLE_CTOR = resolveElytraBoostEffectHandleCtor();
+    private static final @Nullable Method ELYTRA_BOOST_SHOULD_CONSUME = resolveElytraBoostEffectMethod("shouldConsume");
     private static final ThreadLocal<@Nullable DeathCapture> ACTIVE_DEATH_CAPTURE = new ThreadLocal<>();
     private static volatile boolean registered;
 
@@ -778,6 +780,17 @@ public final class SkriptFabricEventBridge {
                 level,
                 null
         ));
+    }
+
+    public static boolean dispatchElytraBoost(ServerLevel level, ServerPlayer player, FireworkRocketEntity firework) {
+        Object handle = createElytraBoostHandle(true);
+        SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
+                handle,
+                level.getServer(),
+                level,
+                player
+        ));
+        return elytraBoostShouldConsume(handle);
     }
 
     public static FabricEventCompatHandles.Explosion dispatchExplosion(ServerLevel level, Entity source, List<BlockPos> explodedPositions) {
@@ -1747,6 +1760,51 @@ public final class SkriptFabricEventBridge {
             return constructor;
         } catch (ReflectiveOperationException ignored) {
             return null;
+        }
+    }
+
+    private static @Nullable Constructor<?> resolveElytraBoostEffectHandleCtor() {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$PlayerElytraBoost");
+            Constructor<?> constructor = type.getDeclaredConstructor(boolean.class);
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static @Nullable Method resolveElytraBoostEffectMethod(String methodName) {
+        try {
+            Class<?> type = Class.forName("ch.njol.skript.effects.FabricEffectEventHandles$PlayerElytraBoost");
+            Method method = type.getDeclaredMethod(methodName);
+            method.setAccessible(true);
+            return method;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static Object createElytraBoostHandle(boolean shouldConsume) {
+        if (ELYTRA_BOOST_EFFECT_HANDLE_CTOR == null) {
+            throw new IllegalStateException("Elytra boost effect handle constructor is unavailable.");
+        }
+        try {
+            return ELYTRA_BOOST_EFFECT_HANDLE_CTOR.newInstance(shouldConsume);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Failed to create elytra boost effect handle.", exception);
+        }
+    }
+
+    private static boolean elytraBoostShouldConsume(Object handle) {
+        if (ELYTRA_BOOST_SHOULD_CONSUME == null || !ELYTRA_BOOST_SHOULD_CONSUME.getDeclaringClass().isInstance(handle)) {
+            return true;
+        }
+        try {
+            Object value = ELYTRA_BOOST_SHOULD_CONSUME.invoke(handle);
+            return value instanceof Boolean bool ? bool : true;
+        } catch (ReflectiveOperationException exception) {
+            return true;
         }
     }
 

@@ -9,6 +9,7 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -42,12 +43,22 @@ public class EffMakeSay extends Effect {
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         players = (Expression<ServerPlayer>) exprs[0];
         messages = (Expression<String>) exprs[1];
-        Skript.error("Player chat injection is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        for (ServerPlayer player : players.getArray(event)) {
+            for (String message : messages.getArray(event)) {
+                if (message.startsWith("/")) {
+                    player.getServer().getCommands().performPrefixedCommand(
+                            player.createCommandSourceStack(), message.substring(1));
+                } else {
+                    player.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("<" + player.getGameProfile().getName() + "> " + message), false);
+                }
+            }
+        }
     }
 
     @Override

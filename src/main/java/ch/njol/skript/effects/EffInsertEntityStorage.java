@@ -11,6 +11,8 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Bee;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -45,12 +47,22 @@ public final class EffInsertEntityStorage extends Effect {
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         entities = (Expression<? extends LivingEntity>) exprs[0];
         block = (Expression<FabricBlock>) exprs[1];
-        Skript.error("Entity block storage mutation is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        FabricBlock fabricBlock = block.getSingle(event);
+        if (fabricBlock == null) return;
+        if (!(fabricBlock.blockEntity() instanceof BeehiveBlockEntity beehive)) return;
+        for (LivingEntity entity : entities.getArray(event)) {
+            if (!(entity instanceof Bee bee)) {
+                Skript.error("Only bees can be added to beehives, got: " + entity.getType().toShortString());
+                continue;
+            }
+            if (beehive.isFull()) break;
+            beehive.addOccupant(bee);
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package kim.biryeong.skriptFabric.mixin;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket;
 import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
@@ -19,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Mixin(ServerStatusPacketListenerImpl.class)
@@ -50,23 +52,49 @@ abstract class ServerStatusMixin {
         int currentProtocol = SharedConstants.getProtocolVersion();
         FabricServerListPingHandle handle = SkriptFabricEventBridge.dispatchServerListPing(currentSample, currentProtocol);
 
-        List<String> modifiedSample = handle.playerSample();
-        List<GameProfile> newProfiles = new ArrayList<>();
-        for (String name : modifiedSample) {
-            newProfiles.add(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes()), name));
+        // Build description (MOTD)
+        Component description;
+        String motd = handle.motd();
+        if (motd != null) {
+            description = Component.literal(motd);
+        } else {
+            description = this.status.description();
         }
 
-        int online = 0;
-        int max = 0;
-        if (playersOptional.isPresent()) {
-            ServerStatus.Players players = playersOptional.get();
-            online = players.online();
-            max = players.max();
+        // Build players section
+        Optional<ServerStatus.Players> newPlayersOpt;
+        if (handle.hidePlayerInfo()) {
+            newPlayersOpt = Optional.empty();
+        } else {
+            List<String> modifiedSample = handle.playerSample();
+            Set<UUID> hiddenPlayerIds = handle.hiddenPlayers();
+
+            int online = 0;
+            int max = 0;
+            if (playersOptional.isPresent()) {
+                ServerStatus.Players players = playersOptional.get();
+                online = players.online();
+                max = players.max();
+            }
+
+            List<GameProfile> newProfiles = new ArrayList<>();
+            for (String name : modifiedSample) {
+                UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes());
+                if (!hiddenPlayerIds.contains(uuid)) {
+                    newProfiles.add(new GameProfile(uuid, name));
+                }
+            }
+
+            // Also hide by matching real player UUIDs — reduce online count
+            if (!hiddenPlayerIds.isEmpty()) {
+                online = Math.max(0, online - hiddenPlayerIds.size());
+            }
+
+            ServerStatus.Players newPlayers = new ServerStatus.Players(max, online, newProfiles);
+            newPlayersOpt = Optional.of(newPlayers);
         }
 
-        ServerStatus.Players newPlayers = new ServerStatus.Players(max, online, newProfiles);
-
-        // Use the handle's protocol version (may have been modified by scripts)
+        // Build version
         Optional<ServerStatus.Version> version;
         if (handle.protocolVersion() != currentProtocol) {
             version = Optional.of(new ServerStatus.Version(
@@ -77,11 +105,20 @@ abstract class ServerStatusMixin {
             version = this.status.version();
         }
 
+        // Build favicon
+        Optional<ServerStatus.Favicon> favicon;
+        byte[] faviconBytes = handle.faviconBytes();
+        if (faviconBytes != null) {
+            favicon = Optional.of(new ServerStatus.Favicon(faviconBytes));
+        } else {
+            favicon = this.status.favicon();
+        }
+
         ServerStatus newStatus = new ServerStatus(
-                this.status.description(),
-                Optional.of(newPlayers),
+                description,
+                newPlayersOpt,
                 version,
-                this.status.favicon(),
+                favicon,
                 this.status.enforcesSecureChat()
         );
 

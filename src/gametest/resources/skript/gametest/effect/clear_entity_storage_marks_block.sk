@@ -1,0 +1,3 @@
+on use block:
+    clear the stored entities of event-block
+    set test block above event-block to lime_wool

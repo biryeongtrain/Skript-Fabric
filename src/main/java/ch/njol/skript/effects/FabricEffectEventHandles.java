@@ -126,7 +126,7 @@ final class FabricEffectEventHandles {
 
     static final class PlayerElytraBoost {
 
-        private final boolean shouldConsume;
+        private boolean shouldConsume;
 
         PlayerElytraBoost(boolean shouldConsume) {
             this.shouldConsume = shouldConsume;
@@ -134,6 +134,10 @@ final class FabricEffectEventHandles {
 
         boolean shouldConsume() {
             return shouldConsume;
+        }
+
+        void setShouldConsume(boolean shouldConsume) {
+            this.shouldConsume = shouldConsume;
         }
     }
 

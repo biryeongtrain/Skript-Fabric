@@ -10,13 +10,22 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.Patterns;
 import ch.njol.util.Kleenean;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.EnchantmentTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.EnchantmentType;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 @Name("Enchant/Disenchant")
 @Description("Enchant or disenchant an existing item.")
@@ -97,7 +106,25 @@ public class EffEnchant extends Effect {
                 }
             }
             case ENCHANT_AT_LEVEL -> {
-                // TODO: implement random enchantment at level using EnchantmentHelper.selectEnchantment()
+                if (level == null || event.server() == null) return;
+                Number levelValue = level.getSingle(event);
+                if (levelValue == null) return;
+                int enchantLevel = levelValue.intValue();
+                var registry = event.server().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+                Stream<Holder<Enchantment>> enchantmentStream = treasure
+                        ? registry.listElements().map(ref -> (Holder<Enchantment>) ref)
+                        : java.util.stream.StreamSupport.stream(
+                                registry.getTagOrEmpty(EnchantmentTags.IN_ENCHANTING_TABLE).spliterator(), false);
+                List<EnchantmentInstance> selected = EnchantmentHelper.selectEnchantment(
+                        RandomSource.create(), new ItemStack(itemTypes[0].item()), enchantLevel, enchantmentStream);
+                for (FabricItemType itemType : itemTypes) {
+                    ItemStack stack = itemType.toStack();
+                    for (EnchantmentInstance instance : selected) {
+                        EnchantmentHelper.updateEnchantments(stack, mutable ->
+                                mutable.set(instance.enchantment(), instance.level()));
+                    }
+                    itemType.applyPrototype(stack);
+                }
             }
         }
     }

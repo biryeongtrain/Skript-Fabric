@@ -1,0 +1,4 @@
+on use entity:
+    set {_block} to block below event-player
+    add event-entity into the entity storage of {_block}
+    set test block under player event-player to cyan_wool

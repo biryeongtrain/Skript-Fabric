@@ -5,12 +5,17 @@ import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
+import ch.njol.skript.expressions.ExprLastLoadedServerIcon;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Name("Load Server Icon")
 @Description({"Loads server icons from the given files. You can get the loaded icon using the",
@@ -41,12 +46,23 @@ public final class EffLoadServerIcon extends Effect {
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         path = (Expression<String>) exprs[0];
-        Skript.error("Server icon loading is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        String filePath = path.getSingle(event);
+        if (filePath == null) {
+            return;
+        }
+        try {
+            Path iconPath = Path.of(filePath);
+            byte[] bytes = Files.readAllBytes(iconPath);
+            ExprLastLoadedServerIcon.lastLoaded = filePath;
+            ExprLastLoadedServerIcon.lastLoadedBytes = bytes;
+        } catch (IOException e) {
+            Skript.error("Could not load server icon from file '" + filePath + "': " + e.getMessage());
+        }
     }
 
     @Override

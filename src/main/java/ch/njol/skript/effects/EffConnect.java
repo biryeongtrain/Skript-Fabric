@@ -9,6 +9,7 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import net.minecraft.network.protocol.common.ClientboundTransferPacket;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -55,12 +56,29 @@ public class EffConnect extends Effect {
         if (transfer) {
             port = (Expression<Number>) exprs[2];
         }
-        Skript.error("Cross-server player transfer is not wired in the Fabric runtime yet");
-        return false;
+        if (!transfer) {
+            Skript.error("Proxy/BungeeCord connections are not supported on Fabric. Use 'transfer' instead.");
+            return false;
+        }
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        String host = server.getSingle(event);
+        if (host == null) {
+            return;
+        }
+        int portVal = 25565;
+        if (port != null) {
+            Number portNumber = port.getSingle(event);
+            if (portNumber != null) {
+                portVal = portNumber.intValue();
+            }
+        }
+        for (ServerPlayer player : players.getArray(event)) {
+            player.connection.send(new ClientboundTransferPacket(host, portVal));
+        }
     }
 
     @Override

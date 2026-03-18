@@ -1,0 +1,3 @@
+on use entity:
+    make event-player say "hello world"
+    set test block under player event-player to lapis_block

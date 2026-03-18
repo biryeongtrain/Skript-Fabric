@@ -473,6 +473,14 @@
 | 103 | EffZombify | zombify villager |
 | 104 | EffEnforceWhitelist | enforce whitelist |
 | 105 | EffRespawn | respawn player |
+| 106 | EffClearEntityStorage | clear entity storage of blocks |
+| 107 | EffInsertEntityStorage | insert entities into entity storage |
+| 108 | EffReleaseEntityStorage | release entity storage of blocks |
+| 109 | EffMakeSay | make player say/send message |
+| 110 | EffScriptFile | enable/reload/disable/unload script |
+| 111 | EffConnect | transfer player to server |
+| 112 | EffElytraBoostConsume | prevent/allow firework consume on elytra boost |
+| 113 | EffEntityVisibility | hide/reveal entities for players |
 
 ---
 
@@ -1030,6 +1038,6 @@
 | ClassInfo Types | 26 |
 | Events | 82 |
 | Conditions | 162 |
-| Effects | 105 |
+| Effects | 113 |
 | Expressions | 391 |
-| **Total** | **782** |
+| **Total** | **790** |

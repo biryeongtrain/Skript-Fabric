@@ -9,6 +9,8 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import kim.biryeong.skriptFabric.mixin.BeehiveBlockEntityStoredAccessor;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -36,12 +38,17 @@ public final class EffClearEntityStorage extends Effect {
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         blocks = (Expression<FabricBlock>) exprs[0];
-        Skript.error("Entity block storage mutation is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        for (FabricBlock block : blocks.getArray(event)) {
+            if (block.blockEntity() instanceof BeehiveBlockEntity beehive) {
+                ((BeehiveBlockEntityStoredAccessor) beehive).skript$getStored().clear();
+                beehive.setChanged();
+            }
+        }
     }
 
     @Override

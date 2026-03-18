@@ -1,0 +1,3 @@
+on use entity:
+    enchant player's tool at level 30, allowing treasure enchantments
+    set test block under player event-player to gold_block

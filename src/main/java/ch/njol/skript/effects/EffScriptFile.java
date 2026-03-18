@@ -10,8 +10,12 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.SkriptRuntimeServices;
+import org.skriptlang.skript.fabric.runtime.SkriptScriptService;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 import org.skriptlang.skript.lang.script.Script;
+
+import java.io.IOException;
 
 @Name("Enable/Disable/Unload/Reload Script")
 @Description("""
@@ -62,12 +66,45 @@ public class EffScriptFile extends Effect {
             default -> {
             }
         }
-        Skript.error("Dynamic script file enable/disable/reload is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        SkriptScriptService service = SkriptRuntimeServices.scriptService();
+        try {
+            if (scripts && scriptExpression != null) {
+                for (Script script : scriptExpression.getArray(event)) {
+                    String name = script.nameAndPath();
+                    if (name == null) continue;
+                    executeForTarget(service, name);
+                }
+            } else if (scriptNameExpression != null) {
+                String name = scriptNameExpression.getSingle(event);
+                if (name == null) return;
+                executeForTarget(service, name);
+            }
+        } catch (IOException exception) {
+            Skript.error("Script file operation failed: " + exception.getMessage());
+        }
+    }
+
+    private void executeForTarget(SkriptScriptService service, String target) throws IOException {
+        switch (mark) {
+            case 1 -> service.enableTarget(target);
+            case 2 -> service.reloadTarget(target);
+            case 3 -> service.disableTarget(target);
+            case 4 -> {
+                var runtime = org.skriptlang.skript.fabric.runtime.SkriptRuntime.instance();
+                for (Script script : runtime.loadedScripts()) {
+                    String scriptName = script.nameAndPath();
+                    if (scriptName != null && scriptName.equalsIgnoreCase(target)) {
+                        runtime.unloadScripts(java.util.List.of(script));
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @Override

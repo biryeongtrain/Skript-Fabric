@@ -10,6 +10,12 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import kim.biryeong.skriptFabric.EntityVisibilityManager;
+import kim.biryeong.skriptFabric.mixin.ChunkMapAccessor;
+import kim.biryeong.skriptFabric.mixin.TrackedEntityAccessor;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
@@ -54,12 +60,67 @@ public final class EffEntityVisibility extends Effect {
         reveal = matchedPattern == 1;
         hidden = (Expression<Entity>) exprs[0];
         viewers = exprs.length < 2 ? null : (Expression<ServerPlayer>) exprs[1];
-        Skript.error("Per-viewer entity visibility is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        EntityVisibilityManager manager = EntityVisibilityManager.instance();
+
+        for (Entity entity : hidden.getArray(event)) {
+            if (!(entity.level() instanceof ServerLevel level)) {
+                continue;
+            }
+
+            if (viewers == null) {
+                if (reveal) {
+                    manager.revealGlobally(entity.getUUID());
+                    forceUpdateTracking(level, entity, null);
+                } else {
+                    manager.hideGlobally(entity.getUUID());
+                    sendRemovePacket(level, entity, null);
+                }
+            } else {
+                for (ServerPlayer viewer : viewers.getArray(event)) {
+                    if (reveal) {
+                        manager.revealFor(entity.getUUID(), viewer.getUUID());
+                        forceUpdateTracking(level, entity, viewer);
+                    } else {
+                        manager.hideFor(entity.getUUID(), viewer.getUUID());
+                        sendRemovePacket(level, entity, viewer);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void sendRemovePacket(ServerLevel level, Entity entity, @Nullable ServerPlayer specificViewer) {
+        ClientboundRemoveEntitiesPacket packet = new ClientboundRemoveEntitiesPacket(entity.getId());
+        if (specificViewer != null) {
+            specificViewer.connection.send(packet);
+        } else {
+            for (ServerPlayer player : level.players()) {
+                player.connection.send(packet);
+            }
+        }
+    }
+
+    private static void forceUpdateTracking(ServerLevel level, Entity entity, @Nullable ServerPlayer specificViewer) {
+        ChunkMap chunkMap = level.getChunkSource().chunkMap;
+        if (!(chunkMap instanceof ChunkMapAccessor accessor)) {
+            return;
+        }
+        Object tracked = accessor.getEntityMap().get(entity.getId());
+        if (!(tracked instanceof TrackedEntityAccessor trackedAccessor)) {
+            return;
+        }
+        if (specificViewer != null) {
+            trackedAccessor.callUpdatePlayer(specificViewer);
+        } else {
+            for (ServerPlayer player : level.players()) {
+                trackedAccessor.callUpdatePlayer(player);
+            }
+        }
     }
 
     @Override

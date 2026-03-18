@@ -19,10 +19,14 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 public class ExprLastLoadedServerIcon extends SimpleExpression<String> {
 
 	/**
-	 * Static field that can be set by an effect that loads a server icon.
-	 * For now, this is a stub that remains null.
+	 * Static field storing the file path of the last loaded server icon.
 	 */
 	public static volatile @Nullable String lastLoaded = null;
+
+	/**
+	 * Static field storing the raw PNG bytes of the last loaded server icon.
+	 */
+	public static volatile byte @Nullable [] lastLoadedBytes = null;
 
 	static {
 		Skript.registerExpression(ExprLastLoadedServerIcon.class, String.class, "[the] [last[ly]] loaded server icon");

@@ -12,6 +12,8 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.SyntaxStringBuilder;
 import ch.njol.skript.util.Timespan;
 import ch.njol.util.Kleenean;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity.BeeReleaseStatus;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -47,12 +49,15 @@ public final class EffReleaseEntityStorage extends Effect {
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         blocks = (Expression<FabricBlock>) exprs[0];
         timespan = exprs[1] == null ? null : (Expression<Timespan>) exprs[1];
-        Skript.error("Entity block storage mutation is not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        for (FabricBlock block : blocks.getArray(event)) {
+            if (!(block.blockEntity() instanceof BeehiveBlockEntity beehive)) continue;
+            beehive.emptyAllLivingFromHive(null, block.state(), BeeReleaseStatus.BEE_RELEASED);
+        }
     }
 
     @Override

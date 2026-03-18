@@ -72,6 +72,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.equipment.Equippable;
@@ -79,8 +80,10 @@ import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WitherRoseBlock;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
@@ -971,6 +974,239 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
             );
 
             runtime.clearScripts();
+        });
+    }
+
+    // --- Phase A/B: New effect tests ---
+
+    @GameTest
+    public void enchantAtLevelEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/enchant_at_level_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND_SWORD));
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, cow, new EntityHitResult(cow)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected enchant-at-level test to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, markerPos);
+            ItemStack tool = player.getItemInHand(InteractionHand.MAIN_HAND);
+            helper.assertTrue(!EnchantmentHelper.getEnchantmentsForCrafting(tool).isEmpty(),
+                    Component.literal("Expected enchant-at-level effect to add enchantments to the player's tool."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void enchantAtLevelTreasureEffectExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/enchant_at_level_treasure_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND_SWORD));
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, cow, new EntityHitResult(cow)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected enchant-at-level-treasure test to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.GOLD_BLOCK, markerPos);
+            ItemStack tool = player.getItemInHand(InteractionHand.MAIN_HAND);
+            helper.assertTrue(!EnchantmentHelper.getEnchantmentsForCrafting(tool).isEmpty(),
+                    Component.literal("Expected enchant-at-level-treasure effect to add enchantments to the player's tool."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void makeSayCommandEffectExecutesRealScript(GameTestHelper helper) {
+        Interaction interaction = createInteraction(helper, true);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/make_say_command_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, interaction, new EntityHitResult(interaction)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected make-say-command test to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.EMERALD_BLOCK, markerPos);
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void makeSayMessageEffectExecutesRealScript(GameTestHelper helper) {
+        Interaction interaction = createInteraction(helper, true);
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/make_say_message_marks_block.sk");
+
+            BlockPos markerAbsolute = helper.absolutePos(markerPos);
+            helper.getLevel().setBlockAndUpdate(markerAbsolute, Blocks.AIR.defaultBlockState());
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, interaction, new EntityHitResult(interaction)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected make-say-message test to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.LAPIS_BLOCK, markerPos);
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void clearEntityStorageEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/clear_entity_storage_marks_block.sk");
+
+            BlockPos hiveRelative = new BlockPos(14, 1, 0);
+            BlockPos hiveAbsolute = helper.absolutePos(hiveRelative);
+            BlockPos markerRelative = new BlockPos(14, 2, 0);
+            helper.getLevel().setBlockAndUpdate(hiveAbsolute, Blocks.BEE_NEST.defaultBlockState());
+
+            BeehiveBlockEntity beehive = (BeehiveBlockEntity) helper.getLevel().getBlockEntity(hiveAbsolute);
+            helper.assertTrue(beehive != null, Component.literal("Expected beehive block entity to exist."));
+            Bee bee = new Bee(EntityType.BEE, helper.getLevel());
+            bee.setPos(hiveAbsolute.getX() + 0.5D, hiveAbsolute.getY() + 0.5D, hiveAbsolute.getZ() + 0.5D);
+            helper.getLevel().addFreshEntity(bee);
+            beehive.addOccupant(bee);
+            helper.assertTrue(beehive.getOccupantCount() > 0,
+                    Component.literal("Expected beehive to contain at least one bee before clearing."));
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(hiveAbsolute.getX() + 0.5D, hiveAbsolute.getY() + 1.0D, hiveAbsolute.getZ() + 0.5D);
+            BlockHitResult hitResult = new BlockHitResult(Vec3.atCenterOf(hiveAbsolute), Direction.UP, hiveAbsolute, false);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseBlockCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, hitResult
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected clear-entity-storage test to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.LIME_WOOL, markerRelative);
+            helper.assertTrue(beehive.getOccupantCount() == 0,
+                    Component.literal("Expected clear-entity-storage effect to empty the beehive."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void releaseEntityStorageEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/release_entity_storage_marks_block.sk");
+
+            BlockPos hiveRelative = new BlockPos(14, 1, 0);
+            BlockPos hiveAbsolute = helper.absolutePos(hiveRelative);
+            BlockPos markerRelative = new BlockPos(14, 2, 0);
+            helper.getLevel().setBlockAndUpdate(hiveAbsolute, Blocks.BEE_NEST.defaultBlockState());
+
+            BeehiveBlockEntity beehive = (BeehiveBlockEntity) helper.getLevel().getBlockEntity(hiveAbsolute);
+            helper.assertTrue(beehive != null, Component.literal("Expected beehive block entity to exist."));
+            Bee bee = new Bee(EntityType.BEE, helper.getLevel());
+            bee.setPos(hiveAbsolute.getX() + 0.5D, hiveAbsolute.getY() + 0.5D, hiveAbsolute.getZ() + 0.5D);
+            helper.getLevel().addFreshEntity(bee);
+            beehive.addOccupant(bee);
+            helper.assertTrue(beehive.getOccupantCount() > 0,
+                    Component.literal("Expected beehive to contain at least one bee before releasing."));
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(hiveAbsolute.getX() + 0.5D, hiveAbsolute.getY() + 1.0D, hiveAbsolute.getZ() + 0.5D);
+            BlockHitResult hitResult = new BlockHitResult(Vec3.atCenterOf(hiveAbsolute), Direction.UP, hiveAbsolute, false);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseBlockCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, hitResult
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected release-entity-storage test to keep Fabric callback flow in PASS state."));
+            helper.assertBlockPresent(Blocks.ORANGE_WOOL, markerRelative);
+            helper.assertTrue(beehive.getOccupantCount() == 0,
+                    Component.literal("Expected release-entity-storage effect to empty the beehive after releasing."));
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void insertEntityStorageEffectExecutesRealScript(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            BlockPos markerPos = new BlockPos(9, 1, 0);
+            runtime.clearScripts();
+            runtime.loadFromResource("skript/gametest/effect/insert_entity_storage_marks_block.sk");
+
+            BlockPos hiveRelative = new BlockPos(9, 1, 0);
+            BlockPos hiveAbsolute = helper.absolutePos(hiveRelative);
+            helper.getLevel().setBlockAndUpdate(hiveAbsolute, Blocks.BEE_NEST.defaultBlockState());
+
+            BeehiveBlockEntity beehive = (BeehiveBlockEntity) helper.getLevel().getBlockEntity(hiveAbsolute);
+            helper.assertTrue(beehive != null, Component.literal("Expected beehive block entity to exist."));
+            helper.assertTrue(beehive.getOccupantCount() == 0,
+                    Component.literal("Expected beehive to be empty before inserting."));
+
+            Bee bee = new Bee(EntityType.BEE, helper.getLevel());
+            bee.setPos(hiveAbsolute.getX() + 0.5D, hiveAbsolute.getY() + 1.5D, hiveAbsolute.getZ() + 0.5D);
+            helper.getLevel().addFreshEntity(bee);
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(hiveAbsolute.getX() + 0.5D, hiveAbsolute.getY() + 1.0D, hiveAbsolute.getZ() + 0.5D);
+
+            InteractionResult result = GameTestRuntimeContext.withHelper(helper, () -> UseEntityCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, bee, new EntityHitResult(bee)
+            ));
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected insert-entity-storage test to keep Fabric callback flow in PASS state."));
+            helper.assertTrue(beehive.getOccupantCount() > 0,
+                    Component.literal("Expected insert-entity-storage effect to add a bee to the beehive."));
+            runtime.clearScripts();
+            helper.succeed();
         });
     }
 }

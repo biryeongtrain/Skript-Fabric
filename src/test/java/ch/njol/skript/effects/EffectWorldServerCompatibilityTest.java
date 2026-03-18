@@ -191,7 +191,7 @@ final class EffectWorldServerCompatibilityTest {
                 Kleenean.FALSE,
                 new ParseResult()
         ));
-        assertFalse(new EffConnect().init(
+        assertTrue(new EffConnect().init(
                 new Expression[]{new TestPlayerExpression(), new TestStringExpression(), new TestNumberExpression()},
                 2,
                 Kleenean.FALSE,

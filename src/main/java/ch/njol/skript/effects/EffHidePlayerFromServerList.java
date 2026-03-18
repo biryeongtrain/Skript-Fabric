@@ -11,6 +11,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.fabric.runtime.FabricServerListPingEventHandle;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
 @Name("Hide Player from Server List")
@@ -41,13 +42,23 @@ public final class EffHidePlayerFromServerList extends Effect {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        if (!getParser().isCurrentEvent(FabricServerListPingEventHandle.class)) {
+            Skript.error("The 'hide player from server list' effect can only be used in a server list ping event");
+            return false;
+        }
         players = (Expression<ServerPlayer>) exprs[0];
-        Skript.error("Server list ping effects are not wired in the Fabric runtime yet");
-        return false;
+        return true;
     }
 
     @Override
     protected void execute(SkriptEvent event) {
+        if (!(event.handle() instanceof FabricServerListPingEventHandle handle)) {
+            return;
+        }
+        for (ServerPlayer player : players.getArray(event)) {
+            handle.hidePlayer(player.getUUID());
+            handle.playerSample().remove(player.getGameProfile().getName());
+        }
     }
 
     @Override

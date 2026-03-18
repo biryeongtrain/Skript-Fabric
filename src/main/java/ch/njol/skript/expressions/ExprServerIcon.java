@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.runtime.FabricServerListPingEventHandle;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -21,11 +22,16 @@ import java.nio.file.Path;
 @Description({
 	"Icon of the server in the server list.",
 	"'default server icon' returns the path to server-icon.png.",
-	"Currently a stub on Fabric that returns the server-icon.png path if present."
+	"'shown server icon' returns the currently set icon path in a server list ping event.",
+	"Can be set to a file path (string) in a server list ping event."
 })
 @Example("""
 	on script load:
 		set {server-icon} to the default server icon
+	""")
+@Example("""
+	on server list ping:
+		set the icon to the last loaded server icon
 	""")
 @Since("2.3, Fabric")
 public class ExprServerIcon extends SimpleExpression<String> {
@@ -50,7 +56,12 @@ public class ExprServerIcon extends SimpleExpression<String> {
 
 	@Override
 	protected String @Nullable [] get(SkriptEvent event) {
-		// Stub: return path to server-icon.png if it exists
+		if (!isDefault && event.handle() instanceof FabricServerListPingEventHandle handle) {
+			byte[] bytes = handle.faviconBytes();
+			if (bytes != null) {
+				return new String[]{"custom-server-icon"};
+			}
+		}
 		Path iconPath = Path.of("server-icon.png");
 		if (Files.exists(iconPath)) {
 			return new String[]{iconPath.toAbsolutePath().toString()};
@@ -60,8 +71,43 @@ public class ExprServerIcon extends SimpleExpression<String> {
 
 	@Override
 	public @Nullable Class<?>[] acceptChange(ChangeMode mode) {
-		// Server icon change not yet supported on Fabric
+		if (isDefault) {
+			return null;
+		}
+		if (mode == ChangeMode.SET || mode == ChangeMode.RESET || mode == ChangeMode.DELETE) {
+			return new Class[]{String.class};
+		}
 		return null;
+	}
+
+	@Override
+	public void change(SkriptEvent event, @Nullable Object[] delta, ChangeMode mode) {
+		if (!(event.handle() instanceof FabricServerListPingEventHandle handle)) {
+			return;
+		}
+		if (mode == ChangeMode.RESET || mode == ChangeMode.DELETE) {
+			handle.setFaviconBytes(null);
+			return;
+		}
+		if (delta == null || delta.length == 0) {
+			return;
+		}
+		String filePath = (String) delta[0];
+		// Check if it matches the last loaded icon path
+		if (filePath.equals(ExprLastLoadedServerIcon.lastLoaded)) {
+			byte[] bytes = ExprLastLoadedServerIcon.lastLoadedBytes;
+			if (bytes != null) {
+				handle.setFaviconBytes(bytes);
+				return;
+			}
+		}
+		// Otherwise load from file
+		try {
+			byte[] bytes = Files.readAllBytes(Path.of(filePath));
+			handle.setFaviconBytes(bytes);
+		} catch (IOException e) {
+			Skript.error("Could not load server icon from file '" + filePath + "': " + e.getMessage());
+		}
 	}
 
 	@Override
