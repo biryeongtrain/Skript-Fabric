@@ -1,0 +1,3 @@
+on use entity:
+    strike lightning effect at location of event-entity
+    set test block under player event-player to purple_wool

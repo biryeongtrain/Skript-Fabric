@@ -6,11 +6,10 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
+import kim.biryeong.skriptFabric.mixin.LivingEntityLastHurtAccessor;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
-
-import java.lang.reflect.Field;
 
 @Name("Last Damage")
 @Description("The last damage that was done to an entity. Note that changing it doesn't deal more/less damage.")
@@ -25,7 +24,7 @@ public class ExprLastDamage extends SimplePropertyExpression<LivingEntity, Numbe
     @Override
     @Nullable
     public Number convert(LivingEntity livingEntity) {
-        return getLastHurt(livingEntity);
+        return ((LivingEntityLastHurtAccessor) livingEntity).skript$getLastHurt();
     }
 
     @Override
@@ -43,12 +42,12 @@ public class ExprLastDamage extends SimplePropertyExpression<LivingEntity, Numbe
         }
         float damage = number.floatValue();
         for (LivingEntity entity : getExpr().getArray(event)) {
+            LivingEntityLastHurtAccessor accessor = (LivingEntityLastHurtAccessor) entity;
             switch (mode) {
-                case SET -> setLastHurt(entity, damage);
-                case REMOVE -> setLastHurt(entity, getLastHurt(entity) - damage);
-                case ADD -> setLastHurt(entity, getLastHurt(entity) + damage);
-                default -> {
-                }
+                case SET -> accessor.skript$setLastHurt(damage);
+                case REMOVE -> accessor.skript$setLastHurt(accessor.skript$getLastHurt() - damage);
+                case ADD -> accessor.skript$setLastHurt(accessor.skript$getLastHurt() + damage);
+                default -> {}
             }
         }
     }
@@ -61,25 +60,5 @@ public class ExprLastDamage extends SimplePropertyExpression<LivingEntity, Numbe
     @Override
     protected String getPropertyName() {
         return "last damage";
-    }
-
-    private float getLastHurt(LivingEntity entity) {
-        try {
-            Field field = LivingEntity.class.getDeclaredField("lastHurt");
-            field.setAccessible(true);
-            return field.getFloat(entity);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to read last damage", e);
-        }
-    }
-
-    private void setLastHurt(LivingEntity entity, float value) {
-        try {
-            Field field = LivingEntity.class.getDeclaredField("lastHurt");
-            field.setAccessible(true);
-            field.setFloat(entity, value);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to set last damage", e);
-        }
     }
 }

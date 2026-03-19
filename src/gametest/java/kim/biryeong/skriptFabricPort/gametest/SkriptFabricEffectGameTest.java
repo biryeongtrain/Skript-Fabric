@@ -1171,4 +1171,96 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
             runtime.clearScripts();
         });
     }
+
+    @GameTest
+    public void knockbackEntityEffect(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/knockback_entity_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.RED_WOOL,
+                () -> helper.assertTrue(
+                        cow.getDeltaMovement().z > 0,
+                        Component.literal("Expected knockback effect to apply positive Z velocity to entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void pushEntityEffect(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/push_entity_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.BLUE_WOOL,
+                () -> helper.assertTrue(
+                        cow.getDeltaMovement().y > 0,
+                        Component.literal("Expected push effect to apply upward velocity to entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void vehicleRideEffect(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/vehicle_ride_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.BROWN_WOOL,
+                null
+        );
+    }
+
+    @GameTest
+    public void breakNaturallyEffect(GameTestHelper helper) {
+        runWithRuntimeLock(helper, () -> {
+            SkriptRuntime runtime = SkriptRuntime.instance();
+            runtime.clearScripts();
+
+            BlockPos stoneRelative = new BlockPos(5, 1, 5);
+            BlockPos stoneAbsolute = helper.absolutePos(stoneRelative);
+            helper.getLevel().setBlockAndUpdate(stoneAbsolute, Blocks.STONE.defaultBlockState());
+            runtime.loadFromResource("skript/gametest/effect/break_naturally_marks_block.sk");
+
+            ServerPlayer player = helper.makeMockServerPlayerInLevel();
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(stoneAbsolute.getX() + 0.5D, stoneAbsolute.getY() + 1.0D, stoneAbsolute.getZ() + 0.5D);
+            BlockHitResult hitResult = new BlockHitResult(Vec3.atCenterOf(stoneAbsolute), Direction.UP, stoneAbsolute, false);
+
+            InteractionResult result = UseBlockCallback.EVENT.invoker().interact(
+                    player, helper.getLevel(), InteractionHand.MAIN_HAND, hitResult
+            );
+            helper.assertTrue(result == InteractionResult.PASS,
+                    Component.literal("Expected break-naturally effect test to keep Fabric callback flow in PASS state."));
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(stoneAbsolute).isAir(),
+                    Component.literal("Expected break-naturally effect to destroy the stone block.")
+            );
+            BlockPos markerAbsolute = helper.absolutePos(new BlockPos(5, 2, 5));
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(markerAbsolute).is(Blocks.CYAN_WOOL),
+                    Component.literal("Expected break-naturally effect script to set cyan_wool marker above the broken block.")
+            );
+            runtime.clearScripts();
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void lightningEffectEffect(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/effect/lightning_effect_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.PURPLE_WOOL
+        );
+    }
 }

@@ -124,6 +124,7 @@ import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionEffect
 import org.skriptlang.skript.bukkit.potion.elements.expressions.ExprPotionEffects;
 import org.skriptlang.skript.bukkit.tags.elements.CondIsTagged;
 import org.skriptlang.skript.bukkit.base.types.EntityClassInfo;
+import org.skriptlang.skript.bukkit.base.types.LivingEntityClassInfo;
 import org.skriptlang.skript.bukkit.base.types.InventoryClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ItemStackClassInfo;
 import org.skriptlang.skript.bukkit.base.types.ItemTypeClassInfo;
@@ -1008,6 +1009,7 @@ public final class SkriptFabricBootstrap {
         registerClassInfoIfMissing("timespan", TimespanClassInfo::register);
         registerClassInfoIfMissing("world", WorldClassInfo::register);
         registerClassInfoIfMissing("entity", EntityClassInfo::register);
+        registerClassInfoIfMissing("livingentity", LivingEntityClassInfo::register);
         registerClassInfoIfMissing("damagesource", DamageSourceClassInfo::register);
         registerClassInfoIfMissing("block", BlockClassInfo::register);
         registerClassInfoIfMissing("slot", SlotClassInfo::register);
@@ -1092,10 +1094,10 @@ public final class SkriptFabricBootstrap {
         forceInitialize(ch.njol.skript.expressions.ExprLastDamageCause.class);
         forceInitialize(ch.njol.skript.expressions.ExprLanguage.class);
         forceInitialize(ch.njol.skript.expressions.ExprLightLevel.class);
+        forceInitialize(ch.njol.skript.expressions.ExprLocationOf.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocation.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocationAt.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocationFromVector.class);
-        forceInitialize(ch.njol.skript.expressions.ExprLocationOf.class);
         forceInitialize(ch.njol.skript.expressions.ExprLocationVectorOffset.class);
         forceInitialize(ch.njol.skript.expressions.ExprMOTD.class);
         forceInitialize(ch.njol.skript.expressions.ExprMe.class);

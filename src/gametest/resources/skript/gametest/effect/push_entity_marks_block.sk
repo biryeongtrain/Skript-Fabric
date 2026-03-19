@@ -1,0 +1,3 @@
+on use entity:
+    push event-entity along vector(0, 1, 0)
+    set test block under player event-player to blue_wool

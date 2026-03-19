@@ -91,22 +91,56 @@ public final class EffectEntityClosureCompatibilityTest {
             expressionsRegistered = true;
         }
         Skript.instance().syntaxRegistry().clear(SyntaxRegistry.EFFECT);
-        EffAllayCanDuplicate.register();
-        EffAllayDuplicate.register();
-        EffCharge.register();
-        EffDancing.register();
-        EffDropLeash.register();
-        EffExplodeCreeper.register();
-        EffFireResistant.register();
-        EffGoatHorns.register();
-        EffGoatRam.register();
-        EffIncendiary.register();
-        EffItemDespawn.register();
-        EffKnockback.register();
-        EffPush.register();
-        EffMakeEggHatch.register();
-        EffSwingHand.register();
-        EffLightning.register();
+        Skript.registerEffect(EffAllayCanDuplicate.class,
+                "allow %livingentities% to (duplicate|clone)",
+                "prevent %livingentities% from (duplicating|cloning)");
+        Skript.registerEffect(EffAllayDuplicate.class,
+                "make %livingentities% (duplicate|clone)");
+        Skript.registerEffect(EffCharge.class,
+                "make %entities% [un:(un|not |non[-| ])](charged|powered)",
+                "[:un](charge|power) %entities%");
+        Skript.registerEffect(EffDancing.class,
+                "make %livingentities% (start dancing|dance) [%-location%] [timespan:for %-timespan%]",
+                "make %livingentities% (stop dancing|not dance)");
+        Skript.registerEffect(EffDropLeash.class,
+                "(force|allow) [the] (lead|leash) [item] to drop",
+                "(block|disallow|prevent) [the] (lead|leash) [item] from dropping");
+        Skript.registerEffect(EffExplodeCreeper.class,
+                "instantly explode [creeper[s]] %livingentities%",
+                "explode [creeper[s]] %livingentities% instantly",
+                "ignite creeper[s] %livingentities%",
+                "start (ignition|explosion) [process] of [creeper[s]] %livingentities%",
+                "stop (ignition|explosion) [process] of [creeper[s]] %livingentities%");
+        Skript.registerEffect(EffFireResistant.class,
+                "make %itemtypes% [:not] (fire resistant|resistant to fire)");
+        Skript.registerEffect(EffGoatHorns.class,
+                "remove [the] (left horn[s]|right:right horn[s]|both:both horns) of %livingentities%",
+                "remove %livingentities%'[s] (left horn[s]|right:right horn[s]|both:horns)",
+                "(regrow|replace) [the] (left horn[s]|right:right horn[s]|both:both horns) of %livingentities%",
+                "(regrow|replace) %livingentities%'[s] (left horn[s]|right:right horn[s]|both:horns)");
+        Skript.registerEffect(EffGoatRam.class,
+                "make %livingentities% ram %livingentity%",
+                "force %livingentities% to ram %livingentity%");
+        Skript.registerEffect(EffIncendiary.class,
+                "make %entities% [(1¦not)] incendiary",
+                "make %entities%'[s] explosion [(1¦not)] (incendiary|fiery)",
+                "make [the] [event(-| )]explosion [(1¦not)] (incendiary|fiery)");
+        Skript.registerEffect(EffItemDespawn.class,
+                "(prevent|disallow) %itementities% from (naturally despawning|despawning naturally)",
+                "allow natural despawning of %itementities%",
+                "allow %itementities% to (naturally despawn|despawn naturally)");
+        Skript.registerEffect(EffKnockback.class,
+                "(apply knockback to|knock[back]) %livingentities% [%vector%] [with (strength|force) %-number%]");
+        Skript.registerEffect(EffPush.class,
+                "(push|thrust|pull) %entities% [along] %vector% [(at|with) [a] (speed|velocity|force) [of] %-number%]",
+                "(push|thrust|pull) %entities% (towards|away:away from) %location% [(at|with) [a] (speed|velocity|force) [of] %-number%]");
+        Skript.registerEffect(EffMakeEggHatch.class,
+                "make [the] egg [:not] hatch");
+        Skript.registerEffect(EffSwingHand.class,
+                "make %livingentities% swing [their] [main] hand",
+                "make %livingentities% swing [their] off[ ]hand");
+        Skript.registerEffect(EffLightning.class,
+                "(create|strike) lightning(1¦[ ]effect|) %locations%");
     }
 
     private static <T> void registerClassInfo(Class<T> type, String codeName) {

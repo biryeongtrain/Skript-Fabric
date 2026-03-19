@@ -1571,4 +1571,74 @@ public final class SkriptFabricConditionGameTest extends AbstractSkriptFabricGam
 
         helper.succeed();
     }
+
+    @GameTest
+    public void wetEntityConditionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        BlockPos cowAbsolute = helper.absolutePos(new BlockPos(0, 1, 0));
+        helper.getLevel().setBlockAndUpdate(cowAbsolute, net.minecraft.world.level.block.Blocks.WATER.defaultBlockState());
+        cow.setPos(cowAbsolute.getX() + 0.5D, cowAbsolute.getY(), cowAbsolute.getZ() + 0.5D);
+        cow.tick();
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/condition/wet_entity_names_entity.sk",
+                cow,
+                "wet"
+        );
+    }
+
+    @GameTest
+    public void canPickUpItemsConditionExecutesRealScript(GameTestHelper helper) {
+        net.minecraft.world.entity.monster.Zombie zombie =
+                (net.minecraft.world.entity.monster.Zombie) helper.spawnWithNoFreeWill(
+                        EntityType.ZOMBIE, 0.5F, 1.0F, 0.5F);
+        zombie.setCanPickUpLoot(true);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/condition/can_pick_up_items_names_entity.sk",
+                zombie,
+                "can pick up"
+        );
+    }
+
+    @GameTest
+    public void glowingEntityConditionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/condition/glowing_entity_names_entity.sk",
+                cow,
+                "glowing",
+                () -> helper.assertTrue(
+                        cow.hasGlowingTag(),
+                        Component.literal("Expected glowing script to make entity glow.")
+                )
+        );
+    }
+
+    @GameTest
+    public void hasGravityConditionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/condition/has_gravity_entity_names_entity.sk",
+                cow,
+                "has gravity"
+        );
+    }
+
+    @GameTest
+    public void frozenEntityConditionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/condition/frozen_entity_names_entity.sk",
+                cow,
+                "frozen",
+                () -> helper.assertTrue(
+                        cow.getTicksFrozen() >= 200,
+                        Component.literal("Expected frozen condition script to set freeze ticks on entity.")
+                )
+        );
+    }
 }

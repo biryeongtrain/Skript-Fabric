@@ -50,6 +50,7 @@ public class EffLightning extends Effect {
     @Override
     protected void execute(SkriptEvent event) {
         for (FabricLocation location : locations.getArray(event)) {
+            if (location.level() == null) continue;
             LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(location.level(), EntitySpawnReason.TRIGGERED);
             if (lightning == null) {
                 continue;

@@ -46,6 +46,10 @@ dependencies {
     implementation "net.kyori:adventure-api:${project.adventure_api_version}"
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/skript-fabric.accesswidener")
+}
+
 fabricApi {
     configureTests {
         createSourceSet = true

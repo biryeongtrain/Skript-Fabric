@@ -1,0 +1,2 @@
+on gametest cycle f safe4 context:
+    set {cyclef::size} to recursive size of {cyclef::source::*}

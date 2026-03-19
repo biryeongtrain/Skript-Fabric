@@ -92,16 +92,40 @@ public final class EffectRuntimeClosureCompatibilityTest {
             expressionsRegistered = true;
         }
         Skript.instance().syntaxRegistry().clear(SyntaxRegistry.EFFECT);
-        EffEndermanTeleport.register();
-        EffForceAttack.register();
-        EffPathfind.register();
-        EffPersistent.register();
-        EffToggleFlight.register();
-        EffTransform.register();
-        EffVehicle.register();
-        EffZombify.register();
-        EffCommandBlockConditional.register();
-        EffGlowingText.register();
+        Skript.registerEffect(EffEndermanTeleport.class,
+                "make %livingentities% (randomly teleport|teleport randomly)",
+                "force %livingentities% to (randomly teleport|teleport randomly)",
+                "make %livingentities% teleport [randomly] towards %entity%",
+                "force %livingentities% to teleport [randomly] towards %entity%");
+        Skript.registerEffect(EffForceAttack.class,
+                "make %livingentities% attack %entities%",
+                "force %livingentities% to attack %entities%",
+                "make %livingentities% damage %entities% by %number% [heart[s]]",
+                "force %livingentities% to damage %entities% by %number% [heart[s]]");
+        Skript.registerEffect(EffPathfind.class,
+                "make %livingentities% (pathfind|move) to[wards] %livingentity/location% [at speed %-number%]",
+                "make %livingentities% stop (pathfinding|moving)");
+        Skript.registerEffect(EffPersistent.class,
+                "make %entities/blocks% [:not] persist[ent]",
+                "force %entities/blocks% to [:not] persist",
+                "prevent %entities/blocks% from persisting");
+        Skript.registerEffect(EffToggleFlight.class,
+                "(allow|enable) (fly|flight) (for|to) %players%",
+                "(disallow|disable) (fly|flight) (for|to) %players%");
+        Skript.registerEffect(EffTransform.class, "(transform|map) %~objects% (using|with) <.+>");
+        Skript.registerEffect(EffVehicle.class,
+                "(make|let|force) %entities% [to] (ride|mount) [(in|on)] %entity/entitydata%",
+                "(make|let|force) %entities% [to] (dismount|(dismount|leave) (from|of|) (any|the[ir]|his|her|) vehicle[s])",
+                "(eject|dismount) (any|the|) passenger[s] (of|from) %entities%",
+                "eject passenger[s] (of|from) %entities%");
+        Skript.registerEffect(EffZombify.class,
+                "zombify %livingentities%",
+                "unzombify %livingentities% [(in|after) %-timespan%]");
+        Skript.registerEffect(EffCommandBlockConditional.class,
+                "make command block[s] %blocks% [not:(un|not )]conditional");
+        Skript.registerEffect(EffGlowingText.class,
+                "make %blocks/itemtypes% have glowing text",
+                "make %blocks/itemtypes% have (normal|non[-| ]glowing) text");
         Skript.registerEffect(
                 EffBan.class,
                 "ban [kick:and kick] %strings/offlineplayers% [(by reason of|because [of]|on account of|due to) %-string%] [for %-timespan%]",

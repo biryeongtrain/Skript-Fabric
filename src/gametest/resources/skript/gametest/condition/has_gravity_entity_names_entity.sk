@@ -1,0 +1,3 @@
+on use entity:
+    gravity of event-entity is true
+    set test name of entity event-entity to "has gravity"

@@ -17,6 +17,7 @@
     ],
     "skript": []
   },
+  "accessWidener": "skript-fabric.accesswidener",
   "mixins": [
     "skript-fabric.mixins.json"
   ],

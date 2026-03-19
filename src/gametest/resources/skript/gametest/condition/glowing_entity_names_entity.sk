@@ -1,0 +1,3 @@
+on use entity:
+    set glowing of event-entity to true
+    set test name of entity event-entity to "glowing"

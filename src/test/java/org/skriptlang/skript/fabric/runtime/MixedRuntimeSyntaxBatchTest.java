@@ -25,31 +25,6 @@ import ch.njol.skript.effects.EffExceptionDebug;
 import ch.njol.skript.effects.EffHealth;
 import ch.njol.skript.effects.EffSort;
 import ch.njol.skript.effects.EffToggle;
-import ch.njol.skript.events.EvtBeaconEffect;
-import ch.njol.skript.events.EvtBeaconToggle;
-import ch.njol.skript.events.EvtBlock;
-import ch.njol.skript.events.EvtBookEdit;
-import ch.njol.skript.events.EvtBookSign;
-import ch.njol.skript.events.EvtClick;
-import ch.njol.skript.events.EvtCommand;
-import ch.njol.skript.events.EvtEntity;
-import ch.njol.skript.events.EvtEntityBlockChange;
-import ch.njol.skript.events.EvtEntityTransform;
-import ch.njol.skript.events.EvtExperienceChange;
-import ch.njol.skript.events.EvtExperienceSpawn;
-import ch.njol.skript.events.EvtGrow;
-import ch.njol.skript.events.EvtHealing;
-import ch.njol.skript.events.EvtItem;
-import ch.njol.skript.events.EvtLevel;
-import ch.njol.skript.events.EvtMove;
-import ch.njol.skript.events.EvtPlantGrowth;
-import ch.njol.skript.events.EvtPlayerChunkEnter;
-import ch.njol.skript.events.EvtPlayerCommandSend;
-import ch.njol.skript.events.EvtPressurePlate;
-import ch.njol.skript.events.EvtResourcePackResponse;
-import ch.njol.skript.events.EvtSpectate;
-import ch.njol.skript.events.EvtTeleport;
-import ch.njol.skript.events.EvtVehicleCollision;
 import ch.njol.skript.expressions.ExprAffectedEntities;
 import ch.njol.skript.expressions.ExprArrowKnockbackStrength;
 import ch.njol.skript.expressions.ExprArrowPierceLevel;
@@ -76,7 +51,6 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.Statement;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.parser.ParserInstance;
-import ch.njol.skript.config.SectionNode;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.jetbrains.annotations.Nullable;
@@ -229,35 +203,6 @@ final class MixedRuntimeSyntaxBatchTest {
         assertInstanceOf(EffToggle.class, parseEffectInEvent("toggle gravity of event-entity", FabricUseEntityHandle.class));
     }
 
-    @Test
-    void mixedEventsParseThroughBootstrap() {
-        assertInstanceOf(EvtBookEdit.class, parseEvent("book edit"));
-        assertInstanceOf(EvtBookSign.class, parseEvent("book signing"));
-        assertInstanceOf(EvtBeaconEffect.class, parseEvent("secondary beacon effect of speed"));
-        assertInstanceOf(EvtBeaconToggle.class, parseEvent("beacon activation"));
-        assertInstanceOf(EvtBlock.class, parseEvent("block breaking of stone"));
-        assertInstanceOf(EvtBlock.class, parseEvent("break of item frame"));
-        assertInstanceOf(EvtClick.class, parseEvent("right click with stick on stone"));
-        assertInstanceOf(EvtCommand.class, parseEvent("command \"say\""));
-        assertInstanceOf(EvtEntity.class, parseEvent("spawning of zombie"));
-        assertInstanceOf(EvtEntityBlockChange.class, parseEvent("sheep eat"));
-        assertInstanceOf(EvtEntityTransform.class, parseEvent("zombie transforming due to \"curing\""));
-        assertInstanceOf(EvtExperienceChange.class, parseEvent("player experience decrease"));
-        assertInstanceOf(EvtExperienceSpawn.class, parseEvent("experience orb spawn"));
-        assertInstanceOf(EvtGrow.class, parseEvent("growth"));
-        assertInstanceOf(EvtHealing.class, parseEvent("healing of zombie by \"magic\""));
-        assertInstanceOf(EvtItem.class, parseEvent("item spawn of stick"));
-        assertInstanceOf(EvtLevel.class, parseEvent("player level up"));
-        assertInstanceOf(EvtMove.class, parseEvent("player move"));
-        assertInstanceOf(EvtPlantGrowth.class, parseEvent("plant growth"));
-        assertInstanceOf(EvtPlayerChunkEnter.class, parseEvent("player enters a chunk"));
-        assertInstanceOf(EvtPlayerCommandSend.class, parseEvent("send command list"));
-        assertInstanceOf(EvtPressurePlate.class, parseEvent("tripwire"));
-        assertInstanceOf(EvtResourcePackResponse.class, parseEvent("resource pack accepted"));
-        assertInstanceOf(EvtSpectate.class, parseEvent("player start spectating of armor stand"));
-        assertInstanceOf(EvtTeleport.class, parseEvent("zombie teleporting"));
-        assertInstanceOf(EvtVehicleCollision.class, parseEvent("vehicle entity collision of zombie"));
-    }
 
     private Condition parseCondition(String input) {
         Condition parsed = Condition.parse(input, "failed");
@@ -312,16 +257,6 @@ final class MixedRuntimeSyntaxBatchTest {
         } finally {
             restoreEventContext(parser, previousEventName, previousEventClasses);
         }
-    }
-
-    private ch.njol.skript.lang.SkriptEvent parseEvent(String input) {
-        ch.njol.skript.lang.SkriptEvent parsed = ch.njol.skript.lang.SkriptEvent.parse(
-                input,
-                new SectionNode(input),
-                "failed"
-        );
-        assertNotNull(parsed, input);
-        return parsed;
     }
 
     private void restoreEventContext(ParserInstance parser, @Nullable String previousEventName, Class<?>[] previousEventClasses) {

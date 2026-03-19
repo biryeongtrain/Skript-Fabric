@@ -1,0 +1,2 @@
+on gametest cycle f safe4 context:
+    set {cyclef::hex} to hex code of (color from hex code "#FF0000")

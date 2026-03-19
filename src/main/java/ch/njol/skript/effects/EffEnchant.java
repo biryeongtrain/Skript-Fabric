@@ -14,6 +14,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -43,13 +44,13 @@ public class EffEnchant extends Effect {
 
     private static boolean registered;
     private static final Patterns<Operation> PATTERNS = new Patterns<>(new Object[][]{
-            {"enchant %~itemtypes% with %enchantmenttypes%", Operation.ENCHANT},
-            {"[naturally|randomly] enchant %~itemtypes% at level %number%[treasure:[,] allowing treasure enchant[ment]s]",
+            {"enchant %~itemtypes/slots% with %enchantmenttypes%", Operation.ENCHANT},
+            {"[naturally|randomly] enchant %~itemtypes/slots% at level %number%[treasure:[,] allowing treasure enchant[ment]s]",
                     Operation.ENCHANT_AT_LEVEL},
-            {"disenchant %~itemtypes%", Operation.DISENCHANT}
+            {"disenchant %~itemtypes/slots%", Operation.DISENCHANT}
     });
 
-    private Expression<FabricItemType> items;
+    private Expression<?> items;
     private @Nullable Expression<?> enchantments;
     private @Nullable Expression<Number> level;
     private boolean treasure;
@@ -66,7 +67,7 @@ public class EffEnchant extends Effect {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        items = (Expression<FabricItemType>) exprs[0];
+        items = exprs[0];
         if (matchedPattern == 0) {
             enchantments = exprs[1];
         } else if (matchedPattern == 1) {
@@ -80,8 +81,8 @@ public class EffEnchant extends Effect {
     @Override
     @SuppressWarnings("unchecked")
     protected void execute(SkriptEvent event) {
-        FabricItemType[] itemTypes = items != null ? items.getArray(event) : null;
-        if (itemTypes == null) return;
+        Object[] targets = items != null ? items.getArray(event) : null;
+        if (targets == null || targets.length == 0) return;
 
         switch (operation) {
             case ENCHANT -> {
@@ -89,20 +90,19 @@ public class EffEnchant extends Effect {
                         ? ((Expression<EnchantmentType>) enchantments).getArray(event)
                         : null;
                 if (types == null) return;
-                for (FabricItemType itemType : itemTypes) {
-                    ItemStack stack = itemType.toStack();
-                    for (EnchantmentType type : types) {
-                        EnchantmentHelper.updateEnchantments(stack, mutable ->
-                                mutable.set(type.enchantment(), type.level()));
-                    }
-                    itemType.applyPrototype(stack);
+                for (Object target : targets) {
+                    withItemStack(target, stack -> {
+                        for (EnchantmentType type : types) {
+                            EnchantmentHelper.updateEnchantments(stack, mutable ->
+                                    mutable.set(type.enchantment(), type.level()));
+                        }
+                    });
                 }
             }
             case DISENCHANT -> {
-                for (FabricItemType itemType : itemTypes) {
-                    ItemStack stack = itemType.toStack();
-                    EnchantmentHelper.setEnchantments(stack, ItemEnchantments.EMPTY);
-                    itemType.applyPrototype(stack);
+                for (Object target : targets) {
+                    withItemStack(target, stack ->
+                            EnchantmentHelper.setEnchantments(stack, ItemEnchantments.EMPTY));
                 }
             }
             case ENCHANT_AT_LEVEL -> {
@@ -115,17 +115,41 @@ public class EffEnchant extends Effect {
                         ? registry.listElements().map(ref -> (Holder<Enchantment>) ref)
                         : java.util.stream.StreamSupport.stream(
                                 registry.getTagOrEmpty(EnchantmentTags.IN_ENCHANTING_TABLE).spliterator(), false);
+                ItemStack first = getItemStack(targets[0]);
+                if (first == null) return;
                 List<EnchantmentInstance> selected = EnchantmentHelper.selectEnchantment(
-                        RandomSource.create(), new ItemStack(itemTypes[0].item()), enchantLevel, enchantmentStream);
-                for (FabricItemType itemType : itemTypes) {
-                    ItemStack stack = itemType.toStack();
-                    for (EnchantmentInstance instance : selected) {
-                        EnchantmentHelper.updateEnchantments(stack, mutable ->
-                                mutable.set(instance.enchantment(), instance.level()));
-                    }
-                    itemType.applyPrototype(stack);
+                        RandomSource.create(), first, enchantLevel, enchantmentStream);
+                for (Object target : targets) {
+                    withItemStack(target, stack -> {
+                        for (EnchantmentInstance instance : selected) {
+                            EnchantmentHelper.updateEnchantments(stack, mutable ->
+                                    mutable.set(instance.enchantment(), instance.level()));
+                        }
+                    });
                 }
             }
+        }
+    }
+
+    private static @Nullable ItemStack getItemStack(Object target) {
+        if (target instanceof FabricItemType itemType) {
+            return itemType.toStack();
+        } else if (target instanceof Slot slot) {
+            return slot.getItem().copy();
+        }
+        return null;
+    }
+
+    private static void withItemStack(Object target, java.util.function.Consumer<ItemStack> action) {
+        if (target instanceof FabricItemType itemType) {
+            ItemStack stack = itemType.toStack();
+            action.accept(stack);
+            itemType.applyPrototype(stack);
+        } else if (target instanceof Slot slot) {
+            ItemStack stack = slot.getItem();
+            if (stack.isEmpty()) return;
+            action.accept(stack);
+            slot.set(stack);
         }
     }
 

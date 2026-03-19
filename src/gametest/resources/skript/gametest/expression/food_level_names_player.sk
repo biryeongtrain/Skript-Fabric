@@ -1,0 +1,4 @@
+on use entity:
+    set food level of event-player to 5
+    food level of event-player < 10
+    set test name of entity event-entity to "hungry"

@@ -1,0 +1,2 @@
+on gametest cycle f safe4 context:
+    set {cyclef::blocks::*} to blocks in radius 1 around lane-f-center-location

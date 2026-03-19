@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.classes.data.JavaClasses;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.ExecutionIntent;
@@ -187,8 +188,18 @@ final class EffectCompatibilityTest {
                 "make %players% (start|1¦stop) flying",
                 "make %players% fly"
         );
-        EffContinue.register();
-        EffExit.register();
+        Skript.registerEffect(
+                EffContinue.class,
+                "continue [this loop|[the] [current] loop]",
+                "continue [the] <" + JavaClasses.INTEGER_NUMBER_PATTERN + ">(st|nd|rd|th) loop"
+        );
+        Skript.registerEffect(
+                EffExit.class,
+                "(exit|stop) [trigger]",
+                "(exit|stop) [1|a|the|this] (section|1:loop|2:conditional)",
+                "(exit|stop) <" + JavaClasses.INTEGER_NUMBER_PATTERN + "> (section|1:loop|2:conditional)s",
+                "(exit|stop) all (section|1:loop|2:conditional)s"
+        );
     }
 
     private static <T> void registerClassInfo(Class<T> type, String codeName) {

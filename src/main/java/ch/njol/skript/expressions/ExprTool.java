@@ -11,6 +11,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.Slot;
@@ -26,16 +27,16 @@ import java.lang.reflect.Method;
 @Example("player's tool is a diamond sword")
 @Example("set off hand tool of victim to shield")
 @Since("1.0")
-public final class ExprTool extends PropertyExpression<LivingEntity, Slot> {
+public final class ExprTool extends PropertyExpression<Entity, Slot> {
 
     static {
         Skript.registerExpression(
                 ExprTool.class,
                 Slot.class,
-                "[the] (tool|held item|weapon) [of %livingentities%]",
-                "%livingentities%'[s] (tool|held item|weapon)",
-                "[the] off[ ]hand (tool|item) [of %livingentities%]",
-                "%livingentities%'[s] off[ ]hand (tool|item)"
+                "[the] (tool|held item|weapon) [of %entities%]",
+                "%entities%'[s] (tool|held item|weapon)",
+                "[the] off[ ]hand (tool|item) [of %entities%]",
+                "%entities%'[s] off[ ]hand (tool|item)"
         );
     }
 
@@ -44,15 +45,20 @@ public final class ExprTool extends PropertyExpression<LivingEntity, Slot> {
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        setExpr((Expression<? extends LivingEntity>) expressions[0]);
+        setExpr((Expression<? extends Entity>) expressions[0]);
         offHand = matchedPattern >= 2;
         return true;
     }
 
     @Override
-    protected Slot[] get(SkriptEvent event, LivingEntity[] source) {
+    protected Slot[] get(SkriptEvent event, Entity[] source) {
         InteractionHand hand = offHand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-        return get(source, entity -> new HandBackedSlot(entity, hand));
+        return get(source, entity -> {
+            if (!(entity instanceof LivingEntity living)) {
+                return null;
+            }
+            return new HandBackedSlot(living, hand);
+        });
     }
 
     @Override

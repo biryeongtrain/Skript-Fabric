@@ -113,12 +113,22 @@ final class ExpressionVectorGeometryCompatibilityTest {
         if (syntaxRegistered) {
             return;
         }
-        Class.forName(ExprVectorAngleBetween.class.getName());
-        Class.forName(ExprVectorFromXYZ.class.getName());
-        Class.forName(ExprVectorOfLocation.class.getName());
-        Class.forName(ExprVectorProjection.class.getName());
-        Class.forName(ExprVectorRandom.class.getName());
-        Class.forName(ExprVectorSquaredLength.class.getName());
+        // Re-register vector expressions with ExprVectorFromDirection last so that
+        // more specific patterns (ExprVectorFromXYZ, ExprVectorOfLocation) match first.
+        Skript.instance().syntaxRegistry().clear(SyntaxRegistry.EXPRESSION);
+        List<SyntaxInfo<?>> reordered = new ArrayList<>();
+        List<SyntaxInfo<?>> directionEntries = new ArrayList<>();
+        for (SyntaxInfo<?> info : originalExpressions) {
+            if (info.type() == ExprVectorFromDirection.class) {
+                directionEntries.add(info);
+            } else {
+                reordered.add(info);
+            }
+        }
+        reordered.addAll(directionEntries);
+        for (SyntaxInfo<?> info : reordered) {
+            Skript.instance().syntaxRegistry().register(SyntaxRegistry.EXPRESSION, info);
+        }
         Skript.registerExpression(TestLocationExpression.class, FabricLocation.class, "lane-c-unit-location");
         syntaxRegistered = true;
     }

@@ -1,0 +1,3 @@
+on use entity:
+    knockback event-entity vector(0, 0, 1) with strength 1
+    set test block under player event-player to red_wool

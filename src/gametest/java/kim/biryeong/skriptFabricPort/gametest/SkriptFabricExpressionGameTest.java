@@ -2735,4 +2735,77 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
 
         helper.succeed();
     }
+
+    @GameTest
+    public void healthSetExpressionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/health_set_names_entity.sk",
+                cow,
+                "health set",
+                () -> helper.assertTrue(
+                        cow.getHealth() <= 10.0F,
+                        Component.literal("Expected health expression to set entity health to 5 hearts (10 HP).")
+                )
+        );
+    }
+
+    @GameTest
+    public void foodLevelExpressionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/food_level_names_player.sk",
+                cow,
+                "hungry"
+        );
+    }
+
+    @GameTest
+    public void velocitySetExpressionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/expression/velocity_set_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.MAGENTA_WOOL,
+                () -> helper.assertTrue(
+                        cow.getDeltaMovement().y > 0,
+                        Component.literal("Expected velocity expression to set upward velocity on entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void fireTicksExpressionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptNamesEntity(
+                helper,
+                "skript/gametest/expression/fire_ticks_names_entity.sk",
+                cow,
+                "on fire",
+                () -> helper.assertTrue(
+                        cow.getRemainingFireTicks() > 0,
+                        Component.literal("Expected fire time expression to set fire ticks on entity.")
+                )
+        );
+    }
+
+    @GameTest
+    public void customNameGetExpressionExecutesRealScript(GameTestHelper helper) {
+        Cow cow = createCow(helper, false);
+        assertUseEntityScriptSetsMarker(
+                helper,
+                "skript/gametest/expression/custom_name_get_marks_block.sk",
+                cow,
+                new BlockPos(9, 1, 0),
+                Blocks.LIME_WOOL,
+                () -> helper.assertTrue(
+                        cow.getCustomName() != null && "test name".equals(cow.getCustomName().getString()),
+                        Component.literal("Expected name expression to set custom name on entity.")
+                )
+        );
+    }
 }

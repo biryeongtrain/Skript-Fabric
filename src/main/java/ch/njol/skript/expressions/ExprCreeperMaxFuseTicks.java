@@ -6,7 +6,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
-import java.lang.reflect.Field;
+import kim.biryeong.skriptFabric.mixin.CreeperAccessor;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Creeper;
 import org.jetbrains.annotations.Nullable;
@@ -18,8 +18,6 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Since("2.5")
 public class ExprCreeperMaxFuseTicks extends SimplePropertyExpression<LivingEntity, Long> {
 
-    private static final Field MAX_SWELL = findField();
-
     static {
         register(ExprCreeperMaxFuseTicks.class, Long.class, "[creeper] max[imum] fuse tick[s]", "livingentities");
     }
@@ -29,11 +27,7 @@ public class ExprCreeperMaxFuseTicks extends SimplePropertyExpression<LivingEnti
         if (!(entity instanceof Creeper creeper)) {
             return 0L;
         }
-        try {
-            return (long) MAX_SWELL.getInt(creeper);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to read creeper max fuse ticks.", exception);
-        }
+        return (long) ((CreeperAccessor) creeper).skript$getMaxSwell();
     }
 
     @Override
@@ -50,18 +44,15 @@ public class ExprCreeperMaxFuseTicks extends SimplePropertyExpression<LivingEnti
             if (!(entity instanceof Creeper creeper)) {
                 continue;
             }
+            CreeperAccessor accessor = (CreeperAccessor) creeper;
             int next = switch (mode) {
-                case ADD -> (int) (convert(creeper) + change);
+                case ADD -> accessor.skript$getMaxSwell() + change;
                 case SET -> change;
                 case DELETE -> 0;
                 case RESET -> 30;
-                case REMOVE -> (int) (convert(creeper) - change);
+                case REMOVE -> accessor.skript$getMaxSwell() - change;
             };
-            try {
-                MAX_SWELL.setInt(creeper, Math.max(0, next));
-            } catch (ReflectiveOperationException exception) {
-                throw new IllegalStateException("Unable to change creeper max fuse ticks.", exception);
-            }
+            accessor.skript$setMaxSwell(Math.max(0, next));
         }
     }
 
@@ -73,15 +64,5 @@ public class ExprCreeperMaxFuseTicks extends SimplePropertyExpression<LivingEnti
     @Override
     protected String getPropertyName() {
         return "creeper max fuse ticks";
-    }
-
-    private static Field findField() {
-        try {
-            Field field = Creeper.class.getDeclaredField("maxSwell");
-            field.setAccessible(true);
-            return field;
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to access creeper max fuse ticks.", exception);
-        }
     }
 }

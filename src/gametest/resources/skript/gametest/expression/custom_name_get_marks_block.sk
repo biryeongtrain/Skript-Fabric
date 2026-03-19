@@ -1,0 +1,4 @@
+on use entity:
+    set name of event-entity to "test name"
+    name of event-entity is "test name"
+    set test block under player event-player to lime_wool

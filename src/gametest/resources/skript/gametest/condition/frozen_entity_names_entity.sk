@@ -1,0 +1,4 @@
+on use entity:
+    set freeze time of event-entity to 200 ticks
+    event-entity is frozen
+    set test name of entity event-entity to "frozen"

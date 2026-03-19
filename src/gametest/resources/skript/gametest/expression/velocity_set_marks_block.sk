@@ -1,0 +1,3 @@
+on use entity:
+    set velocity of event-entity to vector(0, 1, 0)
+    set test block under player event-player to magenta_wool

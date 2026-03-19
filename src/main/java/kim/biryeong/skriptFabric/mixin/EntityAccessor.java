@@ -15,4 +15,6 @@ public interface EntityAccessor {
     boolean callIsInRain();
     @Invoker
     void callSetSharedFlag(int flag, boolean value);
+    @Invoker("getFireImmuneTicks")
+    int skript$invokeGetFireImmuneTicks();
 }

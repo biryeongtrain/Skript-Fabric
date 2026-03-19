@@ -19,6 +19,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.enchantment.Enchantment;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +66,7 @@ final class ExpressionCycle20260313FSafe5BindingTest {
             return;
         }
         Skript.registerExpression(TestItemExpression.class, FabricItemType.class, "lane-safe5-item");
-        Skript.registerExpression(TestEnchantmentExpression.class, Enchantment.class, "lane-safe5-enchantment");
+        Skript.registerExpression(TestEnchantmentExpression.class, Holder.class, "lane-safe5-enchantment");
         Skript.registerExpression(TestItemStackExpression.class, ItemStack.class, "lane-safe5-itemstack");
         Skript.registerExpression(TestSkullItemExpression.class, FabricItemType.class, "lane-safe5-skull-item");
         syntaxRegistered = true;
@@ -94,10 +95,11 @@ final class ExpressionCycle20260313FSafe5BindingTest {
         }
     }
 
-    public static final class TestEnchantmentExpression extends SimpleExpression<Enchantment> {
+    @SuppressWarnings("rawtypes")
+    public static final class TestEnchantmentExpression extends SimpleExpression<Holder> {
         @Override
-        protected Enchantment @Nullable [] get(SkriptEvent event) {
-            return new Enchantment[0];
+        protected Holder @Nullable [] get(SkriptEvent event) {
+            return new Holder[0];
         }
 
         @Override
@@ -106,8 +108,8 @@ final class ExpressionCycle20260313FSafe5BindingTest {
         }
 
         @Override
-        public Class<? extends Enchantment> getReturnType() {
-            return Enchantment.class;
+        public Class<? extends Holder> getReturnType() {
+            return Holder.class;
         }
     }
 

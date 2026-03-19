@@ -11,6 +11,9 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.util.Color;
 import ch.njol.util.Kleenean;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -109,6 +112,14 @@ public class EffColorItems extends Effect {
 
     @Override
     protected void execute(SkriptEvent event) {
+        Color c = color.getSingle(event);
+        if (c == null) return;
+        int rgb = (c.red() << 16) | (c.green() << 8) | c.blue();
+        for (FabricItemType itemType : items.getArray(event)) {
+            ItemStack stack = itemType.toStack();
+            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(rgb));
+            itemType.applyPrototype(stack);
+        }
     }
 
     @Override

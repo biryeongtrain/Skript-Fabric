@@ -57,4 +57,10 @@ public interface FishingHookAccessor {
 
     @Invoker("pullEntity")
     void skript$invokePullEntity(Entity entity);
+
+    @Accessor("currentState")
+    FishingHook.FishHookState skript$getCurrentState();
+
+    @Accessor("currentState")
+    void skript$setCurrentState(FishingHook.FishHookState state);
 }

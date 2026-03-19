@@ -2,8 +2,7 @@ package ch.njol.skript.expressions;
 
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import kim.biryeong.skriptFabric.mixin.ExperienceOrbAccessor;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -48,7 +47,7 @@ public class ExprTotalExperience extends SimplePropertyExpression<Entity, Intege
                     case DELETE, RESET -> 0;
                     default -> current;
                 };
-                setOrbValue(orb, Math.max(0, next));
+                ((ExperienceOrbAccessor) orb).skript$setValue(Math.max(0, next));
             } else if (entity instanceof ServerPlayer player) {
                 int current = totalExperience(player);
                 switch (mode) {
@@ -103,18 +102,6 @@ public class ExprTotalExperience extends SimplePropertyExpression<Entity, Intege
             return 5 * level - 38;
         }
         return 9 * level - 158;
-    }
-
-    private static void setOrbValue(ExperienceOrb orb, int value) {
-        try {
-            Method setter = ExperienceOrb.class.getDeclaredMethod("setValue", int.class);
-            setter.setAccessible(true);
-            setter.invoke(orb, value);
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new IllegalStateException("Unable to update experience orb value", e);
-        } catch (InvocationTargetException e) {
-            throw new IllegalStateException("Unable to update experience orb value", e.getCause());
-        }
     }
 
     @Override

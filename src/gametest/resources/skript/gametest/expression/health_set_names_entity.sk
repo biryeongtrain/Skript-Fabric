@@ -1,0 +1,4 @@
+on use entity:
+    set health of event-entity to 5
+    health of event-entity < 15
+    set test name of entity event-entity to "health set"

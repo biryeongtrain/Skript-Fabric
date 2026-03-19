@@ -11,11 +11,10 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Timespan.TimePeriod;
 import ch.njol.util.Kleenean;
+import kim.biryeong.skriptFabric.mixin.EntityAccessor;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
-
-import java.lang.reflect.Method;
 
 @Name("Entity Fire Burn Duration")
 @Description("How much time an entity will be burning for.")
@@ -38,7 +37,7 @@ public class ExprFireTicks extends SimplePropertyExpression<Entity, Timespan> {
 
     @Override
     public @Nullable Timespan convert(Entity entity) {
-        int ticks = max ? getFireImmuneTicks(entity) : Math.max(entity.getRemainingFireTicks(), 0);
+        int ticks = max ? ((EntityAccessor) entity).skript$invokeGetFireImmuneTicks() : Math.max(entity.getRemainingFireTicks(), 0);
         return new Timespan(TimePeriod.TICK, ticks);
     }
 
@@ -72,15 +71,5 @@ public class ExprFireTicks extends SimplePropertyExpression<Entity, Timespan> {
     @Override
     protected String getPropertyName() {
         return "fire time";
-    }
-
-    private int getFireImmuneTicks(Entity entity) {
-        try {
-            Method method = Entity.class.getDeclaredMethod("getFireImmuneTicks");
-            method.setAccessible(true);
-            return (int) method.invoke(entity);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to read fire immune ticks", e);
-        }
     }
 }

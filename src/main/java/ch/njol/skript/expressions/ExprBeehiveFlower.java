@@ -6,7 +6,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
-import java.lang.reflect.Field;
+import kim.biryeong.skriptFabric.mixin.BeehiveBlockEntityFlowerAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
@@ -22,8 +22,6 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Since("2.11")
 public class ExprBeehiveFlower extends SimplePropertyExpression<FabricBlock, FabricLocation> {
 
-    private static final Field SAVED_FLOWER_POS = findField(BeehiveBlockEntity.class, "savedFlowerPos");
-
     static {
         registerDefault(ExprBeehiveFlower.class, FabricLocation.class, "target flower", "blocks");
     }
@@ -36,12 +34,8 @@ public class ExprBeehiveFlower extends SimplePropertyExpression<FabricBlock, Fab
         if (!(block.level().getBlockEntity(block.position()) instanceof BeehiveBlockEntity beehive)) {
             return null;
         }
-        try {
-            BlockPos flower = (BlockPos) SAVED_FLOWER_POS.get(beehive);
-            return flower == null ? null : new FabricLocation(level, flower.getCenter());
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to read beehive flower position.", exception);
-        }
+        BlockPos flower = ((BeehiveBlockEntityFlowerAccessor) beehive).skript$getSavedFlowerPos();
+        return flower == null ? null : new FabricLocation(level, flower.getCenter());
     }
 
     @Override
@@ -67,12 +61,8 @@ public class ExprBeehiveFlower extends SimplePropertyExpression<FabricBlock, Fab
             if (!(block.level().getBlockEntity(block.position()) instanceof BeehiveBlockEntity beehive)) {
                 continue;
             }
-            try {
-                SAVED_FLOWER_POS.set(beehive, flower);
-                beehive.setChanged();
-            } catch (ReflectiveOperationException exception) {
-                throw new IllegalStateException("Unable to change beehive flower position.", exception);
-            }
+            ((BeehiveBlockEntityFlowerAccessor) beehive).skript$setSavedFlowerPos(flower);
+            beehive.setChanged();
         }
     }
 
@@ -84,15 +74,5 @@ public class ExprBeehiveFlower extends SimplePropertyExpression<FabricBlock, Fab
     @Override
     protected String getPropertyName() {
         return "target flower";
-    }
-
-    private static Field findField(Class<?> owner, String name) {
-        try {
-            Field field = owner.getDeclaredField(name);
-            field.setAccessible(true);
-            return field;
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Unable to access beehive flower position.", exception);
-        }
     }
 }

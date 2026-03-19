@@ -10,6 +10,7 @@ import ch.njol.skript.expressions.base.PropertyExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -22,25 +23,20 @@ import org.skriptlang.skript.lang.event.SkriptEvent;
 @Example("message \"You have %health% HP left.\"")
 @Since("1.0")
 @Events("damage")
-public class ExprHealth extends PropertyExpression<LivingEntity, Number> {
+public class ExprHealth extends PropertyExpression<Entity, Number> {
 
     static {
-        register(ExprHealth.class, Number.class, "health", "livingentities");
+        register(ExprHealth.class, Number.class, "health", "entities");
     }
 
     @Override
-    public boolean init(Expression<?>[] vars, int matchedPattern, Kleenean isDelayed, ParseResult parser) {
-        Expression<? extends LivingEntity> converted = vars[0].getConvertedExpression(LivingEntity.class);
-        if (converted == null) {
-            return false;
-        }
-        setExpr(converted);
-        return true;
-    }
-
-    @Override
-    protected Number[] get(SkriptEvent event, LivingEntity[] source) {
-        return get(source, entity -> entity.getHealth() / 2.0F);
+    protected Number[] get(SkriptEvent event, Entity[] source) {
+        return get(source, entity -> {
+            if (entity instanceof LivingEntity living) {
+                return living.getHealth() / 2.0F;
+            }
+            return null;
+        });
     }
 
     @Override
@@ -58,12 +54,15 @@ public class ExprHealth extends PropertyExpression<LivingEntity, Number> {
     @Override
     public void change(SkriptEvent event, @Nullable Object[] delta, ChangeMode mode) {
         double change = delta == null ? 0.0 : ((Number) delta[0]).doubleValue();
-        for (LivingEntity entity : getExpr().getArray(event)) {
+        for (Entity entity : getExpr().getArray(event)) {
+            if (!(entity instanceof LivingEntity living)) {
+                continue;
+            }
             switch (mode) {
-                case DELETE, SET -> entity.setHealth(clampHealth(entity, change));
-                case REMOVE -> entity.setHealth(clampHealth(entity, entity.getHealth() / 2.0 - change));
-                case ADD -> entity.setHealth(clampHealth(entity, entity.getHealth() / 2.0 + change));
-                case RESET -> entity.setHealth(entity.getMaxHealth());
+                case DELETE, SET -> living.setHealth(clampHealth(living, change));
+                case REMOVE -> living.setHealth(clampHealth(living, living.getHealth() / 2.0 - change));
+                case ADD -> living.setHealth(clampHealth(living, living.getHealth() / 2.0 + change));
+                case RESET -> living.setHealth(living.getMaxHealth());
             }
         }
     }

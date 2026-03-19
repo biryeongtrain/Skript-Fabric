@@ -28,7 +28,7 @@ public class ExprGlowing extends SimpleExpression<Boolean> {
         Entity[] targets = entities.getArray(event);
         Boolean[] result = new Boolean[targets.length];
         for (int i = 0; i < targets.length; i++) {
-            result[i] = isEntityGlowing(targets[i]);
+            result[i] = targets[i].isCurrentlyGlowing();
         }
         return result;
     }
@@ -60,31 +60,7 @@ public class ExprGlowing extends SimpleExpression<Boolean> {
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
         boolean value = delta != null && delta.length > 0 && delta[0] instanceof Boolean b && b;
         for (Entity entity : entities.getAll(event)) {
-            setEntityGlowing(entity, value);
-        }
-    }
-
-    private static boolean isEntityGlowing(Entity entity) {
-        try {
-            return (Boolean) Entity.class.getMethod("isCurrentlyGlowing").invoke(entity);
-        } catch (ReflectiveOperationException ignored) {
-        }
-        try {
-            return (Boolean) Entity.class.getMethod("hasGlowingTag").invoke(entity);
-        } catch (ReflectiveOperationException ignored) {
-        }
-        return false;
-    }
-
-    private static void setEntityGlowing(Entity entity, boolean value) {
-        try {
-            try {
-                Entity.class.getMethod("setGlowing", boolean.class).invoke(entity, value);
-                return;
-            } catch (NoSuchMethodException ignored) {
-            }
-            Entity.class.getMethod("setGlowingTag", boolean.class).invoke(entity, value);
-        } catch (ReflectiveOperationException ignored) {
+            entity.setGlowingTag(value);
         }
     }
 }

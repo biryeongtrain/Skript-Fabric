@@ -19,7 +19,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-import org.skriptlang.skript.bukkit.base.effects.EffFeed;
+import ch.njol.skript.effects.EffEntityVisibility;
+import ch.njol.skript.effects.EffFeed;
 import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
 import org.skriptlang.skript.bukkit.displays.text.EffTextDisplayDropShadow;
 import org.skriptlang.skript.bukkit.displays.text.EffTextDisplaySeeThroughBlocks;
@@ -33,8 +34,6 @@ import org.skriptlang.skript.bukkit.loottables.elements.effects.EffGenerateLoot;
 import org.skriptlang.skript.bukkit.potion.elements.effects.EffApplyPotionEffect;
 import org.skriptlang.skript.bukkit.potion.elements.effects.EffPoison;
 import org.skriptlang.skript.bukkit.potion.elements.effects.EffPotionAmbient;
-import org.skriptlang.skript.bukkit.potion.elements.effects.EffPotionIcon;
-import org.skriptlang.skript.bukkit.potion.elements.effects.EffPotionParticles;
 import org.skriptlang.skript.bukkit.tags.elements.EffRegisterTag;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
@@ -61,7 +60,7 @@ final class EffectSyntaxParsingTest {
     @Test
     void failingEffectScriptsStillLoadExpectedEffectItems() throws Exception {
         Map<String, Class<?>> expectations = Map.ofEntries(
-                Map.entry("skript/gametest/effect/feed_event_player_by_beefs_marks_block.sk", EffFeed.class),
+                Map.entry("skript/gametest/effect/feed_event_player_by_beefs_marks_block.sk", ch.njol.skript.effects.EffFeed.class),
                 Map.entry("skript/gametest/effect/make_adult_marks_block.sk", EffMakeAdultOrBaby.class),
                 Map.entry("skript/gametest/effect/make_baby_marks_block.sk", EffMakeAdultOrBaby.class),
                 Map.entry("skript/gametest/effect/force_event_entity_to_become_child_marks_block.sk", EffMakeAdultOrBaby.class),
@@ -77,8 +76,8 @@ final class EffectSyntaxParsingTest {
                 Map.entry("skript/gametest/effect/apply_potion_names_entity.sk", EffApplyPotionEffect.class),
                 Map.entry("skript/gametest/effect/poison_effect_names_entity.sk", EffPoison.class),
                 Map.entry("skript/gametest/effect/potion_ambient_effect_names_entity.sk", EffPotionAmbient.class),
-                Map.entry("skript/gametest/effect/potion_icon_effect_names_entity.sk", EffPotionIcon.class),
-                Map.entry("skript/gametest/effect/potion_particles_effect_names_entity.sk", EffPotionParticles.class),
+                Map.entry("skript/gametest/effect/potion_icon_effect_names_entity.sk", EffEntityVisibility.class),
+                Map.entry("skript/gametest/effect/potion_particles_effect_names_entity.sk", EffEntityVisibility.class),
                 Map.entry("skript/gametest/effect/register_custom_tag_renames_item.sk", EffRegisterTag.class),
                 Map.entry("skript/gametest/effect/wait_one_tick_sets_block.sk", Delay.class),
                 Map.entry("skript/gametest/effect/do_if_names_entity.sk", EffDoIf.class),
