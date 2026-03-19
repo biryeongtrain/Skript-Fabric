@@ -8,7 +8,6 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import kim.biryeong.skriptFabric.mixin.FoodDataAccessor;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.food.FoodData;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
