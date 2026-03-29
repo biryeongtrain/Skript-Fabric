@@ -72,6 +72,6 @@ abstract class ServerExplosionMixin {
             drops.clear();
             return;
         }
-        drops.removeIf(drop -> level.random.nextFloat() > skript$yield);
+        drops.removeIf(drop -> level.getRandom().nextFloat() > skript$yield);
     }
 }

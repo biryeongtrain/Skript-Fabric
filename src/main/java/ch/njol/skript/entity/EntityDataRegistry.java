@@ -8,19 +8,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.boat.Boat;
 import net.minecraft.world.entity.vehicle.VehicleEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +42,7 @@ final class EntityDataRegistry {
 
         registerSpecificExacts();
         for (net.minecraft.world.entity.EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
-            ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+            Identifier key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
             if (key == null) {
                 continue;
             }

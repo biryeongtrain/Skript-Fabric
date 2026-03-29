@@ -50,8 +50,8 @@ public final class LitConsole extends SimpleExpression<MinecraftServer> {
         if (event.server() != null) {
             return event.server();
         }
-        if (event.player() != null && event.player().getServer() != null) {
-            return event.player().getServer();
+        if (event.player() != null && event.player().level().getServer() != null) {
+            return event.player().level().getServer();
         }
         if (event.level() != null) {
             return event.level().getServer();

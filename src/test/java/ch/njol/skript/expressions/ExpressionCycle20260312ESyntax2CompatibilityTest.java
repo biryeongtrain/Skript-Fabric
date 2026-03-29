@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -17,9 +18,7 @@ import ch.njol.util.Kleenean;
 import com.mojang.authlib.GameProfile;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.Slot;
@@ -44,8 +43,7 @@ final class ExpressionCycle20260312ESyntax2CompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         ensureSyntax();
     }
@@ -53,7 +51,7 @@ final class ExpressionCycle20260312ESyntax2CompatibilityTest {
     @Test
     void parserBindsRecoveredSyntaxBatch() {
         assertInstanceOf(ExprSeaPickles.class, parseExpression("sea pickle count of lane-e2-block", Integer.class));
-        assertInstanceOf(ExprPandaGene.class, parseExpression("main gene of lane-e2-livingentity", net.minecraft.world.entity.animal.Panda.Gene.class));
+        assertInstanceOf(ExprPandaGene.class, parseExpression("main gene of lane-e2-livingentity", net.minecraft.world.entity.animal.panda.Panda.Gene.class));
         assertInstanceOf(ExprPlain.class, parseExpression("plain lane-e2-itemtype", FabricItemType.class));
         assertInstanceOf(ExprNamed.class, parseExpression("lane-e2-itemtype named \"Lane E\"", FabricItemType.class));
         assertInstanceOf(ExprWithItemFlags.class, parseExpression("lane-e2-itemtype with item flags \"hide enchants\"", FabricItemType.class));
@@ -119,7 +117,7 @@ final class ExpressionCycle20260312ESyntax2CompatibilityTest {
         registerClassInfo(LivingEntity.class, "livingentity");
         registerClassInfo(Entity.class, "entity");
         registerClassInfo(BlockState.class, "blockdata");
-        registerClassInfo(net.minecraft.world.entity.animal.Panda.Gene.class, "gene");
+        registerClassInfo(net.minecraft.world.entity.animal.panda.Panda.Gene.class, "gene");
         new ExprSeaPickles();
         new ExprPandaGene();
         new ExprPlain();

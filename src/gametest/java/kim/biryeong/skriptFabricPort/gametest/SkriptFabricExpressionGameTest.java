@@ -28,11 +28,11 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Interaction;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.projectile.FishingHook;
-import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.entity.vehicle.minecart.MinecartChest;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -2097,17 +2097,17 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
         translationExpression.change(event, new Object[]{new Vec3(5.0D, 6.0D, 7.0D)}, ChangeMode.SET);
         Transformation translationChange = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(translationChange.getTranslation().x - 5.0F) < 0.0001F
-                        && Math.abs(translationChange.getTranslation().y - 6.0F) < 0.0001F
-                        && Math.abs(translationChange.getTranslation().z - 7.0F) < 0.0001F,
+                Math.abs(translationChange.translation().x() - 5.0F) < 0.0001F
+                        && Math.abs(translationChange.translation().y() - 6.0F) < 0.0001F
+                        && Math.abs(translationChange.translation().z() - 7.0F) < 0.0001F,
                 Component.literal("Expected transformation translation expression to apply SET changes.")
         );
         translationExpression.change(event, null, ChangeMode.RESET);
         Transformation translationReset = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(translationReset.getTranslation().x) < 0.0001F
-                        && Math.abs(translationReset.getTranslation().y) < 0.0001F
-                        && Math.abs(translationReset.getTranslation().z) < 0.0001F,
+                Math.abs(translationReset.translation().x()) < 0.0001F
+                        && Math.abs(translationReset.translation().y()) < 0.0001F
+                        && Math.abs(translationReset.translation().z()) < 0.0001F,
                 Component.literal("Expected transformation translation expression to reset to zero.")
         );
 
@@ -2139,17 +2139,17 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
         scaleExpression.change(event, new Object[]{new Vec3(8.0D, 9.0D, 10.0D)}, ChangeMode.SET);
         Transformation scaleChange = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(scaleChange.getScale().x - 8.0F) < 0.0001F
-                        && Math.abs(scaleChange.getScale().y - 9.0F) < 0.0001F
-                        && Math.abs(scaleChange.getScale().z - 10.0F) < 0.0001F,
+                Math.abs(scaleChange.scale().x() - 8.0F) < 0.0001F
+                        && Math.abs(scaleChange.scale().y() - 9.0F) < 0.0001F
+                        && Math.abs(scaleChange.scale().z() - 10.0F) < 0.0001F,
                 Component.literal("Expected transformation scale expression to apply SET changes.")
         );
         scaleExpression.change(event, null, ChangeMode.RESET);
         Transformation scaleReset = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(scaleReset.getScale().x - 1.0F) < 0.0001F
-                        && Math.abs(scaleReset.getScale().y - 1.0F) < 0.0001F
-                        && Math.abs(scaleReset.getScale().z - 1.0F) < 0.0001F,
+                Math.abs(scaleReset.scale().x() - 1.0F) < 0.0001F
+                        && Math.abs(scaleReset.scale().y() - 1.0F) < 0.0001F
+                        && Math.abs(scaleReset.scale().z() - 1.0F) < 0.0001F,
                 Component.literal("Expected transformation scale expression to reset to one.")
         );
 
@@ -2184,17 +2184,17 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
         leftRotationExpression.change(event, new Object[]{new Quaternionf(0.11F, 0.22F, 0.33F, 0.44F)}, ChangeMode.SET);
         Transformation leftRotationChange = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(leftRotationChange.getLeftRotation().x - 0.11F) < 0.0001F
-                        && Math.abs(leftRotationChange.getLeftRotation().w - 0.44F) < 0.0001F,
+                Math.abs(leftRotationChange.leftRotation().x() - 0.11F) < 0.0001F
+                        && Math.abs(leftRotationChange.leftRotation().w() - 0.44F) < 0.0001F,
                 Component.literal("Expected left rotation expression to apply SET changes.")
         );
         leftRotationExpression.change(event, null, ChangeMode.RESET);
         Transformation leftRotationReset = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(leftRotationReset.getLeftRotation().x) < 0.0001F
-                        && Math.abs(leftRotationReset.getLeftRotation().y) < 0.0001F
-                        && Math.abs(leftRotationReset.getLeftRotation().z) < 0.0001F
-                        && Math.abs(leftRotationReset.getLeftRotation().w - 1.0F) < 0.0001F,
+                Math.abs(leftRotationReset.leftRotation().x()) < 0.0001F
+                        && Math.abs(leftRotationReset.leftRotation().y()) < 0.0001F
+                        && Math.abs(leftRotationReset.leftRotation().z()) < 0.0001F
+                        && Math.abs(leftRotationReset.leftRotation().w() - 1.0F) < 0.0001F,
                 Component.literal("Expected left rotation expression to reset to identity.")
         );
 
@@ -2229,17 +2229,17 @@ public final class SkriptFabricExpressionGameTest extends AbstractSkriptFabricGa
         rightRotationExpression.change(event, new Object[]{new Quaternionf(0.9F, 1.0F, 1.1F, 1.2F)}, ChangeMode.SET);
         Transformation rightRotationChange = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(rightRotationChange.getRightRotation().x - 0.9F) < 0.0001F
-                        && Math.abs(rightRotationChange.getRightRotation().w - 1.2F) < 0.0001F,
+                Math.abs(rightRotationChange.rightRotation().x() - 0.9F) < 0.0001F
+                        && Math.abs(rightRotationChange.rightRotation().w() - 1.2F) < 0.0001F,
                 Component.literal("Expected right rotation expression to apply SET changes.")
         );
         rightRotationExpression.change(event, null, ChangeMode.RESET);
         Transformation rightRotationReset = PrivateEntityAccess.displayTransformation(textDisplay);
         helper.assertTrue(
-                Math.abs(rightRotationReset.getRightRotation().x) < 0.0001F
-                        && Math.abs(rightRotationReset.getRightRotation().y) < 0.0001F
-                        && Math.abs(rightRotationReset.getRightRotation().z) < 0.0001F
-                        && Math.abs(rightRotationReset.getRightRotation().w - 1.0F) < 0.0001F,
+                Math.abs(rightRotationReset.rightRotation().x()) < 0.0001F
+                        && Math.abs(rightRotationReset.rightRotation().y()) < 0.0001F
+                        && Math.abs(rightRotationReset.rightRotation().z()) < 0.0001F
+                        && Math.abs(rightRotationReset.rightRotation().w() - 1.0F) < 0.0001F,
                 Component.literal("Expected right rotation expression to reset to identity.")
         );
         helper.succeed();

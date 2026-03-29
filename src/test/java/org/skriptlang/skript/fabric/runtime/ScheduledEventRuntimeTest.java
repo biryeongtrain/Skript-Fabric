@@ -1,5 +1,6 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.njol.skript.Skript;
@@ -12,8 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,8 +24,7 @@ final class ScheduledEventRuntimeTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         Skript.registerEffect(RecordScheduledEffect.class, "record scheduled %string%");
     }

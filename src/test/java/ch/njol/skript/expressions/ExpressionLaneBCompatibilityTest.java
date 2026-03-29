@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -22,8 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.UserWhiteList;
 import net.minecraft.server.players.UserWhiteListEntry;
@@ -47,8 +46,7 @@ final class ExpressionLaneBCompatibilityTest {
 
     @BeforeAll
     static void bootstrapSyntax() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         originalExpressions = new ArrayList<>();
         for (SyntaxInfo<?> info : Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EXPRESSION)) {
@@ -150,20 +148,20 @@ final class ExpressionLaneBCompatibilityTest {
 
     @Test
     void whitelistRuntimeHelperExtractsProfilesFromWhitelistEntries() throws Exception {
-        UserWhiteList whitelist = new UserWhiteList(tempDir.resolve("whitelist.json").toFile());
+        UserWhiteList whitelist = new UserWhiteList(tempDir.resolve("whitelist.json").toFile(), noopNotificationService());
         GameProfile expected = new GameProfile(
                 UUID.nameUUIDFromBytes("OfflinePlayer:LaneBListed".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                 "LaneBListed"
         );
-        whitelist.add(new UserWhiteListEntry(expected));
+        whitelist.add(new UserWhiteListEntry(new net.minecraft.server.players.NameAndId(expected)));
 
         Method helper = ExpressionRuntimeSupport.class.getDeclaredMethod("configEntriesAsProfiles", Object.class);
         helper.setAccessible(true);
         GameProfile[] profiles = (GameProfile[]) helper.invoke(null, whitelist);
 
         assertEquals(1, profiles.length);
-        assertEquals(expected.getId(), profiles[0].getId());
-        assertEquals(expected.getName(), profiles[0].getName());
+        assertEquals(expected.id(), profiles[0].id());
+        assertEquals(expected.name(), profiles[0].name());
     }
 
     private static void ensureSyntax() {
@@ -192,6 +190,14 @@ final class ExpressionLaneBCompatibilityTest {
         ParseResult result = new ParseResult();
         result.expr = expr;
         return result;
+    }
+
+    private static net.minecraft.server.notifications.NotificationService noopNotificationService() {
+        return (net.minecraft.server.notifications.NotificationService) java.lang.reflect.Proxy.newProxyInstance(
+                ExpressionLaneBCompatibilityTest.class.getClassLoader(),
+                new Class[]{net.minecraft.server.notifications.NotificationService.class},
+                (proxy, method, args) -> null
+        );
     }
 
     public static final class TestPlayerExpression extends SimpleExpression<ServerPlayer> {

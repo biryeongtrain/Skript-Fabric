@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -24,16 +24,16 @@ import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
 
 public final class TagSupport {
 
-    private static final Map<ResourceLocation, List<Item>> CUSTOM_ITEM_TAGS = new ConcurrentHashMap<>();
-    private static final Map<ResourceLocation, List<Block>> CUSTOM_BLOCK_TAGS = new ConcurrentHashMap<>();
-    private static final Map<ResourceLocation, List<EntityType<?>>> CUSTOM_ENTITY_TAGS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, List<Item>> CUSTOM_ITEM_TAGS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, List<Block>> CUSTOM_BLOCK_TAGS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, List<EntityType<?>>> CUSTOM_ENTITY_TAGS = new ConcurrentHashMap<>();
 
     private TagSupport() {
     }
 
     public static boolean isTagged(@Nullable Object element, @Nullable Object rawTag) {
         MinecraftTag tag = asTag(rawTag, MinecraftTag.Target.ANY, "minecraft");
-        ResourceLocation tagId = tag == null ? null : tag.id();
+        Identifier tagId = tag == null ? null : tag.id();
         if (tagId == null || element == null) {
             return false;
         }
@@ -73,7 +73,7 @@ public final class TagSupport {
         return false;
     }
 
-    public static void registerCustomTag(MinecraftTag.Target target, ResourceLocation id, Object[] contents) {
+    public static void registerCustomTag(MinecraftTag.Target target, Identifier id, Object[] contents) {
         switch (target) {
             case ITEM -> CUSTOM_ITEM_TAGS.put(id, normalizeItems(contents));
             case BLOCK -> CUSTOM_BLOCK_TAGS.put(id, normalizeBlocks(contents));
@@ -83,7 +83,7 @@ public final class TagSupport {
         }
     }
 
-    public static @Nullable ResourceLocation parseTagId(@Nullable String rawTag, String defaultNamespace) {
+    public static @Nullable Identifier parseTagId(@Nullable String rawTag, String defaultNamespace) {
         if (rawTag == null || rawTag.isBlank()) {
             return null;
         }
@@ -102,13 +102,13 @@ public final class TagSupport {
         if (rawTag instanceof MinecraftTag tag) {
             return tag;
         }
-        if (rawTag instanceof ResourceLocation resourceLocation) {
+        if (rawTag instanceof Identifier resourceLocation) {
             return new MinecraftTag(resourceLocation, defaultTarget);
         }
         if (!(rawTag instanceof String string)) {
             return null;
         }
-        ResourceLocation id = parseTagId(string, defaultNamespace);
+        Identifier id = parseTagId(string, defaultNamespace);
         return id == null ? null : new MinecraftTag(id, defaultTarget);
     }
 
@@ -313,7 +313,7 @@ public final class TagSupport {
             } else if (value instanceof EntityType<?> entityType) {
                 values.add(entityType);
             } else if (value instanceof String raw) {
-                ResourceLocation id = parseTagId(raw, "minecraft");
+                Identifier id = parseTagId(raw, "minecraft");
                 EntityType<?> entityType = id == null ? null : BuiltInRegistries.ENTITY_TYPE.getValue(id);
                 if (entityType != null) {
                     values.add(entityType);

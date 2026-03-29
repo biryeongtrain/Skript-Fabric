@@ -46,7 +46,7 @@ public final class ExprParticleWithData extends SimpleExpression<ParticleEffect>
         } else {
             FabricItemType itemType = first != null ? Classes.parse(String.valueOf(first.getSingle(event)), FabricItemType.class, ParseContext.DEFAULT) : null;
             ItemStack stack = itemType != null ? itemType.toStack() : new ItemStack(net.minecraft.world.item.Items.STONE);
-            options = new ItemParticleOption(ParticleTypes.ITEM, stack);
+            options = new ItemParticleOption(ParticleTypes.ITEM, stack.getItem());
         }
         ParticleEffect effect = ParticleEffect.of(options);
         if (count != null) {

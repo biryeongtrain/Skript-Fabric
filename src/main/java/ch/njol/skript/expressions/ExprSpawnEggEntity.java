@@ -37,8 +37,8 @@ public class ExprSpawnEggEntity extends SimplePropertyExpression<ItemStack, Stri
 		}
 		// Look up the entity type from the spawn egg item's registry key
 		for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
-			SpawnEggItem egg = SpawnEggItem.byId(entityType);
-			if (egg != null && egg == itemStack.getItem()) {
+			java.util.Optional<net.minecraft.core.Holder<net.minecraft.world.item.Item>> eggOpt = SpawnEggItem.byId(entityType);
+			if (eggOpt.isPresent() && eggOpt.get().value() == itemStack.getItem()) {
 				return BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString();
 			}
 		}

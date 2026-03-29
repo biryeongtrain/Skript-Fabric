@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -23,12 +24,10 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -47,8 +46,7 @@ final class ExpressionCycle20260312Syntax4CompatibilityTest {
 
     @BeforeAll
     static void bootstrapSyntax() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         originalExpressions = new ArrayList<>();
         for (SyntaxInfo<?> info : Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EXPRESSION)) {
@@ -94,7 +92,7 @@ final class ExpressionCycle20260312Syntax4CompatibilityTest {
         offlineResult.tags.add("offline");
         assertTrue(offlinePlayers.init(new Expression[]{new SimpleLiteral<>(uuid, false)}, 0, Kleenean.FALSE, offlineResult));
         GameProfile profile = assertInstanceOf(GameProfile.class, offlinePlayers.getSingle(SkriptEvent.EMPTY));
-        assertEquals(uuid, profile.getId());
+        assertEquals(uuid, profile.id());
         assertEquals(GameProfile.class, offlinePlayers.getReturnType());
 
         ExprFromUUID entities = new ExprFromUUID();

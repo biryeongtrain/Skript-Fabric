@@ -1,6 +1,6 @@
 package org.skriptlang.skript.fabric.compat;
 
-import eu.pb4.sgui.api.GuiHelpers;
+import eu.pb4.sgui.api.SguiUtils;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import java.util.Objects;
 import net.minecraft.network.chat.Component;
@@ -54,7 +54,7 @@ public final class FabricInventory {
     }
 
     public int virtualSize() {
-        return GuiHelpers.getWidth(menuType) * GuiHelpers.getHeight(menuType);
+        return SguiUtils.getWidth(menuType) * SguiUtils.getHeight(menuType);
     }
 
     public SimpleGui createGui(@Nullable ServerPlayer player) {
@@ -63,7 +63,7 @@ public final class FabricInventory {
         gui.setLockPlayerInventory(false);
         int slotCount = Math.min(container.getContainerSize(), gui.getVirtualSize());
         for (int slot = 0; slot < slotCount; slot++) {
-            gui.setSlotRedirect(slot, new Slot(container, slot, 0, 0));
+            gui.setSlot(slot, new Slot(container, slot, 0, 0));
         }
         return gui;
     }

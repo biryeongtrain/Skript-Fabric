@@ -1,7 +1,7 @@
 package org.skriptlang.skript.fabric.runtime;
 
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.projectile.ThrownEgg;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg;
 import org.jetbrains.annotations.Nullable;
 
 public interface FabricEggThrowEventHandle extends FabricEntityEventHandle {

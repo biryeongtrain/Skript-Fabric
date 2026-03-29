@@ -1,5 +1,6 @@
 package ch.njol.skript.effects;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -18,8 +19,6 @@ import ch.njol.util.Kleenean;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -47,8 +46,7 @@ public final class EffectRuntimeClosureCompatibilityTest {
 
     @BeforeAll
     static void bootstrapSyntax() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         originalEffects = new ArrayList<>();
         for (SyntaxInfo<?> effectInfo : Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EFFECT)) {

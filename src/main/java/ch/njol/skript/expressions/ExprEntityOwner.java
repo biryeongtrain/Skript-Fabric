@@ -62,7 +62,7 @@ public class ExprEntityOwner extends SimplePropertyExpression<Entity, GameProfil
             if (!(entity instanceof TamableAnimal tameable)) {
                 continue;
             }
-            if (mode == ChangeMode.DELETE || mode == ChangeMode.RESET || profile == null || profile.getId() == null) {
+            if (mode == ChangeMode.DELETE || mode == ChangeMode.RESET || profile == null || profile.id() == null) {
                 tameable.setOwner(null);
                 tameable.setTame(false, false);
                 continue;
@@ -70,7 +70,7 @@ public class ExprEntityOwner extends SimplePropertyExpression<Entity, GameProfil
             if (entity.level().getServer() == null) {
                 continue;
             }
-            ServerPlayer player = entity.level().getServer().getPlayerList().getPlayer(profile.getId());
+            ServerPlayer player = entity.level().getServer().getPlayerList().getPlayer(profile.id());
             if (player != null) {
                 tameable.setOwner(player);
             }

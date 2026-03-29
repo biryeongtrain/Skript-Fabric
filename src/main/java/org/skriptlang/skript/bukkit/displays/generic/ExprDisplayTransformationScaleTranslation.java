@@ -28,7 +28,7 @@ public final class ExprDisplayTransformationScaleTranslation extends AbstractDis
     @Override
     protected @Nullable Vec3 convert(Display display) {
         Transformation transformation = PrivateEntityAccess.displayTransformation(display);
-        Vector3f vector = scale ? transformation.getScale() : transformation.getTranslation();
+        Vector3f vector = new Vector3f(scale ? transformation.scale() : transformation.translation());
         return new Vec3(vector.x, vector.y, vector.z);
     }
 
@@ -63,10 +63,10 @@ public final class ExprDisplayTransformationScaleTranslation extends AbstractDis
             }
             Transformation transformation = PrivateEntityAccess.displayTransformation(display);
             Vector3f nextVector = new Vector3f((float) vector.x, (float) vector.y, (float) vector.z);
-            Quaternionf leftRotation = new Quaternionf(transformation.getLeftRotation());
-            Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
-            Vector3f translation = scale ? new Vector3f(transformation.getTranslation()) : nextVector;
-            Vector3f nextScale = scale ? nextVector : new Vector3f(transformation.getScale());
+            Quaternionf leftRotation = new Quaternionf().set(transformation.leftRotation());
+            Quaternionf rightRotation = new Quaternionf().set(transformation.rightRotation());
+            Vector3f translation = scale ? new Vector3f(transformation.translation()) : nextVector;
+            Vector3f nextScale = scale ? nextVector : new Vector3f(transformation.scale());
             PrivateEntityAccess.setDisplayTransformation(
                     display,
                     new Transformation(translation, leftRotation, nextScale, rightRotation)

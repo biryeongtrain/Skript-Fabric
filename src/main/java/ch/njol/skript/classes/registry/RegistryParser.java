@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.MinecraftRegistryLookup;
@@ -43,7 +43,7 @@ public class RegistryParser<R> extends PatternedParser<R> {
         names.clear();
         parseMap.clear();
         for (R registryObject : registry) {
-            ResourceLocation key = registry.getKey(registryObject);
+            Identifier key = registry.getKey(registryObject);
             if (key == null) {
                 continue;
             }
@@ -101,7 +101,7 @@ public class RegistryParser<R> extends PatternedParser<R> {
         }
         return MinecraftRegistryLookup.lookup(input, id -> {
             R value = registry.getValue(id);
-            ResourceLocation actual = value == null ? null : registry.getKey(value);
+            Identifier actual = value == null ? null : registry.getKey(value);
             return id.equals(actual) ? value : null;
         });
     }
@@ -112,7 +112,7 @@ public class RegistryParser<R> extends PatternedParser<R> {
         if (name != null) {
             return name;
         }
-        ResourceLocation key = registry.getKey(object);
+        Identifier key = registry.getKey(object);
         return key == null ? String.valueOf(object) : MinecraftResourceParser.display(key);
     }
 

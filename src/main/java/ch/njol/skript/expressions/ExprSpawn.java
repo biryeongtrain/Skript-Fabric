@@ -18,7 +18,7 @@ public class ExprSpawn extends PropertyExpression<ServerLevel, FabricLocation> {
     @Override
     protected FabricLocation[] get(SkriptEvent event, ServerLevel[] source) {
         return get(source, world -> {
-            BlockPos position = world.getSharedSpawnPos();
+            BlockPos position = world.getRespawnData() != null ? world.getRespawnData().pos() : BlockPos.ZERO;
             return new FabricLocation(world, new Vec3(position.getX(), position.getY(), position.getZ()));
         });
     }
@@ -38,7 +38,7 @@ public class ExprSpawn extends PropertyExpression<ServerLevel, FabricLocation> {
             if (targetWorld != world) {
                 continue;
             }
-            world.setDefaultSpawnPos(BlockPos.containing(original.position()), 0.0F);
+            world.setRespawnData(net.minecraft.world.level.storage.LevelData.RespawnData.of(world.dimension(), BlockPos.containing(original.position()), 0.0F, 0.0F));
         }
     }
 

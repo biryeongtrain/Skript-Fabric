@@ -1,5 +1,6 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.njol.skript.Skript;
@@ -14,8 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
@@ -31,8 +30,7 @@ final class HarvestBlockRuntimeTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         EvtHarvestBlock.register();
         Skript.registerEffect(RecordHarvestBlockEffect.class, "record harvest block");

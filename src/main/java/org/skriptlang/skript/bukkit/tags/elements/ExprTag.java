@@ -6,7 +6,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.tags.MinecraftTag;
 import org.skriptlang.skript.bukkit.tags.TagSupport;
@@ -44,7 +44,7 @@ public final class ExprTag extends SimpleExpression<MinecraftTag> {
     protected MinecraftTag @Nullable [] get(SkriptEvent event) {
         List<MinecraftTag> tags = new ArrayList<>();
         for (String raw : names.getAll(event)) {
-            ResourceLocation id = TagSupport.parseTagId(raw, defaultNamespace);
+            Identifier id = TagSupport.parseTagId(raw, defaultNamespace);
             if (id != null) {
                 tags.add(new MinecraftTag(id, target));
             }

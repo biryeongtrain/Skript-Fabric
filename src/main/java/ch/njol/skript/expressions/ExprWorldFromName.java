@@ -6,7 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -49,7 +49,7 @@ public class ExprWorldFromName extends SimpleExpression<ServerLevel> {
         if (input.equalsIgnoreCase(String.valueOf(key))) {
             return true;
         }
-        ResourceLocation location = key.location();
+        Identifier location = key.identifier();
         return input.equalsIgnoreCase(location.toString())
                 || input.equalsIgnoreCase(location.getPath());
     }

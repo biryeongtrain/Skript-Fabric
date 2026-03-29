@@ -53,7 +53,7 @@ public class EffKnockback extends Effect {
         double appliedStrength = strength == null ? 1.0D : strength.getOptionalSingle(event).orElse(1).doubleValue();
         for (LivingEntity livingEntity : entities.getArray(event)) {
             livingEntity.knockback(appliedStrength, -knockbackDirection.x(), -knockbackDirection.z());
-            livingEntity.hasImpulse = true;
+            livingEntity.hurtMarked = true;
         }
     }
 

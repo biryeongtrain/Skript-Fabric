@@ -27,7 +27,7 @@ public class ExprSkull extends SimplePropertyExpression<GameProfile, FabricItemT
     @Override
     public @Nullable FabricItemType convert(GameProfile profile) {
         ItemStack skull = new ItemStack(Items.PLAYER_HEAD);
-        skull.set(DataComponents.PROFILE, new ResolvableProfile(profile));
+        skull.set(DataComponents.PROFILE, ResolvableProfile.createResolved(profile));
         return new FabricItemType(skull);
     }
 

@@ -52,8 +52,8 @@ public class ExprOfflinePlayers extends SimpleExpression<GameProfile> {
     ) {
         Map<UUID, GameProfile> profiles = new LinkedHashMap<>();
         for (GameProfile onlinePlayer : onlinePlayers) {
-            if (onlinePlayer.getId() != null) {
-                profiles.put(onlinePlayer.getId(), onlinePlayer);
+            if (onlinePlayer.id() != null) {
+                profiles.put(onlinePlayer.id(), onlinePlayer);
             }
         }
         if (!Files.isDirectory(playerDataDirectory)) {

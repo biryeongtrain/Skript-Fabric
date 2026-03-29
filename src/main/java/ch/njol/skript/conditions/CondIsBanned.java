@@ -60,7 +60,7 @@ public class CondIsBanned extends Condition {
             return false;
         }
         if (value instanceof GameProfile profile) {
-            return event.server().getPlayerList().getBans().isBanned(profile);
+            return event.server().getPlayerList().getBans().isBanned(new net.minecraft.server.players.NameAndId(profile));
         }
         if (value instanceof String name) {
             for (String bannedName : event.server().getPlayerList().getBans().getUserList()) {

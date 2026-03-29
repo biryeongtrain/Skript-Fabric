@@ -56,7 +56,7 @@ public class CondIsWhitelisted extends Condition {
             return enabled ^ isNegated();
         }
         return players.check(event,
-                profile -> event.server().getPlayerList().isWhiteListed(profile),
+                profile -> event.server().getPlayerList().isWhiteListed(new net.minecraft.server.players.NameAndId(profile)),
                 isNegated());
     }
 

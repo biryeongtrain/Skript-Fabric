@@ -1,7 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.projectile.ThrownSplashPotion;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownSplashPotion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.HitResult;
 import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;

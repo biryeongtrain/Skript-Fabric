@@ -8,7 +8,7 @@ import java.util.Locale;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -52,20 +52,20 @@ final class EffectRuntimeSupport {
         return value instanceof String string ? string : Classes.toString(value, StringMode.MESSAGE);
     }
 
-    static @Nullable ResourceLocation parseResourceLocation(@Nullable String input) {
+    static @Nullable Identifier parseResourceLocation(@Nullable String input) {
         if (input == null || input.isBlank()) {
             return null;
         }
         try {
             return input.contains(":")
-                    ? ResourceLocation.parse(input)
-                    : ResourceLocation.withDefaultNamespace(input);
+                    ? Identifier.parse(input)
+                    : Identifier.withDefaultNamespace(input);
         } catch (IllegalArgumentException ignored) {
             return null;
         }
     }
 
-    static Holder<SoundEvent> soundOf(ResourceLocation id) {
+    static Holder<SoundEvent> soundOf(Identifier id) {
         return BuiltInRegistries.SOUND_EVENT.get(id)
                 .<Holder<SoundEvent>>map(reference -> reference)
                 .orElseGet(() -> Holder.direct(SoundEvent.createVariableRangeEvent(id)));

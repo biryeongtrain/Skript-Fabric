@@ -23,6 +23,7 @@ abstract class WitherRosePotionCauseMixin {
             BlockPos pos,
             Entity entity,
             InsideBlockEffectApplier effectApplier,
+            boolean moving,
             CallbackInfo callbackInfo
     ) {
         FabricPotionEffectCauseContext.push(FabricPotionEffectCause.WITHER_ROSE);
@@ -35,6 +36,7 @@ abstract class WitherRosePotionCauseMixin {
             BlockPos pos,
             Entity entity,
             InsideBlockEffectApplier effectApplier,
+            boolean moving,
             CallbackInfo callbackInfo
     ) {
         FabricPotionEffectCauseContext.pop(FabricPotionEffectCause.WITHER_ROSE);

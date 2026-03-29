@@ -29,7 +29,7 @@ public final class PlayerClassInfo {
 
             @Override
             public String toString(ServerPlayer player, int flags) {
-                return player.getGameProfile().getName();
+                return player.getGameProfile().name();
             }
 
             @Override
@@ -46,7 +46,7 @@ public final class PlayerClassInfo {
 
         @Override
         public @Nullable String convert(ServerPlayer propertyHolder) {
-            return propertyHolder.getGameProfile().getName();
+            return propertyHolder.getGameProfile().name();
         }
 
         @Override

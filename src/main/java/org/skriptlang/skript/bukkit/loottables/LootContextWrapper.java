@@ -4,7 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -135,7 +135,7 @@ public final class LootContextWrapper {
         return List.of();
     }
 
-    private List<ItemStack> fallback(ResourceLocation id) {
+    private List<ItemStack> fallback(Identifier id) {
         String path = id.getPath();
         if (path.contains("simple_dungeon")) {
             return List.of(new ItemStack(Items.SADDLE));

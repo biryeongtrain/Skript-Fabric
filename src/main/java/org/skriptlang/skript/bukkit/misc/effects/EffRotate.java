@@ -108,12 +108,12 @@ public final class EffRotate extends Effect {
                 quaternion.mul(rotation);
             } else if (value instanceof Display display) {
                 Transformation transformation = PrivateEntityAccess.displayTransformation(display);
-                Quaternionf next = new Quaternionf(transformation.getLeftRotation()).mul(rotation);
+                Quaternionf next = new Quaternionf(transformation.leftRotation()).mul(rotation);
                 PrivateEntityAccess.setDisplayTransformation(display, new Transformation(
-                        transformation.getTranslation(),
+                        transformation.translation(),
                         next,
-                        transformation.getScale(),
-                        transformation.getRightRotation()
+                        transformation.scale(),
+                        transformation.rightRotation()
                 ));
             }
         }

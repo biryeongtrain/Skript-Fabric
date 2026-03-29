@@ -1,8 +1,10 @@
 package ch.njol.skript.entity;
 
-public final class VillagerData extends ExactEntityData<net.minecraft.world.entity.npc.Villager> {
+import net.minecraft.world.entity.npc.villager.Villager;
+
+public final class VillagerData extends ExactEntityData<Villager> {
 
     public VillagerData() {
-        super("villager", net.minecraft.world.entity.npc.Villager.class, "villager");
+        super("villager", Villager.class, "villager");
     }
 }

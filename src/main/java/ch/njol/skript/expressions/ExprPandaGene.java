@@ -6,7 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import ch.njol.util.Kleenean;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Panda;
+import net.minecraft.world.entity.animal.panda.Panda;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 

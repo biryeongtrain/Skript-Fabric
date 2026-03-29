@@ -6,7 +6,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.EventValueExpression;
-import net.minecraft.world.entity.projectile.ThrownEgg;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.runtime.FabricEggThrowEventHandle;
 import org.skriptlang.skript.lang.event.SkriptEvent;

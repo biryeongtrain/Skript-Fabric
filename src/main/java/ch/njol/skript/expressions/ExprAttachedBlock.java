@@ -4,7 +4,7 @@ import ch.njol.skript.expressions.base.PropertyExpression;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.FabricBlock;

@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -14,8 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -27,8 +26,7 @@ final class ExpressionCycle20260312ESyntax3CompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         ensureSyntax();
     }
@@ -55,9 +53,9 @@ final class ExpressionCycle20260312ESyntax3CompatibilityTest {
         );
 
         assertEquals(2, resolved.length);
-        assertEquals(onlineUuid, resolved[0].getId());
-        assertEquals(offlineUuid, resolved[1].getId());
-        assertEquals("OfflinePlayer", resolved[1].getName());
+        assertEquals(onlineUuid, resolved[0].id());
+        assertEquals(offlineUuid, resolved[1].id());
+        assertEquals("OfflinePlayer", resolved[1].name());
     }
 
     private static void ensureSyntax() {

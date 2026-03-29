@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
@@ -21,7 +21,7 @@ public final class DamageSourceTypeSupport {
         try {
             return damageSource.typeHolder()
                     .unwrapKey()
-                    .map(ResourceKey::location)
+                    .map(ResourceKey::identifier)
                     .map(MinecraftResourceParser::display)
                     .orElseGet(() -> fallbackDisplay(damageSource));
         } catch (RuntimeException ignored) {
@@ -49,7 +49,7 @@ public final class DamageSourceTypeSupport {
             return null;
         }
         try {
-            ResourceLocation id = MinecraftResourceParser.parse(string.trim());
+            Identifier id = MinecraftResourceParser.parse(string.trim());
             Object registryLookup = invoke(level.registryAccess(), "lookupOrThrow", Registries.DAMAGE_TYPE);
             Object key = ResourceKey.create(Registries.DAMAGE_TYPE, id);
             Object holder = tryInvoke(registryLookup, "get", key);

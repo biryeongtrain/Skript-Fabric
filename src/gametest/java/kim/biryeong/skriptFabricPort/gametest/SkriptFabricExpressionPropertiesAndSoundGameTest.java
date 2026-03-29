@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -65,8 +65,8 @@ public final class SkriptFabricExpressionPropertiesAndSoundGameTest extends Abst
 
             Object value = Variables.getVariable("props::player_name", null, false);
             helper.assertTrue(
-                    value instanceof String name && name.equals(testPlayer.getGameProfile().getName()),
-                    Component.literal("Expected player name '" + testPlayer.getGameProfile().getName() + "' but got " + value + ".")
+                    value instanceof String name && name.equals(testPlayer.getGameProfile().name()),
+                    Component.literal("Expected player name '" + testPlayer.getGameProfile().name() + "' but got " + value + ".")
             );
             runtime.clearScripts();
             Variables.clearAll();

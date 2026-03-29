@@ -1,18 +1,18 @@
 package org.skriptlang.skript.fabric.compat;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public final class MinecraftResourceParser {
 
     private MinecraftResourceParser() {
     }
 
-    public static ResourceLocation parse(String rawId) {
+    public static Identifier parse(String rawId) {
         String normalized = normalize(rawId);
         try {
             return normalized.indexOf(':') >= 0
-                    ? ResourceLocation.parse(normalized)
-                    : ResourceLocation.withDefaultNamespace(normalized);
+                    ? Identifier.parse(normalized)
+                    : Identifier.withDefaultNamespace(normalized);
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException(
                     "Unable to parse resource id. raw=" + printable(rawId) + ", normalized=" + printable(normalized),
@@ -21,7 +21,7 @@ public final class MinecraftResourceParser {
         }
     }
 
-    public static String display(ResourceLocation id) {
+    public static String display(Identifier id) {
         return "minecraft".equals(id.getNamespace()) ? id.getPath() : id.toString();
     }
 

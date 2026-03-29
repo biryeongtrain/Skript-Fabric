@@ -68,10 +68,10 @@ public class ExprName extends SimplePropertyExpression<Entity, String> {
 	public @Nullable String convert(Entity entity) {
 		if (entity instanceof ServerPlayer player) {
 			return switch (mark) {
-				case 1 -> player.getGameProfile().getName();
+				case 1 -> player.getGameProfile().name();
 				case 2 -> {
 					Component customName = player.getCustomName();
-					yield customName != null ? customName.getString() : player.getGameProfile().getName();
+					yield customName != null ? customName.getString() : player.getGameProfile().name();
 				}
 				default -> throw new IllegalStateException("Unexpected value: " + mark);
 			};

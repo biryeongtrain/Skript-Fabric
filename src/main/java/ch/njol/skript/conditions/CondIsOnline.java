@@ -64,9 +64,9 @@ public class CondIsOnline extends Condition {
     }
 
     private boolean isOnline(SkriptEvent event, GameProfile profile) {
-        ServerPlayer player = event.server().getPlayerList().getPlayer(profile.getId());
-        if (player == null && profile.getName() != null) {
-            player = event.server().getPlayerList().getPlayerByName(profile.getName());
+        ServerPlayer player = event.server().getPlayerList().getPlayer(profile.id());
+        if (player == null && profile.name() != null) {
+            player = event.server().getPlayerList().getPlayerByName(profile.name());
         }
         if (player == null) {
             return false;

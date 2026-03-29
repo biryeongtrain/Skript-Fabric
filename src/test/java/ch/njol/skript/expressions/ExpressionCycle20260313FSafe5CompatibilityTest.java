@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -23,13 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.Bootstrap;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -56,8 +55,7 @@ final class ExpressionCycle20260313FSafe5CompatibilityTest {
 
     @BeforeAll
     static void bootstrapSyntax() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         originalExpressions = new ArrayList<>();
         for (SyntaxInfo<?> info : Skript.instance().syntaxRegistry().syntaxes(SyntaxRegistry.EXPRESSION)) {
@@ -148,22 +146,22 @@ final class ExpressionCycle20260313FSafe5CompatibilityTest {
 
         GameProfile firstOwner = new GameProfile(UUID.fromString("00000000-0000-0000-0000-0000000000f5"), "safe5-a");
         ItemStack headStack = new ItemStack(Items.PLAYER_HEAD);
-        headStack.set(DataComponents.PROFILE, new ResolvableProfile(firstOwner));
+        headStack.set(DataComponents.PROFILE, ResolvableProfile.createResolved(firstOwner));
         FabricItemType head = new FabricItemType(headStack);
 
         ExprSkullOwner skullOwner = new ExprSkullOwner();
         skullOwner.init(new Expression[]{new ch.njol.skript.lang.util.SimpleLiteral<>(head, false)}, 0, Kleenean.FALSE, parseResult(""));
         GameProfile resolvedOwner = skullOwner.getSingle(SkriptEvent.EMPTY);
         assertNotNull(resolvedOwner);
-        assertEquals(firstOwner.getId(), resolvedOwner.getId());
-        assertEquals(firstOwner.getName(), resolvedOwner.getName());
+        assertEquals(firstOwner.id(), resolvedOwner.id());
+        assertEquals(firstOwner.name(), resolvedOwner.name());
 
         GameProfile nextOwner = new GameProfile(UUID.fromString("00000000-0000-0000-0000-0000000000f6"), "safe5-b");
         skullOwner.change(SkriptEvent.EMPTY, new Object[]{nextOwner}, ch.njol.skript.classes.Changer.ChangeMode.SET);
         ResolvableProfile updatedProfile = head.toStack().get(DataComponents.PROFILE);
         assertNotNull(updatedProfile);
-        assertEquals(nextOwner.getId(), updatedProfile.gameProfile().getId());
-        assertEquals(nextOwner.getName(), updatedProfile.gameProfile().getName());
+        assertEquals(nextOwner.id(), updatedProfile.partialProfile().id());
+        assertEquals(nextOwner.name(), updatedProfile.partialProfile().name());
     }
 
     private static void ensureSyntax() {
@@ -210,7 +208,7 @@ final class ExpressionCycle20260313FSafe5CompatibilityTest {
         return registry.getOrThrow(switch (path) {
             case "sharpness" -> Enchantments.SHARPNESS;
             case "unbreaking" -> Enchantments.UNBREAKING;
-            default -> throw new IllegalArgumentException(ResourceLocation.withDefaultNamespace(path).toString());
+            default -> throw new IllegalArgumentException(Identifier.withDefaultNamespace(path).toString());
         }).value();
     }
 
@@ -304,7 +302,7 @@ final class ExpressionCycle20260313FSafe5CompatibilityTest {
             ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
             stack.set(
                     DataComponents.PROFILE,
-                    new ResolvableProfile(new GameProfile(UUID.fromString("00000000-0000-0000-0000-0000000000f5"), "safe5-a"))
+                    ResolvableProfile.createResolved(new GameProfile(UUID.fromString("00000000-0000-0000-0000-0000000000f5"), "safe5-a"))
             );
             return new FabricItemType[]{new FabricItemType(stack)};
         }

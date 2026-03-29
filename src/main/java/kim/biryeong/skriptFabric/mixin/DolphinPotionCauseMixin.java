@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Dolphin$DolphinSwimWithPlayerGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.dolphin.Dolphin$DolphinSwimWithPlayerGoal")
 abstract class DolphinPotionCauseMixin {
 
     @Inject(method = "start", at = @At("HEAD"))

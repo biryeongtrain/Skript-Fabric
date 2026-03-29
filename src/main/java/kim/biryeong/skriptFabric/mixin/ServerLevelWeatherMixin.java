@@ -17,15 +17,33 @@ abstract class ServerLevelWeatherMixin {
     @Unique
     private boolean skript$previousThunder;
 
-    @Inject(method = "setWeatherParameters", at = @At("HEAD"))
-    private void skript$captureWeather(int clearDuration, int rainDuration, boolean raining, boolean thundering, CallbackInfo callbackInfo) {
+    @Inject(method = "advanceWeatherCycle", at = @At("HEAD"))
+    private void skript$captureWeather(CallbackInfo callbackInfo) {
         ServerLevel self = (ServerLevel) (Object) this;
         skript$previousRain = self.isRaining();
         skript$previousThunder = self.isThundering();
     }
 
-    @Inject(method = "setWeatherParameters", at = @At("TAIL"))
-    private void skript$dispatchWeather(int clearDuration, int rainDuration, boolean raining, boolean thundering, CallbackInfo callbackInfo) {
+    @Inject(method = "advanceWeatherCycle", at = @At("TAIL"))
+    private void skript$dispatchWeather(CallbackInfo callbackInfo) {
+        ServerLevel self = (ServerLevel) (Object) this;
+        boolean currentRain = self.isRaining();
+        boolean currentThunder = self.isThundering();
+        if (skript$previousRain == currentRain && skript$previousThunder == currentThunder) {
+            return;
+        }
+        SkriptFabricEventBridge.dispatchWeatherChange(self, currentRain, currentThunder);
+    }
+
+    @Inject(method = "resetWeatherCycle", at = @At("HEAD"))
+    private void skript$captureWeatherBeforeReset(CallbackInfo callbackInfo) {
+        ServerLevel self = (ServerLevel) (Object) this;
+        skript$previousRain = self.isRaining();
+        skript$previousThunder = self.isThundering();
+    }
+
+    @Inject(method = "resetWeatherCycle", at = @At("TAIL"))
+    private void skript$dispatchWeatherAfterReset(CallbackInfo callbackInfo) {
         ServerLevel self = (ServerLevel) (Object) this;
         boolean currentRain = self.isRaining();
         boolean currentThunder = self.isThundering();

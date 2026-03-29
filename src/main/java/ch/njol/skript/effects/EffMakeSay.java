@@ -51,11 +51,11 @@ public class EffMakeSay extends Effect {
         for (ServerPlayer player : players.getArray(event)) {
             for (String message : messages.getArray(event)) {
                 if (message.startsWith("/")) {
-                    player.getServer().getCommands().performPrefixedCommand(
+                    player.level().getServer().getCommands().performPrefixedCommand(
                             player.createCommandSourceStack(), message.substring(1));
                 } else {
-                    player.getServer().getPlayerList().broadcastSystemMessage(
-                            Component.literal("<" + player.getGameProfile().getName() + "> " + message), false);
+                    player.level().getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("<" + player.getGameProfile().name() + "> " + message), false);
                 }
             }
         }

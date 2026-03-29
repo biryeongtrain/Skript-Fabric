@@ -60,7 +60,7 @@ public class ExprWorldBorder extends SimplePropertyExpression<Object, WorldBorde
         to.setCenter(from.getCenterX(), from.getCenterZ());
         to.setSize(from.getSize());
         to.setDamagePerBlock(from.getDamagePerBlock());
-        to.setDamageSafeZone(from.getDamageSafeZone());
+        to.setSafeZone(from.getSafeZone());
         to.setWarningBlocks(from.getWarningBlocks());
         to.setWarningTime(from.getWarningTime());
     }
@@ -69,7 +69,7 @@ public class ExprWorldBorder extends SimplePropertyExpression<Object, WorldBorde
         border.setCenter(0.0D, 0.0D);
         border.setSize(DEFAULT_SIZE);
         border.setDamagePerBlock(DEFAULT_DAMAGE_AMOUNT);
-        border.setDamageSafeZone(DEFAULT_DAMAGE_BUFFER);
+        border.setSafeZone(DEFAULT_DAMAGE_BUFFER);
         border.setWarningBlocks(DEFAULT_WARNING_DISTANCE);
         border.setWarningTime(DEFAULT_WARNING_TIME);
     }

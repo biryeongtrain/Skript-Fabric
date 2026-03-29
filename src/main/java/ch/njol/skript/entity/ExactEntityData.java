@@ -1,7 +1,7 @@
 package ch.njol.skript.entity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 
 abstract class ExactEntityData<E extends Entity> extends EntityData<E> {
@@ -10,7 +10,7 @@ abstract class ExactEntityData<E extends Entity> extends EntityData<E> {
 
     protected ExactEntityData(String codeName, Class<? extends E> entityClass, String entityTypePath) {
         super(codeName, entityClass);
-        ResourceLocation id = ResourceLocation.withDefaultNamespace(entityTypePath);
+        Identifier id = Identifier.withDefaultNamespace(entityTypePath);
         net.minecraft.world.entity.EntityType<?> resolved = BuiltInRegistries.ENTITY_TYPE.getValue(id);
         if (resolved == null) {
             throw new IllegalStateException("Unknown entity type: " + id);

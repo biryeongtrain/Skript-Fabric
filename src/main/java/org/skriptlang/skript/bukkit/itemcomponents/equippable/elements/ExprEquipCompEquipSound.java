@@ -7,7 +7,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableSupport;
@@ -37,7 +37,7 @@ public final class ExprEquipCompEquipSound extends SimpleExpression<String> {
                 .map(Holder::unwrapKey)
                 .filter(java.util.Optional::isPresent)
                 .map(java.util.Optional::get)
-                .map(ResourceKey -> MinecraftResourceParser.display(ResourceKey.location()))
+                .map(ResourceKey -> MinecraftResourceParser.display(ResourceKey.identifier()))
                 .toArray(String[]::new);
     }
 

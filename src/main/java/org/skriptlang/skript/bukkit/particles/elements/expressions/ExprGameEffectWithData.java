@@ -4,7 +4,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.particles.GameEffect;
 import org.skriptlang.skript.lang.event.SkriptEvent;
@@ -25,7 +25,7 @@ public final class ExprGameEffectWithData extends SimpleExpression<GameEffect> {
 
     @Override
     protected GameEffect @Nullable [] get(SkriptEvent event) {
-        GameEffect effect = new GameEffect(ResourceLocation.withDefaultNamespace(potionBreak ? "potion_break" : "bone_meal_use"));
+        GameEffect effect = new GameEffect(Identifier.withDefaultNamespace(potionBreak ? "potion_break" : "bone_meal_use"));
         if (first != null) {
             Object value = first.getSingle(event);
             if (potionBreak) {

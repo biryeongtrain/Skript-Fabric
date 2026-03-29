@@ -16,8 +16,8 @@ import ch.njol.skript.util.Timespan.TimePeriod;
 import ch.njol.util.Kleenean;
 import java.util.function.Function;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.ZombieVillager;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 

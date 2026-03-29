@@ -22,9 +22,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Interaction;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
-import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.animal.equine.Horse;
 import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.projectile.FishingHook;
@@ -35,7 +35,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.ambient.Bat;
-import net.minecraft.world.entity.animal.Bee;
+import net.minecraft.world.entity.animal.bee.Bee;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
@@ -661,7 +661,7 @@ public final class SkriptFabricEffectGameTest extends AbstractSkriptFabricGameTe
                 () -> {
                     Transformation transformation = PrivateEntityAccess.displayTransformation(textDisplay);
                     helper.assertTrue(
-                            Math.abs(transformation.getLeftRotation().y) > 0.5F,
+                            Math.abs(transformation.leftRotation().y()) > 0.5F,
                             Component.literal("Expected rotate effect to modify the display left rotation quaternion.")
                     );
                 }

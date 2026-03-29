@@ -1,7 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
-import com.mojang.authlib.GameProfile;
 import net.minecraft.SharedConstants;
+import net.minecraft.server.players.NameAndId;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket;
@@ -44,8 +44,8 @@ abstract class ServerStatusMixin {
         Optional<ServerStatus.Players> playersOptional = this.status.players();
         if (playersOptional.isPresent()) {
             ServerStatus.Players players = playersOptional.get();
-            for (GameProfile profile : players.sample()) {
-                currentSample.add(profile.getName());
+            for (NameAndId entry : players.sample()) {
+                currentSample.add(entry.name());
             }
         }
 
@@ -77,11 +77,11 @@ abstract class ServerStatusMixin {
                 max = players.max();
             }
 
-            List<GameProfile> newProfiles = new ArrayList<>();
+            List<NameAndId> newProfiles = new ArrayList<>();
             for (String name : modifiedSample) {
                 UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes());
                 if (!hiddenPlayerIds.contains(uuid)) {
-                    newProfiles.add(new GameProfile(uuid, name));
+                    newProfiles.add(new NameAndId(uuid, name));
                 }
             }
 

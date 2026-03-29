@@ -1,8 +1,8 @@
 package ch.njol.skript.entity;
 
-public final class ZombieVillagerData extends ExactEntityData<net.minecraft.world.entity.monster.ZombieVillager> {
+public final class ZombieVillagerData extends ExactEntityData<net.minecraft.world.entity.monster.zombie.ZombieVillager> {
 
     public ZombieVillagerData() {
-        super("zombie villager", net.minecraft.world.entity.monster.ZombieVillager.class, "zombie_villager");
+        super("zombie villager", net.minecraft.world.entity.monster.zombie.ZombieVillager.class, "zombie_villager");
     }
 }

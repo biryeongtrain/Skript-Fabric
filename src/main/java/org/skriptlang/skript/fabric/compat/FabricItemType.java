@@ -3,7 +3,7 @@ package org.skriptlang.skript.fabric.compat;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.Equippable;
@@ -155,7 +155,7 @@ public final class FabricItemType {
     }
 
     public String itemId() {
-        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+        Identifier key = BuiltInRegistries.ITEM.getKey(item);
         return key != null ? MinecraftResourceParser.display(key) : item.toString();
     }
 

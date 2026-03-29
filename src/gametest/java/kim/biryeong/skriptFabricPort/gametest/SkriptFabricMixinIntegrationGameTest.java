@@ -13,8 +13,8 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.entity.projectile.Arrow;
-import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.vehicle.minecart.MinecartChest;
 import net.minecraft.world.level.block.Blocks;
 import org.skriptlang.skript.fabric.runtime.SkriptRuntime;
 
@@ -59,7 +59,7 @@ public final class SkriptFabricMixinIntegrationGameTest extends AbstractSkriptFa
 
 			Entity pig = helper.spawnWithNoFreeWill(EntityType.PIG, 0.5F, 1.0F, 0.5F);
 			Entity cow = helper.spawnWithNoFreeWill(EntityType.COW, 1.5F, 1.0F, 0.5F);
-			cow.startRiding(pig, true);
+			cow.startRiding(pig);
 
 			helper.assertTrue(
 					helper.getLevel().getBlockState(marker).is(Blocks.REDSTONE_BLOCK),
@@ -80,7 +80,7 @@ public final class SkriptFabricMixinIntegrationGameTest extends AbstractSkriptFa
 
 			Entity pig = helper.spawnWithNoFreeWill(EntityType.PIG, 0.5F, 1.0F, 0.5F);
 			Entity cow = helper.spawnWithNoFreeWill(EntityType.COW, 1.5F, 1.0F, 0.5F);
-			cow.startRiding(pig, true);
+			cow.startRiding(pig);
 
 			runtime.loadFromResource("skript/gametest/event/entity_dismount_marks_block.sk");
 			cow.removeVehicle();
@@ -296,7 +296,7 @@ public final class SkriptFabricMixinIntegrationGameTest extends AbstractSkriptFa
 
 			Entity pig = helper.spawnWithNoFreeWill(EntityType.PIG, 0.5F, 1.0F, 0.5F);
 			Entity cow = helper.spawnWithNoFreeWill(EntityType.COW, 1.5F, 1.0F, 0.5F);
-			cow.startRiding(pig, true);
+			cow.startRiding(pig);
 
 			helper.assertTrue(
 					helper.getLevel().getBlockState(marker).is(Blocks.REDSTONE_BLOCK),
@@ -317,7 +317,7 @@ public final class SkriptFabricMixinIntegrationGameTest extends AbstractSkriptFa
 
 			Entity pig = helper.spawnWithNoFreeWill(EntityType.PIG, 0.5F, 1.0F, 0.5F);
 			Entity cow = helper.spawnWithNoFreeWill(EntityType.COW, 1.5F, 1.0F, 0.5F);
-			cow.startRiding(pig, true);
+			cow.startRiding(pig);
 
 			runtime.loadFromResource("skript/gametest/event/vehicle_exit_marks_block.sk");
 			cow.removeVehicle();

@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.15-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT'
     id 'maven-publish'
     id "net.linguica.maven-settings" version "0.5"
 }
@@ -22,26 +22,40 @@ repositories {
         name = "Nucleoid"
         url = "https://maven.nucleoid.xyz/"
     }
+    maven {
+        name = "qf-repo"
+        url = "https://repo.biryeong.kim/releases/"
+    }
+    maven {
+        url = "https://repo.biryeong.kim/snapshots/"
+    }
+    maven {
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+        name = "sonatype-oss-snapshots1"
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation include("eu.pb4:placeholder-api:2.7.2+1.21.8")
-    modImplementation include("eu.pb4:sgui:1.10.2+1.21.8")
-    modImplementation include("xyz.nucleoid:stimuli:0.5.2+1.21.8")
-    modImplementation include("xyz.nucleoid:fantasy:0.6.7+1.21.5")
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation include("eu.pb4:placeholder-api:${project.papi_version}")
+    implementation include("eu.pb4:sgui:${project.sgui_version}")
+//    implementation include(files("libs/stimuli-0.5.4+26.1-pre-2.jar"))
+    implementation include("xyz.nucleoid:stimuli:0.5.6+26.1")
+    implementation include("xyz.nucleoid:fantasy:0.8.0+26.1-pre-3")
     compileOnly "net.luckperms:api:5.5"
 
     testImplementation platform("org.junit:junit-bom:${project.junit_version}")
     testImplementation "org.junit.jupiter:junit-jupiter"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-    modImplementation include("net.kyori:adventure-platform-fabric:${project.adventure_platform_version}")
+    implementation include("net.kyori:adventure-platform-fabric:${project.adventure_platform_version}")
     implementation "net.kyori:adventure-text-minimessage:${project.adventure_api_version}"
     implementation "net.kyori:adventure-api:${project.adventure_api_version}"
 }
@@ -73,7 +87,7 @@ processResources {
     }
 }
 
-def targetJavaVersion = 21
+def targetJavaVersion = 25
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
     // this fixes some edge cases with special characters not displaying correctly

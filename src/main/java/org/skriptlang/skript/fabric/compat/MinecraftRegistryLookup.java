@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 public final class MinecraftRegistryLookup {
@@ -13,8 +13,8 @@ public final class MinecraftRegistryLookup {
     private MinecraftRegistryLookup() {
     }
 
-    public static <T> @Nullable T lookup(@Nullable String raw, Function<ResourceLocation, T> resolver) {
-        for (ResourceLocation id : candidateIds(raw)) {
+    public static <T> @Nullable T lookup(@Nullable String raw, Function<Identifier, T> resolver) {
+        for (Identifier id : candidateIds(raw)) {
             T value = resolver.apply(id);
             if (value != null) {
                 return value;
@@ -23,11 +23,11 @@ public final class MinecraftRegistryLookup {
         return null;
     }
 
-    public static List<ResourceLocation> candidateIds(@Nullable String raw) {
+    public static List<Identifier> candidateIds(@Nullable String raw) {
         if (raw == null || raw.isBlank()) {
             return List.of();
         }
-        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        Set<Identifier> ids = new LinkedHashSet<>();
         for (String candidate : textCandidates(raw)) {
             addId(ids, candidate, false, false);
             addId(ids, candidate, false, true);
@@ -78,15 +78,15 @@ public final class MinecraftRegistryLookup {
         candidates.add(raw.trim().toLowerCase(Locale.ENGLISH));
     }
 
-    private static void addId(Set<ResourceLocation> ids, String raw, boolean collapseSpaces, boolean collapseHyphens) {
+    private static void addId(Set<Identifier> ids, String raw, boolean collapseSpaces, boolean collapseHyphens) {
         String normalized = normalizeId(raw, collapseSpaces, collapseHyphens);
         if (normalized == null || normalized.isBlank()) {
             return;
         }
         try {
             ids.add(normalized.indexOf(':') >= 0
-                    ? ResourceLocation.parse(normalized)
-                    : ResourceLocation.withDefaultNamespace(normalized));
+                    ? Identifier.parse(normalized)
+                    : Identifier.withDefaultNamespace(normalized));
         } catch (RuntimeException ignored) {
         }
     }

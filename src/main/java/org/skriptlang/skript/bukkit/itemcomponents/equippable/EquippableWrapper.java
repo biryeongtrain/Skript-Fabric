@@ -9,7 +9,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
@@ -160,11 +160,11 @@ public final class EquippableWrapper extends ComponentWrapper<Equippable> {
         ));
     }
 
-    public @Nullable ResourceLocation cameraOverlay() {
+    public @Nullable Identifier cameraOverlay() {
         return getComponent().cameraOverlay().orElse(null);
     }
 
-    public void cameraOverlay(@Nullable ResourceLocation overlay) {
+    public void cameraOverlay(@Nullable Identifier overlay) {
         Equippable source = getComponent();
         applyComponent(build(
                 source.slot(),
@@ -181,11 +181,11 @@ public final class EquippableWrapper extends ComponentWrapper<Equippable> {
         ));
     }
 
-    public @Nullable ResourceLocation model() {
-        return getComponent().assetId().map(ResourceKey::location).orElse(null);
+    public @Nullable Identifier model() {
+        return getComponent().assetId().map(ResourceKey::identifier).orElse(null);
     }
 
-    public void model(@Nullable ResourceLocation assetId) {
+    public void model(@Nullable Identifier assetId) {
         Equippable source = getComponent();
         ResourceKey<EquipmentAsset> key = assetId != null ? EquipmentAssets.createId(assetId.toString()) : null;
         applyComponent(build(
@@ -295,7 +295,7 @@ public final class EquippableWrapper extends ComponentWrapper<Equippable> {
             EquipmentSlot slot,
             Holder<SoundEvent> equipSound,
             @Nullable ResourceKey<EquipmentAsset> assetId,
-            @Nullable ResourceLocation cameraOverlay,
+            @Nullable Identifier cameraOverlay,
             @Nullable HolderSet<EntityType<?>> allowedEntities,
             boolean dispensable,
             boolean swappable,

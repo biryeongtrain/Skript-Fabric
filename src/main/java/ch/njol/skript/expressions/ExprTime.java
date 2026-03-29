@@ -35,7 +35,7 @@ public class ExprTime extends PropertyExpression<ServerLevel, Time> {
 
     @Override
     protected Time[] get(SkriptEvent event, ServerLevel[] worlds) {
-        return get(worlds, world -> new Time((int) world.getDayTime()));
+        return get(worlds, world -> new Time((int) world.getDefaultClockTime()));
     }
 
     @Override
@@ -55,10 +55,15 @@ public class ExprTime extends PropertyExpression<ServerLevel, Time> {
 
         long ticks = ticksForChange(delta[0], mode);
         for (ServerLevel world : getExpr().getArray(event)) {
+            net.minecraft.world.level.dimension.DimensionType dimType = world.dimensionType();
+            java.util.Optional<net.minecraft.core.Holder<net.minecraft.world.clock.WorldClock>> clockHolder = dimType.defaultClock();
+            if (clockHolder.isEmpty()) continue;
+            net.minecraft.core.Holder<net.minecraft.world.clock.WorldClock> clock = clockHolder.get();
+            long current = world.clockManager().getTotalTicks(clock);
             switch (mode) {
-                case ADD -> world.setDayTime(world.getDayTime() + ticks);
-                case REMOVE -> world.setDayTime(world.getDayTime() - ticks);
-                case SET -> world.setDayTime(rebaseTimeOfDay(world.getDayTime(), ticks));
+                case ADD -> world.clockManager().setTotalTicks(clock, current + ticks);
+                case REMOVE -> world.clockManager().setTotalTicks(clock, current - ticks);
+                case SET -> world.clockManager().setTotalTicks(clock, rebaseTimeOfDay(current, ticks));
                 default -> {
                 }
             }

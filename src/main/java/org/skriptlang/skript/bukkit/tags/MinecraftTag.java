@@ -1,9 +1,9 @@
 package org.skriptlang.skript.bukkit.tags;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
 
-public record MinecraftTag(ResourceLocation id, Target target) {
+public record MinecraftTag(Identifier id, Target target) {
 
     public enum Target {
         ANY,

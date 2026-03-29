@@ -54,10 +54,14 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
             player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
             player.getInventory().setItem(0, new ItemStack(Items.APPLE));
 
-            helper.assertTrue(
-                    player.drop(false),
-                    Component.literal("Expected the real player drop path to drop the selected apple.")
-            );
+            {
+                ItemStack selectedItem = player.getInventory().getSelectedItem();
+                net.minecraft.world.entity.item.ItemEntity dropped = player.drop(selectedItem, false);
+                helper.assertTrue(
+                        dropped != null,
+                        Component.literal("Expected the real player drop path to drop the selected apple.")
+                );
+            }
             helper.assertTrue(
                     helper.getLevel().getBlockState(markerAbsolute).is(Blocks.EMERALD_BLOCK),
                     Component.literal("Expected player drop event script to mark the block under the player.")
@@ -486,7 +490,7 @@ public final class SkriptFabricPlayerEventInfraGameTest extends AbstractSkriptFa
 
             ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
-            String expectedName = "join-" + player.getGameProfile().getName();
+            String expectedName = "join-" + player.getGameProfile().name();
             helper.assertTrue(
                     player.getCustomName() != null && expectedName.equals(player.getCustomName().getString()),
                     Component.literal("Expected join event to resolve %%event-player%% to player name but got: "

@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -18,8 +19,6 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Timespan;
 import ch.njol.util.Kleenean;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.border.WorldBorder;
@@ -38,8 +37,7 @@ class ExpressionSyntaxS2CompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         ensureSyntax();
     }
@@ -78,7 +76,7 @@ class ExpressionSyntaxS2CompatibilityTest {
         source.setCenter(10.0D, -4.0D);
         source.setSize(32.0D);
         source.setDamagePerBlock(1.5D);
-        source.setDamageSafeZone(2.0D);
+        source.setSafeZone(2.0D);
         source.setWarningBlocks(8);
         source.setWarningTime(20);
 
@@ -91,7 +89,7 @@ class ExpressionSyntaxS2CompatibilityTest {
         assertEquals(-4.0D, target.getCenterZ());
         assertEquals(32.0D, target.getSize());
         assertEquals(1.5D, target.getDamagePerBlock());
-        assertEquals(2.0D, target.getDamageSafeZone());
+        assertEquals(2.0D, target.getSafeZone());
         assertEquals(8, target.getWarningBlocks());
         assertEquals(20, target.getWarningTime());
 
@@ -100,7 +98,7 @@ class ExpressionSyntaxS2CompatibilityTest {
         assertEquals(0.0D, target.getCenterZ());
         assertEquals(59_999_968D, target.getSize());
         assertEquals(0.2D, target.getDamagePerBlock());
-        assertEquals(5.0D, target.getDamageSafeZone());
+        assertEquals(5.0D, target.getSafeZone());
         assertEquals(5, target.getWarningBlocks());
         assertEquals(15, target.getWarningTime());
     }
@@ -158,9 +156,9 @@ class ExpressionSyntaxS2CompatibilityTest {
         ExprWorldBorderDamageBuffer damageBuffer = new ExprWorldBorderDamageBuffer();
         assertTrue(damageBuffer.init(new Expression[]{new SimpleLiteral<>(border, false)}, 0, Kleenean.FALSE, parseResult("world border damage buffer")));
         damageBuffer.change(SkriptEvent.EMPTY, new Object[]{7.0D}, ChangeMode.SET);
-        assertEquals(7.0D, border.getDamageSafeZone());
+        assertEquals(7.0D, border.getSafeZone());
         damageBuffer.change(SkriptEvent.EMPTY, new Object[]{10.0D}, ChangeMode.REMOVE);
-        assertEquals(0.0D, border.getDamageSafeZone());
+        assertEquals(0.0D, border.getSafeZone());
 
         ExprWorldBorderWarningDistance warningDistance = new ExprWorldBorderWarningDistance();
         assertTrue(warningDistance.init(new Expression[]{new SimpleLiteral<>(border, false)}, 0, Kleenean.FALSE, parseResult("world border warning distance")));

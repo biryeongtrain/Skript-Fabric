@@ -18,7 +18,7 @@ final class FirstJoinRuntimeUnitTest {
 
         assertTrue(SkriptFabricEventBridge.isFirstJoin(playerData, profile));
 
-        Files.createFile(playerData.resolve(profile.getId() + ".dat"));
+        Files.createFile(playerData.resolve(profile.id() + ".dat"));
         assertFalse(SkriptFabricEventBridge.isFirstJoin(playerData, profile));
     }
 }

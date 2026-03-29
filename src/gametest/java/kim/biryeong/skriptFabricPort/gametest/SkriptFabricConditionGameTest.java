@@ -29,11 +29,11 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Interaction;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.projectile.FishingHook;
-import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.entity.vehicle.minecart.MinecartChest;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -1514,8 +1514,8 @@ public final class SkriptFabricConditionGameTest extends AbstractSkriptFabricGam
 
     @GameTest
     public void canPickUpItemsConditionExecutesRealScript(GameTestHelper helper) {
-        net.minecraft.world.entity.monster.Zombie zombie =
-                (net.minecraft.world.entity.monster.Zombie) helper.spawnWithNoFreeWill(
+        net.minecraft.world.entity.monster.zombie.Zombie zombie =
+                (net.minecraft.world.entity.monster.zombie.Zombie) helper.spawnWithNoFreeWill(
                         EntityType.ZOMBIE, 0.5F, 1.0F, 0.5F);
         zombie.setCanPickUpLoot(true);
         assertUseEntityScriptNamesEntity(

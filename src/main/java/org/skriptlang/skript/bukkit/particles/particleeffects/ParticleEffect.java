@@ -3,7 +3,7 @@ package org.skriptlang.skript.bukkit.particles.particleeffects;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
@@ -17,10 +17,10 @@ public class ParticleEffect {
     private @Nullable Object data;
 
     public static ParticleEffect of(ParticleOptions particle) {
-        ResourceLocation id = BuiltInRegistries.PARTICLE_TYPE.getKey(particle.getType());
-        if (id != null && (id.equals(ResourceLocation.withDefaultNamespace("electric_spark"))
-                || id.equals(ResourceLocation.withDefaultNamespace("flame"))
-                || id.equals(ResourceLocation.withDefaultNamespace("smoke")))) {
+        Identifier id = BuiltInRegistries.PARTICLE_TYPE.getKey(particle.getType());
+        if (id != null && (id.equals(Identifier.withDefaultNamespace("electric_spark"))
+                || id.equals(Identifier.withDefaultNamespace("flame"))
+                || id.equals(Identifier.withDefaultNamespace("smoke")))) {
             return new DirectionalEffect(particle);
         }
         return new ParticleEffect(particle);

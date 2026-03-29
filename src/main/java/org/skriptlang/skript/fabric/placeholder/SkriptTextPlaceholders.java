@@ -6,8 +6,8 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.StringMode;
 import com.mojang.authlib.GameProfile;
-import eu.pb4.placeholders.api.PlaceholderContext;
 import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.placeholders.api.ServerPlaceholderContext;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,12 +57,13 @@ public final class SkriptTextPlaceholders {
             return SkriptFabric.byMiniMessage(value);
         }
 
-        PlaceholderContext context = createContext(event != null ? event : CurrentSkriptEvent.get());
+        ServerPlaceholderContext context = createContext(event != null ? event : CurrentSkriptEvent.get());
         if (context == null) {
             return SkriptFabric.byMiniMessage(value);
         }
 
-        return Placeholders.parseText(SkriptFabric.byMiniMessage(value), context);
+        return Placeholders.SERVER_PLACEHOLDER_PARSER.parseComponent(
+                eu.pb4.placeholders.api.node.TextNode.convert(SkriptFabric.byMiniMessage(value)), context.asParserContext());
     }
 
     @SuppressWarnings("unchecked")
@@ -114,63 +115,29 @@ public final class SkriptTextPlaceholders {
         return null;
     }
 
-    static @Nullable PlaceholderContext createContext(@Nullable SkriptEvent event) {
+    static @Nullable ServerPlaceholderContext createContext(@Nullable SkriptEvent event) {
         if (event == null) {
             return null;
         }
 
         ServerPlayer player = event.player();
-        Entity entity = player != null ? player : event.handle() instanceof Entity resolved ? resolved : null;
-        MinecraftServer server = event.server();
-        if (server == null) {
-            if (player != null) {
-                server = player.getServer();
-            } else if (entity != null) {
-                server = entity.getServer();
-            }
+        if (player != null) {
+            return ServerPlaceholderContext.of(player);
         }
+
+        Entity entity = event.handle() instanceof Entity resolved ? resolved : null;
+        if (entity != null) {
+            return ServerPlaceholderContext.of(entity);
+        }
+
+        if (event.handle() instanceof CommandSourceStack commandSource) {
+            return ServerPlaceholderContext.of(commandSource);
+        }
+
+        MinecraftServer server = event.server();
         if (server == null) {
             return null;
         }
-
-        ServerLevel level = event.level();
-        if (level == null) {
-            if (player != null) {
-                if (player.level() instanceof ServerLevel playerLevel) {
-                    level = playerLevel;
-                }
-            } else if (entity != null && entity.level() instanceof ServerLevel entityLevel) {
-                level = entityLevel;
-            }
-        }
-
-        CommandSourceStack source;
-        if (event.handle() instanceof CommandSourceStack commandSource) {
-            source = commandSource;
-            if (level == null) {
-                level = commandSource.getLevel();
-            }
-            if (entity == null) {
-                entity = commandSource.getEntity();
-            }
-            if (player == null) {
-                try {
-                    player = commandSource.getPlayer();
-                } catch (Exception ignored) {
-                    player = null;
-                }
-            }
-        } else if (player != null) {
-            source = player.createCommandSourceStack();
-        } else {
-            source = server.createCommandSourceStack();
-        }
-
-        if (level != null) {
-            source = source.withLevel(level);
-        }
-
-        GameProfile profile = player != null ? player.getGameProfile() : null;
-        return new PlaceholderContext(server, source, level, player, entity, profile);
+        return ServerPlaceholderContext.of(server);
     }
 }

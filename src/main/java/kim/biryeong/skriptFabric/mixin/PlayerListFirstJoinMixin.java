@@ -21,7 +21,7 @@ abstract class PlayerListFirstJoinMixin {
     @Inject(method = "placeNewPlayer", at = @At("HEAD"))
     private void skript$captureFirstJoin(Connection connection, ServerPlayer player, CommonListenerCookie cookie, CallbackInfo ci) {
         SKRIPT_FIRST_JOIN.set(SkriptFabricEventBridge.isFirstJoin(
-                player.getServer().getWorldPath(LevelResource.PLAYER_DATA_DIR),
+                player.level().getServer().getWorldPath(LevelResource.PLAYER_DATA_DIR),
                 player.getGameProfile()
         ));
     }

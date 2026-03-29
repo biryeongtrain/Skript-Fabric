@@ -93,7 +93,7 @@ public class EffPush extends Effect {
                 return;
             }
             entity.setDeltaMovement(entity.getDeltaMovement().add(pushDirection));
-            entity.hasImpulse = true;
+            entity.hurtMarked = true;
         }
     }
 

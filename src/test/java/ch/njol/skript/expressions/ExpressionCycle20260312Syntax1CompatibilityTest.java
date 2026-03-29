@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -23,17 +24,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.Optional;
-import java.util.OptionalLong;
-import net.minecraft.SharedConstants;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.notifications.NotificationManager;
+import net.minecraft.world.level.saveddata.WeatherData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRule;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
@@ -56,8 +59,7 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         ensureSyntax();
     }
@@ -118,22 +120,22 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         ExprGameRule keepInventory = new ExprGameRule();
         assertTrue(keepInventory.init(
                 new Expression[]{
-                        new SimpleLiteral<>(GameRules.RULE_KEEPINVENTORY, false),
+                        new SimpleLiteral<>(GameRules.KEEP_INVENTORY, false),
                         new SimpleLiteral<>(level, false)
                 },
                 0,
                 Kleenean.FALSE,
                 parseResult("gamerule keepInventory of lane-c12-s1-world")
         ));
-        assertEquals(new GameruleValue<>(rules.getBoolean(GameRules.RULE_KEEPINVENTORY)), keepInventory.getSingle(SkriptEvent.EMPTY));
+        assertEquals(new GameruleValue<>(rules.get(GameRules.KEEP_INVENTORY)), keepInventory.getSingle(SkriptEvent.EMPTY));
         keepInventory.change(SkriptEvent.EMPTY, new Object[]{Boolean.TRUE}, ChangeMode.SET);
         assertEquals(Boolean.TRUE, keepInventory.getSingle(SkriptEvent.EMPTY).getGameruleValue());
-        assertEquals(true, rules.getBoolean(GameRules.RULE_KEEPINVENTORY));
+        assertEquals(true, rules.get(GameRules.KEEP_INVENTORY));
 
         ExprGameRule randomTickSpeed = new ExprGameRule();
         assertTrue(randomTickSpeed.init(
                 new Expression[]{
-                        new SimpleLiteral<>(GameRules.RULE_RANDOMTICKING, false),
+                        new SimpleLiteral<>(GameRules.RANDOM_TICK_SPEED, false),
                         new SimpleLiteral<>(level, false)
                 },
                 0,
@@ -143,7 +145,7 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         assertArrayEquals(new Class[]{Boolean.class, Integer.class}, randomTickSpeed.acceptChange(ChangeMode.SET));
         randomTickSpeed.change(SkriptEvent.EMPTY, new Object[]{9}, ChangeMode.SET);
         assertEquals(new GameruleValue<>(9), randomTickSpeed.getSingle(SkriptEvent.EMPTY));
-        assertEquals(9, rules.getInt(GameRules.RULE_RANDOMTICKING));
+        assertEquals(9, rules.get(GameRules.RANDOM_TICK_SPEED));
     }
 
     @Test
@@ -190,15 +192,15 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         assertEquals(ExprWeather.WeatherKind.RAIN, expression.getSingle(SkriptEvent.EMPTY));
         assertEquals(true, level.isRaining());
         assertEquals(false, level.isThundering());
-        assertEquals(true, fixture.levelData().raining);
-        assertEquals(false, fixture.levelData().thundering);
+        assertEquals(true, fixture.weatherData().isRaining());
+        assertEquals(false, fixture.weatherData().isThundering());
 
         expression.change(SkriptEvent.EMPTY, new Object[]{ExprWeather.WeatherKind.THUNDER}, ChangeMode.SET);
         assertEquals(ExprWeather.WeatherKind.THUNDER, expression.getSingle(SkriptEvent.EMPTY));
         assertEquals(true, level.isRaining());
         assertEquals(true, level.isThundering());
-        assertEquals(true, fixture.levelData().raining);
-        assertEquals(true, fixture.levelData().thundering);
+        assertEquals(true, fixture.weatherData().isRaining());
+        assertEquals(true, fixture.weatherData().isThundering());
 
         SkriptEvent event = new SkriptEvent(new FabricEventCompatHandles.WeatherChange(true, false), null, level, null);
         assertEquals(ExprWeather.WeatherKind.RAIN, expression.getSingle(event));
@@ -207,8 +209,8 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         assertEquals(ExprWeather.WeatherKind.CLEAR, expression.getSingle(SkriptEvent.EMPTY));
         assertEquals(false, level.isRaining());
         assertEquals(false, level.isThundering());
-        assertEquals(false, fixture.levelData().raining);
-        assertEquals(false, fixture.levelData().thundering);
+        assertEquals(false, fixture.weatherData().isRaining());
+        assertEquals(false, fixture.weatherData().isThundering());
     }
 
     private static void ensureSyntax() {
@@ -263,7 +265,24 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         levelDataField().set(level, levelData);
         serverLevelDataField().set(level, levelData);
         dimensionTypeField().set(level, Holder.direct(overworldDimensionType()));
-        return new LevelFixture(level, levelDataHandler);
+        MinecraftServer server = (MinecraftServer) unsafe().allocateInstance(DedicatedServer.class);
+        WeatherData weatherData = new WeatherData();
+        setField(MinecraftServer.class, server, GameRules.class, rules);
+        setField(MinecraftServer.class, server, WeatherData.class, weatherData);
+        setField(MinecraftServer.class, server, NotificationManager.class, new NotificationManager());
+        setField(ServerLevel.class, level, MinecraftServer.class, server);
+        return new LevelFixture(level, levelDataHandler, weatherData);
+    }
+
+    private static void setField(Class<?> owner, Object target, Class<?> fieldType, Object value) throws Exception {
+        for (Field field : owner.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers()) && field.getType() == fieldType) {
+                field.setAccessible(true);
+                field.set(target, value);
+                return;
+            }
+        }
+        throw new IllegalStateException("Could not find field of type " + fieldType.getName() + " in " + owner.getName());
     }
 
     private static Field levelDataField() {
@@ -298,22 +317,22 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
 
     private static DimensionType overworldDimensionType() {
         return new DimensionType(
-                OptionalLong.empty(),
+                false,
                 true,
                 false,
                 false,
-                true,
                 1.0D,
-                true,
-                false,
                 -64,
                 384,
                 384,
                 BlockTags.INFINIBURN_OVERWORLD,
-                BuiltinDimensionTypes.OVERWORLD_EFFECTS,
                 0.0F,
-                Optional.empty(),
-                new DimensionType.MonsterSettings(false, true, ConstantInt.of(0), 0)
+                new DimensionType.MonsterSettings(ConstantInt.of(0), 0),
+                DimensionType.Skybox.OVERWORLD,
+                net.minecraft.world.level.CardinalLighting.Type.DEFAULT,
+                net.minecraft.world.attribute.EnvironmentAttributeMap.EMPTY,
+                net.minecraft.core.HolderSet.empty(),
+                Optional.empty()
         );
     }
 
@@ -355,7 +374,7 @@ class ExpressionCycle20260312Syntax1CompatibilityTest {
         return (Unsafe) field.get(null);
     }
 
-    private record LevelFixture(ServerLevel level, MutableLevelData levelData) {
+    private record LevelFixture(ServerLevel level, MutableLevelData levelData, WeatherData weatherData) {
     }
 
     private record TestQuitHandle(String reason) {

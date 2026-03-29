@@ -58,7 +58,7 @@ public class ExprVelocity extends SimplePropertyExpression<Object, Vec3> {
                     default -> current;
                 };
                 entity.setDeltaMovement(next);
-                entity.hasImpulse = true;
+                entity.hurtMarked = true;
             } else if (object instanceof DirectionalEffect particleEffect) {
                 Vec3 current = particleEffect.velocity();
                 Vec3 next = switch (mode) {

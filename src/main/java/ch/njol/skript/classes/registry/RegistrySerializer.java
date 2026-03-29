@@ -2,7 +2,7 @@ package ch.njol.skript.classes.registry;
 
 import java.io.StreamCorruptedException;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +19,7 @@ public class RegistrySerializer<R> {
     }
 
     public @NotNull String serialize(R object) throws StreamCorruptedException {
-        ResourceLocation key = registry.getKey(object);
+        Identifier key = registry.getKey(object);
         if (key == null) {
             throw new StreamCorruptedException("Unregistered object: " + object);
         }
@@ -30,14 +30,14 @@ public class RegistrySerializer<R> {
         if (name == null || name.isBlank()) {
             return null;
         }
-        ResourceLocation id;
+        Identifier id;
         try {
-            id = name.contains(":") ? ResourceLocation.parse(name) : ResourceLocation.withDefaultNamespace(name);
+            id = name.contains(":") ? Identifier.parse(name) : Identifier.withDefaultNamespace(name);
         } catch (RuntimeException ex) {
             return null;
         }
         R value = registry.getValue(id);
-        ResourceLocation actual = value == null ? null : registry.getKey(value);
+        Identifier actual = value == null ? null : registry.getKey(value);
         return id.equals(actual) ? value : null;
     }
 

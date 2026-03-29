@@ -36,9 +36,9 @@ public class ExprHiddenPlayers extends SimpleExpression<ServerPlayer> {
 		List<ServerPlayer> list = new ArrayList<>();
 		for (ServerPlayer player : viewers.getArray(event)) {
 			Set<UUID> hidden = HiddenPlayerSupport.getHidden(player);
-			if (player.getServer() != null) {
+			if (player.level().getServer() != null) {
 				for (UUID uuid : hidden) {
-					ServerPlayer target = player.getServer().getPlayerList().getPlayer(uuid);
+					ServerPlayer target = player.level().getServer().getPlayerList().getPlayer(uuid);
 					if (target != null) {
 						list.add(target);
 					}

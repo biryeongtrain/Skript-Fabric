@@ -27,7 +27,7 @@ public final class ExprDisplayTransformationRotation extends AbstractDisplayExpr
     @Override
     protected @Nullable Quaternionf convert(Display display) {
         Transformation transformation = PrivateEntityAccess.displayTransformation(display);
-        return new Quaternionf(left ? transformation.getLeftRotation() : transformation.getRightRotation());
+        return new Quaternionf().set(left ? transformation.leftRotation() : transformation.rightRotation());
     }
 
     @Override
@@ -60,10 +60,10 @@ public final class ExprDisplayTransformationRotation extends AbstractDisplayExpr
                 continue;
             }
             Transformation transformation = PrivateEntityAccess.displayTransformation(display);
-            Vector3f translation = new Vector3f(transformation.getTranslation());
-            Vector3f scale = new Vector3f(transformation.getScale());
-            Quaternionf leftRotation = left ? new Quaternionf(quaternion) : new Quaternionf(transformation.getLeftRotation());
-            Quaternionf rightRotation = left ? new Quaternionf(transformation.getRightRotation()) : new Quaternionf(quaternion);
+            Vector3f translation = new Vector3f(transformation.translation());
+            Vector3f scale = new Vector3f(transformation.scale());
+            Quaternionf leftRotation = left ? new Quaternionf(quaternion) : new Quaternionf().set(transformation.leftRotation());
+            Quaternionf rightRotation = left ? new Quaternionf().set(transformation.rightRotation()) : new Quaternionf(quaternion);
             PrivateEntityAccess.setDisplayTransformation(
                     display,
                     new Transformation(translation, leftRotation, scale, rightRotation)

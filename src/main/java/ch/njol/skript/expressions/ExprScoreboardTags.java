@@ -45,7 +45,7 @@ public class ExprScoreboardTags extends SimpleExpression<String> {
     protected String @Nullable [] get(SkriptEvent event) {
         List<String> values = new ArrayList<>();
         for (Entity entity : entities.getArray(event)) {
-            values.addAll(entity.getTags());
+            values.addAll(entity.entityTags());
         }
         return values.toArray(String[]::new);
     }
@@ -77,7 +77,7 @@ public class ExprScoreboardTags extends SimpleExpression<String> {
     }
 
     private static void clearTags(Entity entity) {
-        Set<String> existing = Set.copyOf(entity.getTags());
+        Set<String> existing = Set.copyOf(entity.entityTags());
         for (String tag : existing) {
             entity.removeTag(tag);
         }

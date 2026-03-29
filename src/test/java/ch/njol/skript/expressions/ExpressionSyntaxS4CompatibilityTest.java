@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,13 +21,11 @@ import ch.njol.util.Kleenean;
 import com.google.common.collect.ImmutableList;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Pig;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -42,8 +41,7 @@ final class ExpressionSyntaxS4CompatibilityTest {
 
     @BeforeAll
     static void bootstrapSyntax() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         EntityData.register();
         ensureSyntax();
     }
@@ -169,9 +167,30 @@ final class ExpressionSyntaxS4CompatibilityTest {
     @SuppressWarnings("unchecked")
     private static <T extends Entity> T allocateEntity(Class<T> type) {
         try {
-            return (T) unsafe().allocateInstance(type);
-        } catch (InstantiationException exception) {
+            T entity = (T) unsafe().allocateInstance(type);
+            setEntityType(entity, type);
+            return entity;
+        } catch (Exception exception) {
             throw new IllegalStateException(exception);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setEntityType(Entity entity, Class<?> entityClass) throws Exception {
+        net.minecraft.world.entity.EntityType<?> entityType = null;
+        if (entityClass == Zombie.class) {
+            entityType = net.minecraft.world.entity.EntityType.ZOMBIE;
+        } else if (entityClass == Pig.class) {
+            entityType = net.minecraft.world.entity.EntityType.PIG;
+        }
+        if (entityType != null) {
+            for (Field field : Entity.class.getDeclaredFields()) {
+                if (!Modifier.isStatic(field.getModifiers()) && field.getType() == net.minecraft.world.entity.EntityType.class) {
+                    field.setAccessible(true);
+                    field.set(entity, entityType);
+                    return;
+                }
+            }
         }
     }
 

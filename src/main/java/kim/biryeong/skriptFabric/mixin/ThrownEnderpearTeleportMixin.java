@@ -1,7 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
 import ch.njol.skript.events.TeleportCause;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.phys.HitResult;
 import org.skriptlang.skript.fabric.runtime.TeleportCauseCapture;
 import org.spongepowered.asm.mixin.Mixin;

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.MinecraftRegistryLookup;
@@ -89,9 +89,9 @@ public final class EvtBucketCatch extends SimpleEvent {
         return MinecraftRegistryLookup.lookup(raw, EvtBucketCatch::entityTypeFromId);
     }
 
-    private static @Nullable EntityType<?> entityTypeFromId(ResourceLocation id) {
+    private static @Nullable EntityType<?> entityTypeFromId(Identifier id) {
         EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.getValue(id);
-        ResourceLocation key = entityType == null ? null : BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+        Identifier key = entityType == null ? null : BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
         return id.equals(key) ? entityType : null;
     }
 }

@@ -70,7 +70,7 @@ abstract class AbstractFurnaceBlockEntityMixin {
             method = "serverTick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;burn(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/world/item/crafting/SingleRecipeInput;Lnet/minecraft/core/NonNullList;I)Z"
+                    target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;burn(Lnet/minecraft/core/NonNullList;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)V"
             )
     )
     private static void skript$captureSmeltSnapshot(
@@ -92,7 +92,7 @@ abstract class AbstractFurnaceBlockEntityMixin {
             method = "serverTick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;burn(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/world/item/crafting/SingleRecipeInput;Lnet/minecraft/core/NonNullList;I)Z",
+                    target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;burn(Lnet/minecraft/core/NonNullList;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)V",
                     shift = At.Shift.AFTER
             ),
             locals = LocalCapture.CAPTURE_FAILHARD
@@ -103,15 +103,17 @@ abstract class AbstractFurnaceBlockEntityMixin {
             BlockState state,
             AbstractFurnaceBlockEntity furnace,
             CallbackInfo callbackInfo,
-            boolean wasLit,
             boolean changed,
+            boolean isLit,
+            boolean wasLit,
             ItemStack fuel,
             ItemStack source,
             boolean hasSource,
             boolean hasFuel,
-            net.minecraft.world.item.crafting.RecipeHolder<?> recipe,
             net.minecraft.world.item.crafting.SingleRecipeInput input,
-            int maxStackSize
+            net.minecraft.world.item.crafting.RecipeHolder<?> recipe,
+            int maxStackSize,
+            ItemStack recipeResult
     ) {
         Deque<SmeltSnapshot> snapshots = SKRIPT$SMELT_SNAPSHOTS.get();
         SmeltSnapshot snapshot = snapshots.poll();
@@ -127,19 +129,14 @@ abstract class AbstractFurnaceBlockEntityMixin {
             return;
         }
 
-        net.minecraft.world.item.crafting.AbstractCookingRecipe cookingRecipe =
-                (net.minecraft.world.item.crafting.AbstractCookingRecipe) recipe.value();
-        ItemStack recipeResult = cookingRecipe.assemble(input, level.registryAccess());
-        if (recipeResult.isEmpty()) {
-            recipeResult = currentResult.copy();
-        }
+        ItemStack effectiveResult = recipeResult.isEmpty() ? currentResult.copy() : recipeResult;
         SkriptFabricEventBridge.dispatchFurnaceSmelt(
                 level,
                 snapshot.position(),
                 furnace,
                 snapshot.source(),
                 snapshot.fuel(),
-                recipeResult
+                effectiveResult
         );
     }
 

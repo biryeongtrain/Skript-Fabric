@@ -106,9 +106,9 @@ public final class EffBan extends Effect {
 
             if (value instanceof ServerPlayer player) {
                 if (ban) {
-                    playerList.getBans().add(new UserBanListEntry(player.getGameProfile(), null, "Skript ban effect", expiry, reason));
+                    playerList.getBans().add(new UserBanListEntry(new net.minecraft.server.players.NameAndId(player.getGameProfile()), null, "Skript ban effect", expiry, reason));
                 } else {
-                    playerList.getBans().remove(player.getGameProfile());
+                    playerList.getBans().remove(new net.minecraft.server.players.NameAndId(player.getGameProfile()));
                 }
                 if (kick) {
                     player.connection.disconnect(EffectRuntimeSupport.componentOf(reason, event));
@@ -118,9 +118,9 @@ public final class EffBan extends Effect {
 
             if (value instanceof GameProfile profile) {
                 if (ban) {
-                    playerList.getBans().add(new UserBanListEntry(profile, null, "Skript ban effect", expiry, reason));
+                    playerList.getBans().add(new UserBanListEntry(new net.minecraft.server.players.NameAndId(profile), null, "Skript ban effect", expiry, reason));
                 } else {
-                    playerList.getBans().remove(profile);
+                    playerList.getBans().remove(new net.minecraft.server.players.NameAndId(profile));
                 }
                 continue;
             }
@@ -128,10 +128,10 @@ public final class EffBan extends Effect {
             if (value instanceof String string) {
                 if (ban) {
                     playerList.getIpBans().add(new IpBanListEntry(string, null, "Skript ban effect", expiry, reason));
-                    playerList.getBans().add(new UserBanListEntry(new GameProfile(null, string), null, "Skript ban effect", expiry, reason));
+                    playerList.getBans().add(new UserBanListEntry(net.minecraft.server.players.NameAndId.createOffline(string), null, "Skript ban effect", expiry, reason));
                 } else {
                     playerList.getIpBans().remove(string);
-                    playerList.getBans().remove(new GameProfile(null, string));
+                    playerList.getBans().remove(net.minecraft.server.players.NameAndId.createOffline(string));
                 }
             }
         }

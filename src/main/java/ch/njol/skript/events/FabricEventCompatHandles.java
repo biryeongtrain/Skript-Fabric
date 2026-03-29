@@ -311,7 +311,7 @@ public final class FabricEventCompatHandles {
             return null;
         }
         return effect.unwrapKey()
-                .map(key -> key.location().getPath())
+                .map(key -> key.identifier().getPath())
                 .orElseGet(() -> BuiltInRegistries.MOB_EFFECT.getKey(effect.value()).getPath());
     }
 

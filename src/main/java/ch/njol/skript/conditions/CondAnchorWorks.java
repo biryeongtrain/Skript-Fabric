@@ -37,7 +37,8 @@ public class CondAnchorWorks extends Condition {
 
     @Override
     public boolean check(SkriptEvent event) {
-        return worlds.check(event, world -> world.dimensionType().respawnAnchorWorks(), isNegated());
+        return worlds.check(event, world -> world.dimensionType().attributes().applyModifier(
+                net.minecraft.world.attribute.EnvironmentAttributes.RESPAWN_ANCHOR_WORKS, false), isNegated());
     }
 
     @Override

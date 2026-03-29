@@ -52,7 +52,7 @@ public class CondPlayedBefore extends Condition {
     }
 
     private static boolean hasPlayedBefore(Path playerData, GameProfile profile) {
-        return profile.getId() != null && Files.exists(playerData.resolve(profile.getId() + ".dat"));
+        return profile.id() != null && Files.exists(playerData.resolve(profile.id() + ".dat"));
     }
 
     @Override

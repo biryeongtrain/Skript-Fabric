@@ -53,7 +53,8 @@ public final class ExprWithFireResistance extends PropertyExpression<FabricItemT
             if (without) {
                 stack.remove(DataComponents.DAMAGE_RESISTANT);
             } else {
-                stack.set(DataComponents.DAMAGE_RESISTANT, new DamageResistant(DamageTypeTags.IS_FIRE));
+                stack.set(DataComponents.DAMAGE_RESISTANT, new DamageResistant(
+                        net.minecraft.core.HolderSet.emptyNamed(new net.minecraft.core.HolderOwner<net.minecraft.world.damagesource.DamageType>() {}, DamageTypeTags.IS_FIRE)));
             }
             return new FabricItemType(stack);
         });

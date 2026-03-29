@@ -1,5 +1,6 @@
 package org.skriptlang.skript.fabric.runtime;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.njol.skript.Skript;
@@ -14,9 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -30,8 +29,7 @@ final class WorldLifecycleRuntimeTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         Skript.registerEffect(RecordWorldLifecycleEffect.class, "record world lifecycle");
     }
@@ -60,8 +58,8 @@ final class WorldLifecycleRuntimeTest {
 
         ServerLevel level = allocate(ServerLevel.class);
 
-        ServerWorldEvents.LOAD.invoker().onWorldLoad(null, level);
-        ServerWorldEvents.UNLOAD.invoker().onWorldUnload(null, level);
+        ServerLevelEvents.LOAD.invoker().onLevelLoad(null, level);
+        ServerLevelEvents.UNLOAD.invoker().onLevelUnload(null, level);
 
         assertEquals(List.of("LOAD", "UNLOAD"), EVENTS);
     }

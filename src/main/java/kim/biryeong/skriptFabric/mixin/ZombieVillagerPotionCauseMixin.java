@@ -1,7 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
 import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCauseContext;
 import org.spongepowered.asm.mixin.Mixin;

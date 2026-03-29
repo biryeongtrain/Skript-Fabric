@@ -44,7 +44,9 @@ public class EffRespawn extends Effect {
     @Override
     protected void execute(SkriptEvent event) {
         for (ServerPlayer player : players.getArray(event)) {
-            player.respawn();
+            if (player.level().getServer() != null) {
+                player.level().getServer().getPlayerList().respawn(player, false, net.minecraft.world.entity.Entity.RemovalReason.KILLED);
+            }
         }
     }
 

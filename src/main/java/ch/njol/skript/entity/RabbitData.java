@@ -1,8 +1,10 @@
 package ch.njol.skript.entity;
 
-public final class RabbitData extends ExactEntityData<net.minecraft.world.entity.animal.Rabbit> {
+import net.minecraft.world.entity.animal.rabbit.Rabbit;
+
+public final class RabbitData extends ExactEntityData<Rabbit> {
 
     public RabbitData() {
-        super("rabbit", net.minecraft.world.entity.animal.Rabbit.class, "rabbit");
+        super("rabbit", Rabbit.class, "rabbit");
     }
 }

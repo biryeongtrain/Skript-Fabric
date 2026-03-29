@@ -131,19 +131,29 @@ public class ExprWeather extends PropertyExpression<ServerLevel, ExprWeather.Wea
         }
 
         void apply(ServerLevel world) {
+            net.minecraft.world.level.saveddata.WeatherData weatherData = world.getWeatherData();
             switch (this) {
                 case CLEAR -> {
-                    world.setWeatherParameters(WEATHER_DURATION, 0, false, false);
+                    weatherData.setClearWeatherTime(WEATHER_DURATION);
+                    weatherData.setRainTime(0);
+                    weatherData.setRaining(false);
+                    weatherData.setThundering(false);
                     world.setRainLevel(0.0F);
                     world.setThunderLevel(0.0F);
                 }
                 case RAIN -> {
-                    world.setWeatherParameters(0, WEATHER_DURATION, true, false);
+                    weatherData.setClearWeatherTime(0);
+                    weatherData.setRainTime(WEATHER_DURATION);
+                    weatherData.setRaining(true);
+                    weatherData.setThundering(false);
                     world.setRainLevel(1.0F);
                     world.setThunderLevel(0.0F);
                 }
                 case THUNDER -> {
-                    world.setWeatherParameters(0, WEATHER_DURATION, true, true);
+                    weatherData.setClearWeatherTime(0);
+                    weatherData.setRainTime(WEATHER_DURATION);
+                    weatherData.setRaining(true);
+                    weatherData.setThundering(true);
                     world.setRainLevel(1.0F);
                     world.setThunderLevel(1.0F);
                 }

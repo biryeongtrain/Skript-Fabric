@@ -71,7 +71,7 @@ public class ExprPassenger extends PropertyExpression<Entity, Entity> {
                 continue;
             }
             passenger.stopRiding();
-            passenger.startRiding(vehicle, true);
+            passenger.startRiding(vehicle);
         }
     }
 

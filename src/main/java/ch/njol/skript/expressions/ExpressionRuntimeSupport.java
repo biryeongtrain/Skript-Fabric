@@ -28,8 +28,8 @@ final class ExpressionRuntimeSupport {
         if (event.server() != null) {
             return event.server();
         }
-        if (event.player() != null && event.player().getServer() != null) {
-            return event.player().getServer();
+        if (event.player() != null && event.player().level().getServer() != null) {
+            return event.player().level().getServer();
         }
         if (event.level() != null) {
             return event.level().getServer();
@@ -39,10 +39,10 @@ final class ExpressionRuntimeSupport {
 
     static @Nullable Path playerDataFile(@Nullable SkriptEvent event, GameProfile profile) {
         MinecraftServer server = resolveServer(event);
-        if (server == null || profile.getId() == null) {
+        if (server == null || profile.id() == null) {
             return null;
         }
-        return server.getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(profile.getId() + ".dat");
+        return server.getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(profile.id() + ".dat");
     }
 
     static int onlinePlayerCount(MinecraftServer server) {
@@ -100,12 +100,12 @@ final class ExpressionRuntimeSupport {
 
     static void addWhitelist(MinecraftServer server, GameProfile profile) {
         UserWhiteList whitelist = server.getPlayerList().getWhiteList();
-        whitelist.add(new UserWhiteListEntry(profile));
+        whitelist.add(new UserWhiteListEntry(new net.minecraft.server.players.NameAndId(profile)));
         reloadWhitelist(server);
     }
 
     static void removeWhitelist(MinecraftServer server, GameProfile profile) {
-        server.getPlayerList().getWhiteList().remove(profile);
+        server.getPlayerList().getWhiteList().remove(new net.minecraft.server.players.NameAndId(profile));
         reloadWhitelist(server);
     }
 
@@ -120,7 +120,7 @@ final class ExpressionRuntimeSupport {
     }
 
     static void setWhitelistEnabled(MinecraftServer server, boolean enabled) {
-        server.getPlayerList().setUsingWhiteList(enabled);
+        invokeBooleanSetter(server.getPlayerList(), enabled, "setUsingWhiteList", "setUsingWhitelist");
     }
 
     static void kickUnlistedPlayers(MinecraftServer server) {
@@ -154,7 +154,7 @@ final class ExpressionRuntimeSupport {
 
     static int playerSimulationDistance(ServerPlayer player) {
         Integer value = invokeInt(player, "getSimulationDistance", "requestedSimulationDistance");
-        return value == null ? player.getServer().getPlayerList().getSimulationDistance() : value;
+        return value == null ? player.level().getServer().getPlayerList().getSimulationDistance() : value;
     }
 
     static boolean setPlayerSimulationDistance(ServerPlayer player, int value) {
@@ -181,6 +181,8 @@ final class ExpressionRuntimeSupport {
                     : invokeNoArg(entry, "getKey", "getUser");
             if (key instanceof GameProfile profile) {
                 profiles.add(profile);
+            } else if (key instanceof net.minecraft.server.players.NameAndId nameAndId) {
+                profiles.add(new GameProfile(nameAndId.id(), nameAndId.name()));
             }
         }
         return profiles.toArray(GameProfile[]::new);

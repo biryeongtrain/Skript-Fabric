@@ -6,7 +6,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.expressions.base.SimplePropertyExpression;
-import net.minecraft.world.entity.vehicle.MinecartCommandBlock;
+import net.minecraft.world.entity.vehicle.minecart.MinecartCommandBlock;
 import net.minecraft.world.level.BaseCommandBlock;
 import net.minecraft.world.level.block.CommandBlock;
 import net.minecraft.world.level.block.entity.CommandBlockEntity;

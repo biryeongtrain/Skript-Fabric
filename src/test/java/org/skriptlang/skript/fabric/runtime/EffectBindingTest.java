@@ -8,10 +8,9 @@ import ch.njol.skript.effects.Delay;
 import ch.njol.skript.effects.EffDoIf;
 import ch.njol.skript.effects.EffEquip;
 import ch.njol.skript.effects.EffHealth;
+import ch.njol.skript.test.TestBootstrap;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import org.skriptlang.skript.bukkit.breeding.elements.EffMakeAdultOrBaby;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -40,8 +39,7 @@ final class EffectBindingTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
     }
 
     @AfterEach

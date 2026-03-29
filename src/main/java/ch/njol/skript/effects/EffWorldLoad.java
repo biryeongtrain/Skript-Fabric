@@ -9,7 +9,7 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -93,7 +93,7 @@ public final class EffWorldLoad extends Effect {
         ChunkGenerator generator = server.overworld().getChunkSource().getGenerator();
         config.setGenerator(generator);
 
-        ResourceLocation id = ResourceLocation.tryBuild("skript", worldName.toLowerCase().replaceAll("[^a-z0-9_.-]", "_"));
+        Identifier id = Identifier.tryBuild("skript", worldName.toLowerCase().replaceAll("[^a-z0-9_.-]", "_"));
         if (id == null) {
             Skript.error("Invalid world name: " + worldName);
             return;
@@ -118,13 +118,13 @@ public final class EffWorldLoad extends Effect {
             if (withoutSaving) {
                 // Delete removes the world data
                 fantasy.getOrOpenPersistentWorld(
-                        ResourceLocation.tryBuild("skript", level.dimension().location().getPath()),
+                        Identifier.tryBuild("skript", level.dimension().identifier().getPath()),
                         new RuntimeWorldConfig().setGenerator(level.getChunkSource().getGenerator())
                 ).delete();
             } else {
                 level.save(null, false, false);
                 fantasy.getOrOpenPersistentWorld(
-                        ResourceLocation.tryBuild("skript", level.dimension().location().getPath()),
+                        Identifier.tryBuild("skript", level.dimension().identifier().getPath()),
                         new RuntimeWorldConfig().setGenerator(level.getChunkSource().getGenerator())
                 ).delete();
             }
@@ -138,7 +138,7 @@ public final class EffWorldLoad extends Effect {
             return event.server();
         }
         if (event.player() != null) {
-            return event.player().getServer();
+            return event.player().level().getServer();
         }
         if (event.level() != null) {
             return event.level().getServer();

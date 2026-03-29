@@ -26,7 +26,7 @@ abstract class ChatMessageMixin {
     )
     private void skript$dispatchChat(PlayerChatMessage chatMessage, CallbackInfo ci) {
         Component messageContent = chatMessage.decoratedContent();
-        Set<ServerPlayer> recipients = new LinkedHashSet<>(player.getServer().getPlayerList().getPlayers());
+        Set<ServerPlayer> recipients = new LinkedHashSet<>(player.level().getServer().getPlayerList().getPlayers());
 
         FabricChatHandle handle = SkriptFabricEventBridge.dispatchChat(player, messageContent, recipients);
 
@@ -40,7 +40,7 @@ abstract class ChatMessageMixin {
         // recipient filtering and formatted message dispatch are handled here
         // if the recipients set was modified.
         Set<ServerPlayer> modifiedRecipients = handle.recipients();
-        if (!modifiedRecipients.equals(new LinkedHashSet<>(player.getServer().getPlayerList().getPlayers()))) {
+        if (!modifiedRecipients.equals(new LinkedHashSet<>(player.level().getServer().getPlayerList().getPlayers()))) {
             // Recipients were modified; send to the subset and cancel the default broadcast
             String format = handle.format();
             String formattedMessage = String.format(format, player.getDisplayName().getString(), messageContent.getString());

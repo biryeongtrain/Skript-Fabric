@@ -7,7 +7,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import java.util.Objects;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,7 +49,7 @@ public class ExprBlockSound extends SimpleExpression<String> {
                 .filter(Objects::nonNull)
                 .map(BuiltInRegistries.SOUND_EVENT::getKey)
                 .filter(Objects::nonNull)
-                .map(ResourceLocation::toString)
+                .map(Identifier::toString)
                 .distinct()
                 .toArray(String[]::new);
     }

@@ -8,7 +8,7 @@ import ch.njol.util.Kleenean;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 

@@ -8,7 +8,7 @@ import ch.njol.skript.doc.Since;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.projectile.WitherSkull;
+import net.minecraft.world.entity.projectile.hurtingprojectile.WitherSkull;
 
 @Name("Is Charged")
 @Description("Checks if a creeper, wither, or wither skull is charged (powered).")

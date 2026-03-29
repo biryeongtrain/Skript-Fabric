@@ -1,7 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCause;
 import org.skriptlang.skript.fabric.runtime.FabricPotionEffectCauseContext;
 import org.spongepowered.asm.mixin.Mixin;

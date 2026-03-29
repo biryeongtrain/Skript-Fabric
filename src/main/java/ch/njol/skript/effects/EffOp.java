@@ -47,10 +47,11 @@ public class EffOp extends Effect {
             return;
         }
         for (GameProfile profile : players.getArray(event)) {
+            net.minecraft.server.players.NameAndId nameAndId = new net.minecraft.server.players.NameAndId(profile);
             if (op) {
-                event.server().getPlayerList().op(profile);
+                event.server().getPlayerList().op(nameAndId);
             } else {
-                event.server().getPlayerList().deop(profile);
+                event.server().getPlayerList().deop(nameAndId);
             }
         }
     }

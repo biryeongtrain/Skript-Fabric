@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 abstract class EntityRidingMixin {
 
-    @Inject(method = "startRiding(Lnet/minecraft/world/entity/Entity;Z)Z", at = @At("RETURN"))
-    private void skript$dispatchMount(Entity vehicle, boolean force, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z", at = @At("RETURN"))
+    private void skript$dispatchMount(Entity vehicle, boolean force, boolean suppressEvents, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValue()) return;
         Entity rider = (Entity) (Object) this;
         if (rider.level() instanceof ServerLevel level) {

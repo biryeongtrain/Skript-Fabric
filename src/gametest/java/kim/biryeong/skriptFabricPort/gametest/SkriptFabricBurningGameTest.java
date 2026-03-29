@@ -6,7 +6,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.phys.EntityHitResult;
 import org.skriptlang.skript.fabric.runtime.FabricUseEntityHandle;
 import org.skriptlang.skript.lang.event.SkriptEvent;

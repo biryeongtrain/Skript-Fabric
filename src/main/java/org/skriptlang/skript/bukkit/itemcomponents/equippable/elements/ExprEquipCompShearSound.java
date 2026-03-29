@@ -36,7 +36,7 @@ public final class ExprEquipCompShearSound extends SimpleExpression<String> {
                 .map(Holder::unwrapKey)
                 .filter(java.util.Optional::isPresent)
                 .map(java.util.Optional::get)
-                .map(key -> MinecraftResourceParser.display(key.location()))
+                .map(key -> MinecraftResourceParser.display(key.identifier()))
                 .toArray(String[]::new);
     }
 

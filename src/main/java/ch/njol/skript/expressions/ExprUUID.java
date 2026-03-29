@@ -25,13 +25,13 @@ public class ExprUUID extends SimplePropertyExpression<Object, UUID> {
     @Override
     public @Nullable UUID convert(Object object) {
         if (object instanceof GameProfile profile) {
-            return profile.getId();
+            return profile.id();
         }
         if (object instanceof Entity entity) {
             return entity.getUUID();
         }
         if (object instanceof ServerLevel world) {
-            return UUID.nameUUIDFromBytes(world.dimension().location().toString().getBytes(StandardCharsets.UTF_8));
+            return UUID.nameUUIDFromBytes(world.dimension().identifier().toString().getBytes(StandardCharsets.UTF_8));
         }
         return null;
     }

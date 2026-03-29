@@ -13,7 +13,8 @@ public enum MoonPhase {
     WAXING_GIBBOUS;
 
     public static MoonPhase of(ServerLevel level) {
-        int phase = level.getMoonPhase();
-        return values()[Math.floorMod(phase, values().length)];
+        long time = level.getDefaultClockTime();
+        int phase = (int) (time / 24000L % 8L + 8L) % 8;
+        return values()[phase];
     }
 }

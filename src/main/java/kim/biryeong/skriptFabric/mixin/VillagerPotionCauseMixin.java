@@ -1,7 +1,7 @@
 package kim.biryeong.skriptFabric.mixin;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,7 +26,7 @@ abstract class VillagerPotionCauseMixin {
             method = "customServerAiStep",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/npc/Villager;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z",
+                    target = "Lnet/minecraft/world/entity/npc/villager/Villager;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z",
                     shift = At.Shift.BEFORE
             )
     )
@@ -40,7 +40,7 @@ abstract class VillagerPotionCauseMixin {
             method = "customServerAiStep",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/npc/Villager;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z",
+                    target = "Lnet/minecraft/world/entity/npc/villager/Villager;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z",
                     shift = At.Shift.AFTER
             )
     )

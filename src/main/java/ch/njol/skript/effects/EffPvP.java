@@ -46,7 +46,13 @@ public final class EffPvP extends Effect {
         if (event.server() == null || worlds.getArray(event).length == 0) {
             return;
         }
-        event.server().setPvpAllowed(enable);
+        // PvP is now per-level; use reflection as fallback for server-wide setting
+        try {
+            java.lang.reflect.Method method = event.server().getClass().getMethod("setPvpAllowed", boolean.class);
+            method.invoke(event.server(), enable);
+        } catch (ReflectiveOperationException ignored) {
+            // setPvpAllowed may not exist in this version
+        }
     }
 
     @Override

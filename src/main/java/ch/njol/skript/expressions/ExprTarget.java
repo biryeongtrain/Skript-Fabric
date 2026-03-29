@@ -60,7 +60,7 @@ public class ExprTarget extends PropertyExpression<LivingEntity, Entity> {
             if (!(entity instanceof Mob mob)) {
                 return null;
             }
-            LivingEntity target = mob.getTarget();
+            LivingEntity target = mob.getTargetUnchecked();
             if (target == null || type != null && !type.isInstance(target)) {
                 return null;
             }

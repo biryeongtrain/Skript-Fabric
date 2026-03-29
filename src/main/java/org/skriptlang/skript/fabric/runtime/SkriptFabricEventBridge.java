@@ -14,6 +14,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -24,13 +26,13 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -49,7 +51,6 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
-import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
@@ -122,10 +123,10 @@ public final class SkriptFabricEventBridge {
             ServerLivingEntityEvents.ALLOW_DAMAGE.register(SkriptFabricEventBridge::dispatchDamage);
             ServerLivingEntityEvents.AFTER_DEATH.register(SkriptFabricEventBridge::dispatchDeath);
             ServerLivingEntityEvents.MOB_CONVERSION.register(SkriptFabricEventBridge::dispatchEntityTransform);
-            ServerWorldEvents.LOAD.register(SkriptFabricEventBridge::dispatchWorldLoad);
-            ServerWorldEvents.UNLOAD.register(SkriptFabricEventBridge::dispatchWorldUnload);
-            ServerChunkEvents.CHUNK_LOAD.register((level, chunk) -> dispatchChunkLoad(level, chunk));
-            ServerChunkEvents.CHUNK_UNLOAD.register((level, chunk) -> dispatchChunkUnload(level, chunk));
+            ServerLevelEvents.LOAD.register(SkriptFabricEventBridge::dispatchWorldLoad);
+            ServerLevelEvents.UNLOAD.register(SkriptFabricEventBridge::dispatchWorldUnload);
+            ServerChunkEvents.CHUNK_LOAD.register((level, chunk, generated) -> dispatchChunkLoad(level, chunk));
+            ServerChunkEvents.CHUNK_UNLOAD.register(SkriptFabricEventBridge::dispatchChunkUnload);
             ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> dispatchQuit(handler.getPlayer()));
             registered = true;
         }
@@ -140,14 +141,14 @@ public final class SkriptFabricEventBridge {
                 null
         ));
         SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                new FabricScheduledTickHandle(null, server.overworld().getGameTime(), server.overworld().getDayTime()),
+                new FabricScheduledTickHandle(null, server.overworld().getGameTime(), server.overworld().getGameTime()),
                 server,
                 null,
                 null
         ));
         for (ServerLevel level : server.getAllLevels()) {
             SkriptRuntime.instance().dispatch(new org.skriptlang.skript.lang.event.SkriptEvent(
-                    new FabricScheduledTickHandle(level, level.getGameTime(), level.getDayTime()),
+                    new FabricScheduledTickHandle(level, level.getGameTime(), level.getGameTime()),
                     server,
                     level,
                     null
@@ -1393,7 +1394,7 @@ public final class SkriptFabricEventBridge {
             Object rawPos = invokeNoArg(respawnData, "pos");
             if (rawDimension instanceof ResourceKey<?> dimensionKey && rawPos instanceof BlockPos blockPos) {
                 @SuppressWarnings("unchecked")
-                ServerLevel respawnLevel = player.getServer().getLevel((ResourceKey<Level>) dimensionKey);
+                ServerLevel respawnLevel = player.level().getServer().getLevel((ResourceKey<Level>) dimensionKey);
                 if (respawnLevel != null) {
                     BlockState blockState = respawnLevel.getBlockState(blockPos);
                     anchorSpawn = blockState.is(Blocks.RESPAWN_ANCHOR);
@@ -1472,7 +1473,7 @@ public final class SkriptFabricEventBridge {
     }
 
     public static boolean isFirstJoin(Path playerDataDirectory, GameProfile profile) {
-        return profile.getId() != null && !Files.exists(playerDataDirectory.resolve(profile.getId() + ".dat"));
+        return profile.id() != null && !Files.exists(playerDataDirectory.resolve(profile.id() + ".dat"));
     }
 
     public static void dispatchArmorChange(ServerPlayer player, FabricEventCompatHandles.ArmorSlot slot) {
@@ -2038,10 +2039,10 @@ public final class SkriptFabricEventBridge {
         }
 
         private static MutableEggThrowHandle create(ThrownEgg egg) {
-            boolean hatching = egg.level().random.nextInt(8) == 0;
+            boolean hatching = egg.level().getRandom().nextInt(8) == 0;
             byte hatches = 0;
             if (hatching) {
-                hatches = (byte) (egg.level().random.nextInt(32) == 0 ? 4 : 1);
+                hatches = (byte) (egg.level().getRandom().nextInt(32) == 0 ? 4 : 1);
             }
             return new MutableEggThrowHandle(egg, hatching, hatches, EntityType.CHICKEN);
         }

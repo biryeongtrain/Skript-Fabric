@@ -1,8 +1,10 @@
 package ch.njol.skript.entity;
 
-public final class ThrownPotionData extends ClassEntityData<net.minecraft.world.entity.projectile.AbstractThrownPotion> {
+import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion;
+
+public final class ThrownPotionData extends ClassEntityData<AbstractThrownPotion> {
 
     public ThrownPotionData() {
-        super("thrown potion", net.minecraft.world.entity.projectile.AbstractThrownPotion.class);
+        super("thrown potion", AbstractThrownPotion.class);
     }
 }

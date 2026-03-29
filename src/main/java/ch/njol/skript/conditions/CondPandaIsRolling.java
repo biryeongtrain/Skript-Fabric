@@ -6,7 +6,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Panda;
+import net.minecraft.world.entity.animal.panda.Panda;
 
 @Name("Panda Is Rolling")
 @Description("Whether a panda is rolling.")

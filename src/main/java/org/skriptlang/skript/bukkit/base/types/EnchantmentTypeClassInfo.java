@@ -60,7 +60,7 @@ public final class EnchantmentTypeClassInfo {
 			@Override
 			public String toString(EnchantmentType type, int flags) {
 				String name = type.enchantment().unwrapKey()
-						.map(key -> key.location().getPath())
+						.map(key -> (String) key.identifier().getPath())
 						.orElse("unknown");
 				return name + " " + type.level();
 			}

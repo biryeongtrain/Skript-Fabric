@@ -17,7 +17,7 @@ public class ExprWorldBorderDamageBuffer extends SimplePropertyExpression<WorldB
 
     @Override
     public @Nullable Double convert(WorldBorder worldBorder) {
-        return worldBorder.getDamageSafeZone();
+        return worldBorder.getSafeZone();
     }
 
     @Override
@@ -37,9 +37,9 @@ public class ExprWorldBorderDamageBuffer extends SimplePropertyExpression<WorldB
         }
         for (WorldBorder worldBorder : getExpr().getArray(event)) {
             switch (mode) {
-                case SET, RESET -> worldBorder.setDamageSafeZone(Math.max(input, 0.0D));
-                case ADD -> worldBorder.setDamageSafeZone(Math.max(worldBorder.getDamageSafeZone() + input, 0.0D));
-                case REMOVE -> worldBorder.setDamageSafeZone(Math.max(worldBorder.getDamageSafeZone() - input, 0.0D));
+                case SET, RESET -> worldBorder.setSafeZone(Math.max(input, 0.0D));
+                case ADD -> worldBorder.setSafeZone(Math.max(worldBorder.getSafeZone() + input, 0.0D));
+                case REMOVE -> worldBorder.setSafeZone(Math.max(worldBorder.getSafeZone() - input, 0.0D));
                 default -> {
                 }
             }

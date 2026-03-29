@@ -24,7 +24,7 @@ public class ExprTablistName extends SimplePropertyExpression<ServerPlayer, Stri
     @Override
     public String convert(ServerPlayer player) {
         String custom = TabListExpressionSupport.getDisplayName(player);
-        return custom != null ? custom : player.getGameProfile().getName();
+        return custom != null ? custom : player.getGameProfile().name();
     }
 
     @Override

@@ -20,13 +20,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.Skeleton;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.decoration.ItemFrame;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
@@ -403,7 +403,7 @@ public final class SkriptFabricMixedRuntimeBackfillGameTest extends AbstractSkri
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
 
             helper.assertTrue(
-                    player.interactOn(creeper, InteractionHand.MAIN_HAND).consumesAction(),
+                    player.interactOn(creeper, InteractionHand.MAIN_HAND, creeper.position()).consumesAction(),
                     Component.literal("Expected creeper ignition to succeed through the real interaction path.")
             );
             for (int i = 0; i < 4 && creeper.isAlive(); i++) {

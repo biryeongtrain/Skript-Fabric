@@ -3,7 +3,7 @@ package org.skriptlang.skript.bukkit.loottables;
 import java.util.Objects;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
@@ -16,7 +16,7 @@ public final class LootTable {
         this.key = key;
     }
 
-    public static LootTable fromId(ResourceLocation id) {
+    public static LootTable fromId(Identifier id) {
         return new LootTable(ResourceKey.create(Registries.LOOT_TABLE, id));
     }
 
@@ -24,8 +24,8 @@ public final class LootTable {
         return key;
     }
 
-    public ResourceLocation id() {
-        return key.location();
+    public Identifier id() {
+        return key.identifier();
     }
 
     public @Nullable net.minecraft.world.level.storage.loot.LootTable resolve(@Nullable MinecraftServer server) {

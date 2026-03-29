@@ -37,7 +37,7 @@ public class CondPvP extends Condition {
 
     @Override
     public boolean check(SkriptEvent event) {
-        return worlds.check(event, world -> world.getServer().isPvpAllowed() == enabled, isNegated());
+        return worlds.check(event, world -> world.isPvpAllowed() == enabled, isNegated());
     }
 
     @Override

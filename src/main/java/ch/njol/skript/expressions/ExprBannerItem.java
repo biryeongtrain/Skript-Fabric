@@ -11,7 +11,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import org.skriptlang.skript.fabric.compat.FabricItemType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ public class ExprBannerItem extends SimpleExpression<FabricItemType> {
 		// Build mapping of pattern names to banner pattern items
 		// Known banner pattern items follow the naming convention: <pattern>_banner_pattern
 		for (var entry : BuiltInRegistries.ITEM.entrySet()) {
-			ResourceLocation key = entry.getKey().location();
+			Identifier key = entry.getKey().identifier();
 			String path = key.getPath();
 			if (path.endsWith("_banner_pattern")) {
 				String patternName = path.substring(0, path.length() - "_banner_pattern".length());

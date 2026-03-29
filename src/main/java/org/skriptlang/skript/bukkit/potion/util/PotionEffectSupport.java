@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +30,7 @@ public final class PotionEffectSupport {
             @SuppressWarnings("unchecked") Holder<MobEffect> mobEffectHolder = (Holder<MobEffect>) holder;
             return mobEffectHolder;
         }
-        if (value instanceof ResourceLocation id) {
+        if (value instanceof Identifier id) {
             return holderFromId(id);
         }
         if (value instanceof MobEffect mobEffect) {
@@ -117,7 +117,7 @@ public final class PotionEffectSupport {
     }
 
     public static String effectId(Holder<MobEffect> effect) {
-        ResourceLocation key = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
+        Identifier key = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
         return key != null ? MinecraftResourceParser.display(key) : effect.toString();
     }
 
@@ -128,8 +128,8 @@ public final class PotionEffectSupport {
         if (left == right || left.value() == right.value()) {
             return true;
         }
-        ResourceLocation leftId = BuiltInRegistries.MOB_EFFECT.getKey(left.value());
-        ResourceLocation rightId = BuiltInRegistries.MOB_EFFECT.getKey(right.value());
+        Identifier leftId = BuiltInRegistries.MOB_EFFECT.getKey(left.value());
+        Identifier rightId = BuiltInRegistries.MOB_EFFECT.getKey(right.value());
         return leftId != null && leftId.equals(rightId);
     }
 
@@ -158,7 +158,7 @@ public final class PotionEffectSupport {
             return null;
         }
         if (value instanceof GameProfile profile) {
-            return profile.getName();
+            return profile.name();
         }
         if (value instanceof Enum<?> enumValue) {
             return enumValue.name();
@@ -167,14 +167,14 @@ public final class PotionEffectSupport {
         return rendered == null || rendered.isBlank() ? null : rendered;
     }
 
-    private static @Nullable Holder<MobEffect> holderFromId(ResourceLocation id) {
+    private static @Nullable Holder<MobEffect> holderFromId(Identifier id) {
         MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.getValue(id);
         return mobEffect != null ? BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect) : null;
     }
 
-    private static @Nullable MobEffect effectFromId(ResourceLocation id) {
+    private static @Nullable MobEffect effectFromId(Identifier id) {
         MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.getValue(id);
-        ResourceLocation key = mobEffect == null ? null : BuiltInRegistries.MOB_EFFECT.getKey(mobEffect);
+        Identifier key = mobEffect == null ? null : BuiltInRegistries.MOB_EFFECT.getKey(mobEffect);
         return id.equals(key) ? mobEffect : null;
     }
 }

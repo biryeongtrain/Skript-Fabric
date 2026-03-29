@@ -329,10 +329,10 @@ public class CondCompare extends Condition {
         if (normalized.isEmpty()) {
             return false;
         }
-        if (normalize(profile.getName()).equals(normalized)) {
+        if (normalize(profile.name()).equals(normalized)) {
             return true;
         }
-        return profile.getId() != null && normalize(profile.getId().toString()).equals(normalized);
+        return profile.id() != null && normalize(profile.id().toString()).equals(normalized);
     }
 
     private boolean matchesVectorAlias(Vec3 vector, String value) {
@@ -364,7 +364,7 @@ public class CondCompare extends Condition {
             return null;
         }
         if (value instanceof GameProfile profile) {
-            return profile.getName();
+            return profile.name();
         }
         if (value instanceof Enum<?> enumValue) {
             return enumValue.name();

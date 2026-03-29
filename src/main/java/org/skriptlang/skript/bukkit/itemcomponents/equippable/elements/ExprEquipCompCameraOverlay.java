@@ -5,7 +5,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableSupport;
 import org.skriptlang.skript.bukkit.itemcomponents.equippable.EquippableWrapper;
@@ -57,7 +57,7 @@ public final class ExprEquipCompCameraOverlay extends SimpleExpression<String> {
 
     @Override
     public void change(SkriptEvent event, Object @Nullable [] delta, ChangeMode mode) {
-        ResourceLocation overlay = null;
+        Identifier overlay = null;
         if (mode == ChangeMode.SET && delta != null && delta.length > 0 && delta[0] != null) {
             overlay = MinecraftResourceParser.parse(String.valueOf(delta[0]));
         }

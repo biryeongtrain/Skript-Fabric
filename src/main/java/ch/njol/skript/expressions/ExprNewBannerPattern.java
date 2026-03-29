@@ -13,7 +13,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.entity.BannerPattern;
@@ -65,7 +65,7 @@ public class ExprNewBannerPattern extends SimpleExpression<BannerPatternLayers.L
 	}
 
 	static @Nullable Holder<BannerPattern> resolvePattern(MinecraftServer server, String name) {
-		ResourceLocation location = ResourceLocation.tryParse(name.contains(":") ? name : "minecraft:" + name);
+		Identifier location = Identifier.tryParse(name.contains(":") ? name : "minecraft:" + name);
 		if (location == null)
 			return null;
 		Registry<BannerPattern> registry = server.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN);

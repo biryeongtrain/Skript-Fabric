@@ -69,7 +69,7 @@ public class ExprTimePlayed extends PropertyExpression<GameProfile, Timespan> {
 
     static @Nullable Integer readTicks(SkriptEvent event, GameProfile profile) {
         MinecraftServer server = ExpressionRuntimeSupport.resolveServer(event);
-        if (server == null || profile.getId() == null) {
+        if (server == null || profile.id() == null) {
             return null;
         }
         ServerPlayer player = resolvePlayer(server, profile);
@@ -80,7 +80,7 @@ public class ExprTimePlayed extends PropertyExpression<GameProfile, Timespan> {
         if (!Files.exists(statsFile)) {
             return null;
         }
-        return readTicks(new ServerStatsCounter(server, statsFile.toFile()));
+        return readTicks(new ServerStatsCounter(server, statsFile));
     }
 
     static int readTicks(ServerStatsCounter stats) {
@@ -93,7 +93,7 @@ public class ExprTimePlayed extends PropertyExpression<GameProfile, Timespan> {
 
     private static void writeTicks(SkriptEvent event, GameProfile profile, int ticks) {
         MinecraftServer server = ExpressionRuntimeSupport.resolveServer(event);
-        if (server == null || profile.getId() == null) {
+        if (server == null || profile.id() == null) {
             return;
         }
         ServerPlayer player = resolvePlayer(server, profile);
@@ -101,21 +101,21 @@ public class ExprTimePlayed extends PropertyExpression<GameProfile, Timespan> {
             writeTicks(player.getStats(), player, ticks);
             return;
         }
-        ServerStatsCounter stats = new ServerStatsCounter(server, statsFile(server, profile).toFile());
+        ServerStatsCounter stats = new ServerStatsCounter(server, statsFile(server, profile));
         writeTicks(stats, null, ticks);
         stats.save();
     }
 
     private static @Nullable ServerPlayer resolvePlayer(MinecraftServer server, GameProfile profile) {
-        ServerPlayer player = server.getPlayerList().getPlayer(profile.getId());
-        if (player == null && profile.getName() != null) {
-            player = server.getPlayerList().getPlayerByName(profile.getName());
+        ServerPlayer player = server.getPlayerList().getPlayer(profile.id());
+        if (player == null && profile.name() != null) {
+            player = server.getPlayerList().getPlayerByName(profile.name());
         }
         return player;
     }
 
     private static Path statsFile(MinecraftServer server, GameProfile profile) {
-        return server.getWorldPath(LevelResource.PLAYER_STATS_DIR).resolve(profile.getId() + ".json");
+        return server.getWorldPath(LevelResource.PLAYER_STATS_DIR).resolve(profile.id() + ".json");
     }
 
     @Override

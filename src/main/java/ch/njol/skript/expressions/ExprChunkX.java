@@ -11,7 +11,7 @@ public class ExprChunkX extends SimplePropertyExpression<LevelChunk, Number> {
 
     @Override
     public Number convert(LevelChunk chunk) {
-        return chunk.getPos().x;
+        return chunk.getPos().x();
     }
 
     @Override

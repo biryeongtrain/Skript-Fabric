@@ -78,7 +78,7 @@ public class EffVehicle extends Effect {
                     continue;
                 }
                 passenger.stopRiding();
-                passenger.startRiding(vehicleEntity, true);
+                passenger.startRiding(vehicleEntity, true, false);
             }
             return;
         }
@@ -89,7 +89,7 @@ public class EffVehicle extends Effect {
                     continue;
                 }
                 passenger.stopRiding();
-                passenger.startRiding(spawned, true);
+                passenger.startRiding(spawned, true, false);
             }
         }
     }

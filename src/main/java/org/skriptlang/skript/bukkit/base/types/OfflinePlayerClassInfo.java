@@ -63,7 +63,7 @@ public final class OfflinePlayerClassInfo {
 
         @Override
         public @Nullable String convert(GameProfile propertyHolder) {
-            return propertyHolder.getName();
+            return propertyHolder.name();
         }
 
         @Override

@@ -24,6 +24,7 @@ abstract class BasePressurePlateBlockMixin {
             BlockPos pos,
             Entity entity,
             InsideBlockEffectApplier effectApplier,
+            boolean moving,
             CallbackInfo callbackInfo
     ) {
         if (!(level instanceof ServerLevel serverLevel)) {

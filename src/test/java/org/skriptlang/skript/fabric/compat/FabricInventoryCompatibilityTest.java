@@ -1,12 +1,11 @@
 package org.skriptlang.skript.fabric.compat;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import eu.pb4.sgui.api.gui.SimpleGui;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
@@ -18,8 +17,7 @@ class FabricInventoryCompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
     }
 
     @Test
@@ -34,11 +32,11 @@ class FabricInventoryCompatibilityTest {
         assertEquals(MenuType.HOPPER, inventory.menuType());
         assertEquals(MenuType.HOPPER, gui.getType());
         assertEquals(5, gui.getVirtualSize());
-        assertNotNull(gui.getSlotRedirect(0));
-        assertNotNull(gui.getSlotRedirect(1));
-        assertNull(gui.getSlotRedirect(2));
-        assertEquals(Items.STICK, gui.getSlotRedirect(0).getItem().getItem());
-        assertEquals(Items.DIRT, gui.getSlotRedirect(1).getItem().getItem());
+        assertNotNull(gui.getCustomSlot(0));
+        assertNotNull(gui.getCustomSlot(1));
+        assertNull(gui.getCustomSlot(2));
+        assertEquals(Items.STICK, gui.getCustomSlot(0).getItem().getItem());
+        assertEquals(Items.DIRT, gui.getCustomSlot(1).getItem().getItem());
     }
 
     @Test

@@ -44,14 +44,14 @@ public class CondHasScoreboardTag extends Condition {
                 entity -> {
                     if (tags.getAnd()) {
                         for (String tag : tagsList) {
-                            if (!entity.getTags().contains(tag)) {
+                            if (!entity.entityTags().contains(tag)) {
                                 return false;
                             }
                         }
                         return true;
                     }
                     for (String tag : tagsList) {
-                        if (entity.getTags().contains(tag)) {
+                        if (entity.entityTags().contains(tag)) {
                             return true;
                         }
                     }

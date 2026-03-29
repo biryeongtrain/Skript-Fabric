@@ -7,7 +7,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.sections.SecCreateGui;
 import ch.njol.util.Kleenean;
 import eu.pb4.sgui.api.elements.GuiElement;
-import eu.pb4.sgui.api.elements.GuiElementInterface;
+import eu.pb4.sgui.api.elements.SimpleGuiElement;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -69,7 +69,7 @@ public class EffFormatGuiSlot extends Effect {
         }
 
         if (slot >= 0 && slot < gui.getVirtualSize()) {
-            gui.setSlot(slot, new GuiElement(stack, GuiElementInterface.EMPTY_CALLBACK));
+            gui.setSlot(slot, new SimpleGuiElement(stack, SimpleGuiElement.EMPTY_CALLBACK));
         }
     }
 

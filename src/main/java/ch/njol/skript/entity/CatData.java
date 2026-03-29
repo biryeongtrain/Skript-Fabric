@@ -1,8 +1,10 @@
 package ch.njol.skript.entity;
 
-public final class CatData extends ExactEntityData<net.minecraft.world.entity.animal.Cat> {
+import net.minecraft.world.entity.animal.feline.Cat;
+
+public final class CatData extends ExactEntityData<Cat> {
 
     public CatData() {
-        super("cat", net.minecraft.world.entity.animal.Cat.class, "cat");
+        super("cat", Cat.class, "cat");
     }
 }

@@ -185,7 +185,7 @@ public final class ScriptCommand {
 			return CondPermission.hasPermission(player, permission);
 		}
 		// Console always has permission; non-player non-console falls back to op level 2
-		return source.hasPermission(2);
+		return source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
 	}
 
 	private int executeCommand(CommandContext<CommandSourceStack> context) {

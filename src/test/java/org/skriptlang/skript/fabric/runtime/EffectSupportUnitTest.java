@@ -6,14 +6,13 @@ import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.lang.TriggerSection;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.test.TestBootstrap;
 import ch.njol.util.Kleenean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
@@ -42,8 +41,7 @@ final class EffectSupportUnitTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
     }
 
     @Test
@@ -134,7 +132,7 @@ final class EffectSupportUnitTest {
         LootContextWrapper context = new LootContextWrapper(new FabricLocation(null, Vec3.ZERO));
         boolean initialized = effect.init(
                 new Expression<?>[]{
-                        new ConstantExpression<>(LootTable.class, LootTable.fromId(net.minecraft.resources.ResourceLocation.parse("minecraft:chests/simple_dungeon"))),
+                        new ConstantExpression<>(LootTable.class, LootTable.fromId(net.minecraft.resources.Identifier.parse("minecraft:chests/simple_dungeon"))),
                         new ConstantExpression<>(LootContextWrapper.class, context),
                         new ConstantExpression<>(SimpleContainer.class, chest)
                 },

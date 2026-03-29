@@ -29,11 +29,15 @@ final class CompassTargetExpressionSupport {
     }
 
     static FabricLocation defaultTarget(ServerPlayer player) {
-        return new FabricLocation(player.level(), player.level().getSharedSpawnPos().getCenter());
+        net.minecraft.world.level.storage.LevelData.RespawnData respawnData = player.level().getRespawnData();
+        BlockPos spawnPos = respawnData != null ? respawnData.pos() : BlockPos.ZERO;
+        return new FabricLocation(player.level(), spawnPos.getCenter());
     }
 
     static void sync(ServerPlayer player, FabricLocation target) {
         BlockPos position = BlockPos.containing(target.position());
-        player.connection.send(new ClientboundSetDefaultSpawnPositionPacket(position, player.level().getSharedSpawnAngle()));
+        net.minecraft.world.level.storage.LevelData.RespawnData respawnData =
+                net.minecraft.world.level.storage.LevelData.RespawnData.of(player.level().dimension(), position, 0.0F, 0.0F);
+        player.connection.send(new ClientboundSetDefaultSpawnPositionPacket(respawnData));
     }
 }

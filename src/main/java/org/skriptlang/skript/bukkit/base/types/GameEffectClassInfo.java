@@ -5,7 +5,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import java.util.Locale;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.particles.GameEffect;
 
@@ -42,7 +42,7 @@ public final class GameEffectClassInfo {
 
             // Try registry lookup with normalized name
             String normalized = trimmed.replace(' ', '_');
-            ResourceLocation id = ResourceLocation.tryParse("minecraft:" + normalized);
+            Identifier id = Identifier.tryParse("minecraft:" + normalized);
             if (id != null && BuiltInRegistries.PARTICLE_TYPE.containsKey(id)) {
                 return new GameEffect(id);
             }
@@ -54,13 +54,13 @@ public final class GameEffectClassInfo {
     private static @Nullable GameEffect resolveGameEffect(String name) {
         return switch (name) {
             case "potion break", "potion break effect" ->
-                    new GameEffect(ResourceLocation.withDefaultNamespace("effect"));
+                    new GameEffect(Identifier.withDefaultNamespace("effect"));
             case "bone meal", "bone meal effect" ->
-                    new GameEffect(ResourceLocation.withDefaultNamespace("happy_villager"));
+                    new GameEffect(Identifier.withDefaultNamespace("happy_villager"));
             case "ender signal", "eye of ender signal" ->
-                    new GameEffect(ResourceLocation.withDefaultNamespace("portal"));
+                    new GameEffect(Identifier.withDefaultNamespace("portal"));
             case "mobspawner flames", "mob spawner flames" ->
-                    new GameEffect(ResourceLocation.withDefaultNamespace("flame"));
+                    new GameEffect(Identifier.withDefaultNamespace("flame"));
             default -> null;
         };
     }

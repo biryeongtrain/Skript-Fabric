@@ -83,7 +83,7 @@ public class ExprHoverList extends SimpleExpression<String> {
 				if (delta != null) {
 					for (Object object : delta) {
 						if (object instanceof ServerPlayer player) {
-							sample.add(player.getGameProfile().getName());
+							sample.add(player.getGameProfile().name());
 						} else {
 							sample.add((String) object);
 						}
@@ -94,7 +94,7 @@ public class ExprHoverList extends SimpleExpression<String> {
 				if (delta != null) {
 					for (Object value : delta) {
 						String name = value instanceof ServerPlayer player
-								? player.getGameProfile().getName()
+								? player.getGameProfile().name()
 								: (String) value;
 						sample.remove(name);
 					}

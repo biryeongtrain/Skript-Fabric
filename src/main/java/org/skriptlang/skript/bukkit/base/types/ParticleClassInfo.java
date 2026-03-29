@@ -12,7 +12,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.particles.particleeffects.ParticleEffect;
 
@@ -76,7 +76,7 @@ public final class ParticleClassInfo {
 
         // Try direct particle registry lookup
         String normalized = name.replace(' ', '_');
-        ResourceLocation id = ResourceLocation.tryParse("minecraft:" + normalized);
+        Identifier id = Identifier.tryParse("minecraft:" + normalized);
         if (id != null) {
             ParticleType<?> type = BuiltInRegistries.PARTICLE_TYPE.getValue(id);
             if (type != null && type instanceof ParticleOptions options) {

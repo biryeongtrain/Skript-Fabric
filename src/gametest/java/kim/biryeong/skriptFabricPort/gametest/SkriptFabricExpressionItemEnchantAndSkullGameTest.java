@@ -57,7 +57,7 @@ public final class SkriptFabricExpressionItemEnchantAndSkullGameTest extends Abs
 
             GameProfile startingOwner = new GameProfile(UUID.fromString("00000000-0000-0000-0000-0000000000f5"), "safe5-a");
             ItemStack headStack = new ItemStack(Items.PLAYER_HEAD);
-            headStack.set(DataComponents.PROFILE, new ResolvableProfile(startingOwner));
+            headStack.set(DataComponents.PROFILE, ResolvableProfile.createResolved(startingOwner));
             skullItem = new FabricItemType(headStack);
 
             enchantment = sharpness;
@@ -99,7 +99,7 @@ public final class SkriptFabricExpressionItemEnchantAndSkullGameTest extends Abs
                     skullItem != null
                             && skullItem.toStack().get(DataComponents.PROFILE) != null
                             && nextOwner != null
-                            && nextOwner.equals(skullItem.toStack().get(DataComponents.PROFILE).gameProfile()),
+                            && nextOwner.equals(skullItem.toStack().get(DataComponents.PROFILE).partialProfile()),
                     Component.literal("Expected skull owner mutation to update the underlying player head profile.")
             );
 

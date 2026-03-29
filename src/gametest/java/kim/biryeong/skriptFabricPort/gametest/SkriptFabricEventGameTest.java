@@ -22,7 +22,7 @@ import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -53,34 +53,34 @@ import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Cow;
-import net.minecraft.world.entity.animal.Dolphin;
-import net.minecraft.world.entity.animal.Pig;
-import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.animal.cow.Cow;
+import net.minecraft.world.entity.animal.dolphin.Dolphin;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.fish.Pufferfish;
 import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
-import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.illager.Illusioner;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.monster.piglin.Piglin;
-import net.minecraft.world.entity.monster.Spider;
-import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.monster.warden.Warden;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.FishingHook;
-import net.minecraft.world.entity.projectile.ThrownEgg;
-import net.minecraft.world.entity.projectile.ThrownSplashPotion;
-import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownSplashPotion;
+import net.minecraft.world.entity.vehicle.minecart.MinecartChest;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.inventory.FurnaceResultSlot;
@@ -99,7 +99,8 @@ import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.DispenserBlock;
@@ -209,10 +210,16 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             SkriptRuntime runtime = SkriptRuntime.instance();
             runtime.clearScripts();
             Variables.clearAll();
-            helper.getLevel().setWeatherParameters(0, 0, false, false);
+            {
+                var wd = helper.getLevel().getWeatherData();
+                wd.setClearWeatherTime(0); wd.setRainTime(0); wd.setRaining(false); wd.setThundering(false);
+            }
             runtime.loadFromResource("skript/gametest/event/weather_change_to_rain_sets_variable.sk");
 
-            helper.getLevel().setWeatherParameters(0, 6000, true, false);
+            {
+                var wd = helper.getLevel().getWeatherData();
+                wd.setClearWeatherTime(0); wd.setRainTime(6000); wd.setRaining(true); wd.setThundering(false);
+            }
 
             helper.assertTrue(
                     Boolean.TRUE.equals(Variables.getVariable("gametest::weather_change_to_rain", null, false)),
@@ -256,8 +263,8 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             helper.getLevel().setBlockAndUpdate(loadMarker, Blocks.AIR.defaultBlockState());
             helper.getLevel().setBlockAndUpdate(unloadMarker, Blocks.AIR.defaultBlockState());
 
-            ServerWorldEvents.LOAD.invoker().onWorldLoad(helper.getLevel().getServer(), helper.getLevel());
-            ServerWorldEvents.UNLOAD.invoker().onWorldUnload(helper.getLevel().getServer(), helper.getLevel());
+            ServerLevelEvents.LOAD.invoker().onLevelLoad(helper.getLevel().getServer(), helper.getLevel());
+            ServerLevelEvents.UNLOAD.invoker().onLevelUnload(helper.getLevel().getServer(), helper.getLevel());
 
             helper.assertTrue(
                     helper.getLevel().getBlockState(loadMarker).is(Blocks.EMERALD_BLOCK),
@@ -483,7 +490,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                     player.containerMenu.getStateId(),
                     (short) 0,
                     (byte) 0,
-                    ClickType.PICKUP,
+                    ContainerInput.PICKUP,
                     new Int2ObjectOpenHashMap<>(),
                     HashedStack.EMPTY
             ));
@@ -618,7 +625,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             BlockPos markerAbsolute = helper.absolutePos(targetRelative.above());
             BlockPos targetAbsolute = helper.absolutePos(targetRelative);
 
-            helper.getLevel().getGameRules().getRule(GameRules.RULE_DOFIRETICK).set(true, helper.getLevel().getServer());
+            helper.getLevel().getGameRules().set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128, helper.getLevel().getServer());
             helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(0, 1, 0)), Blocks.NETHERRACK.defaultBlockState());
             helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(1, 1, 0)), Blocks.STONE.defaultBlockState());
             helper.getLevel().setBlockAndUpdate(targetAbsolute, Blocks.OAK_PLANKS.defaultBlockState());
@@ -1083,8 +1090,8 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WHEAT));
 
-            InteractionResult motherResult = mother.interact(player, InteractionHand.MAIN_HAND);
-            InteractionResult fatherResult = father.interact(player, InteractionHand.MAIN_HAND);
+            InteractionResult motherResult = mother.interact(player, InteractionHand.MAIN_HAND, mother.position());
+            InteractionResult fatherResult = father.interact(player, InteractionHand.MAIN_HAND, father.position());
             helper.assertTrue(
                     motherResult.consumesAction() && fatherResult.consumesAction(),
                     Component.literal("Expected feeding wheat to both parents to consume the player action.")
@@ -1232,7 +1239,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             player.teleportTo(markerAbsolute.getX() + 0.5D, markerAbsolute.getY() + 1.0D, markerAbsolute.getZ() + 0.5D);
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WHEAT));
 
-            InteractionResult result = cow.interact(player, InteractionHand.MAIN_HAND);
+            InteractionResult result = cow.interact(player, InteractionHand.MAIN_HAND, cow.position());
 
             helper.assertTrue(
                     result.consumesAction(),
@@ -1276,7 +1283,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
 
             Pufferfish pufferfish = (Pufferfish) helper.spawnWithNoFreeWill(EntityType.PUFFERFISH, 13.5F, 2.0F, 0.5F);
-            InteractionResult result = pufferfish.interact(player, InteractionHand.MAIN_HAND);
+            InteractionResult result = pufferfish.interact(player, InteractionHand.MAIN_HAND, pufferfish.position());
 
             helper.assertTrue(
                     result.consumesAction(),
@@ -1316,7 +1323,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             BlockPos futureMarker = player.blockPosition().below();
 
             Pufferfish pufferfish = (Pufferfish) helper.spawnWithNoFreeWill(EntityType.PUFFERFISH, 13.5F, 2.0F, 1.5F);
-            InteractionResult result = pufferfish.interact(player, InteractionHand.MAIN_HAND);
+            InteractionResult result = pufferfish.interact(player, InteractionHand.MAIN_HAND, pufferfish.position());
 
             helper.assertTrue(
                     result.consumesAction(),
@@ -2628,7 +2635,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
 
             helper.getLevel().getServer()
                     .getCommands()
-                    .performPrefixedCommand(player.createCommandSourceStack().withPermission(4), "effect give @s poison 5 0 true");
+                    .performPrefixedCommand(player.createCommandSourceStack().withPermission(LevelBasedPermissionSet.OWNER), "effect give @s poison 5 0 true");
 
             helper.assertTrue(
                     player.getCustomName() != null && "command".equals(player.getCustomName().getString()),
@@ -2803,7 +2810,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
 
             helper.assertTrue(
-                    player.interactOn(creeper, InteractionHand.MAIN_HAND).consumesAction(),
+                    player.interactOn(creeper, InteractionHand.MAIN_HAND, creeper.position()).consumesAction(),
                     Component.literal("Expected creeper ignition to succeed through the real interaction path.")
             );
             for (int i = 0; i < 4 && creeper.isAlive(); i++) {
@@ -2887,7 +2894,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
                 }
                 runtime.clearScripts();
                 runtime.loadFromResource("skript/gametest/event/explosion_zero_yield_marks_block.sk");
-                helper.getLevel().getGameRules().getRule(GameRules.RULE_TNT_EXPLOSION_DROP_DECAY).set(false, helper.getLevel().getServer());
+                helper.getLevel().getGameRules().set(GameRules.TNT_EXPLOSION_DROP_DECAY, false, helper.getLevel().getServer());
                 helper.getLevel().setBlockAndUpdate(helper.absolutePos(dirtPos), Blocks.DIRT.defaultBlockState());
                 helper.getLevel().setBlockAndUpdate(helper.absolutePos(markerPos), Blocks.AIR.defaultBlockState());
 
@@ -3122,7 +3129,7 @@ public final class SkriptFabricEventGameTest extends AbstractSkriptFabricGameTes
 
             helper.getLevel().getServer()
                     .getCommands()
-                    .performPrefixedCommand(player.createCommandSourceStack().withPermission(4), "effect clear @s");
+                    .performPrefixedCommand(player.createCommandSourceStack().withPermission(LevelBasedPermissionSet.OWNER), "effect clear @s");
 
             helper.assertTrue(
                     player.getCustomName() != null && "command clear".equals(player.getCustomName().getString()),

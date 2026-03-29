@@ -64,7 +64,7 @@ public class ExprItemOwner extends SimplePropertyExpression<ItemEntity, UUID> {
             return uuid;
         }
         if (value instanceof GameProfile profile) {
-            return profile.getId();
+            return profile.id();
         }
         if (value instanceof Entity entity) {
             return entity.getUUID();

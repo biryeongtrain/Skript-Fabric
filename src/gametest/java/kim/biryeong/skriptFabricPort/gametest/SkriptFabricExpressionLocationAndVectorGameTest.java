@@ -101,8 +101,8 @@ public final class SkriptFabricExpressionLocationAndVectorGameTest extends Abstr
                             && state.is(Blocks.GOLD_BLOCK),
                     Component.literal("Expected block data expression to read the event block's gold block state.")
             );
-            assertNumber(helper, "locvec::chunk_x", helper.getLevel().getChunkAt(absolute).getPos().x);
-            assertNumber(helper, "locvec::chunk_z", helper.getLevel().getChunkAt(absolute).getPos().z);
+            assertNumber(helper, "locvec::chunk_x", helper.getLevel().getChunkAt(absolute).getPos().x());
+            assertNumber(helper, "locvec::chunk_z", helper.getLevel().getChunkAt(absolute).getPos().z());
             runtime.clearScripts();
         });
     }
@@ -119,7 +119,7 @@ public final class SkriptFabricExpressionLocationAndVectorGameTest extends Abstr
             helper.getLevel().setBlockAndUpdate(absolute.east(), Blocks.REDSTONE_BLOCK.defaultBlockState());
             helper.getLevel().setBlockAndUpdate(absolute.above(), Blocks.TORCH.defaultBlockState());
 
-            BlockPos originalSpawn = helper.getLevel().getSharedSpawnPos();
+            BlockPos originalSpawn = helper.getLevel().getRespawnData().pos();
             LocationAndVectorHandle handle = new LocationAndVectorHandle(helper.getLevel(), absolute);
 
             executeScript(runtime, helper, handle, "skript/gametest/expression/location-and-vector/difficulty_records_value.sk", "lane A difficulty");
@@ -162,10 +162,10 @@ public final class SkriptFabricExpressionLocationAndVectorGameTest extends Abstr
             );
             BlockPos expectedSpawn = new BlockPos(absolute.getX() + 7, absolute.getY() + 1, absolute.getZ());
             helper.assertTrue(
-                    helper.getLevel().getSharedSpawnPos().equals(expectedSpawn),
+                    helper.getLevel().getRespawnData().pos().equals(expectedSpawn),
                     Component.literal("Expected spawn location expression to update the world spawn.")
             );
-            helper.getLevel().setDefaultSpawnPos(originalSpawn, 0.0F);
+            helper.getLevel().setRespawnData(net.minecraft.world.level.storage.LevelData.RespawnData.of(helper.getLevel().dimension(), originalSpawn, 0.0F, 0.0F));
             runtime.clearScripts();
         });
     }

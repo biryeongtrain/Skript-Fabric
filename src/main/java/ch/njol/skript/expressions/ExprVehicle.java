@@ -40,7 +40,7 @@ public class ExprVehicle extends SimplePropertyExpression<Entity, Entity> {
                 continue;
             }
             passenger.stopRiding();
-            passenger.startRiding(vehicle, true);
+            passenger.startRiding(vehicle);
         }
     }
 

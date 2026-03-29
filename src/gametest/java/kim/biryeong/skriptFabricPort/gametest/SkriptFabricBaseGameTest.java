@@ -55,21 +55,21 @@ import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Cow;
-import net.minecraft.world.entity.animal.Dolphin;
-import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.animal.cow.Cow;
+import net.minecraft.world.entity.animal.dolphin.Dolphin;
+import net.minecraft.world.entity.animal.fish.Pufferfish;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.monster.Illusioner;
-import net.minecraft.world.entity.monster.Spider;
-import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.entity.monster.illager.Illusioner;
+import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.monster.warden.Warden;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Input;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.entity.projectile.FishingHook;
-import net.minecraft.world.entity.projectile.ThrownSplashPotion;
-import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownSplashPotion;
+import net.minecraft.world.entity.vehicle.minecart.MinecartChest;
 import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.inventory.Slot;
@@ -733,7 +733,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
             );
             helper.assertTrue(
                     player.getCustomName() != null
-                            && player.getGameProfile().getName().equals(player.getCustomName().getString()),
+                            && player.getGameProfile().name().equals(player.getCustomName().getString()),
                     Component.literal("Expected %player:name% to resolve through TextPlaceholderAPI for the event-player.")
             );
             runtime.clearScripts();
@@ -1044,7 +1044,7 @@ public final class SkriptFabricBaseGameTest extends AbstractSkriptFabricGameTest
 
         GameProfile offline = Classes.parse("Notch", GameProfile.class, ParseContext.CONFIG);
         helper.assertTrue(
-                offline != null && "Notch".equals(offline.getName()),
+                offline != null && "Notch".equals(offline.name()),
                 Component.literal("Offline player parser should resolve named GameProfiles.")
         );
         if (offline == null) {

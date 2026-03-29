@@ -1,19 +1,19 @@
 package org.skriptlang.skript.bukkit.particles;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.fabric.compat.MinecraftResourceParser;
 
 public final class GameEffect {
 
-    private final ResourceLocation id;
+    private final Identifier id;
     private @Nullable Object data;
 
-    public GameEffect(ResourceLocation id) {
+    public GameEffect(Identifier id) {
         this.id = id;
     }
 
-    public ResourceLocation id() {
+    public Identifier id() {
         return id;
     }
 

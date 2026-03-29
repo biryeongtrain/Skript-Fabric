@@ -128,7 +128,7 @@ public class ExprFromUUID extends SimpleExpression<Object> {
     }
 
     private static UUID worldUuid(ServerLevel level) {
-        return UUID.nameUUIDFromBytes(level.dimension().location().toString().getBytes(StandardCharsets.UTF_8));
+        return UUID.nameUUIDFromBytes(level.dimension().identifier().toString().getBytes(StandardCharsets.UTF_8));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRule;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.event.SkriptEvent;
 
@@ -27,20 +28,20 @@ public class ExprGameRule extends SimpleExpression<GameruleValue> {
         Skript.registerExpression(ExprGameRule.class, GameruleValue.class, "[the] gamerule %gamerule% of %worlds%");
     }
 
-    private Expression<GameRules.Key<?>> gamerule;
+    private Expression<GameRule<Object>> gamerule;
     private Expression<ServerLevel> worlds;
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        gamerule = (Expression<GameRules.Key<?>>) exprs[0];
+        gamerule = (Expression<GameRule<Object>>) exprs[0];
         worlds = (Expression<ServerLevel>) exprs[1];
         return true;
     }
 
     @Override
     protected GameruleValue @Nullable [] get(SkriptEvent event) {
-        GameRules.Key<?> key = gamerule.getSingle(event);
+        GameRule<?> key = gamerule.getSingle(event);
         if (key == null) {
             return null;
         }
@@ -48,7 +49,7 @@ public class ExprGameRule extends SimpleExpression<GameruleValue> {
         ServerLevel[] levels = worlds.getArray(event);
         GameruleValue<?>[] values = new GameruleValue<?>[levels.length];
         for (int index = 0; index < levels.length; index++) {
-            Object value = readValue(levels[index].getGameRules().getRule(key));
+            Object value = readValue(levels[index].getGameRules().get(key));
             if (value == null) {
                 return null;
             }
@@ -68,31 +69,22 @@ public class ExprGameRule extends SimpleExpression<GameruleValue> {
             return;
         }
 
-        GameRules.Key<?> key = gamerule.getSingle(event);
+        GameRule<Object> key = gamerule.getSingle(event);
         if (key == null) {
             return;
         }
 
         Object value = delta[0];
         for (ServerLevel level : worlds.getArray(event)) {
-            GameRules.Value<?> rule = level.getGameRules().getRule(key);
-            if (rule instanceof GameRules.BooleanValue booleanValue) {
-                if (!(value instanceof Boolean flag)) {
-                    Skript.error("The " + key.getId() + " gamerule can only be set to a boolean value.");
-                    return;
-                }
-                booleanValue.set(flag, level.getServer());
+            if (value instanceof Boolean booleanValue) {
+                level.getGameRules().set(key, booleanValue, level.getServer());
                 continue;
             }
-            if (rule instanceof GameRules.IntegerValue integerValue) {
-                if (!(value instanceof Integer number)) {
-                    Skript.error("The " + key.getId() + " gamerule can only be set to an integer value.");
-                    return;
-                }
-                integerValue.set(number, level.getServer());
+            if (value instanceof Integer integerValue) {
+                level.getGameRules().set(key, integerValue, level.getServer());
                 continue;
             }
-            Skript.error("The " + key.getId() + " gamerule is not supported on this compatibility surface.");
+            Skript.error("The " + key.id() + " gamerule is not supported on this compatibility surface.");
             return;
         }
     }
@@ -112,44 +104,44 @@ public class ExprGameRule extends SimpleExpression<GameruleValue> {
         return "the gamerule " + gamerule.toString(event, debug) + " of " + worlds.toString(event, debug);
     }
 
-    private static @Nullable Object readValue(GameRules.Value<?> value) {
-        if (value instanceof GameRules.BooleanValue booleanValue) {
-            return booleanValue.get();
+    private static @Nullable Object readValue(Object value) {
+        if (value instanceof Boolean booleanValue) {
+            return booleanValue;
         }
-        if (value instanceof GameRules.IntegerValue integerValue) {
-            return integerValue.get();
+        if (value instanceof Integer integerValue) {
+            return integerValue;
         }
         return null;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static void ensureGameRuleClassInfo() {
-        if (Classes.getExactClassInfo((Class) GameRules.Key.class) != null || Classes.getClassInfoNoError("gamerule") != null) {
+        if (Classes.getExactClassInfo((Class) GameRule.class) != null || Classes.getClassInfoNoError("gamerule") != null) {
             return;
         }
-        ClassInfo<GameRules.Key<?>> info = new ClassInfo<>((Class) GameRules.Key.class, "gamerule");
+        ClassInfo<GameRule<?>> info = new ClassInfo<>((Class) GameRule.class, "gamerule");
         info.user("game ?rules?");
         info.supplier(() -> allGameRules().iterator());
         info.parser(new GameRuleParser());
         Classes.registerClassInfo(info);
     }
 
-    private static List<GameRules.Key<?>> allGameRules() {
-        List<GameRules.Key<?>> keys = new ArrayList<>();
+    private static List<GameRule<?>> allGameRules() {
+        List<GameRule<?>> keys = new ArrayList<>();
         for (Field field : GameRules.class.getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers()) || !GameRules.Key.class.isAssignableFrom(field.getType())) {
+            if (!Modifier.isStatic(field.getModifiers()) || !GameRule.class.isAssignableFrom(field.getType())) {
                 continue;
             }
             try {
                 field.setAccessible(true);
                 Object value = field.get(null);
-                if (value instanceof GameRules.Key<?> key) {
+                if (value instanceof GameRule<?> key) {
                     keys.add(key);
                 }
             } catch (ReflectiveOperationException ignored) {
             }
         }
-        keys.sort(Comparator.comparing(GameRules.Key::getId));
+        keys.sort(Comparator.comparing(GameRule::id));
         return keys;
     }
 
@@ -164,7 +156,7 @@ public class ExprGameRule extends SimpleExpression<GameruleValue> {
         return builder.toString();
     }
 
-    private static final class GameRuleParser implements ClassInfo.Parser<GameRules.Key<?>> {
+    private static final class GameRuleParser implements ClassInfo.Parser<GameRule<?>> {
 
         @Override
         public boolean canParse(ParseContext context) {
@@ -172,13 +164,13 @@ public class ExprGameRule extends SimpleExpression<GameruleValue> {
         }
 
         @Override
-        public @Nullable GameRules.Key<?> parse(String input, ParseContext context) {
+        public @Nullable GameRule<?> parse(String input, ParseContext context) {
             if (input == null || input.isBlank()) {
                 return null;
             }
             String normalized = normalize(input);
-            for (GameRules.Key<?> key : allGameRules()) {
-                if (normalize(key.getId()).equals(normalized)) {
+            for (GameRule<?> key : allGameRules()) {
+                if (normalize(key.id()).equals(normalized)) {
                     return key;
                 }
             }

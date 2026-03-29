@@ -87,12 +87,12 @@ public class EffWorldBorderExpand extends Effect {
         }
         for (WorldBorder worldBorder : worldBorders.getArray(event)) {
             if (to) {
-                worldBorder.lerpSizeBetween(worldBorder.getSize(), Math2.fit(1, input, MAX_WORLDBORDER_SIZE), speed * 1000L);
+                worldBorder.lerpSizeBetween(worldBorder.getSize(), Math2.fit(1, input, MAX_WORLDBORDER_SIZE), 0L, speed * 1000L);
                 continue;
             }
             double delta = shrink ? -input : input;
             double size = Math2.fit(1, worldBorder.getSize() + delta, MAX_WORLDBORDER_SIZE);
-            worldBorder.lerpSizeBetween(worldBorder.getSize(), size, speed * 1000L);
+            worldBorder.lerpSizeBetween(worldBorder.getSize(), size, 0L, speed * 1000L);
         }
     }
 

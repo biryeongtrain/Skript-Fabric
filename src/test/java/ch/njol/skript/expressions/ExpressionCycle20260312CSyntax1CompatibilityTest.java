@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,13 +19,11 @@ import ch.njol.util.Kleenean;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -41,8 +40,7 @@ final class ExpressionCycle20260312CSyntax1CompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         ensureSyntax();
     }
 
@@ -104,7 +102,7 @@ final class ExpressionCycle20260312CSyntax1CompatibilityTest {
         assertNull(plain.toStack().get(DataComponents.DAMAGE_RESISTANT));
 
         ItemStack sourceStack = new ItemStack(Items.DIAMOND_SWORD);
-        sourceStack.set(DataComponents.DAMAGE_RESISTANT, new net.minecraft.world.item.component.DamageResistant(net.minecraft.tags.DamageTypeTags.IS_FIRE));
+        sourceStack.set(DataComponents.DAMAGE_RESISTANT, new net.minecraft.world.item.component.DamageResistant(net.minecraft.core.HolderSet.emptyNamed(new net.minecraft.core.HolderOwner<net.minecraft.world.damagesource.DamageType>() {}, net.minecraft.tags.DamageTypeTags.IS_FIRE)));
         FabricItemType originalResistant = new FabricItemType(sourceStack);
         ExprWithFireResistance without = new ExprWithFireResistance();
         SkriptParser.ParseResult withoutParse = parseResult("without fire resistance");

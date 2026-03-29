@@ -5,7 +5,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import java.util.regex.Pattern;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.bukkit.tags.MinecraftTag;
 import org.skriptlang.skript.bukkit.tags.TagSupport;
@@ -50,7 +50,7 @@ public final class EffRegisterTag extends Effect {
         if (!KEY_PATTERN.matcher(normalized).matches()) {
             return;
         }
-        ResourceLocation id = TagSupport.parseTagId(normalized, "skript");
+        Identifier id = TagSupport.parseTagId(normalized, "skript");
         if (id == null) {
             return;
         }

@@ -245,7 +245,7 @@ public final class SkriptFabricConditionAndEventBatchGameTest extends AbstractSk
 
     private static DamageSource newDamageSource(GameTestHelper helper) {
         try {
-            net.minecraft.world.entity.animal.Cow cow = new net.minecraft.world.entity.animal.Cow(
+            net.minecraft.world.entity.animal.cow.Cow cow = new net.minecraft.world.entity.animal.cow.Cow(
                     EntityType.COW, helper.getLevel()
             );
             Constructor<DamageSource> constructor = DamageSource.class.getDeclaredConstructor(

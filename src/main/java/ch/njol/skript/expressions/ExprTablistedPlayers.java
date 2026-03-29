@@ -41,8 +41,8 @@ public class ExprTablistedPlayers extends PropertyExpression<ServerPlayer, Serve
 	@Override
 	protected ServerPlayer[] get(SkriptEvent event, ServerPlayer[] source) {
 		return Arrays.stream(source)
-				.filter(viewer -> viewer.getServer() != null)
-				.flatMap(viewer -> viewer.getServer().getPlayerList().getPlayers().stream()
+				.filter(viewer -> viewer.level().getServer() != null)
+				.flatMap(viewer -> viewer.level().getServer().getPlayerList().getPlayers().stream()
 						.filter(p -> !HiddenPlayerSupport.isHidden(viewer, p.getUUID()))
 						.filter(p -> TabListedPlayerSupport.isListed(viewer, p.getUUID())))
 				.distinct()
@@ -61,8 +61,8 @@ public class ExprTablistedPlayers extends PropertyExpression<ServerPlayer, Serve
 		switch (mode) {
 			case DELETE:
 				for (ServerPlayer viewer : viewers) {
-					if (viewer.getServer() != null)
-						for (ServerPlayer player : viewer.getServer().getPlayerList().getPlayers()) {
+					if (viewer.level().getServer() != null)
+						for (ServerPlayer player : viewer.level().getServer().getPlayerList().getPlayers()) {
 							TabListedPlayerSupport.unlist(viewer, player);
 						}
 				}
@@ -76,8 +76,8 @@ public class ExprTablistedPlayers extends PropertyExpression<ServerPlayer, Serve
 				break;
 			case SET:
 				for (ServerPlayer viewer : viewers) {
-					if (viewer.getServer() != null)
-						for (ServerPlayer player : viewer.getServer().getPlayerList().getPlayers()) {
+					if (viewer.level().getServer() != null)
+						for (ServerPlayer player : viewer.level().getServer().getPlayerList().getPlayers()) {
 							if (Arrays.stream(recipients).noneMatch(recipient -> recipient.equals(player))) {
 								TabListedPlayerSupport.unlist(viewer, player);
 							}
@@ -97,8 +97,8 @@ public class ExprTablistedPlayers extends PropertyExpression<ServerPlayer, Serve
 			case RESET:
 				for (ServerPlayer viewer : viewers) {
 					TabListedPlayerSupport.resetAll(viewer);
-					if (viewer.getServer() != null)
-						for (ServerPlayer player : viewer.getServer().getPlayerList().getPlayers()) {
+					if (viewer.level().getServer() != null)
+						for (ServerPlayer player : viewer.level().getServer().getPlayerList().getPlayers()) {
 							if (!HiddenPlayerSupport.isHidden(viewer, player.getUUID())) {
 								TabListedPlayerSupport.list(viewer, player);
 							}

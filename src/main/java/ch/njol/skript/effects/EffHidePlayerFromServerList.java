@@ -57,7 +57,7 @@ public final class EffHidePlayerFromServerList extends Effect {
         }
         for (ServerPlayer player : players.getArray(event)) {
             handle.hidePlayer(player.getUUID());
-            handle.playerSample().remove(player.getGameProfile().getName());
+            handle.playerSample().remove(player.getGameProfile().name());
         }
     }
 

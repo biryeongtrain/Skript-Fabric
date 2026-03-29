@@ -8,7 +8,7 @@ import ch.njol.skript.registrations.Classes;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.enchantment.Enchantment;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +32,7 @@ public final class EnchantmentClassInfo {
 				if (server == null) return null;
 				Registry<Enchantment> reg = server.registryAccess()
 						.lookupOrThrow(Registries.ENCHANTMENT);
-				ResourceLocation id = ResourceLocation.tryParse(input.toLowerCase().replace(" ", "_"));
+				Identifier id = Identifier.tryParse(input.toLowerCase().replace(" ", "_"));
 				if (id == null) return null;
 				return reg.get(id).orElse(null);
 			}
@@ -45,7 +45,7 @@ public final class EnchantmentClassInfo {
 			@Override
 			public String toString(Holder<Enchantment> holder, int flags) {
 				return holder.unwrapKey()
-						.map(key -> key.location().getPath())
+						.map(key -> (String) key.identifier().getPath())
 						.orElse("unknown enchantment");
 			}
 

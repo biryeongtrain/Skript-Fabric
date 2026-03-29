@@ -24,6 +24,7 @@ abstract class TripWireBlockMixin {
             BlockPos pos,
             Entity entity,
             InsideBlockEffectApplier effectApplier,
+            boolean moving,
             CallbackInfo callbackInfo
     ) {
         if (!(level instanceof ServerLevel serverLevel) || !state.hasProperty(BlockStateProperties.POWERED)) {

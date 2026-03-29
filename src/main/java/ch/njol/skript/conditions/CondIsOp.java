@@ -40,7 +40,7 @@ public class CondIsOp extends Condition {
         if (event.server() == null) {
             return isNegated();
         }
-        return players.check(event, profile -> event.server().getPlayerList().isOp(profile), isNegated());
+        return players.check(event, profile -> event.server().getPlayerList().isOp(new net.minecraft.server.players.NameAndId(profile)), isNegated());
     }
 
     @Override

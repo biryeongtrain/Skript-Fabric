@@ -1,8 +1,10 @@
 package ch.njol.skript.entity;
 
-public final class MooshroomData extends ExactEntityData<net.minecraft.world.entity.animal.MushroomCow> {
+import net.minecraft.world.entity.animal.cow.MushroomCow;
+
+public final class MooshroomData extends ExactEntityData<MushroomCow> {
 
     public MooshroomData() {
-        super("mooshroom", net.minecraft.world.entity.animal.MushroomCow.class, "mooshroom");
+        super("mooshroom", MushroomCow.class, "mooshroom");
     }
 }

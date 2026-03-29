@@ -6,7 +6,7 @@ import ch.njol.skript.doc.Example;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.animal.parrot.Parrot;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 

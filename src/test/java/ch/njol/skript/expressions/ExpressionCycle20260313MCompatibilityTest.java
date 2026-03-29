@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -16,9 +17,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import com.mojang.authlib.GameProfile;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.entity.EntityType;
@@ -37,8 +36,7 @@ final class ExpressionCycle20260313MCompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         EntityData.register();
         SkriptFabricBootstrap.bootstrap();
         ensureSupportRegistered();
@@ -63,8 +61,8 @@ final class ExpressionCycle20260313MCompatibilityTest {
         assertEquals(Items.PLAYER_HEAD, itemType.item());
         ResolvableProfile profile = itemType.toStack().get(DataComponents.PROFILE);
         assertNotNull(profile);
-        assertEquals("cyclem", profile.gameProfile().getName());
-        assertEquals(UUID.fromString("00000000-0000-0000-0000-0000000000c1"), profile.gameProfile().getId());
+        assertEquals("cyclem", profile.partialProfile().name());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-0000000000c1"), profile.partialProfile().id());
     }
 
     @Test

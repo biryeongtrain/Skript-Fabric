@@ -3,7 +3,7 @@ package kim.biryeong.skriptFabric.mixin;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import org.skriptlang.skript.fabric.runtime.SkriptFabricEventBridge;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,11 +21,11 @@ abstract class ServerGamePacketListenerImplInventoryClickMixin {
             method = "handleContainerClick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;clicked(IILnet/minecraft/world/inventory/ClickType;Lnet/minecraft/world/entity/player/Player;)V"
+                    target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;clicked(IILnet/minecraft/world/inventory/ContainerInput;Lnet/minecraft/world/entity/player/Player;)V"
             )
     )
     private void skript$dispatchInventoryClick(ServerboundContainerClickPacket packet, CallbackInfo callbackInfo) {
-        if (packet.clickType() != ClickType.PICKUP) {
+        if (packet.containerInput() != ContainerInput.PICKUP) {
             return;
         }
         int slotNum = packet.slotNum();

@@ -1,5 +1,6 @@
 package ch.njol.skript.conditions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.njol.skript.Skript;
@@ -9,8 +10,6 @@ import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.util.Timespan;
 import ch.njol.util.Kleenean;
 import net.minecraft.world.item.Items;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,8 +22,7 @@ class ConditionBlockItemCompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
     }
 
     @AfterEach

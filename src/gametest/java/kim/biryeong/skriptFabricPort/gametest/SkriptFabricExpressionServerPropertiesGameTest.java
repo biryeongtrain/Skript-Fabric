@@ -116,7 +116,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
             eventPlayer.setGameMode(GameType.CREATIVE);
             ServerPlayer operator = helper.makeMockServerPlayerInLevel();
             operator.setGameMode(GameType.CREATIVE);
-            helper.getLevel().getServer().getPlayerList().op(operator.getGameProfile());
+            helper.getLevel().getServer().getPlayerList().op(new net.minecraft.server.players.NameAndId(operator.getGameProfile()));
 
             executeScripts(
                     runtime,
@@ -140,7 +140,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
                     "skript/gametest/expression/server-properties/whitelist_adds_literal_profile.sk"
             );
             helper.assertTrue(
-                    helper.getLevel().getServer().getPlayerList().getWhiteList().isWhiteListed(listed),
+                    helper.getLevel().getServer().getPlayerList().getWhiteList().isWhiteListed(new net.minecraft.server.players.NameAndId(listed)),
                     Component.literal("Expected whitelist expression to add the literal offline player to the server whitelist.")
             );
             helper.assertTrue(
@@ -158,7 +158,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
                     "skript/gametest/expression/server-properties/whitelist_removes_literal_profile.sk"
             );
             helper.assertTrue(
-                    !helper.getLevel().getServer().getPlayerList().getWhiteList().isWhiteListed(listed),
+                    !helper.getLevel().getServer().getPlayerList().getWhiteList().isWhiteListed(new net.minecraft.server.players.NameAndId(listed)),
                     Component.literal("Expected whitelist expression to remove the literal offline player from the server whitelist.")
             );
             assertProfileListMissing(helper, "serverprops::whitelist_after_remove::", listed);
@@ -189,7 +189,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
                     Component.literal("Expected whitelist expression to disable server whitelist mode.")
             );
 
-            helper.getLevel().getServer().getPlayerList().deop(operator.getGameProfile());
+            helper.getLevel().getServer().getPlayerList().deop(new net.minecraft.server.players.NameAndId(operator.getGameProfile()));
             runtime.clearScripts();
         });
     }
@@ -258,14 +258,14 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
         Collection<Object> values = profileValues(prefix);
         helper.assertTrue(
                 containsProfile(values, expected),
-                Component.literal("Expected " + prefix + " to contain " + expected.getName() + " but got " + describeValues(values) + ".")
+                Component.literal("Expected " + prefix + " to contain " + expected.name() + " but got " + describeValues(values) + ".")
         );
     }
 
     private static void assertProfileListMissing(GameTestHelper helper, String prefix, GameProfile expected) {
         helper.assertTrue(
                 !containsProfile(profileValues(prefix), expected),
-                Component.literal("Expected " + prefix + " not to contain " + expected.getName() + ".")
+                Component.literal("Expected " + prefix + " not to contain " + expected.name() + ".")
         );
     }
 
@@ -282,10 +282,10 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
             if (!(value instanceof GameProfile profile)) {
                 continue;
             }
-            if (expected.getId() != null && expected.getId().equals(profile.getId())) {
+            if (expected.id() != null && expected.id().equals(profile.id())) {
                 return true;
             }
-            if (expected.getName() != null && expected.getName().equals(profile.getName())) {
+            if (expected.name() != null && expected.name().equals(profile.name())) {
                 return true;
             }
         }
@@ -312,7 +312,7 @@ public final class SkriptFabricExpressionServerPropertiesGameTest extends Abstra
             }
             first = false;
             if (value instanceof GameProfile profile) {
-                builder.append(profile.getName()).append("/").append(profile.getId());
+                builder.append(profile.name()).append("/").append(profile.id());
             } else if (value == null) {
                 builder.append("null");
             } else {

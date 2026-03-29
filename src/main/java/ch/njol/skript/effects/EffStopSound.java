@@ -10,7 +10,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
@@ -67,7 +67,7 @@ public class EffStopSound extends Effect {
             return;
         }
         for (String sound : sounds.getArray(event)) {
-            ResourceLocation id = EffectRuntimeSupport.parseResourceLocation(sound);
+            Identifier id = EffectRuntimeSupport.parseResourceLocation(sound);
             if (id == null) {
                 continue;
             }

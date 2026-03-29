@@ -53,7 +53,8 @@ public class EffFireResistant extends Effect {
             if (not) {
                 stack.remove(DataComponents.DAMAGE_RESISTANT);
             } else {
-                stack.set(DataComponents.DAMAGE_RESISTANT, new net.minecraft.world.item.component.DamageResistant(DamageTypeTags.IS_FIRE));
+                stack.set(DataComponents.DAMAGE_RESISTANT, new net.minecraft.world.item.component.DamageResistant(
+                        net.minecraft.core.HolderSet.emptyNamed(new net.minecraft.core.HolderOwner<net.minecraft.world.damagesource.DamageType>() {}, DamageTypeTags.IS_FIRE)));
             }
         }
     }

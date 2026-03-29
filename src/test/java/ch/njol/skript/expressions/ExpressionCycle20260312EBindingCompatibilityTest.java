@@ -1,5 +1,6 @@
 package ch.njol.skript.expressions;
 
+import ch.njol.skript.test.TestBootstrap;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -11,8 +12,6 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Classes;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,8 +31,7 @@ final class ExpressionCycle20260312EBindingCompatibilityTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        TestBootstrap.bootstrap();
         SkriptFabricBootstrap.bootstrap();
         ensureSyntax();
     }
@@ -54,7 +52,7 @@ final class ExpressionCycle20260312EBindingCompatibilityTest {
     @Test
     void parserBindsCycle20260312eExpressions() {
         assertInstanceOf(ExprSeaPickles.class, parseExpression("sea pickle count of lane-e-block", Integer.class));
-        assertInstanceOf(ExprPandaGene.class, parseExpression("main gene of lane-e-livingentity", net.minecraft.world.entity.animal.Panda.Gene.class));
+        assertInstanceOf(ExprPandaGene.class, parseExpression("main gene of lane-e-livingentity", net.minecraft.world.entity.animal.panda.Panda.Gene.class));
         assertInstanceOf(ExprPlain.class, parseExpression("plain lane-e-itemtype", FabricItemType.class));
         assertInstanceOf(ExprNamed.class, parseExpression("lane-e-itemtype named \"Lane E\"", FabricItemType.class));
         assertInstanceOf(ExprWithItemFlags.class, parseExpression("lane-e-itemtype with item flags \"hide enchants\"", FabricItemType.class));
@@ -74,7 +72,7 @@ final class ExpressionCycle20260312EBindingCompatibilityTest {
         registerClassInfo(Entity.class, "entity");
         registerClassInfo(BlockState.class, "blockdata");
         registerClassInfo(GameProfile.class, "offlineplayer");
-        registerClassInfo(net.minecraft.world.entity.animal.Panda.Gene.class, "gene");
+        registerClassInfo(net.minecraft.world.entity.animal.panda.Panda.Gene.class, "gene");
 
         Skript.registerExpression(TestBlockExpression.class, FabricBlock.class, "lane-e-block");
         Skript.registerExpression(TestItemTypeExpression.class, FabricItemType.class, "lane-e-itemtype");

@@ -25,7 +25,7 @@ public class ExprLastDeathLocation extends PropertyExpression<GameProfile, Fabri
         }
         List<FabricLocation> values = new ArrayList<>();
         for (GameProfile profile : source) {
-            ServerPlayer player = event.server().getPlayerList().getPlayer(profile.getId());
+            ServerPlayer player = event.server().getPlayerList().getPlayer(profile.id());
             if (player == null) {
                 continue;
             }
@@ -56,7 +56,7 @@ public class ExprLastDeathLocation extends PropertyExpression<GameProfile, Fabri
         }
         FabricLocation location = delta == null ? null : (FabricLocation) delta[0];
         for (GameProfile profile : getExpr().getArray(event)) {
-            ServerPlayer player = event.server().getPlayerList().getPlayer(profile.getId());
+            ServerPlayer player = event.server().getPlayerList().getPlayer(profile.id());
             if (player == null) {
                 continue;
             }

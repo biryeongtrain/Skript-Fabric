@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
@@ -70,9 +70,9 @@ public class EffPlaySound extends Effect {
                 ? ThreadLocalRandom.current().nextLong()
                 : seed.getSingle(event).longValue();
 
-        List<ResourceLocation> soundIds = new ArrayList<>();
+        List<Identifier> soundIds = new ArrayList<>();
         for (String sound : sounds.getArray(event)) {
-            ResourceLocation id = EffectRuntimeSupport.parseResourceLocation(sound);
+            Identifier id = EffectRuntimeSupport.parseResourceLocation(sound);
             if (id != null) {
                 soundIds.add(id);
             }
@@ -117,13 +117,13 @@ public class EffPlaySound extends Effect {
     private void sendSounds(
             ServerPlayer player,
             FabricLocation emitter,
-            List<ResourceLocation> soundIds,
+            List<Identifier> soundIds,
             SoundSource source,
             float volume,
             float pitch,
             long seed
     ) {
-        for (ResourceLocation soundId : soundIds) {
+        for (Identifier soundId : soundIds) {
             player.connection.send(new ClientboundSoundPacket(
                     EffectRuntimeSupport.soundOf(soundId),
                     source,

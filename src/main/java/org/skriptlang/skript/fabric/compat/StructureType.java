@@ -6,7 +6,7 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -58,7 +58,7 @@ public final class StructureType {
     }
 
     private static ResourceKey<ConfiguredFeature<?, ?>> key(String path) {
-        return ResourceKey.create(Registries.CONFIGURED_FEATURE, ResourceLocation.withDefaultNamespace(path));
+        return ResourceKey.create(Registries.CONFIGURED_FEATURE, Identifier.withDefaultNamespace(path));
     }
 
     private static void register(String name, ResourceKey<ConfiguredFeature<?, ?>> featureKey) {

@@ -7,7 +7,7 @@ import ch.njol.skript.registrations.Classes;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -65,9 +65,9 @@ public final class ItemTypeClassInfo {
             return new FabricItemType(item, amount, null);
         }
 
-        private static @Nullable Item itemFromId(ResourceLocation id) {
+        private static @Nullable Item itemFromId(Identifier id) {
             Item item = BuiltInRegistries.ITEM.getValue(id);
-            ResourceLocation key = item == null ? null : BuiltInRegistries.ITEM.getKey(item);
+            Identifier key = item == null ? null : BuiltInRegistries.ITEM.getKey(item);
             return id.equals(key) ? item : null;
         }
 
@@ -77,7 +77,7 @@ public final class ItemTypeClassInfo {
                 return null;
             }
             for (Item item : BuiltInRegistries.ITEM) {
-                ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+                Identifier key = BuiltInRegistries.ITEM.getKey(item);
                 if (key == null) {
                     continue;
                 }

@@ -34,7 +34,7 @@ public final class ExprSkullOwner extends SimplePropertyExpression<Object, GameP
             return null;
         }
         ResolvableProfile profile = stack.get(DataComponents.PROFILE);
-        return profile == null ? null : profile.gameProfile();
+        return profile == null ? null : profile.partialProfile();
     }
 
     @Override
@@ -53,7 +53,7 @@ public final class ExprSkullOwner extends SimplePropertyExpression<Object, GameP
                 continue;
             }
             ItemStack updated = stack.copy();
-            updated.set(DataComponents.PROFILE, new ResolvableProfile(profile));
+            updated.set(DataComponents.PROFILE, ResolvableProfile.createResolved(profile));
             applyItemStack(object, updated);
         }
     }
